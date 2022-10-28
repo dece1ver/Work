@@ -35,50 +35,60 @@ namespace eLog.Infrastructure
         {
             if (!File.Exists(ConfigFilePath)) CreateBaseConfig();
             var content = File.ReadAllText(ConfigFilePath);
-            var config = Toml.ToModel(content);
+            
             bool needRapair = false;
 
             try
             {
-                Machine = new Machine(Convert.ToInt32(config["machine_id"]!));
+                var config = Toml.ToModel(content);
+                try
+                {
+                    Machine = new Machine(Convert.ToInt32(config["machine_id"]!));
+                }
+                catch
+                {
+                    needRapair = true;
+                    Machine = new Machine(0);
+                }
+
+                try
+                {
+                    LogBasePath = (string)config["log_base_path"]!;
+                }
+                catch
+                {
+                    needRapair = true;
+                    LogBasePath = (string)config["log_base_path"]!;
+                }
+
+                try
+                {
+
+                    TomlArray operators = (TomlArray)config["operators"]!;
+                    OperatorsList = operators.Select(s => s!.ToString()!).ToList();
+                }
+                catch
+                {
+                    needRapair = true;
+                    OperatorsList = new List<string>();
+                }
+
+                try
+                {
+                    CurrentOperator = (string)config["current_operator"]!;
+                    if (string.IsNullOrWhiteSpace(CurrentOperator) && OperatorsList.Count > 0) CurrentOperator = OperatorsList[0];
+                }
+                catch
+                {
+                    needRapair = true;
+                    CurrentOperator = OperatorsList.Count > 0 ? OperatorsList[0] : "";
+                }
             }
             catch
             {
-                needRapair = true;
-                Machine = new Machine(0);
-            }
-
-            try
-            {
-                LogBasePath = (string)config["log_base_path"]!;
-            }
-            catch
-            {
-                needRapair = true;
-                LogBasePath = (string)config["log_base_path"]!;
-            }
-
-            try
-            {
-
-                TomlArray operators = (TomlArray)config["operators"]!;
-                OperatorsList = operators.Select(s => s!.ToString()!).ToList();
-            }
-            catch
-            {
-                needRapair = true;
-                OperatorsList = new List<string>();
-            }
-
-            try
-            {
-                CurrentOperator = (string)config["current_operator"]!;
-                if (string.IsNullOrWhiteSpace(CurrentOperator) && OperatorsList.Count > 0) CurrentOperator = OperatorsList[0];
-            }
-            catch
-            {
-                needRapair = true;
-                CurrentOperator = OperatorsList.Count > 0 ? OperatorsList[0] : "";
+                CreateBaseConfig();
+                ReadConfig();
+                return;
             }
 
             if (needRapair) RewriteConfig();
