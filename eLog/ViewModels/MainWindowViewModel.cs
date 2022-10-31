@@ -20,6 +20,7 @@ using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using eLog.Models;
+using eLog.Views.Windows;
 
 namespace eLog.ViewModels
 {
@@ -35,11 +36,11 @@ namespace eLog.ViewModels
             set => Set(ref _Machine, value);
         }
 
-        private string _CurrentOperator = AppSettings.CurrentOperator;
+        private Operator _CurrentOperator = AppSettings.CurrentOperator;
         /// <summary>
         /// Станок
         /// </summary>
-        public string CurrentOperator
+        public Operator CurrentOperator
         {
             get => _CurrentOperator;
             set {
@@ -49,15 +50,15 @@ namespace eLog.ViewModels
             }
         }
 
-        private List<string> _OperatorsList = AppSettings.OperatorsList;
+        private List<Operator> _Operators = AppSettings.Operators;
         /// <summary>
         /// Станок
         /// </summary>
-        public List<string> OperatorsList
+        public List<Operator> Operators
         {
-            get => _OperatorsList;
+            get => _Operators;
             set {
-                Set(ref _OperatorsList, value); 
+                Set(ref _Operators, value); 
                 AppSettings.RewriteConfig();
             }
         }
@@ -191,6 +192,26 @@ namespace eLog.ViewModels
         private static bool CanCloseApplicationCommandExecute(object p) => true;
         #endregion
 
+        #region EditOperatorsCommand
+        public ICommand EditOperatorsCommand { get; }
+        private void OnEditOperatorsCommandExecuted(object p)
+        {
+            var dlg = new OperatorsEditWindow()
+            {
+                Operators = Operators
+            };
+            if(dlg.ShowDialog() == true)
+            {
+                MessageBox.Show("Ok");
+            }
+            else
+            {
+                MessageBox.Show("Отмена");
+            }
+        }
+        private static bool CanEditOperatorsCommandExecute(object p) => true;
+        #endregion
+
 
         #region StartShiftCommand
         public ICommand StartShiftCommand { get; }
@@ -240,6 +261,7 @@ namespace eLog.ViewModels
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
+            EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
             EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
             SaveReportCommand = new LambdaCommand(OnSaveReportCommandExecuted, CanSaveReportCommandExecute);

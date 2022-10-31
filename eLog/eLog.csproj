@@ -9,9 +9,11 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
+    <Folder Include="Services\Interfaces\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Tomlyn" Version="0.16.0" />
   </ItemGroup>
 

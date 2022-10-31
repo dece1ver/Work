@@ -2,105 +2,77 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using System.Windows.Media;
 using eLog.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Tomlyn;
 using Tomlyn.Model;
 
 namespace eLog.Infrastructure
 {
-    public static class AppSettings
+    public class AppSettings
     {
-        public static readonly string LogReservedPath = "C:\\ProgramData\\dece1ver\\eLog\\FailedLogs";
-        public static readonly string ConfigPath = "C:\\ProgramData\\dece1ver\\eLog";
-        public static readonly string ConfigFilePath = Path.Combine(ConfigPath, "config.toml");
+        private static AppSettings appSettings;
+        private static bool needRewrite = false;
+
+        protected AppSettings()
+        {
+            ReadConfig();
+        }
+        
+        public const string LogReservedPath = "C:\\ProgramData\\dece1ver\\eLog\\FailedLogs";
+        public const string ConfigPath = "C:\\ProgramData\\dece1ver\\eLog";
+        public static readonly string ConfigFilePath = Path.Combine(ConfigPath, "config.json");
         public static Machine Machine { get; set; }
         public static string LogBasePath { get; set; }
-        public static string CurrentOperator { get; set; }
-        public static List<string> OperatorsList { get; set; }
+        public static List<Operator> Operators { get; set; }
+        public static Operator CurrentOperator { get; set; }
+        
+
+
+        public static AppSettings GetInstance()
+        {
+            appSettings ??= new AppSettings();
+            if (needRewrite) RewriteConfig();
+            return appSettings;
+        }
 
 
         private static void CreateBaseConfig()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             if (!Directory.Exists(ConfigPath)) Directory.CreateDirectory(ConfigPath);
-            var tomlBaseContent = "machine_id = 0\r\nlog_base_path = \"\"\r\noperators = []\r\ncurrent_operator = \"\"\r\n";
-            File.WriteAllText(ConfigFilePath, tomlBaseContent);
+            Machine = new Machine(0);
+            LogBasePath = "";
+            Operators = new List<Operator>() {new Operator("Бабохин", "Кирилл", "Георгиевич")};
         }
 
         public static void ReadConfig()
         {
             if (!File.Exists(ConfigFilePath)) CreateBaseConfig();
-            var content = File.ReadAllText(ConfigFilePath);
             
-            bool needRapair = false;
-
             try
             {
-                var config = Toml.ToModel(content);
-                try
-                {
-                    Machine = new Machine(Convert.ToInt32(config["machine_id"]!));
-                }
-                catch
-                {
-                    needRapair = true;
-                    Machine = new Machine(0);
-                }
-
-                try
-                {
-                    LogBasePath = (string)config["log_base_path"]!;
-                }
-                catch
-                {
-                    needRapair = true;
-                    LogBasePath = (string)config["log_base_path"]!;
-                }
-
-                try
-                {
-
-                    TomlArray operators = (TomlArray)config["operators"]!;
-                    OperatorsList = operators.Select(s => s!.ToString()!).ToList();
-                }
-                catch
-                {
-                    needRapair = true;
-                    OperatorsList = new List<string>();
-                }
-
-                try
-                {
-                    CurrentOperator = (string)config["current_operator"]!;
-                    if (string.IsNullOrWhiteSpace(CurrentOperator) && OperatorsList.Count > 0) CurrentOperator = OperatorsList[0];
-                }
-                catch
-                {
-                    needRapair = true;
-                    CurrentOperator = OperatorsList.Count > 0 ? OperatorsList[0] : "";
-                }
+                appSettings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(ConfigFilePath));
+                if (appSettings == null) throw new ArgumentNullException();
             }
             catch
             {
-                CreateBaseConfig();
-                ReadConfig();
-                return;
+                needRewrite = true;
             }
-
-            if (needRapair) RewriteConfig();
         }
 
         public static void RewriteConfig()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
-            var tomlContent = $"machine_id = {Machine.Id}\r\nlog_base_path = \"{LogBasePath}\"\r\noperators = [\"{string.Join("\", \"", OperatorsList)}\"]\r\ncurrent_operator = \"{CurrentOperator}\"\r\n";
-            File.WriteAllText(ConfigFilePath, tomlContent);
+            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings));
         }
     }
-
-
 }

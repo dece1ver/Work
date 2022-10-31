@@ -1,4 +1,5 @@
-﻿using System;
+﻿using eLog.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -13,5 +14,6 @@ namespace eLog
     /// </summary>
     public partial class App : Application
     {
+        AppSettings appSettings = AppSettings.GetInstance();
     }
 }

@@ -1,4 +1,4 @@
-﻿<Window x:Class="eLog.MainWindow"
+﻿<Window x:Class="eLog.Views.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -16,21 +16,24 @@
             <Setter Property="Margin" Value="9 2"/>
             <Setter Property="FontSize" Value="24"/>
         </Style>
-        <Style TargetType="Button">
+        <Style TargetType="Button" x:Key="generalButton">
             <Setter Property="Margin" Value="4 0"/>
             <Setter Property="Width" Value="250"/>
         </Style>
     </Window.Resources>
     <DockPanel LastChildFill="True">
+        <ToolBar DockPanel.Dock="Top">
+            <Button Content="Операторы" Command="{Binding EditOperatorsCommand}" CommandParameter="{Binding OperatorsList}"/>
+        </ToolBar>
         <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True"  Margin="0 0 0 0">
             <DockPanel>
                 <TextBlock Text="Станок: " Padding="5 3" Margin="4 0 0 0" DockPanel.Dock="Left"/>
                 <TextBlock Text="{Binding Machine.Name}" Padding="0 3" Margin="-4 0 4 0" DockPanel.Dock="Left"/>
                 <TextBlock Text="Оператор: " Padding="5 3" Margin="4 0 0 0" DockPanel.Dock="Left"/>
                 <Button Content="Начать смену" DockPanel.Dock="Right" Visibility="{Binding StartShiftButtonVisibility}"
-                        Command="{Binding StartShiftCommand}"/>
+                        Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
                 <Button Content="Завершить смену" DockPanel.Dock="Right" Visibility="{Binding EndShiftButtonVisibility}"
-                        Command="{Binding EndShiftCommand}"/>
+                        Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
                 <ComboBox ItemsSource="{Binding OperatorsList}" SelectedItem="{Binding CurrentOperator}" IsEnabled="{Binding EditshiftInfoIsEnabled}" 
                           Width="250" Margin="4 0 0 0" />
                 <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding Shifts[1]}" IsEnabled="{Binding EditshiftInfoIsEnabled}" 
