@@ -13,15 +13,7 @@ namespace eLog.Models
     {
         public Machine(int id)
         {
-            if (id >= 0 && id <= 10)
-            {
-                Id = id;
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-            
+            Id = id;
         }
 
         public int Id { get; }
@@ -39,7 +31,7 @@ namespace eLog.Models
                     9 => "Quaser MV143",
                     10 => "Victor A110",
 
-                    _ => throw new ArgumentOutOfRangeException(),
+                    _ => "-//-",
                 }; 
             }
 

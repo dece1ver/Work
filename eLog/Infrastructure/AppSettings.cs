@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -24,7 +25,7 @@ namespace eLog.Infrastructure
         public static readonly string ConfigFilePath = Path.Combine(ConfigPath, "config.json");
         public static Machine Machine { get; set; }
         public static string LogBasePath { get; set; }
-        public static List<Operator> Operators { get; set; }
+        public static ObservableCollection<Operator> Operators { get; set; }
         public static Operator? CurrentOperator { get; set; }
         
         private static void CreateBaseConfig()
@@ -33,8 +34,12 @@ namespace eLog.Infrastructure
             if (!Directory.Exists(ConfigPath)) Directory.CreateDirectory(ConfigPath);
             Machine = new Machine(0);
             LogBasePath = "";
-            Operators = new List<Operator>() {
-                new Operator("Бабохин", "Кирилл", "Георгиевич"),
+            Operators = new ObservableCollection<Operator>() {
+                new Operator() {
+                    LastName = "Бабохин",
+                    FirstName = "Кирилл",
+                    Patronymic = "Георгиевич",
+                    },
                 };
             RewriteConfig();
         }

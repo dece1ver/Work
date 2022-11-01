@@ -21,6 +21,8 @@ using MessageBox = System.Windows.MessageBox;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using eLog.Models;
 using eLog.Views.Windows;
+using eLog.Services.Interfaces;
+using eLog.Services;
 
 namespace eLog.ViewModels
 {
@@ -47,15 +49,16 @@ namespace eLog.ViewModels
                 AppSettings.CurrentOperator = value;
                 AppSettings.RewriteConfig();
                 Set(ref _CurrentOperator, value);
-                
             }
         }
 
-        private List<Operator> _Operators = AppSettings.Operators;
+        public string CurrentOperatorDisplay { get => CurrentOperator!.DisplayName; }
+
+        private ObservableCollection<Operator> _Operators = AppSettings.Operators;
         /// <summary>
         /// Список операторов
         /// </summary>
-        public List<Operator> Operators
+        public ObservableCollection<Operator> Operators
         {
             get => _Operators;
             set {
@@ -161,16 +164,6 @@ namespace eLog.ViewModels
         }
 
         /// <summary>
-        /// УП с проблемами
-        /// </summary>
-        private double _BadNcFiles;
-        public double BadNcFiles
-        {
-            get => _BadNcFiles;
-            set => Set(ref _BadNcFiles, value);
-        }
-
-        /// <summary>
         /// Отчет
         /// </summary>
         private string _Report;
@@ -197,18 +190,25 @@ namespace eLog.ViewModels
         public ICommand EditOperatorsCommand { get; }
         private void OnEditOperatorsCommandExecuted(object p)
         {
-            var dlg = new OperatorsEditWindow()
+            var operators = Operators;
+            WindowsUserDialogService windowsUserDialogService = new WindowsUserDialogService();
+            if (windowsUserDialogService.EditOperators(operators) == true)
             {
-                Operators = Operators
-            };
-            if(dlg.ShowDialog() == true)
-            {
-                MessageBox.Show("Ok");
+                List<Operator> tempOperators = operators.ToList();
+                
+                // костыль надо нормально сделать
+                tempOperators.RemoveAll(x => string.IsNullOrEmpty(x.DisplayName));
+                operators = new();
+                foreach (var op in tempOperators)
+                {
+                    operators.Add(op);
+                }
+                Operators = operators;
+                
+                OnPropertyChanged(nameof(Operators));
+                OnPropertyChanged(nameof(CurrentOperator));
             }
-            else
-            {
-                MessageBox.Show("Отмена");
-            }
+            
         }
         private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
@@ -242,6 +242,7 @@ namespace eLog.ViewModels
 
         #region SaveReportCommand
         public ICommand SaveReportCommand { get; }
+
         private void OnSaveReportCommandExecuted(object p)
         {
             if (string.IsNullOrEmpty(Report)) return;
@@ -256,6 +257,7 @@ namespace eLog.ViewModels
         #endregion
 
         #endregion
+
 
 
 

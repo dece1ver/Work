@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using eLog.Infrastructure.Extensions;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,32 +10,32 @@ namespace eLog.Models
 {
     public class Operator
     {
-        public Operator(string lastName, string firstName = "", string patronymic = "")
-        {
-            LastName = lastName;
-            FirstName = firstName;
-            Patronymic = patronymic;
-        }
+        private string firstName;
+        private string lastName;
+        private string patronymic;
 
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Patronymic { get; set; }
+        public string FirstName { get => firstName; set => firstName = value.Capitalize(); }
+        public string LastName { get => lastName; set => lastName = value.Capitalize(); }
+        public string Patronymic { get => patronymic; set => patronymic = value.Capitalize(); }
 
         [JsonIgnore]
-        public string DisplayName { get
+        public string DisplayName
+        {
+            get
+            {
+                var result = LastName;
+                if (!string.IsNullOrEmpty(FirstName))
                 {
-                    var result = LastName;
-                    if (!string.IsNullOrEmpty(FirstName))
+                    result += " " + FirstName[0] + ".";
+                    if (!string.IsNullOrEmpty(Patronymic))
                     {
-                        result += " " + FirstName[0] + ".";
-                        if (!string.IsNullOrEmpty(Patronymic))
-                        {
-                            result += " " + Patronymic[0] + ".";
-                        }
+                        result += " " + Patronymic[0] + ".";
                     }
-                    return result;
-                } 
+                }
+                return result;
             }
+        }
+
         
     }
 }

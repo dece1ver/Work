@@ -22,9 +22,11 @@
         </Style>
     </Window.Resources>
     <DockPanel LastChildFill="True">
-        <ToolBar DockPanel.Dock="Top">
-            <Button Content="Операторы" Command="{Binding EditOperatorsCommand}" CommandParameter="{Binding Operators}"/>
-        </ToolBar>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Параметры">
+                <MenuItem Header="Операторы" Command="{Binding EditOperatorsCommand}" CommandParameter="{Binding Operators}"/>
+            </MenuItem>
+        </Menu>
         <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True"  Margin="0 0 0 0">
             <DockPanel>
                 <TextBlock Text="Станок: " Padding="5 3" Margin="4 0 0 0" DockPanel.Dock="Left"/>
@@ -34,7 +36,10 @@
                         Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
                 <Button Content="Завершить смену" DockPanel.Dock="Right" Visibility="{Binding EndShiftButtonVisibility}"
                         Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
-                <ComboBox ItemsSource="{Binding Operators, Mode=TwoWay}" SelectedItem="{Binding CurrentOperator}"
+                <ComboBox ItemsSource="{Binding Operators}" 
+                          SelectedItem="{Binding CurrentOperator}"
+                          Text="{Binding CurrentOperator.DisplayName, Mode=OneWay}"
+                          IsEnabled="{Binding EditshiftInfoIsEnabled}"
                           DisplayMemberPath="DisplayName"
                           Width="250" Margin="4 0 0 0">
                 </ComboBox>
