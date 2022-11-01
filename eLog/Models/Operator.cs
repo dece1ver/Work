@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,12 +19,14 @@ namespace eLog.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Patronymic { get; set; }
-        public string DiplayName { get
+
+        [JsonIgnore]
+        public string DisplayName { get
                 {
                     var result = LastName;
                     if (!string.IsNullOrEmpty(FirstName))
                     {
-                        result += FirstName[0] + ".";
+                        result += " " + FirstName[0] + ".";
                         if (!string.IsNullOrEmpty(Patronymic))
                         {
                             result += " " + Patronymic[0] + ".";

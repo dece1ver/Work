@@ -7,7 +7,7 @@
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
         mc:Ignorable="d" xmlns:vm="clr-namespace:eLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
-        Title="Электронный журнал оператора" MinWidth="840" MinHeight="480" Width="840" Height="480" WindowState="Maximized">
+        Title="Электронный журнал оператора" MinWidth="840" MinHeight="480" Width="1366" Height="768" WindowState="Maximized">
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
@@ -23,7 +23,7 @@
     </Window.Resources>
     <DockPanel LastChildFill="True">
         <ToolBar DockPanel.Dock="Top">
-            <Button Content="Операторы" Command="{Binding EditOperatorsCommand}" CommandParameter="{Binding OperatorsList}"/>
+            <Button Content="Операторы" Command="{Binding EditOperatorsCommand}" CommandParameter="{Binding Operators}"/>
         </ToolBar>
         <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True"  Margin="0 0 0 0">
             <DockPanel>
@@ -34,8 +34,10 @@
                         Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
                 <Button Content="Завершить смену" DockPanel.Dock="Right" Visibility="{Binding EndShiftButtonVisibility}"
                         Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
-                <ComboBox ItemsSource="{Binding OperatorsList}" SelectedItem="{Binding CurrentOperator}" IsEnabled="{Binding EditshiftInfoIsEnabled}" 
-                          Width="250" Margin="4 0 0 0" />
+                <ComboBox ItemsSource="{Binding Operators, Mode=TwoWay}" SelectedItem="{Binding CurrentOperator}"
+                          DisplayMemberPath="DisplayName"
+                          Width="250" Margin="4 0 0 0">
+                </ComboBox>
                 <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding Shifts[1]}" IsEnabled="{Binding EditshiftInfoIsEnabled}" 
                           Margin="4 0 0 0" />
             </DockPanel>
@@ -60,7 +62,6 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            
         </Grid>
     </DockPanel>
 </Window>

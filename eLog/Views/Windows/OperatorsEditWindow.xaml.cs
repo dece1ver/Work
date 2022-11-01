@@ -22,11 +22,10 @@ namespace eLog.Views.Windows
         public static DependencyProperty OperatorsProperty = 
             DependencyProperty.Register(
                 nameof(Operators),
-                typeof(List<string>),
+                typeof(List<Operator>),
                 typeof(OperatorsEditWindow),
                 new PropertyMetadata(default(string)));
         public List<Operator> Operators { get => (List<Operator>)GetValue(OperatorsProperty) ; set => SetValue(OperatorsProperty, value); }
-
 
         public OperatorsEditWindow()
         {

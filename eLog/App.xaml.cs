@@ -14,6 +14,9 @@ namespace eLog
     /// </summary>
     public partial class App : Application
     {
-        AppSettings appSettings = AppSettings.GetInstance();
+        public App()
+        {
+            AppSettings.ReadConfig();
+        }
     }
 }

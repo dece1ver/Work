@@ -17,15 +17,15 @@
                     <cmd:CloseDialogCommand DialogResult="True"/>
                 </Button.Command>
             </Button>
-            <Button Content="Отмена" Margin="10 0"
+            <Button Content="Отмена" Margin="0 0 10 0"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:OperatorsEditWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="False"/>
                 </Button.Command>
             </Button>
         </UniformGrid>
-        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Text="{Binding OperatorsList[0]}"/>
-        <ListView DockPanel.Dock="Top" ItemsSource="{Binding OperatorsList}">
+        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Text="{Binding Operators[0]}"/>
+        <ListView DockPanel.Dock="Top" ItemsSource="{Binding Operators}">
             
         </ListView>
     </DockPanel>

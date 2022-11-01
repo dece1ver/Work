@@ -36,23 +36,24 @@ namespace eLog.ViewModels
             set => Set(ref _Machine, value);
         }
 
-        private Operator _CurrentOperator = AppSettings.CurrentOperator;
+        private Operator? _CurrentOperator = AppSettings.CurrentOperator;
         /// <summary>
-        /// Станок
+        /// Текущий оператор
         /// </summary>
-        public Operator CurrentOperator
+        public Operator? CurrentOperator
         {
             get => _CurrentOperator;
             set {
-                Set(ref _CurrentOperator, value);
                 AppSettings.CurrentOperator = value;
                 AppSettings.RewriteConfig();
+                Set(ref _CurrentOperator, value);
+                
             }
         }
 
         private List<Operator> _Operators = AppSettings.Operators;
         /// <summary>
-        /// Станок
+        /// Список операторов
         /// </summary>
         public List<Operator> Operators
         {

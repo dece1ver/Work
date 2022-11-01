@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using eLog.Infrastructure;
+using Newtonsoft.Json;
 
 namespace eLog.Models
 {
@@ -42,6 +43,7 @@ namespace eLog.Models
                 }; 
             }
 
+        [JsonIgnore]
         public string LogPath { get => Path.Combine(AppSettings.LogBasePath, Name); }
     }
 }
