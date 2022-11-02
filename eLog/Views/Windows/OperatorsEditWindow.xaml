@@ -12,13 +12,13 @@
 
     <DockPanel>
         <UniformGrid DockPanel.Dock="Bottom" Rows="1" HorizontalAlignment="Right" Margin="0 10">
-            <Button Content="Ok" Margin="10 0" Padding="30 5" 
+            <Button Content="Ok" Margin="10 0" Padding="30 5" IsDefault="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:OperatorsEditWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="True"/>
                 </Button.Command>
             </Button>
-            <Button Content="Отмена" Margin="0 0 10 0"
+            <Button Content="Отмена" Margin="0 0 10 0" IsCancel="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:OperatorsEditWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="False"/>

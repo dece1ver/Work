@@ -62,8 +62,9 @@ namespace eLog.ViewModels
         {
             get => _Operators;
             set {
-                Set(ref _Operators, value); 
+                AppSettings.Operators = value;
                 AppSettings.RewriteConfig();
+                Set(ref _Operators, value); 
             }
         }
 
