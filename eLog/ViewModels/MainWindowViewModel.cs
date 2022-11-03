@@ -68,11 +68,16 @@ namespace eLog.ViewModels
             }
         }
 
-        private bool _ShiftStarted = false;
+        private bool _ShiftStarted = AppSettings.IsShiftStarted;
         public bool ShiftStarted
         {
             get => _ShiftStarted;
-            set => Set(ref _ShiftStarted, value);
+            set 
+                {
+                AppSettings.IsShiftStarted = value;
+                AppSettings.RewriteConfig();
+                Set(ref _ShiftStarted, value);
+                } 
         }
 
         private string[] _Shifts = new[] {

@@ -27,6 +27,8 @@ namespace eLog.Infrastructure
         public static string LogBasePath { get; set; }
         public static ObservableCollection<Operator> Operators { get; set; }
         public static Operator? CurrentOperator { get; set; }
+
+        public static bool IsShiftStarted {get; set; }
         
         private static void CreateBaseConfig()
         {
@@ -41,6 +43,7 @@ namespace eLog.Infrastructure
                     Patronymic = "Георгиевич",
                     },
                 };
+            IsShiftStarted = false;
             RewriteConfig();
         }
 
@@ -56,6 +59,7 @@ namespace eLog.Infrastructure
                 LogBasePath = appSettings.LogBasePath;
                 Operators = appSettings.Operators;
                 CurrentOperator = appSettings.CurrentOperator;
+                IsShiftStarted = appSettings.IsShiftStarted;
                 if (appSettings.CurrentOperator is null && Operators.Count > 0) CurrentOperator = Operators[0];
             }
             catch
@@ -67,7 +71,7 @@ namespace eLog.Infrastructure
 
         public static void RewriteConfig()
         {
-            var appSettings = new AppSettingsModel(Machine, LogBasePath, Operators, CurrentOperator);
+            var appSettings = new AppSettingsModel(Machine, LogBasePath, Operators, CurrentOperator, IsShiftStarted);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented));
         }
