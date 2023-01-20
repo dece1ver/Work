@@ -17,5 +17,6 @@ namespace eLog.Services.Interfaces
         void ShowError(string message, string caption);
 
         bool Confirm(string message, string caption, bool Exclamation = false);
+        bool GetBarCode(ref string barCode);
     }
 }

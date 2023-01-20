@@ -23,6 +23,7 @@ using eLog.Models;
 using eLog.Views.Windows;
 using eLog.Services.Interfaces;
 using eLog.Services;
+using eLog.Infrastructure.Extensions;
 
 namespace eLog.ViewModels
 {
@@ -105,10 +106,6 @@ namespace eLog.ViewModels
             set => Set(ref _Status, value);
         }
 
-        
-
-        
-
         private double _Progress;
         /// <summary>
         /// Значение прогрессбара
@@ -138,48 +135,61 @@ namespace eLog.ViewModels
         }
 
 
-        private string _TargetPath;
-
-        public string TargetPath
-        {
-            get => _TargetPath;
-            set => Set(ref _TargetPath, value);
-        }
-
         /// <summary>
-        /// Список файлов
+        /// Детали
         /// </summary>
-        private List<string> _Files;
+        private ObservableCollection<PartInfoModel> _Parts = new();
 
-        public List<string> Files
+        public ObservableCollection<PartInfoModel> Parts
         {
-            get => _Files;
-            set => Set(ref _Files, value);
+            get => _Parts;
+            set => Set(ref _Parts, value);
         }
-
-        public int? FilesCount => Files?.Count;
-
-        private double _NcFiles;
         /// <summary>
-        /// УП
+        /// Видимость списка
         /// </summary>
-        public double NcFiles
-        {
-            get => _NcFiles;
-            set => Set(ref _NcFiles, value);
-        }
+        public Visibility PartsVisibility => Parts.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
+
+        private DateTime _CurrentPartSetupStartTime;
         /// <summary>
-        /// Отчет
+        /// Начало текущей наладки
         /// </summary>
-        private string _Report;
-
-        public string Report
+        public DateTime CurrentPartSetupStartTime
         {
-            get => _Report;
-            set => Set(ref _Report, value);
+            get => _CurrentPartSetupStartTime;
+            set => Set(ref _CurrentPartSetupStartTime, value);
         }
-      
+
+        private DateTime _CurrentPartSetupEndTime;
+        /// <summary>
+        /// Конец текущей наладки
+        /// </summary>
+        public DateTime CurrentPartSetupEndTime
+        {
+            get => _CurrentPartSetupEndTime;
+            set => Set(ref _CurrentPartSetupEndTime, value);
+        }
+
+        private DateTime _CurrentPartMachinigStartTime;
+        /// <summary>
+        /// Начало текущего изготовления
+        /// </summary>
+        public DateTime CurrentPartMachinigStartTime
+        {
+            get => _CurrentPartMachinigStartTime;
+            set => Set(ref _CurrentPartMachinigStartTime, value);
+        }
+
+        private DateTime _CurrentPartMachinigEndTime;
+        /// <summary>
+        /// Конец текущего изготовления
+        /// </summary>
+        public DateTime CurrentPartMachinigEndTime
+        {
+            get => _CurrentPartMachinigEndTime;
+            set => Set(ref _CurrentPartMachinigEndTime, value);
+        }
 
         #region Команды
 
@@ -198,7 +208,7 @@ namespace eLog.ViewModels
         {
             var operators = Operators;
             WindowsUserDialogService windowsUserDialogService = new WindowsUserDialogService();
-            if (windowsUserDialogService.EditOperators(operators) == true)
+            if (windowsUserDialogService.EditOperators(ref operators) == true)
             {
                 List<Operator> tempOperators = operators.ToList();
                 
@@ -219,7 +229,6 @@ namespace eLog.ViewModels
         private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
 
-
         #region StartShiftCommand
         public ICommand StartShiftCommand { get; }
         private void OnStartShiftCommandExecuted(object p)
@@ -232,6 +241,22 @@ namespace eLog.ViewModels
         private static bool CanStartShiftCommandExecute(object p) => true;
         #endregion
 
+        #region StartDetail
+        public ICommand StartDetailCommand { get; }
+        private void OnStartDetailCommandExecuted(object p)
+        {
+            WindowsUserDialogService windowsUserDialogService = new WindowsUserDialogService();
+            string barCode = string.Empty;
+            if (windowsUserDialogService.GetBarCode(ref barCode) == true)
+            {
+                Parts.Add(barCode.GetPartFromBarCode());
+                OnPropertyChanged(nameof(Parts));
+                OnPropertyChanged(nameof(PartsVisibility));
+            }
+            
+        }
+        private static bool CanStartDetailCommandExecute(object p) => true;
+        #endregion
 
         #region EndShiftCommand
         public ICommand EndShiftCommand { get; }
@@ -245,35 +270,15 @@ namespace eLog.ViewModels
         private static bool CanEndShiftCommandExecute(object p) => true;
         #endregion
 
-
-        #region SaveReportCommand
-        public ICommand SaveReportCommand { get; }
-
-        private void OnSaveReportCommandExecuted(object p)
-        {
-            if (string.IsNullOrEmpty(Report)) return;
-            SaveFileDialog saveFileDialog = new();
-            saveFileDialog.Filter = "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*";
-            saveFileDialog.FileName = "Анализы " + Path.GetFileName(TargetPath) + ".txt";
-            if (saveFileDialog.ShowDialog() != true) return;
-            File.WriteAllText(saveFileDialog.FileName, Report);
-            Status = $"Отчет записан в файл \"{saveFileDialog.FileName}\"";
-        }
-        private static bool CanSaveReportCommandExecute(object p) => true;
         #endregion
-
-        #endregion
-
-
-
 
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
+            StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
             EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
-            SaveReportCommand = new LambdaCommand(OnSaveReportCommandExecuted, CanSaveReportCommandExecute);
         }
     }
 }

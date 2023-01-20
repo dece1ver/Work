@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:inf="clr-namespace:eLog.Infrastructure"
+        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
         mc:Ignorable="d" xmlns:vm="clr-namespace:eLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
@@ -12,13 +13,19 @@
         <vm:MainWindowViewModel/>
     </Window.DataContext>
     <Window.Resources>
+        <cnv:CountConverter x:Key="countConverter"/>
+        <cnv:MinuteConverter x:Key="minuteConverter"/>
+        <cnv:WidthConverter x:Key="widthConverter"/>
         <Style TargetType="TextBlock">
             <Setter Property="Margin" Value="9 2"/>
-            <Setter Property="FontSize" Value="24"/>
+            <!--<Setter Property="FontSize" Value="24"/>-->
         </Style>
         <Style TargetType="Button" x:Key="generalButton">
             <Setter Property="Margin" Value="4 0"/>
             <Setter Property="Width" Value="250"/>
+        </Style>
+        <Style TargetType="GridViewColumnHeader">
+            <Setter Property="FontSize" Value="14"/>
         </Style>
     </Window.Resources>
     <DockPanel LastChildFill="True">
@@ -29,9 +36,9 @@
         </Menu>
         <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True"  Margin="0 0 0 0">
             <DockPanel>
-                <TextBlock Text="Станок: " Padding="5 3" Margin="4 0 0 0" DockPanel.Dock="Left"/>
+                <TextBlock Text="Станок:" Padding="5 3" Margin="4 0 0 0" DockPanel.Dock="Left"/>
                 <TextBlock Text="{Binding Machine.Name}" Padding="0 3" Margin="-4 0 4 0" DockPanel.Dock="Left"/>
-                <TextBlock Text="Оператор: " Padding="5 3" Margin="4 0 0 0" DockPanel.Dock="Left"/>
+                <TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>
                 <Button Content="Начать смену" DockPanel.Dock="Right" Visibility="{Binding StartShiftButtonVisibility}"
                         Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
                 <Button Content="Завершить смену" DockPanel.Dock="Right" Visibility="{Binding EndShiftButtonVisibility}"
@@ -51,24 +58,58 @@
             <StatusBarItem>
                 <TextBlock Text="{Binding Status}"/>
             </StatusBarItem>
-            <StatusBarItem HorizontalAlignment="Right" Width="150" >
+            <StatusBarItem HorizontalAlignment="Right" VerticalContentAlignment="Stretch">
                 <ProgressBar Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}" 
-                             Visibility="{Binding ProgressBarVisibility}" Width="200" Height="14" Margin="0 0 3 0"/>
+                             Visibility="{Binding ProgressBarVisibility}" Width="200" Margin="0"/>
             </StatusBarItem>
         </StatusBar>
         <GroupBox Header="Изготовление">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="85"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="220"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-            </Grid>
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <Button Content="+" Command="{Binding StartDetailCommand}" IsEnabled="{Binding ShiftStarted}"/>
+                </StackPanel>
+                <DockPanel LastChildFill="True" Visibility="{Binding PartsVisibility}">
+                    <Grid>
+                        <!--НАЧАЛО КОСТЫЛЯ-->
+                        <Grid Visibility="Hidden">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding ElementName=orderColumn, Path=ActualWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="{Binding ElementName=partsCountColumn, Path=ActualWidth}"/>
+                                <ColumnDefinition Width="{Binding ElementName=setupTimeColumn, Path=ActualWidth}"/>
+                                <ColumnDefinition Width="{Binding ElementName=machineTimeColumn, Path=ActualWidth}"/>
+                                <ColumnDefinition Width="10"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="1" x:Name="helperField"/>
+                        </Grid>
+                        <!--КОНЕЦ КОСТЫЛЯ-->
+                        <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" Background="Beige">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Bottom" Text="ВСЯКОЕ ТУТ ТАКОЕ"/>
+                                        <ListView Height="200" ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" >
+                                            <ListView.View>
+                                                <GridView>
+                                                    <GridView.Columns>
+                                                        <GridViewColumn x:Name="orderColumn" Header="М/Л" DisplayMemberBinding="{Binding Order}" Width="200"/>
+                                                        <GridViewColumn Header="Номенклатура" DisplayMemberBinding="{Binding FullName}" Width="{Binding ElementName=helperField, Path=ActualWidth}"/>
+                                                        <GridViewColumn x:Name="partsCountColumn" Header="Количество" DisplayMemberBinding="{Binding PartsCount, Converter={StaticResource countConverter}}" Width="100"/>
+                                                        <GridViewColumn x:Name="setupTimeColumn" Header="Наладка план" DisplayMemberBinding="{Binding SetupTimePlan, Converter={StaticResource minuteConverter}}" Width="120"/>
+                                                        <GridViewColumn x:Name="machineTimeColumn" Header="Штучное план" DisplayMemberBinding="{Binding MachineTimePlan, Converter={StaticResource minuteConverter}}" Width="120"/>
+                                                    </GridView.Columns>
+                                                </GridView>
+                                            </ListView.View>
+                                        </ListView>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        
+                    </Grid>
+                    
+                </DockPanel>
+            </DockPanel>
         </GroupBox>
     </DockPanel>
 </Window>

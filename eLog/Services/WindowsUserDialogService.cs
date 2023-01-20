@@ -30,7 +30,7 @@ namespace eLog.Services
             switch (item)
             {
                 case ObservableCollection<Operator> operators:
-                    EditOperators(operators);
+                    EditOperators(ref operators);
                     return true;
                 default:
                     return false;
@@ -43,7 +43,7 @@ namespace eLog.Services
 
         public void ShowWarning(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
-        public bool EditOperators(ObservableCollection<Operator> operators)
+        public bool EditOperators(ref ObservableCollection<Operator> operators)
         {
             var dlg = new OperatorsEditWindow()
             {
@@ -54,6 +54,17 @@ namespace eLog.Services
 
             operators = dlg.Operators;
 
+            return true;
+        }
+
+        public bool GetBarCode(ref string barCode)
+        {
+            var dlg = new ReadBarCodeWindow()
+            {
+                BarCode = string.Empty
+            };
+            if (dlg.ShowDialog() != true) return false;
+            barCode = dlg.BarCode;
             return true;
         }
     }
