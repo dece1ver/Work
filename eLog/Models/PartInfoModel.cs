@@ -29,13 +29,21 @@ namespace eLog.Models
         /// <summary> Плановое штучное время </summary>
         public double MachineTimePlan { get; init; }
 
-        /// <summary> Фактческое время наладки </summary>
-        public double SetupTimeFact { get; set; }
-        public string FullName { get => $"{Name} {Number}"; }
-        public double FullTimePlan { get => SetupTimePlan + PartsCount * MachineTimePlan; }
+        public DateTime StartSetupTime { get; set; }
+        public DateTime EndSetupTime { get; set; }
+
+        public DateTime StartMachiningTime { get; set; }
+        public DateTime EndMachiningTime { get; set; }
+
+        /// <summary> Фактическое время наладки </summary>
+        public TimeSpan SetupTimeFact => EndSetupTime - StartSetupTime;
+
+        public string FullName => $"{Name} {Number}";
+
+        public double FullTimePlan => SetupTimePlan + PartsCount * MachineTimePlan;
 
         /// <summary>Фактическое машинное время </summary>
-        public double MachineTimeFact { get; set; }
+        public TimeSpan MachineTimeFact => EndMachiningTime - StartMachiningTime;
 
         /// <summary>
         /// Информация о детали
@@ -46,7 +54,7 @@ namespace eLog.Models
         /// <param name="order">Заказ</param>
         /// <param name="partsCount">Количество</param>
         /// <param name="setupTimePlan">Плановое время наладки</param>
-        /// <param name="setupTimeFact">Плановое штучное время</param>
+        /// <param name="machineTimePlan">Плановое штучное время</param>
 
         public PartInfoModel(string name, string number, int setup, string order, int partsCount, double setupTimePlan, double machineTimePlan)
         {

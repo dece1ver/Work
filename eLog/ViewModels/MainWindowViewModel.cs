@@ -94,7 +94,7 @@ namespace eLog.ViewModels
         public Visibility StartShiftButtonVisibility => ShiftStarted ? Visibility.Collapsed : Visibility.Visible;
         public Visibility EndShiftButtonVisibility => ShiftStarted ? Visibility.Visible : Visibility.Collapsed;
 
-        public bool EditshiftInfoIsEnabled { get => !ShiftStarted; } 
+        public bool EditShiftInfoIsEnabled => !ShiftStarted;
 
         private string _Status = string.Empty;
         /// <summary>
@@ -171,24 +171,24 @@ namespace eLog.ViewModels
             set => Set(ref _CurrentPartSetupEndTime, value);
         }
 
-        private DateTime _CurrentPartMachinigStartTime;
+        private DateTime _currentPartMachiningStartTime;
         /// <summary>
         /// Начало текущего изготовления
         /// </summary>
-        public DateTime CurrentPartMachinigStartTime
+        public DateTime CurrentPartMachiningStartTime
         {
-            get => _CurrentPartMachinigStartTime;
-            set => Set(ref _CurrentPartMachinigStartTime, value);
+            get => _currentPartMachiningStartTime;
+            set => Set(ref _currentPartMachiningStartTime, value);
         }
 
-        private DateTime _CurrentPartMachinigEndTime;
+        private DateTime _currentPartMachiningEndTime;
         /// <summary>
         /// Конец текущего изготовления
         /// </summary>
-        public DateTime CurrentPartMachinigEndTime
+        public DateTime CurrentPartMachiningEndTime
         {
-            get => _CurrentPartMachinigEndTime;
-            set => Set(ref _CurrentPartMachinigEndTime, value);
+            get => _currentPartMachiningEndTime;
+            set => Set(ref _currentPartMachiningEndTime, value);
         }
 
         #region Команды
@@ -234,7 +234,7 @@ namespace eLog.ViewModels
         private void OnStartShiftCommandExecuted(object p)
         {
             ShiftStarted = true;
-            OnPropertyChanged(nameof(EditshiftInfoIsEnabled));
+            OnPropertyChanged(nameof(EditShiftInfoIsEnabled));
             OnPropertyChanged(nameof(StartShiftButtonVisibility));
             OnPropertyChanged(nameof(EndShiftButtonVisibility));
         }
@@ -245,15 +245,25 @@ namespace eLog.ViewModels
         public ICommand StartDetailCommand { get; }
         private void OnStartDetailCommandExecuted(object p)
         {
-            WindowsUserDialogService windowsUserDialogService = new WindowsUserDialogService();
-            string barCode = string.Empty;
-            if (windowsUserDialogService.GetBarCode(ref barCode) == true)
+            WindowsUserDialogService windowsUserDialogService = new();
+            var barCode = string.Empty;
+            if (!windowsUserDialogService.GetBarCode(ref barCode)) return;
+            var part = barCode.GetPartFromBarCode();
+            if (windowsUserDialogService.Confirm("Наладка?", "Наладка"))
             {
-                Parts.Add(barCode.GetPartFromBarCode());
-                OnPropertyChanged(nameof(Parts));
-                OnPropertyChanged(nameof(PartsVisibility));
+                part.StartSetupTime = DateTime.Now;
+                part.EndSetupTime = part.StartSetupTime;
+                part.StartMachiningTime = part.EndSetupTime;
+            }
+            else
+            {
+                part.StartSetupTime = DateTime.Now;
             }
             
+            Parts.Add(part);
+            OnPropertyChanged(nameof(Parts));
+            OnPropertyChanged(nameof(PartsVisibility));
+
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
         #endregion
@@ -263,7 +273,7 @@ namespace eLog.ViewModels
         private void OnEndShiftCommandExecuted(object p)
         {
             ShiftStarted = false;
-            OnPropertyChanged(nameof(EditshiftInfoIsEnabled));
+            OnPropertyChanged(nameof(EditShiftInfoIsEnabled));
             OnPropertyChanged(nameof(StartShiftButtonVisibility));
             OnPropertyChanged(nameof(EndShiftButtonVisibility));
         }
