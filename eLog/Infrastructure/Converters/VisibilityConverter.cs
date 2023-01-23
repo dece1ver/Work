@@ -9,11 +9,11 @@ using System.Windows.Data;
 
 namespace eLog.Infrastructure.Converters
 {
-    class CountConverter : IValueConverter
+    class VisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return $"{value} шт";
+            return (bool)value is true ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

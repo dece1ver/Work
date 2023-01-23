@@ -31,7 +31,7 @@ namespace eLog.Views.Windows
             DependencyProperty.Register(
                 nameof(BarCode),
                 typeof(string),
-                typeof(OperatorsEditWindow),
+                typeof(ReadBarCodeWindow),
                 new PropertyMetadata(default(string)));
 
 

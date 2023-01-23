@@ -25,16 +25,15 @@ namespace eLog.Services
                 == MessageBoxResult.Yes;
         }
 
-        public bool Edit(object item)
+        public bool Edit(object item) => Edit(ref item);
+        public bool Edit(ref object item)
         {
-            switch (item)
+            return item switch
             {
-                case ObservableCollection<Operator> operators:
-                    EditOperators(ref operators);
-                    return true;
-                default:
-                    return false;
-            }
+                ObservableCollection<Operator> operators => EditOperators(ref operators),
+                Machine machine => EditMachine(ref machine),
+                _ => false,
+            };
         }
 
         public void ShowError(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
@@ -43,7 +42,7 @@ namespace eLog.Services
 
         public void ShowWarning(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
-        public bool EditOperators(ref ObservableCollection<Operator> operators)
+        public static bool EditOperators(ref ObservableCollection<Operator> operators)
         {
             var dlg = new OperatorsEditWindow()
             {
@@ -57,15 +56,32 @@ namespace eLog.Services
             return true;
         }
 
-        public bool GetBarCode(ref string barCode)
+        public bool EditMachine(ref Machine machine)
+        {
+            var dlg = new ChangeMachineWindow()
+            {
+                Machine = machine,
+                Owner = Application.Current.MainWindow,
+            };
+            if (dlg.ShowDialog() != true) return false;
+
+            machine = dlg.Machine;
+
+            return true;
+        }
+
+        public static bool GetBarCode(ref string barCode)
         {
             var dlg = new ReadBarCodeWindow()
             {
-                BarCode = string.Empty
+                BarCode = string.Empty,
+                Owner = Application.Current.MainWindow,
             };
             if (dlg.ShowDialog() != true) return false;
             barCode = dlg.BarCode;
             return true;
         }
+
+        
     }
 }

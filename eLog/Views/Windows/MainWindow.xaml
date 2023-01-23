@@ -13,6 +13,7 @@
         <vm:MainWindowViewModel/>
     </Window.DataContext>
     <Window.Resources>
+        <cnv:VisibilityConverter x:Key="visibilityConverter"/>
         <cnv:CountConverter x:Key="countConverter"/>
         <cnv:MinuteConverter x:Key="minuteConverter"/>
         <cnv:WidthConverter x:Key="widthConverter"/>
@@ -31,13 +32,14 @@
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Параметры">
+                <MenuItem Header="Станок" Command="{Binding EditMachineCommand}" CommandParameter="{Binding Machine}"/>
                 <MenuItem Header="Операторы" Command="{Binding EditOperatorsCommand}" CommandParameter="{Binding Operators}"/>
             </MenuItem>
         </Menu>
         <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True"  Margin="0 0 0 0">
             <DockPanel>
                 <!--<TextBlock Text="Станок:" Padding="5 3" Margin="4 0 0 0" DockPanel.Dock="Left"/>-->
-                <TextBlock Text="{Binding Machine.Name}" Padding="0 3" Margin="4 0" DockPanel.Dock="Left"/>
+                <TextBlock Text="{Binding Machine.Name}" d:Text="Станок" Padding="0 3" Margin="9 0" DockPanel.Dock="Left"/>
                 <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
                 <Button Content="Начать смену" DockPanel.Dock="Right" Visibility="{Binding StartShiftButtonVisibility}"
                         Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
@@ -59,45 +61,69 @@
                 <TextBlock Text="{Binding Status}"/>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right" VerticalContentAlignment="Stretch">
-                <ProgressBar Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}" 
+                <ProgressBar Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}"
                              Visibility="{Binding ProgressBarVisibility}" Width="200" Margin="0"/>
             </StatusBarItem>
         </StatusBar>
         <GroupBox Header="Изготовление">
-            <DockPanel>
+            <DockPanel LastChildFill="True">
                 <StackPanel DockPanel.Dock="Top">
-                    <Button Content="Запустить деталь" Command="{Binding StartDetailCommand}" IsEnabled="{Binding ShiftStarted}"/>
+                    <Button Content="Запустить деталь" Command="{Binding StartDetailCommand}" Visibility="{Binding CanAddPart, Converter={StaticResource visibilityConverter}}"/>
                 </StackPanel>
-                <DockPanel LastChildFill="True" Visibility="{Binding PartsVisibility}">
-                    <ListView ItemsSource="{Binding Parts}" FontSize="20">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid HorizontalAlignment="Stretch">
+                <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <GroupBox Header="{Binding FullName}">
+                                <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="200"/>
                                     </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Order}" Margin="0 0 10 0"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding PartsCount, Converter={StaticResource countConverter}}"/>
-                                    <Button Grid.Column="3" Grid.Row="2" Grid.RowSpan="2" Content="Завершить наладку" HorizontalAlignment="Stretch" Padding="0"/>
-                                    <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding FullName}"/>
-                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Начало наладки:"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding StringFormat={} {0:dd.MM.yyy HH:mm}, Path=StartSetupTime}"/>
-                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Завершение наладки:"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding StringFormat={} {0:dd.MM.yyy HH:mm}, Path=EndSetupTime}"/>
+                                    <Grid Grid.Column="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Margin="5 0" 
+                                                   Text="{Binding Order}"/>
+                                        <TextBlock Grid.Column="1" Grid.Row="0" Margin="5 0" 
+                                                   Text="{Binding PartsCount, Converter={StaticResource countConverter}}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" Text="Начало наладки:" />
+                                        <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 0" 
+                                                   Text="{Binding StringFormat={}{0:dd.MM.yyy HH:mm}, Path=StartSetupTime}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Margin="5 0" Text="Завершение наладки:" />
+                                        <TextBlock Grid.Column="1" Grid.Row="2" Margin="5 0" 
+                                                   Text="{Binding EndSetupInfo}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="3" Margin="5 0" Text="Завершение изготовления:" />
+                                        <TextBlock Grid.Column="1" Grid.Row="3" Margin="5 0" 
+                                                   Text="{Binding EndDetailInfo}" />
+                                    </Grid>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding ButtonsPanelVisibility}">
+                                        <Button Margin="5 0 5 5" Content="Простой" Width="220" />
+                                        <Button Margin="5 0 5 5" Content="Завершить наладку" Width="220" 
+                                                Visibility="{Binding EndSetupButtonVisibility}" 
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EndSetupCommand}" 
+                                                CommandParameter="{Binding}"/>
+                                        <Button Margin="5 0 5 5" Content="Завершить изготовление" Width="220" Visibility="{Binding CanBeFinished, Converter={StaticResource visibilityConverter}}"
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EndDetailCommand}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
                                 </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </DockPanel>
+                            </GroupBox>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
             </DockPanel>
         </GroupBox>
     </DockPanel>

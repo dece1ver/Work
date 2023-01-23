@@ -31,7 +31,7 @@ namespace eLog.Infrastructure.Extensions
                 orders[new Random().Next(0, orders.Length)],
                 new Random().Next(1, 20) * 10,
                 new Random().Next(4, 18) * 10,
-                new Random().Next(1, 20)); // имитация получения иформации из БД
+                new Random().Next(1, 5)); // имитация получения иформации из БД
         }
     }
 }

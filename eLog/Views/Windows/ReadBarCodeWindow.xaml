@@ -7,7 +7,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
         mc:Ignorable="d"
-        Title="Штрихкод" Height="240" Width="320" WindowStartupLocation="CenterScreen">
+        Title="Штрихкод" Height="240" Width="320" WindowStartupLocation="CenterOwner">
     <DockPanel>
         <TextBlock DockPanel.Dock="Top" Text="Отсканируйте штрихкод" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="20" FontSize="24"/>
         <Button DockPanel.Dock="Bottom" Margin="3" Content="Ok" FontSize="24" Padding="30 5" IsDefault="True" 

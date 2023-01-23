@@ -24,6 +24,7 @@ using eLog.Views.Windows;
 using eLog.Services.Interfaces;
 using eLog.Services;
 using eLog.Infrastructure.Extensions;
+using System.Windows.Shapes;
 
 namespace eLog.ViewModels
 {
@@ -134,6 +135,19 @@ namespace eLog.ViewModels
             set => Set(ref _ProgressBarVisibility, value);
         }
 
+        public bool CanAddPart => Parts.Count == 0 || Parts.Count == Parts.Where(x => x.IsFinished).Count();
+
+        /// <summary>
+        /// Текущая деталь
+        /// </summary>
+        //private PartInfoModel _CurrentPart;
+
+        //public PartInfoModel CurrentPart
+        //{
+        //    get => _CurrentPart;
+        //    set => Set(ref _CurrentPart, value);
+        //}
+
 
         /// <summary>
         /// Детали
@@ -150,47 +164,6 @@ namespace eLog.ViewModels
         /// </summary>
         public Visibility PartsVisibility => Parts.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-
-        private DateTime _CurrentPartSetupStartTime;
-        /// <summary>
-        /// Начало текущей наладки
-        /// </summary>
-        public DateTime CurrentPartSetupStartTime
-        {
-            get => _CurrentPartSetupStartTime;
-            set => Set(ref _CurrentPartSetupStartTime, value);
-        }
-
-        private DateTime _CurrentPartSetupEndTime;
-        /// <summary>
-        /// Конец текущей наладки
-        /// </summary>
-        public DateTime CurrentPartSetupEndTime
-        {
-            get => _CurrentPartSetupEndTime;
-            set => Set(ref _CurrentPartSetupEndTime, value);
-        }
-
-        private DateTime _currentPartMachiningStartTime;
-        /// <summary>
-        /// Начало текущего изготовления
-        /// </summary>
-        public DateTime CurrentPartMachiningStartTime
-        {
-            get => _currentPartMachiningStartTime;
-            set => Set(ref _currentPartMachiningStartTime, value);
-        }
-
-        private DateTime _currentPartMachiningEndTime;
-        /// <summary>
-        /// Конец текущего изготовления
-        /// </summary>
-        public DateTime CurrentPartMachiningEndTime
-        {
-            get => _currentPartMachiningEndTime;
-            set => Set(ref _currentPartMachiningEndTime, value);
-        }
-
         #region Команды
 
         #region CloseApplicationCommand
@@ -202,13 +175,29 @@ namespace eLog.ViewModels
         private static bool CanCloseApplicationCommandExecute(object p) => true;
         #endregion
 
+        #region EditMachineCommand
+        public ICommand EditMachineCommand { get; }
+        private void OnEditMachineCommandExecuted(object p)
+        {
+            var machine = Machine;
+            WindowsUserDialogService windowsUserDialogService = new();
+            if (windowsUserDialogService.EditMachine(ref machine)) // (windowsUserDialogService.Edit(machine)) 
+            {
+                Machine = machine;
+                OnPropertyChanged(nameof(Machine));
+            }
+
+        }
+        private static bool CanEditMachineCommandExecute(object p) => true;
+        #endregion
+
         #region EditOperatorsCommand
         public ICommand EditOperatorsCommand { get; }
         private void OnEditOperatorsCommandExecuted(object p)
         {
             var operators = Operators;
-            WindowsUserDialogService windowsUserDialogService = new WindowsUserDialogService();
-            if (windowsUserDialogService.EditOperators(ref operators) == true)
+            WindowsUserDialogService windowsUserDialogService = new();
+            if (windowsUserDialogService.Edit(operators))
             {
                 List<Operator> tempOperators = operators.ToList();
                 
@@ -247,25 +236,52 @@ namespace eLog.ViewModels
         {
             WindowsUserDialogService windowsUserDialogService = new();
             var barCode = string.Empty;
-            if (!windowsUserDialogService.GetBarCode(ref barCode)) return;
+            if (!WindowsUserDialogService.GetBarCode(ref barCode)) return;
             var part = barCode.GetPartFromBarCode();
             if (windowsUserDialogService.Confirm("Наладка?", "Наладка"))
             {
                 part.StartSetupTime = DateTime.Now;
-                part.EndSetupTime = part.StartSetupTime;
-                part.StartMachiningTime = part.EndSetupTime;
+                part.StartMachiningTime = DateTime.MinValue;
             }
             else
             {
                 part.StartSetupTime = DateTime.Now;
+                part.StartMachiningTime = part.StartSetupTime;
             }
             
             Parts.Add(part);
-            OnPropertyChanged(nameof(Parts));
+            OnPropertyChanged(nameof(CanAddPart));
             OnPropertyChanged(nameof(PartsVisibility));
 
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
+        #endregion
+
+        #region EndSetup
+        public ICommand EndSetupCommand { get; }
+        private void OnEndSetupCommandExecuted(object p)
+        {
+            if (p is null) return;
+            Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now;
+            OnPropertyChanged(nameof(Parts));
+        }
+        private static bool CanEndSetupCommandExecute(object p) => true;
+        #endregion
+
+        #region EndDetail
+        public ICommand EndDetailCommand { get; }
+        private void OnEndDetailCommandExecuted(object p)
+        {
+            if (p is null) return;
+            WindowsUserDialogService windowsUserDialogService = new();
+            if (windowsUserDialogService.Confirm("Завершить изготовление и начать следующую деталь?", "Завершение"))
+            {
+                Parts[Parts.IndexOf((PartInfoModel)p)].EndMachiningTime = DateTime.Now;
+                StartDetailCommand.Execute(true);
+                OnPropertyChanged(nameof(CanAddPart));
+            }
+        }
+        private static bool CanEndDetailCommandExecute(object p) => true;
         #endregion
 
         #region EndShiftCommand
@@ -285,9 +301,12 @@ namespace eLog.ViewModels
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
+            EditMachineCommand = new LambdaCommand(OnEditMachineCommandExecuted, CanEditMachineCommandExecute);
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
             StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
+            EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
+            EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
             EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
         }
     }

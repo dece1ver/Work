@@ -1,49 +1,150 @@
-﻿using System;
+﻿using eLog.ViewModels.Base;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace eLog.Models
 {
-    public class PartInfoModel
+    internal class PartInfoModel : ViewModel
     {
+        private string _Name;
+        private string _Number;
+        private string _Order;
+        private int _Setup;
+        private int _PartsCount;
+        private double _SetupTimePlan;
+        private double _MachineTimePlan;
+        private DateTime _StartSetupTime;
+        private DateTime _StartMachiningTime;
+        private DateTime _EndMachiningTime;
+        private bool _IsFinished;
+
         /// <summary> Наименование </summary>
-        public string Name { get; init; }
+        public string Name
+        {
+            get => _Name;
+            init => Set(ref _Name, value);
+        }
 
         /// <summary> Обозначение </summary>
-        public string Number { get; init; }
+        public string Number
+        {
+            get => _Number;
+            init => Set(ref _Number, value);
+        }
 
         /// <summary> Заказ </summary>
-        public string Order { get; set; }
+        public string Order
+        {
+            get => _Order;
+            set => Set(ref _Order, value);
+        }
 
         /// <summary> Текущий установ </summary>
-        public int Setup { get; set; }
+        public int Setup
+        {
+            get => _Setup;
+            set => Set(ref _Setup, value);
+        }
 
         /// <summary> Количество </summary>
-        public int PartsCount { get; set; }
+        public int PartsCount
+        {
+            get => _PartsCount;
+            set => Set(ref _PartsCount, value);
+        }
 
         /// <summary> Плановое время наладки </summary>
-        public double SetupTimePlan { get; init; }
+        public double SetupTimePlan
+        {
+            get => _SetupTimePlan;
+            init => Set(ref _SetupTimePlan, value);
+        }
 
         /// <summary> Плановое штучное время </summary>
-        public double MachineTimePlan { get; init; }
+        public double MachineTimePlan
+        {
+            get => _MachineTimePlan;
+            init => Set(ref _MachineTimePlan, value);
+        }
 
-        public DateTime StartSetupTime { get; set; }
-        public DateTime EndSetupTime { get; set; }
+        public DateTime StartSetupTime
+        {
+            get => _StartSetupTime;
+            set => Set(ref _StartSetupTime, value);
+        }
+        public string EndSetupInfo
+        {
+            get
+            {
+                if (StartMachiningTime == DateTime.MinValue)
+                {
+                    return $"{StartSetupTime.AddMinutes(SetupTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {SetupTimePlan} мин.)";
+                }
+                return $"{StartMachiningTime:dd.MM.yyyy HH:mm}";
+            }
+        }
 
-        public DateTime StartMachiningTime { get; set; }
-        public DateTime EndMachiningTime { get; set; }
+        public string EndDetailInfo
+        {
+            get
+            {
+                if (EndMachiningTime == DateTime.MinValue)
+                {
+                    var setup = SetupTimeFact.TotalMinutes > 0 ? SetupTimeFact.TotalMinutes : SetupTimePlan;
+                    return $"{StartSetupTime.AddMinutes(setup).AddMinutes(PartsCount * MachineTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {PartsCount} шт по {MachineTimePlan} мин.)";
+                }
+                return $"{EndMachiningTime:dd.MM.yyyy HH:mm}";
+            }
+        }
+
+        public DateTime StartMachiningTime
+        {
+            get => _StartMachiningTime;
+            set
+            {
+                Set(ref _StartMachiningTime, value);
+                OnPropertyChanged(nameof(EndSetupInfo));
+                OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(SetupTimeFact));
+                OnPropertyChanged(nameof(EndSetupButtonVisibility));
+                OnPropertyChanged(nameof(CanBeFinished));
+            }
+        }
+        public DateTime EndMachiningTime
+        {
+            get => _EndMachiningTime;
+            set
+            {
+                Set(ref _EndMachiningTime, value);
+                OnPropertyChanged(nameof(MachineTimeFact));
+                OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(ButtonsPanelVisibility));
+            }
+        }
 
         /// <summary> Фактическое время наладки </summary>
-        public TimeSpan SetupTimeFact => EndSetupTime - StartSetupTime;
+        public TimeSpan SetupTimeFact => StartMachiningTime - StartSetupTime;
 
         public string FullName => $"{Name} {Number}";
 
-        public double FullTimePlan => SetupTimePlan + PartsCount * MachineTimePlan;
-
         /// <summary>Фактическое машинное время </summary>
         public TimeSpan MachineTimeFact => EndMachiningTime - StartMachiningTime;
+
+        public bool CanBeFinished
+        {
+            get => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime;
+        }
+
+        public bool IsFinished { 
+            get => EndMachiningTime > StartMachiningTime;
+        }
+
+        public Visibility EndSetupButtonVisibility => StartMachiningTime == DateTime.MinValue ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility ButtonsPanelVisibility => IsFinished ? Visibility.Collapsed : Visibility.Visible;
 
         /// <summary>
         /// Информация о детали
