@@ -28,7 +28,6 @@ namespace eLog.Views.Windows
                 typeof(ChangeMachineWindow),
                 new PropertyMetadata(default(string)));
 
-
         public Machine Machine
         {
             get => (Machine)GetValue(MachineProperty);

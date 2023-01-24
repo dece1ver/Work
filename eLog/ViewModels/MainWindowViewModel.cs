@@ -262,8 +262,16 @@ namespace eLog.ViewModels
         private void OnEndSetupCommandExecuted(object p)
         {
             if (p is null) return;
-            Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now;
-            OnPropertyChanged(nameof(Parts));
+            switch (WindowsUserDialogService.GetSetupResult())
+            {
+                case EndSetupResult.Success:
+                    Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now;
+                    break;
+                case EndSetupResult.Stop:
+                    Parts.Remove((PartInfoModel)p);
+                    break;
+            }
+            OnPropertyChanged(nameof(CanAddPart));
         }
         private static bool CanEndSetupCommandExecute(object p) => true;
         #endregion
@@ -273,13 +281,18 @@ namespace eLog.ViewModels
         private void OnEndDetailCommandExecuted(object p)
         {
             if (p is null) return;
-            WindowsUserDialogService windowsUserDialogService = new();
-            if (windowsUserDialogService.Confirm("Завершить изготовление и начать следующую деталь?", "Завершение"))
+
+            switch (WindowsUserDialogService.GetFinishResult())
             {
-                Parts[Parts.IndexOf((PartInfoModel)p)].EndMachiningTime = DateTime.Now;
-                StartDetailCommand.Execute(true);
-                OnPropertyChanged(nameof(CanAddPart));
+                case EndDetailResult.Finish:
+                    Parts[Parts.IndexOf((PartInfoModel)p)].EndMachiningTime = DateTime.Now;
+                    break;
+                case EndDetailResult.FinishAndNext:
+                    Parts[Parts.IndexOf((PartInfoModel)p)].EndMachiningTime = DateTime.Now;
+                    StartDetailCommand.Execute(true);
+                    break;
             }
+            OnPropertyChanged(nameof(CanAddPart));
         }
         private static bool CanEndDetailCommandExecute(object p) => true;
         #endregion

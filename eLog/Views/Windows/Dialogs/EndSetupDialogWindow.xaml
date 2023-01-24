@@ -1,0 +1,39 @@
+﻿<Window x:Class="eLog.Views.Windows.Dialogs.EndSetupDialogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
+        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands" 
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        mc:Ignorable="d" FontSize="20" 
+        Title="Завершение наладки" Height="212" Width="612" WindowStartupLocation="CenterOwner" Topmost="True" WindowStyle="None" ResizeMode="NoResize">
+    <Border BorderThickness="1" BorderBrush="LightGray">
+        <UniformGrid Columns="3" Margin="5 0">
+            <Button Content="Успех" Margin="5 10 5 10" IsDefault="True"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
+                <Button.Command>
+                    <cmd:CloseEndSetupDialogCommand EndSetupResult="Success"/>
+                </Button.Command>
+            </Button>
+            <Button Margin="5 10 5 10" IsCancel="True"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
+                <Button.Content>
+                    <TextBlock Text="Отмена изготовления" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+                <Button.Command>
+                    <cmd:CloseEndSetupDialogCommand EndSetupResult="Stop"/>
+                </Button.Command>
+            </Button>
+            <Button Margin="5 10 5 10" IsCancel="True"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
+                <Button.Content>
+                    <TextBlock Text="Случайно тыкнул" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+                <Button.Command>
+                    <cmd:CloseEndSetupDialogCommand EndSetupResult="Cancel"/>
+                </Button.Command>
+            </Button>
+        </UniformGrid>
+    </Border>
+</Window>

@@ -1,6 +1,8 @@
-﻿using eLog.Models;
+﻿using eLog.Infrastructure;
+using eLog.Models;
 using eLog.Services.Interfaces;
 using eLog.Views.Windows;
+using eLog.Views.Windows.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -82,6 +84,24 @@ namespace eLog.Services
             return true;
         }
 
-        
+        public static EndSetupResult GetSetupResult()
+        {
+            var dlg = new EndSetupDialogWindow()
+            {
+                Owner = Application.Current.MainWindow,
+            };
+            _ = dlg.ShowDialog();
+            return dlg.EndSetupResult;
+        }
+
+        public static EndDetailResult GetFinishResult()
+        {
+            var dlg = new EndDetailDialogWindow()
+            {
+                Owner = Application.Current.MainWindow,
+            };
+            _ = dlg.ShowDialog();
+            return dlg.EndDetailResult;
+        }
     }
 }
