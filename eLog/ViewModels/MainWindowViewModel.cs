@@ -180,12 +180,9 @@ namespace eLog.ViewModels
         private void OnEditMachineCommandExecuted(object p)
         {
             var machine = Machine;
-            WindowsUserDialogService windowsUserDialogService = new();
-            if (windowsUserDialogService.EditMachine(ref machine)) // (windowsUserDialogService.Edit(machine)) 
-            {
-                Machine = machine;
-                OnPropertyChanged(nameof(Machine));
-            }
+            if (!WindowsUserDialogService.EditMachine(ref machine)) return; // (windowsUserDialogService.Edit(machine)) 
+            Machine = machine;
+            OnPropertyChanged(nameof(Machine));
 
         }
         private static bool CanEditMachineCommandExecute(object p) => true;
@@ -197,23 +194,21 @@ namespace eLog.ViewModels
         {
             var operators = Operators;
             WindowsUserDialogService windowsUserDialogService = new();
-            if (windowsUserDialogService.Edit(operators))
+            if (!windowsUserDialogService.Edit(operators)) return;
+            var tempOperators = operators.ToList();
+                
+            // костыль надо нормально сделать
+            tempOperators.RemoveAll(x => string.IsNullOrWhiteSpace(x.DisplayName));
+            operators = new ObservableCollection<Operator>();
+            foreach (var op in tempOperators)
             {
-                List<Operator> tempOperators = operators.ToList();
-                
-                // костыль надо нормально сделать
-                tempOperators.RemoveAll(x => string.IsNullOrEmpty(x.DisplayName));
-                operators = new();
-                foreach (var op in tempOperators)
-                {
-                    operators.Add(op);
-                }
-                Operators = operators;
-                
-                OnPropertyChanged(nameof(Operators));
-                OnPropertyChanged(nameof(CurrentOperator));
+                operators.Add(op);
             }
-            
+            Operators = operators;
+                
+            OnPropertyChanged(nameof(Operators));
+            OnPropertyChanged(nameof(CurrentOperator));
+
         }
         private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
@@ -276,19 +271,33 @@ namespace eLog.ViewModels
         private static bool CanEndSetupCommandExecute(object p) => true;
         #endregion
 
+        #region EditDetail
+        public ICommand EditDetailCommand { get; }
+        private void OnEditDetailCommandExecuted(object p)
+        {
+            MessageBox.Show("Будет редактирование");
+        }
+        private static bool CanEditDetailCommandExecute(object p) => true;
+        #endregion
+
         #region EndDetail
         public ICommand EndDetailCommand { get; }
         private void OnEndDetailCommandExecuted(object p)
         {
             if (p is null) return;
-
-            switch (WindowsUserDialogService.GetFinishResult())
+            var (result, partsFinished) = WindowsUserDialogService.GetFinishResult();
+            PartInfoModel part;
+            switch (result)
             {
-                case EndDetailResult.Finish:
-                    Parts[Parts.IndexOf((PartInfoModel)p)].EndMachiningTime = DateTime.Now;
+                case (EndDetailResult.Finish):
+                    part = Parts[Parts.IndexOf((PartInfoModel)p)];
+                    part.PartsFinished = partsFinished > part.PartsCount ? part.PartsCount : partsFinished;
+                    part.EndMachiningTime = DateTime.Now;
                     break;
-                case EndDetailResult.FinishAndNext:
-                    Parts[Parts.IndexOf((PartInfoModel)p)].EndMachiningTime = DateTime.Now;
+                case (EndDetailResult.FinishAndNext):
+                    part = Parts[Parts.IndexOf((PartInfoModel)p)];
+                    part.PartsFinished = partsFinished > part.PartsCount ? part.PartsCount : partsFinished;
+                    part.EndMachiningTime = DateTime.Now;
                     StartDetailCommand.Execute(true);
                     break;
             }
@@ -320,6 +329,7 @@ namespace eLog.ViewModels
             StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
             EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
             EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
+            EditDetailCommand = new LambdaCommand(OnEditDetailCommandExecuted, CanEditDetailCommandExecute);
             EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
         }
     }

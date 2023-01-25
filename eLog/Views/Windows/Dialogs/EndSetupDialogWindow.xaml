@@ -6,8 +6,8 @@
         xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
         xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands" 
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        mc:Ignorable="d" FontSize="20" 
-        Title="Завершение наладки" Height="212" Width="612" WindowStartupLocation="CenterOwner" Topmost="True" WindowStyle="None" ResizeMode="NoResize">
+        mc:Ignorable="d" FontSize="19" ShowInTaskbar="False" ShowActivated="True"
+        Title="Завершение наладки" Height="169" Width="479" WindowStartupLocation="CenterOwner" Topmost="True" WindowStyle="None" ResizeMode="NoResize">
     <Border BorderThickness="1" BorderBrush="LightGray">
         <UniformGrid Columns="3" Margin="5 0">
             <Button Content="Успех" Margin="5 10 5 10" IsDefault="True"

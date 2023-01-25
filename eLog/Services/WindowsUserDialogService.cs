@@ -58,7 +58,7 @@ namespace eLog.Services
             return true;
         }
 
-        public bool EditMachine(ref Machine machine)
+        public static bool EditMachine(ref Machine machine)
         {
             var dlg = new ChangeMachineWindow()
             {
@@ -94,14 +94,14 @@ namespace eLog.Services
             return dlg.EndSetupResult;
         }
 
-        public static EndDetailResult GetFinishResult()
+        public static (EndDetailResult, int) GetFinishResult()
         {
             var dlg = new EndDetailDialogWindow()
             {
                 Owner = Application.Current.MainWindow,
             };
             _ = dlg.ShowDialog();
-            return dlg.EndDetailResult;
+            return (dlg.EndDetailResult, dlg.PartsCount);
         }
     }
 }

@@ -15,12 +15,12 @@ namespace eLog.Models
         private string _Order;
         private int _Setup;
         private int _PartsCount;
+        private int _PartsFinished;
         private double _SetupTimePlan;
         private double _MachineTimePlan;
         private DateTime _StartSetupTime;
         private DateTime _StartMachiningTime;
         private DateTime _EndMachiningTime;
-        private bool _IsFinished;
 
         /// <summary> Наименование </summary>
         public string Name
@@ -50,12 +50,26 @@ namespace eLog.Models
             set => Set(ref _Setup, value);
         }
 
-        /// <summary> Количество </summary>
+        /// <summary> Количество по заказу</summary>
         public int PartsCount
         {
             get => _PartsCount;
             set => Set(ref _PartsCount, value);
         }
+
+        /// <summary> Количество выпущено</summary>
+        public int PartsFinished
+        {
+            get => _PartsFinished;
+            set
+            {
+                Set(ref _PartsFinished, value);
+                OnPropertyChanged(nameof(PartsCountInfo));
+                OnPropertyChanged(nameof(IsStarted));
+            }
+        }
+
+        public string PartsCountInfo => PartsFinished > 0 ? $"{PartsFinished} / {PartsCount} шт" : $"{PartsCount} шт";
 
         /// <summary> Плановое время наладки </summary>
         public double SetupTimePlan
@@ -76,17 +90,10 @@ namespace eLog.Models
             get => _StartSetupTime;
             set => Set(ref _StartSetupTime, value);
         }
-        public string EndSetupInfo
-        {
-            get
-            {
-                if (StartMachiningTime == DateTime.MinValue)
-                {
-                    return $"{StartSetupTime.AddMinutes(SetupTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {SetupTimePlan} мин.)";
-                }
-                return $"{StartMachiningTime:dd.MM.yyyy HH:mm}";
-            }
-        }
+        public string EndSetupInfo =>
+            StartMachiningTime == DateTime.MinValue 
+                ? $"{StartSetupTime.AddMinutes(SetupTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {SetupTimePlan} мин.)" 
+                : $"{StartMachiningTime:dd.MM.yyyy HH:mm}{(SetupTimeFact == TimeSpan.Zero ? string.Empty : $" ({(SetupTimePlan / SetupTimeFact.TotalMinutes * 100):N0}%)")}";
 
         public string EndDetailInfo
         {
@@ -97,7 +104,7 @@ namespace eLog.Models
                     var setup = SetupTimeFact.TotalMinutes > 0 ? SetupTimeFact.TotalMinutes : SetupTimePlan;
                     return $"{StartSetupTime.AddMinutes(setup).AddMinutes(PartsCount * MachineTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {PartsCount} шт по {MachineTimePlan} мин.)";
                 }
-                return $"{EndMachiningTime:dd.MM.yyyy HH:mm}";
+                return $"{EndMachiningTime:dd.MM.yyyy HH:mm}{(MachineTimeFact == TimeSpan.Zero ? string.Empty : $" ({MachineTimePlan * PartsFinished / MachineTimeFact.TotalMinutes * 100:N0}%)")}";
             }
         }
 
@@ -109,8 +116,8 @@ namespace eLog.Models
                 Set(ref _StartMachiningTime, value);
                 OnPropertyChanged(nameof(EndSetupInfo));
                 OnPropertyChanged(nameof(EndDetailInfo));
-                OnPropertyChanged(nameof(SetupTimeFact));
-                OnPropertyChanged(nameof(EndSetupButtonVisibility));
+                OnPropertyChanged(nameof(SetupIsNotFinished));
+                OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
             }
         }
@@ -120,9 +127,11 @@ namespace eLog.Models
             set
             {
                 Set(ref _EndMachiningTime, value);
-                OnPropertyChanged(nameof(MachineTimeFact));
+                OnPropertyChanged(nameof(CanBeFinished));
+                OnPropertyChanged(nameof(IsFinished));
+                OnPropertyChanged(nameof(IsStarted));
+                OnPropertyChanged(nameof(PartsCountInfo));
                 OnPropertyChanged(nameof(EndDetailInfo));
-                OnPropertyChanged(nameof(ButtonsPanelVisibility));
             }
         }
 
@@ -134,17 +143,14 @@ namespace eLog.Models
         /// <summary>Фактическое машинное время </summary>
         public TimeSpan MachineTimeFact => EndMachiningTime - StartMachiningTime;
 
-        public bool CanBeFinished
-        {
-            get => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime;
-        }
+        public bool CanBeFinished => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime;
 
-        public bool IsFinished { 
-            get => EndMachiningTime > StartMachiningTime;
-        }
+        public bool IsFinished => EndMachiningTime > StartMachiningTime && SetupIsFinished;
 
-        public Visibility EndSetupButtonVisibility => StartMachiningTime == DateTime.MinValue ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility ButtonsPanelVisibility => IsFinished ? Visibility.Collapsed : Visibility.Visible;
+        public bool SetupIsFinished => StartMachiningTime >= StartSetupTime;
+        public bool SetupIsNotFinished => !SetupIsFinished;
+
+        public bool IsStarted => !IsFinished;
 
         /// <summary>
         /// Информация о детали

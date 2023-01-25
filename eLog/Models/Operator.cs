@@ -10,13 +10,27 @@ namespace eLog.Models
 {
     public class Operator
     {
-        private string firstName;
-        private string lastName;
-        private string patronymic;
+        private string _FirstName = string.Empty;
+        private string _LastName = string.Empty;
+        private string _Patronymic = string.Empty;
 
-        public string FirstName { get => firstName; set => firstName = value.Capitalize(); }
-        public string LastName { get => lastName; set => lastName = value.Capitalize(); }
-        public string Patronymic { get => patronymic; set => patronymic = value.Capitalize(); }
+        public string FirstName
+        {
+            get => _FirstName; 
+            set => _FirstName = value.Capitalize();
+        }
+
+        public string LastName
+        {
+            get => _LastName; 
+            set => _LastName = value.Capitalize();
+        }
+
+        public string Patronymic
+        {
+            get => _Patronymic; 
+            set => _Patronymic = value.Capitalize();
+        }
 
         [JsonIgnore]
         public string DisplayName
@@ -24,13 +38,11 @@ namespace eLog.Models
             get
             {
                 var result = LastName;
-                if (!string.IsNullOrEmpty(FirstName))
+                if (string.IsNullOrEmpty(FirstName)) return result;
+                result += " " + FirstName[0] + ".";
+                if (!string.IsNullOrEmpty(Patronymic))
                 {
-                    result += " " + FirstName[0] + ".";
-                    if (!string.IsNullOrEmpty(Patronymic))
-                    {
-                        result += " " + Patronymic[0] + ".";
-                    }
+                    result += " " + Patronymic[0] + ".";
                 }
                 return result;
             }
