@@ -275,7 +275,8 @@ namespace eLog.ViewModels
         public ICommand EditDetailCommand { get; }
         private void OnEditDetailCommandExecuted(object p)
         {
-            MessageBox.Show("Будет редактирование");
+            MessageBox.Show("Тут будет редактирование");
+
         }
         private static bool CanEditDetailCommandExecute(object p) => true;
         #endregion

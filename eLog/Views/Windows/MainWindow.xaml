@@ -8,7 +8,7 @@
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
         mc:Ignorable="d" xmlns:vm="clr-namespace:eLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
-        Title="Электронный журнал оператора" MinWidth="840" MinHeight="480" Width="1366" Height="768" WindowState="Maximized">
+        Title="Электронный журнал оператора" MinWidth="930" MinHeight="480" Width="1366" Height="768" WindowState="Maximized">
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
@@ -30,7 +30,7 @@
         </Style>
     </Window.Resources>
     <DockPanel LastChildFill="True">
-        <Menu DockPanel.Dock="Top">
+        <Menu DockPanel.Dock="Top" Background="Transparent">
             <MenuItem Header="Параметры">
                 <MenuItem Header="Станок" Command="{Binding EditMachineCommand}" CommandParameter="{Binding Machine}"/>
                 <MenuItem Header="Операторы" Command="{Binding EditOperatorsCommand}" CommandParameter="{Binding Operators}"/>
@@ -45,7 +45,7 @@
                     Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>-->
             <ComboBox ItemsSource="{Binding Operators}" 
                       SelectedItem="{Binding CurrentOperator}"
-                      Text="{Binding CurrentOperator.DisplayName, Mode=OneWay}"
+                      Text="{Binding CurrentOperator.DisplayName, FallbackValue={}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                       IsEnabled="{Binding CanAddPart}"
                       DisplayMemberPath="DisplayName"
                       Width="250" Margin="4 0 0 0">

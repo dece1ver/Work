@@ -27,12 +27,11 @@ namespace eLog.Services
                 == MessageBoxResult.Yes;
         }
 
-        public bool Edit(object item) => Edit(ref item);
-        public bool Edit(ref object item)
+        public bool Edit(object item)
         {
             return item switch
             {
-                ObservableCollection<Operator> operators => EditOperators(ref operators),
+                ObservableCollection<Operator> operators => EditOperators(operators),
                 Machine machine => EditMachine(ref machine),
                 _ => false,
             };
@@ -44,7 +43,7 @@ namespace eLog.Services
 
         public void ShowWarning(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
-        public static bool EditOperators(ref ObservableCollection<Operator> operators)
+        public static bool EditOperators(ObservableCollection<Operator> operators)
         {
             var dlg = new OperatorsEditWindow()
             {

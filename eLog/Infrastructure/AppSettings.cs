@@ -13,8 +13,6 @@ using System.Windows.Media;
 using eLog.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Tomlyn;
-using Tomlyn.Model;
 
 namespace eLog.Infrastructure
 {
