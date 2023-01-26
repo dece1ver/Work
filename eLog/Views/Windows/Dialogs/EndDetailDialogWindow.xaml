@@ -17,6 +17,7 @@
         <Grid Margin="5 0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="480"/>
+                <ColumnDefinition Width="1"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
@@ -55,9 +56,14 @@
             </UniformGrid>
             <DockPanel Grid.Column="0" Grid.Row="1" LastChildFill="True" Margin="10 0 5 10">
                 <TextBlock DockPanel.Dock="Left" Text="Количество: "/>
-                <TextBox x:Name="PartsCountTextBox" Text="{Binding _PartsCount, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
+                <TextBox x:Name="PartsCountTextBox"  Width="90"
+                         Text="{Binding _PartsCount, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
+                <TextBlock DockPanel.Dock="Left" Text="Машинное время: " Margin="9 0 0 0"/>
+                <TextBox  Width="90"
+                          Text="{Binding _PartsCount, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
             </DockPanel>
-            <Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="0 9 5 9" >
+            <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" BorderBrush="LightGray" BorderThickness="1" Margin="0 15"/>
+            <Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Margin="4 9 5 9" >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>

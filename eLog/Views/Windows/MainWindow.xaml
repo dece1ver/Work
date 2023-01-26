@@ -39,19 +39,21 @@
         <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True">
             <TextBlock Text="{Binding Machine.Name}" d:Text="Станок" Padding="0 3" Margin="9 0" DockPanel.Dock="Left"/>
             <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
-            <Button Content="Начать смену" DockPanel.Dock="Right" Visibility="{Binding StartShiftButtonVisibility}"
+            <!--<Button Content="Начать смену" DockPanel.Dock="Right" Visibility="{Binding StartShiftButtonVisibility}"
                     Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
             <Button Content="Завершить смену" DockPanel.Dock="Right" Visibility="{Binding EndShiftButtonVisibility}"
-                    Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
+                    Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>-->
             <ComboBox ItemsSource="{Binding Operators}" 
                       SelectedItem="{Binding CurrentOperator}"
                       Text="{Binding CurrentOperator.DisplayName, Mode=OneWay}"
-                      IsEnabled="{Binding EditShiftInfoIsEnabled}"
+                      IsEnabled="{Binding CanAddPart}"
                       DisplayMemberPath="DisplayName"
                       Width="250" Margin="4 0 0 0">
             </ComboBox>
-            <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding Shifts[1]}" IsEnabled="{Binding EditShiftInfoIsEnabled}" 
-                      Margin="4 0 0 0" />
+            <!--<ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding Shifts[1]}" IsEnabled="{Binding EditShiftInfoIsEnabled}" 
+                      Margin="4 0 0 0" />-->
+            <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4 0"
+                    Command="{Binding StartDetailCommand}" IsEnabled="{Binding CanAddPart}"/>
         </DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
@@ -63,8 +65,7 @@
             </StatusBarItem>
         </StatusBar>
         <DockPanel LastChildFill="True">
-            <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4"
-                    Command="{Binding StartDetailCommand}" Visibility="{Binding CanAddPart, Converter={StaticResource visibilityConverter}}"/>
+            
             <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -130,7 +131,7 @@
                                         <Button.Content>
                                             <StackPanel Orientation="Vertical" Margin="0 -10 0 0">
                                                 <TextBlock Text="." Margin="10 0 10 0"/>
-                                                <TextBlock Text="." Margin="10 -5"/>
+                                                <TextBlock Text="." Margin="10 -10"/>
                                                 <TextBlock Text="." Margin="10 0 10 0"/>
                                             </StackPanel>
                                         </Button.Content>
