@@ -30,20 +30,24 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="22"/>
-                <RowDefinition Height="22"/>
-                <RowDefinition Height="22"/>
-                <RowDefinition Height="22"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Станок:" Margin="5 0 0 0" VerticalAlignment="Center"/>
-            <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" 
+            <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" Margin="0 1"
                       ItemsSource="{Binding Machines}" 
                       SelectedItem="{Binding AppSettings.Machine}" 
                       Text="{Binding AppSettings.Machine.Name, Mode=OneWay}" 
                       DisplayMemberPath="Name"/>
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Путь к таблице:" VerticalAlignment="Center" Margin="5 0 0 0" />
-            <TextBox Grid.Row="1" Grid.Column="1" VerticalContentAlignment="Center"
-                     Text="{Binding AppSettings.XlPath}"/>
+            <DockPanel Grid.Row="1" Grid.Column="1" Margin="0" 
+                        VerticalAlignment="Stretch" LastChildFill="True">
+                <Button x:Name="SetXlPathButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Padding="15 1" Click="SetXlPathButton_Click"/>
+                <TextBox x:Name="XlPathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
+                         Text="{Binding AppSettings.XlPath}"/>
+            </DockPanel>
         </Grid>
     </DockPanel>
 </Window>
