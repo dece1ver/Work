@@ -54,9 +54,36 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="pathToXl">Путь к таблице</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static string AddInfo(this PartInfoModel part, string pathToXl)
+        public static void WriteToXl(this PartInfoModel part)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var wb = new XLWorkbook(AppSettings.XlPath);
+                foreach (var xlRow in wb.Worksheet("Для заполнения").Rows())
+                {
+                    if (xlRow is null || !xlRow.Cell(6).Value.IsBlank) continue;
+                    xlRow.Cell(6).Value = DateTime.Today.ToString("dd.MM.yyyy");
+                    xlRow.Cell(7).Value = AppSettings.Machine.Name;
+                    xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName;
+                    xlRow.Cell(9).Value = part.FullName;
+                    xlRow.Cell(10).Value = part.Order;
+                    xlRow.Cell(11).Value = part.PartsFinished;
+                    xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
+                    xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(16).Value = part.SetupTimePlan;
+                    xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(22).Value = part.MachineTimePlan;
+                    xlRow.Cell(23).Value = part.MachineTime;
+                    break;
+                }
+                wb.Save();
+
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
         }
     }
 }

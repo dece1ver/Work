@@ -48,6 +48,22 @@ namespace eLog.Models
             }
         }
 
-        
+        [JsonIgnore]
+        public string FullName
+        {
+            get
+            {
+                var result = LastName;
+                if (string.IsNullOrEmpty(FirstName)) return result;
+                result += " " + FirstName;
+                if (!string.IsNullOrEmpty(Patronymic))
+                {
+                    result += " " + Patronymic;
+                }
+                return result;
+            }
+        }
+
+
     }
 }

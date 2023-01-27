@@ -10,8 +10,11 @@
         Title="Завершение наладки" Height="169" Width="479" WindowStartupLocation="CenterOwner" Topmost="True" WindowStyle="None" ResizeMode="NoResize">
     <Border BorderThickness="1" BorderBrush="LightGray">
         <UniformGrid Columns="3" Margin="5 0">
-            <Button Content="Успех" Margin="5 10 5 10" IsDefault="True"
+            <Button Margin="5 10 5 10" IsDefault="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
+                <Button.Content>
+                    <TextBlock Text="✓" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
                 <Button.Command>
                     <cmd:CloseEndSetupDialogCommand EndSetupResult="Success"/>
                 </Button.Command>
@@ -28,7 +31,7 @@
             <Button Margin="5 10 5 10" IsCancel="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
                 <Button.Content>
-                    <TextBlock Text="Случайно тыкнул" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Text="✗" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
                 </Button.Content>
                 <Button.Command>
                     <cmd:CloseEndSetupDialogCommand EndSetupResult="Cancel"/>

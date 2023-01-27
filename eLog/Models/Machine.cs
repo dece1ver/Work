@@ -17,25 +17,25 @@ namespace eLog.Models
         }
 
         public int Id { get; }
-        public string Name { get => Id switch
-                {
-                    0 => "Goodway GS-1500",
-                    1 => "Hyundai L320A",
-                    2 => "Hyundai WIA SKT21 #1",
-                    3 => "Hyundai WIA SKT21 #2",
-                    4 => "Hyundai XH6300",
-                    5 => "Mazak QTS200ML",
-                    6 => "Mazak QTS350",
-                    7 => "Mazak Integrex i200",
-                    8 => "Mazak Nexus 5000",
-                    9 => "Quaser MV143",
-                    10 => "Victor A110",
+        public string Name =>
+            Id switch
+            {
+                0 => "Goodway GS-1500",
+                1 => "Hyundai L320A",
+                2 => "Hyundai WIA SKT21 #1",
+                3 => "Hyundai WIA SKT21 #2",
+                4 => "Hyundai XH6300",
+                5 => "Mazak QTS200ML",
+                6 => "Mazak QTS350",
+                7 => "Mazak Integrex i200",
+                8 => "Mazak Nexus 5000",
+                9 => "Quaser MV143",
+                10 => "Victor A110",
 
-                    _ => "-//-",
-                }; 
-            }
+                _ => "-//-",
+            };
 
         [JsonIgnore]
-        public string LogPath { get => Path.Combine(AppSettings.LogBasePath, Name); }
+        public string XlReservedPath => Path.Combine(AppSettings.XlReservedPath, Name);
     }
 }

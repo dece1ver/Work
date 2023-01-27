@@ -27,13 +27,12 @@ namespace eLog.Views.Windows.Dialogs
     {
         public EndDetailResult EndDetailResult { get; set; }
 
-        public bool CanBeFinished => int.TryParse(_PartsCount, out partsCount) && partsCount > 0;
+        public bool CanBeFinished => int.TryParse(_PartsCount, out partsCount) && partsCount >= 0 && double.TryParse(_MachineTime.Replace(".",","), out machineTime) && machineTime > 0;
 
         private int partsCount;
         private string _partsCount = string.Empty;
 
         public int PartsCount => partsCount;
-
         public string _PartsCount
         {
             get => _partsCount;
@@ -41,6 +40,21 @@ namespace eLog.Views.Windows.Dialogs
             {
                 _partsCount = value;
                 OnPropertyChanged(nameof(PartsCount));
+                OnPropertyChanged(nameof(CanBeFinished));
+            }
+        }
+
+        private double machineTime;
+        private string _machineTime = string.Empty;
+
+        public double MachineTime => machineTime;
+        public string _MachineTime
+        {
+            get => _machineTime;
+            set
+            {
+                _machineTime = value;
+                OnPropertyChanged(nameof(MachineTime));
                 OnPropertyChanged(nameof(CanBeFinished));
             }
         }

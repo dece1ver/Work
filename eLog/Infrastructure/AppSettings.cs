@@ -16,48 +16,81 @@ using Newtonsoft.Json.Linq;
 
 namespace eLog.Infrastructure
 {
+    /// <summary>
+    /// Основной класс с настройками, статический для доступа откуда угодно.
+    /// </summary>
     public static class AppSettings
     {
-        public const string LogReservedPath = "C:\\ProgramData\\dece1ver\\eLog\\FailedLogs";
+        /// <summary>
+        /// Локальный путь для записи изготовлений при неудачной записи в общую таблицу на случай отстутствия интернета, занятости файла и тд. 
+        /// </summary>
+        public const string XlReservedPath = "C:\\ProgramData\\dece1ver\\eLog\\XL";
+
+        /// <summary>
+        /// Директория с файлом конфигурации
+        /// </summary>
         public const string ConfigPath = "C:\\ProgramData\\dece1ver\\eLog";
+
+        /// <summary>
+        /// Путь к файлу конфигурации
+        /// </summary>
         public static readonly string ConfigFilePath = Path.Combine(ConfigPath, "config.json");
-        public static Machine Machine { get; set; }
-        public static string LogBasePath { get; set; }
-        public static ObservableCollection<Operator> Operators { get; set; }
+
+        /// <summary>
+        /// Текущий станок
+        /// </summary>
+        public static Machine Machine { get; set; } = new (0);
+
+        /// <summary>
+        /// Путь к общей таблице
+        /// </summary>
+        public static string XlPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Список операторов
+        /// </summary>
+        public static ObservableCollection<Operator> Operators { get; set; } = new();
+
+        /// <summary>
+        /// Текущий оператор
+        /// </summary>
         public static Operator? CurrentOperator { get; set; }
 
-        public static bool IsShiftStarted {get; set; }
-        
+        /// <summary>
+        /// Создает конфиг с параметрами по-умолчанию
+        /// </summary>
         private static void CreateBaseConfig()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             if (!Directory.Exists(ConfigPath)) Directory.CreateDirectory(ConfigPath);
             Machine = new Machine(0);
-            LogBasePath = "";
             Operators = new ObservableCollection<Operator>() {
-                new Operator() {
+                new() {
                     LastName = "Бабохин",
                     FirstName = "Кирилл",
                     Patronymic = "Георгиевич",
                     },
                 };
-            IsShiftStarted = false;
+            XlPath = string.Empty;
             RewriteConfig();
         }
 
+
+        /// <summary>
+        /// Читает конфиг, если возникает исключение, то создает конфиг по-умолчанию.
+        /// </summary>
         public static void ReadConfig()
         {
             if (!File.Exists(ConfigFilePath)) CreateBaseConfig();
             
             try
             {
-                AppSettingsModel appSettings = JsonConvert.DeserializeObject<AppSettingsModel>(File.ReadAllText(ConfigFilePath));
-                if (appSettings == null) throw new ArgumentNullException();
+                var appSettings = JsonConvert.DeserializeObject<AppSettingsModel>(File.ReadAllText(ConfigFilePath));
+                if (appSettings is null) throw new ArgumentNullException();
                 Machine = appSettings.Machine;
-                LogBasePath = appSettings.LogBasePath;
+                XlPath = appSettings.XlPath;
                 Operators = appSettings.Operators;
                 CurrentOperator = appSettings.CurrentOperator;
-                IsShiftStarted = appSettings.IsShiftStarted;
                 if (appSettings.CurrentOperator is null && Operators.Count > 0) CurrentOperator = Operators[0];
             }
             catch
@@ -67,9 +100,12 @@ namespace eLog.Infrastructure
             }
         }
 
+        /// <summary>
+        /// Обновляет конфиг
+        /// </summary>
         public static void RewriteConfig()
         {
-            var appSettings = new AppSettingsModel(Machine, LogBasePath, Operators, CurrentOperator, IsShiftStarted);
+            var appSettings = new AppSettingsModel(Machine, XlPath, Operators, CurrentOperator);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented));
         }

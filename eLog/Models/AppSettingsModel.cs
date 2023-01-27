@@ -7,21 +7,22 @@ using System.Threading.Tasks;
 
 namespace eLog.Models
 {
-    internal class AppSettingsModel
+    /// <summary>
+    /// Не статический т.к. для записи/чтения json нужен экземпляр
+    /// </summary>
+    public class AppSettingsModel
     {
-        public AppSettingsModel(Machine machine, string logBasePath, ObservableCollection<Operator> operators, Operator? currentOperator = null, bool isShiftStarted = false)
+        public AppSettingsModel(Machine machine, string xlPath, ObservableCollection<Operator> operators, Operator? currentOperator = null)
         {
             Machine = machine;
-            LogBasePath = logBasePath;
+            XlPath = xlPath;
             Operators = operators;
             CurrentOperator = currentOperator;
-            IsShiftStarted = isShiftStarted;
         }
 
         public Machine Machine { get; set; }
-        public string LogBasePath { get; set; }
+        public string XlPath { get; set; }
         public ObservableCollection<Operator> Operators { get; set; }
         public Operator? CurrentOperator { get; set; }
-        public bool IsShiftStarted {get; set; }
     }
 }

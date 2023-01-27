@@ -18,6 +18,7 @@ namespace eLog.Models
         private int _PartsFinished;
         private double _SetupTimePlan;
         private double _MachineTimePlan;
+        private double _MachineTime;
         private DateTime _StartSetupTime;
         private DateTime _StartMachiningTime;
         private DateTime _EndMachiningTime;
@@ -83,6 +84,13 @@ namespace eLog.Models
         {
             get => _MachineTimePlan;
             init => Set(ref _MachineTimePlan, value);
+        }
+
+        /// <summary> Фактическое машинное время </summary>
+        public double MachineTime
+        {
+            get => _MachineTime;
+            set => Set(ref _MachineTime, value);
         }
 
         public DateTime StartSetupTime

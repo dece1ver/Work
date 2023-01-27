@@ -31,8 +31,8 @@ namespace eLog.Services
         {
             return item switch
             {
-                ObservableCollection<Operator> operators => EditOperators(operators),
-                Machine machine => EditMachine(ref machine),
+                ObservableCollection<Operator> operators => EditOperators(ref operators),
+                AppSettingsModel settings => EditSettings(ref settings),
                 _ => false,
             };
         }
@@ -43,7 +43,7 @@ namespace eLog.Services
 
         public void ShowWarning(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
-        public static bool EditOperators(ObservableCollection<Operator> operators)
+        public static bool EditOperators(ref ObservableCollection<Operator> operators)
         {
             var dlg = new OperatorsEditWindow()
             {
@@ -57,16 +57,17 @@ namespace eLog.Services
             return true;
         }
 
-        public static bool EditMachine(ref Machine machine)
+        public static bool EditSettings(ref AppSettingsModel settings)
         {
-            var dlg = new ChangeMachineWindow()
+            var dlg = new AppSettingsWindow()
             {
-                Machine = machine,
+                AppSettings = settings,
+                CurrentMachine = settings.Machine,
                 Owner = Application.Current.MainWindow,
             };
             if (dlg.ShowDialog() != true) return false;
 
-            machine = dlg.Machine;
+            settings = dlg.AppSettings;
 
             return true;
         }
@@ -93,14 +94,14 @@ namespace eLog.Services
             return dlg.EndSetupResult;
         }
 
-        public static (EndDetailResult, int) GetFinishResult()
+        public static (EndDetailResult, int, double) GetFinishResult()
         {
             var dlg = new EndDetailDialogWindow()
             {
                 Owner = Application.Current.MainWindow,
             };
             _ = dlg.ShowDialog();
-            return (dlg.EndDetailResult, dlg.PartsCount);
+            return (dlg.EndDetailResult, dlg.PartsCount, dlg.MachineTime);
         }
     }
 }
