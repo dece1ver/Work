@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+using DocumentFormat.OpenXml.Spreadsheet;
+using eLog.Infrastructure.Extensions.Windows;
 
-namespace eLog.Infrastructure.Extensions.Windows
+namespace eLog.Infrastructure.Extensions.pInvoke
 {
     public static class User32
     {
@@ -94,5 +92,17 @@ namespace eLog.Infrastructure.Extensions.Windows
 
         [DllImport(FileName)]
         public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+
+        [DllImport(FileName, SetLastError = true)]
+        public static extern ushort GetKeyboardLayout([In] int idThread);
+
+        [DllImport(FileName, SetLastError = true)]
+        public static extern int GetWindowThreadProcessId([In] IntPtr hWnd, [Out, Optional] IntPtr lpdwProcessId);
+
+        [DllImport(FileName, SetLastError = true)]
+        public static extern IntPtr GetForegroundWindow();
+        public static string mss;
+
+        
     }
 }

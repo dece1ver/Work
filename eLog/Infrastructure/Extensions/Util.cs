@@ -1,6 +1,8 @@
 ﻿using eLog.Models;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -84,6 +86,54 @@ namespace eLog.Infrastructure.Extensions
             {
                 MessageBox.Show(e.Message);
             }
+        }
+
+
+        /// <summary>
+        /// Парсит строку в TimeSpan
+        /// </summary>
+        /// <param name="input">Строка с вводом</param>
+        /// <param name="time">Спарсеный промежуток времени</param>
+        /// <returns></returns>
+        public static bool TimeParse(this string input, out TimeSpan time)
+        {
+            input = input.Replace(",", ".");
+            if (input.Length > 0)
+            {
+                if (input.Count(x => x == ':') == 1)
+                {
+                    var sTime = input.Split(':');
+                    if (double.TryParse(sTime[0], out var minutes) && 
+                        double.TryParse(sTime[1], out var seconds))
+                    {
+                        time = TimeSpan.FromSeconds(minutes * 60 + seconds);
+                        return true;
+                    }
+                }
+                else if (input.Count(x => x == ':') == 2)
+                {
+                    var sTime = input.Split(':');
+                    if (double.TryParse(sTime[0], out var hours) && 
+                        double.TryParse(sTime[1], out var minutes) &&
+                        double.TryParse(sTime[1], out var seconds))
+                    {
+                        time = TimeSpan.FromSeconds(hours * 3600 + minutes * 60 + seconds);
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out var minutes))
+                    {
+                        time = TimeSpan.FromMinutes(minutes);
+                        return true;
+                    }
+                    time = TimeSpan.Zero;
+                    return false;
+                }
+            }
+            time = TimeSpan.Zero;
+            return false;
         }
     }
 }

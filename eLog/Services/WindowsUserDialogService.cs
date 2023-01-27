@@ -94,7 +94,7 @@ namespace eLog.Services
             return dlg.EndSetupResult;
         }
 
-        public static (EndDetailResult, int, double) GetFinishResult()
+        public static (EndDetailResult, int, TimeSpan) GetFinishResult()
         {
             var dlg = new EndDetailDialogWindow()
             {
