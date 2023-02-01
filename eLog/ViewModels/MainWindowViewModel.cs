@@ -93,7 +93,7 @@ namespace eLog.ViewModels
         }
 
         public Visibility ProgressBarVisibility => Progress is 0 || Math.Abs(Progress - ProgressMaxValue) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
-        public bool CanAddPart => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished);
+        public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished);
 
         public bool Overlay { get; set; }
 
@@ -191,7 +191,7 @@ namespace eLog.ViewModels
                 }
                 Parts.Add(part);
             }
-            OnPropertyChanged(nameof(CanAddPart));
+            OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
@@ -211,7 +211,7 @@ namespace eLog.ViewModels
                     Parts.Remove((PartInfoModel)p);
                     break;
             }
-            OnPropertyChanged(nameof(CanAddPart));
+            OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
         }
         private static bool CanEndSetupCommandExecute(object p) => true;
@@ -222,7 +222,16 @@ namespace eLog.ViewModels
         private void OnEditDetailCommandExecuted(object p)
         {
             OverlayOn();
-            MessageBox.Show("Тут будет редактирование");
+            var part = (PartInfoModel)p;
+            if (WindowsUserDialogService.EditDetail(ref part))
+            {
+                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                if (part.RewriteToXl())
+                {
+                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                }
+            }
+            OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
         }
         private static bool CanEditDetailCommandExecute(object p) => true;
@@ -234,19 +243,23 @@ namespace eLog.ViewModels
         {
             OverlayOn();
             var (result, partsFinished, machineTime) = WindowsUserDialogService.GetFinishResult();
-            PartInfoModel part;
             switch (result)
             {
-                case (EndDetailResult.Finish or EndDetailResult.FinishAndNext):
-                    part = Parts[Parts.IndexOf((PartInfoModel)p)];
+                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished > 0:
+                    var part = Parts[Parts.IndexOf((PartInfoModel)p)];
                     part.PartsFinished = partsFinished > part.PartsCount ? part.PartsCount : partsFinished;
                     part.MachineTime = machineTime;
                     part.EndMachiningTime = DateTime.Now;
-                    part.WriteToXl();
+                    var id = part.WriteToXl();
+                    part.Id = id;
+                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                     if (result is EndDetailResult.FinishAndNext) StartDetailCommand.Execute(true);
                     break;
+                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished == 0:
+                    Parts.Remove((PartInfoModel)p);
+                    break;
             }
-            OnPropertyChanged(nameof(CanAddPart));
+            OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
         }
         private static bool CanEndDetailCommandExecute(object p) => true;

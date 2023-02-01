@@ -19,6 +19,9 @@
         <Style TargetType="TextBlock">
             <Setter Property="Margin" Value="9 2"/>
         </Style>
+        <Style TargetType="Button">
+            <Setter Property="Focusable" Value="False"/>
+        </Style>
         <Style TargetType="Button" x:Key="generalButton">
             <Setter Property="Margin" Value="4 0"/>
             <Setter Property="Width" Value="250"/>
@@ -30,7 +33,7 @@
     </Window.Resources>
     <Grid>
         <DockPanel LastChildFill="True" Grid.Column="0">
-            <Menu DockPanel.Dock="Top" Background="Transparent">
+            <Menu DockPanel.Dock="Top" Background="Transparent" IsEnabled="{Binding WorkIsNotInProgress}">
                 <MenuItem Header="Параметры">
                     <MenuItem Header="Операторы" Icon="🧍"
                               Command="{Binding EditOperatorsCommand}" 
@@ -51,14 +54,14 @@
                 <ComboBox ItemsSource="{Binding Operators}" 
                       SelectedItem="{Binding CurrentOperator}"
                       Text="{Binding CurrentOperator.DisplayName, FallbackValue={}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                      IsEnabled="{Binding CanAddPart}"
+                      IsEnabled="{Binding WorkIsNotInProgress}"
                       DisplayMemberPath="DisplayName"
                       Width="250" Margin="4 0 0 0">
                 </ComboBox>
                 <!--<ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding Shifts[1]}" IsEnabled="{Binding EditShiftInfoIsEnabled}" 
                       Margin="4 0 0 0" />-->
                 <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4 0"
-                    Command="{Binding StartDetailCommand}" IsEnabled="{Binding CanAddPart}"/>
+                    Command="{Binding StartDetailCommand}" IsEnabled="{Binding WorkIsNotInProgress}"/>
             </DockPanel>
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>

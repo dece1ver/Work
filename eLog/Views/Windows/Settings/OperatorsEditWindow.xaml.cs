@@ -1,10 +1,10 @@
-﻿using eLog.Models;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using eLog.Models;
 
-namespace eLog.Views.Windows
+namespace eLog.Views.Windows.Settings
 {
 
 

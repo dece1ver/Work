@@ -1,22 +1,23 @@
-﻿<Window x:Class="eLog.Views.Windows.AppSettingsWindow"
+﻿<Window x:Class="eLog.Views.Windows.Settings.AppSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:l="clr-namespace:eLog.Views.Windows" mc:Ignorable="d"
-        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands" 
+        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
+        xmlns:settings="clr-namespace:eLog.Views.Windows.Settings"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="Параметры" Height="480" Width="640" WindowStartupLocation="CenterOwner">
     <DockPanel>
         <UniformGrid DockPanel.Dock="Bottom" Rows="1" HorizontalAlignment="Right" Margin="0 10">
             <Button Content="Ok" Margin="10 0" Padding="30 5" IsDefault="True"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:AppSettingsWindow}}">
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=settings:AppSettingsWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="True"/>
                 </Button.Command>
             </Button>
             <Button Content="Отмена" Margin="0 0 10 0" IsCancel="True"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:AppSettingsWindow}}">
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=settings:AppSettingsWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="False"/>
                 </Button.Command>

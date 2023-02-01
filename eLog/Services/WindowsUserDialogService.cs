@@ -1,7 +1,6 @@
 ﻿using eLog.Infrastructure;
 using eLog.Models;
 using eLog.Services.Interfaces;
-using eLog.Views.Windows;
 using eLog.Views.Windows.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -10,6 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using eLog.Views.Windows.Settings;
+using OperatorsEditWindow = eLog.Views.Windows.Settings.OperatorsEditWindow;
 
 namespace eLog.Services
 {
@@ -18,13 +19,13 @@ namespace eLog.Services
         public bool Confirm(string message, string caption, bool exclamation = false)
         {
             return MessageBox.Show(
-                    message, 
-                    caption, 
-                    MessageBoxButton.YesNo, 
-                    exclamation 
-                    ? MessageBoxImage.Exclamation 
-                    : MessageBoxImage.Question) 
-                == MessageBoxResult.Yes;
+                       message,
+                       caption,
+                       MessageBoxButton.YesNo,
+                       exclamation
+                           ? MessageBoxImage.Exclamation
+                           : MessageBoxImage.Question)
+                   == MessageBoxResult.Yes;
         }
 
         public bool Edit(object item)
@@ -33,15 +34,19 @@ namespace eLog.Services
             {
                 ObservableCollection<Operator> operators => EditOperators(ref operators),
                 AppSettingsModel settings => EditSettings(ref settings),
+                PartInfoModel part => EditDetail(ref part),
                 _ => false,
             };
         }
 
-        public void ShowError(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
+        public void ShowError(string message, string caption) =>
+            MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
 
-        public void ShowInfo(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
+        public void ShowInfo(string message, string caption) =>
+            MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
 
-        public void ShowWarning(string message, string caption) => MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+        public void ShowWarning(string message, string caption) =>
+            MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
         public static bool EditOperators(ref ObservableCollection<Operator> operators)
         {
@@ -102,6 +107,28 @@ namespace eLog.Services
             };
             _ = dlg.ShowDialog();
             return (dlg.EndDetailResult, dlg.PartsCount, dlg.MachineTime);
+        }
+
+        public static bool EditDetail(ref PartInfoModel part)
+        {
+            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.PartsCount,
+                part.SetupTimePlan, part.MachineTimePlan)
+            {
+                StartSetupTime = part.StartSetupTime,
+                StartMachiningTime = part.StartMachiningTime,
+                EndMachiningTime = part.EndMachiningTime,
+                MachineTime = part.MachineTime,
+                Id = part.Id,
+                PartsFinished = part.PartsFinished
+
+            };
+            var dlg = new EditDetailWindow(tempPart)
+            {
+                Owner = Application.Current.MainWindow
+            };
+            if (dlg.ShowDialog() != true) return false;
+            part = dlg.Part;
+            return true;
         }
     }
 }

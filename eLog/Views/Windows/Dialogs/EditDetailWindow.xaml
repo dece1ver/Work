@@ -1,0 +1,95 @@
+﻿<Window x:Class="eLog.Views.Windows.Dialogs.EditDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
+        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
+        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        mc:Ignorable="d" FontSize="18" WindowStyle="None"
+        Title="Редактирование детали" Height="220" Width="720" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize">
+    <Window.Resources>
+        <cnv:DateTimeConverter x:Key="DateTimeConverter"/>
+        <cnv:TimeSpanConverter x:Key="TimeSpanConverter"/>
+    </Window.Resources>
+    <Border BorderThickness="1" BorderBrush="LightGray">
+        <Grid Margin="15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" 
+                       Text="Наименование:"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" d:Text="Корпус клапана"
+                     Text="{Binding Part.Name}" Margin="5 2 0 1"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0"
+                       Text="Обозначение:"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="5 1 0 1" Grid.ColumnSpan="3" d:Text="АР110-01-001"
+                     Text="{Binding Part.Number}"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Text="М/Л:"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Margin="5 1 0 1" d:Text="УЧ-1/001.1.1"
+                     Text="{Binding Part.Order}"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="2" Margin="5 0 0 0"
+                       Text="Количество:"/>
+            <TextBox Grid.Row="2" Grid.Column="3" Margin="5 1 0 1" d:Text="100500"
+                     Text="{Binding Part.PartsFinished}"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0"
+                       Text="Начало наладки:"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Margin="5  1 0 1" d:Text="01.01.2023 00:00"
+                     Text="{Binding Part.StartSetupTime, Converter={StaticResource DateTimeConverter}}"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="2" Margin="5 0 0 0"
+                       Text="Конец наладки:"/>
+            <TextBox Grid.Row="3" Grid.Column="3" Margin="5 1 0 1" d:Text="01.01.2023 01:00"
+                     Text="{Binding Part.StartMachiningTime, Converter={StaticResource DateTimeConverter}}"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0"
+                       Text="Время завершения:"/>
+            <TextBox Grid.Row="4" Grid.Column="1" Margin="5 1 0 1" d:Text="01.01.2023 07:00"
+                     Text="{Binding Part.EndMachiningTime, Converter={StaticResource DateTimeConverter}}"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="2" Margin="5 0 0 0"
+                       Text="Машинное время:"/>
+            <TextBox Grid.Row="4" Grid.Column="3" Margin="5  1 0 1" d:Text="00:04:45"
+                     Text="{Binding Part.MachineTime, Converter={StaticResource TimeSpanConverter}}"/>
+
+            <Button Grid.Column="0" Grid.Row="5" Margin="0 1 0 0" IsDefault="True" Width="159" HorizontalAlignment="Left"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
+                <Button.Content>
+                    <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+                <Button.Command>
+                    <cmd:CloseDialogCommand DialogResult="False"/>
+                </Button.Command>
+            </Button>
+
+            <Button Grid.Column="3" Grid.Row="5" Margin="0 1 0 0" IsDefault="True" Width="159"
+                    HorizontalAlignment="Right"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
+                <Button.Content>
+                    <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+                <Button.Command>
+                    <cmd:CloseDialogCommand DialogResult="True"/>
+                </Button.Command>
+            </Button>
+        </Grid>
+    </Border>
+</Window>

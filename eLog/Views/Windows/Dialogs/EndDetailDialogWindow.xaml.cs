@@ -31,7 +31,8 @@ namespace eLog.Views.Windows.Dialogs
     {
         public EndDetailResult EndDetailResult { get; set; }
 
-        public bool CanBeFinished => int.TryParse(_PartsCount, out partsCount) && partsCount >= 0 && _MachineTime.TimeParse(out machineTime) && machineTime.TotalSeconds > 0;
+        public bool CanBeFinished => (int.TryParse(_PartsCount, out partsCount) && partsCount > 0 && _MachineTime.TimeParse(out machineTime) && machineTime.TotalSeconds > 0)
+                                     || (int.TryParse(_PartsCount, out partsCount) && partsCount == 0);
 
         private int partsCount;
         private string _partsCount = string.Empty;

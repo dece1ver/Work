@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -54,10 +55,11 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="part">Информация об изготовлении</param>
         /// <param name="pathToXl">Путь к таблице</param>
-        /// <returns></returns>
+        /// <returns>Int32 - Id записи в таблице</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static void WriteToXl(this PartInfoModel part)
+        public static int WriteToXl(this PartInfoModel part)
         {
+            var id = -1;
             try
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
@@ -76,7 +78,8 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
                     xlRow.Cell(22).Value = part.MachineTimePlan;
-                    xlRow.Cell(23).Value = part.MachineTime;
+                    xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
+                    id = (int)xlRow.Cell(1).Value.GetNumber();
                     break;
                 }
                 wb.Save();
@@ -86,8 +89,43 @@ namespace eLog.Infrastructure.Extensions
             {
                 MessageBox.Show(e.Message);
             }
+            return id;
         }
 
+        public static bool RewriteToXl(this PartInfoModel part)
+        {
+            var result = false;
+            try
+            {
+                var wb = new XLWorkbook(AppSettings.XlPath);
+                foreach (var xlRow in wb.Worksheet("Для заполнения").Rows())
+                {
+                    if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
+                    xlRow.Cell(6).Value = DateTime.Today.ToString("dd.MM.yyyy");
+                    xlRow.Cell(7).Value = AppSettings.Machine.Name;
+                    xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName;
+                    xlRow.Cell(9).Value = part.FullName;
+                    xlRow.Cell(10).Value = part.Order;
+                    xlRow.Cell(11).Value = part.PartsFinished;
+                    xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
+                    xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(16).Value = part.SetupTimePlan;
+                    xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(22).Value = part.MachineTimePlan;
+                    xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
+                    result = true;
+                    break;
+
+                }
+                wb.Save();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+            return result;
+        }
 
         /// <summary>
         /// Парсит строку в TimeSpan
@@ -115,7 +153,7 @@ namespace eLog.Infrastructure.Extensions
                     var sTime = input.Split(':');
                     if (double.TryParse(sTime[0], out var hours) && 
                         double.TryParse(sTime[1], out var minutes) &&
-                        double.TryParse(sTime[1], out var seconds))
+                        double.TryParse(sTime[2], out var seconds))
                     {
                         time = TimeSpan.FromSeconds(hours * 3600 + minutes * 60 + seconds);
                         return true;

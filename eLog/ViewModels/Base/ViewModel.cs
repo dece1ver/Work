@@ -4,7 +4,7 @@ using System.Windows.Threading;
 
 namespace eLog.ViewModels.Base
 {
-    internal abstract class ViewModel : INotifyPropertyChanged
+    public abstract class ViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
