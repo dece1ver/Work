@@ -133,7 +133,7 @@
                                                 </Button.Content>
                                             </Button>
                                         </StackPanel>
-                                        <Button Margin="0" Visibility="{Binding IsFinished, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}" 
+                                        <Button Margin="4 0 0 0" 
                                                 CommandParameter="{Binding}" 
                                                 Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EditDetailCommand}">
                                             <Button.Content>

@@ -6,24 +6,19 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows;
-using eLog.Infrastructure.Extensions;
 
 namespace eLog.Infrastructure.Converters
 {
-    internal class TimeSpanConverter : IValueConverter
+    class PositiveIntConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is TimeSpan timeSpan)
-            {
-                return timeSpan == TimeSpan.Zero ? string.Empty : timeSpan.ToString(@"hh\:mm\:ss");
-            }
-            return value;
+            return ((int)value >= 0 ? value.ToString() : string.Empty) ?? string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value.ToString() ?? string.Empty).TimeParse(out var dateTime) ? dateTime : DependencyProperty.UnsetValue;
+            return DependencyProperty.UnsetValue;
         }
     }
 }

@@ -99,16 +99,6 @@ namespace eLog.Services
             return dlg.EndSetupResult;
         }
 
-        public static (EndDetailResult, int, TimeSpan) GetFinishResult()
-        {
-            var dlg = new EndDetailDialogWindow()
-            {
-                Owner = Application.Current.MainWindow,
-            };
-            _ = dlg.ShowDialog();
-            return (dlg.EndDetailResult, dlg.PartsCount, dlg.MachineTime);
-        }
-
         public static bool EditDetail(ref PartInfoModel part)
         {
             var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.PartsCount,
@@ -128,7 +118,36 @@ namespace eLog.Services
             };
             if (dlg.ShowDialog() != true) return false;
             part = dlg.Part;
+            if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
+            if (part.EndMachiningTime != DateTime.MinValue && part.MachineTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
             return true;
+        }
+
+        public static EndDetailResult FinishDetail(ref PartInfoModel part)
+        {
+            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.PartsCount,
+                part.SetupTimePlan, part.MachineTimePlan)
+            {
+                StartSetupTime = part.StartSetupTime,
+                StartMachiningTime = part.StartMachiningTime,
+                EndMachiningTime = part.EndMachiningTime,
+                MachineTime = part.MachineTime,
+                Id = part.Id,
+                PartsFinished = part.PartsFinished
+
+            };
+            var dlg = new EndDetailDialogWindow(tempPart)
+            {
+                Owner = Application.Current.MainWindow,
+                PartsFinishedText = tempPart.PartsFinished > 0 ? tempPart.PartsFinished.ToString() : string.Empty,
+                MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(@"hh\:mm\:ss") : string.Empty,
+            };
+            _ = dlg.ShowDialog();
+
+            if (dlg.EndDetailResult is EndDetailResult.Cancel) return dlg.EndDetailResult;
+            dlg.Part.EndMachiningTime = DateTime.Now;
+            part = dlg.Part;
+            return dlg.EndDetailResult;
         }
     }
 }

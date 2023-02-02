@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using ClosedXML.Excel;
+using System.Collections.ObjectModel;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -108,10 +109,16 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(10).Value = part.Order;
                     xlRow.Cell(11).Value = part.PartsFinished;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
-                    xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(14).Value = part.SetupTimeFact.TotalMinutes > 0
+                        ? part.StartMachiningTime.ToString("HH:mm")
+                        : "-";
                     xlRow.Cell(16).Value = part.SetupTimePlan;
-                    xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(19).Value = part.SetupTimeFact.TotalMinutes > 0
+                        ? part.StartMachiningTime.ToString("HH:mm")
+                        : "-";
+                    xlRow.Cell(20).Value = part.MachineTimeFact.TotalMinutes > 0
+                        ? part.EndMachiningTime.ToString("HH:mm")
+                        : "-";
                     xlRow.Cell(22).Value = part.MachineTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     result = true;
@@ -135,6 +142,11 @@ namespace eLog.Infrastructure.Extensions
         /// <returns></returns>
         public static bool TimeParse(this string input, out TimeSpan time)
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                time = TimeSpan.Zero;;
+                return false;
+            }
             input = input.Replace(",", ".");
             if (input.Length > 0)
             {
@@ -173,5 +185,16 @@ namespace eLog.Infrastructure.Extensions
             time = TimeSpan.Zero;
             return false;
         }
+
+        /// <summary>
+        /// Список простоев с временами.
+        /// </summary>
+        /// <param name="downtimes"></param>
+        /// <returns></returns>
+        public static string Report(this ObservableCollection<DownTime> downTimes) => 
+            downTimes.Aggregate(string.Empty, (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 2)} мин\n");
+
+        public static double TotalMinutes(this ObservableCollection<DownTime> downTimes) =>
+            downTimes.Aggregate(0.0, (sum, downTime) => sum + downTime.Time.TotalMinutes);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using eLog.ViewModels.Base;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +27,7 @@ namespace eLog.Models
         private DateTime _StartSetupTime;
         private DateTime _StartMachiningTime;
         private DateTime _EndMachiningTime;
+        private ObservableCollection<DownTime> _DownTimes;
 
         /// <summary> Наименование </summary>
         public string Name
@@ -72,6 +74,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(PartsCountInfo));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(ValidParameters));
             }
         }
 
@@ -96,7 +99,18 @@ namespace eLog.Models
         public TimeSpan MachineTime
         {
             get => _MachineTime;
-            set => Set(ref _MachineTime, value);
+            set
+            {
+                Set(ref _MachineTime, value);
+                OnPropertyChanged(nameof(ValidParameters));
+            }
+        }
+
+        /// <summary> Список простоев </summary>
+        public ObservableCollection<DownTime> DownTimes
+        {
+            get => _DownTimes;
+            set => Set(ref _DownTimes, value);
         }
 
         /// <summary> Id присваивается после записи в таблицу. Нужен для поиска в таблице при редактировании.</summary>
@@ -110,10 +124,11 @@ namespace eLog.Models
             {
                 Set(ref _StartSetupTime, value);
                 OnPropertyChanged(nameof(EndSetupInfo));
-                OnPropertyChanged(nameof(EndDetailInfo));
                 OnPropertyChanged(nameof(SetupIsNotFinished));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
+                OnPropertyChanged(nameof(ValidParameters));
+                OnPropertyChanged(nameof(EndDetailInfo));
             }
         }
 
@@ -125,10 +140,11 @@ namespace eLog.Models
             {
                 Set(ref _StartMachiningTime, value);
                 OnPropertyChanged(nameof(EndSetupInfo));
-                OnPropertyChanged(nameof(EndDetailInfo));
                 OnPropertyChanged(nameof(SetupIsNotFinished));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
+                OnPropertyChanged(nameof(ValidParameters));
+                OnPropertyChanged(nameof(EndDetailInfo));
             }
         }
 
@@ -139,11 +155,13 @@ namespace eLog.Models
             set
             {
                 Set(ref _EndMachiningTime, value);
+                OnPropertyChanged(nameof(SetupIsNotFinished));
                 OnPropertyChanged(nameof(CanBeFinished));
                 OnPropertyChanged(nameof(IsFinished));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(PartsCountInfo));
                 OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(ValidParameters));
             }
         }
 
@@ -158,7 +176,7 @@ namespace eLog.Models
         {
             get
             {
-                if (EndMachiningTime == DateTime.MinValue)
+                if (MachineTimeFact.TotalMinutes <= 0)
                 {
                     var setup = SetupTimeFact.TotalMinutes > 0 ? SetupTimeFact.TotalMinutes : SetupTimePlan;
                     return $"{StartSetupTime.AddMinutes(setup).AddMinutes(PartsCount * MachineTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {PartsCount} шт по {MachineTimePlan} мин.)";
@@ -206,6 +224,8 @@ namespace eLog.Models
         /// </summary>
         public bool IsStarted => !IsFinished;
 
+        public bool ValidParameters => PartsFinished > 0 && MachineTimeFact.TotalMinutes > 0 && MachineTime.TotalMinutes > 0 || PartsFinished == 0;
+
         /// <summary>
         /// Информация о детали.
         /// Статусные свойства выводятся из временных свойств. По-умолчанию завершающие временные свойства присваиваются в DateTime.MinValue. После присваивания времен деталь считается завершенной.
@@ -219,14 +239,16 @@ namespace eLog.Models
         /// <param name="machineTimePlan">Плановое штучное время</param>
         public PartInfoModel(string name, string number, int setup, string order, int partsCount, double setupTimePlan, double machineTimePlan)
         {
-            Name = name;
-            Number = number;
-            Setup = setup;
-            Order = order;
+            _Name = name;
+            _Number = number;
+            _Setup = setup;
+            _Order = order;
+            PartsFinished = -1;
             PartsCount = partsCount;
             SetupTimePlan = setupTimePlan;
             MachineTimePlan = machineTimePlan;
             Id = -1;
+            _DownTimes = new ObservableCollection<DownTime>();
         }
     }
 }

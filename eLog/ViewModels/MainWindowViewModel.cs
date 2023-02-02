@@ -225,11 +225,24 @@ namespace eLog.ViewModels
             var part = (PartInfoModel)p;
             if (WindowsUserDialogService.EditDetail(ref part))
             {
-                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
-                if (part.RewriteToXl())
+                switch (part)
                 {
-                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                    case { Id: -1, IsFinished: true }:
+                        part.Id = part.WriteToXl();
+                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        break;
+                    case { Id: > 0, IsFinished: true }:
+                    {
+                        if (part.RewriteToXl())
+                        {
+                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                        }
+
+                        break;
+                    }
                 }
+
+                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
@@ -242,25 +255,43 @@ namespace eLog.ViewModels
         private void OnEndDetailCommandExecuted(object p)
         {
             OverlayOn();
-            var (result, partsFinished, machineTime) = WindowsUserDialogService.GetFinishResult();
-            switch (result)
+            var part = (PartInfoModel)p;
+            var res = WindowsUserDialogService.FinishDetail(ref part);
+            switch (res)
             {
-                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished > 0:
-                    var part = Parts[Parts.IndexOf((PartInfoModel)p)];
-                    part.PartsFinished = partsFinished > part.PartsCount ? part.PartsCount : partsFinished;
-                    part.MachineTime = machineTime;
-                    part.EndMachiningTime = DateTime.Now;
-                    var id = part.WriteToXl();
-                    part.Id = id;
+                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when part.PartsFinished > 0:
+                    part.Id = part.WriteToXl();
                     Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                    if (result is EndDetailResult.FinishAndNext) StartDetailCommand.Execute(true);
+                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                    if (res is EndDetailResult.FinishAndNext) StartDetailCommand.Execute(true);
                     break;
-                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished == 0:
+                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when part.PartsFinished == 0:
                     Parts.Remove((PartInfoModel)p);
                     break;
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
+
+            //OverlayOn();
+            //var (result, partsFinished, machineTime) = WindowsUserDialogService.GetFinishResult();
+            //switch (result)
+            //{
+            //    case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished > 0:
+            //        var part = Parts[Parts.IndexOf((PartInfoModel)p)];
+            //        part.PartsFinished = partsFinished > part.PartsCount ? part.PartsCount : partsFinished;
+            //        part.MachineTime = machineTime;
+            //        part.EndMachiningTime = DateTime.Now;
+            //        var id = part.WriteToXl();
+            //        part.Id = id;
+            //        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+            //        if (result is EndDetailResult.FinishAndNext) StartDetailCommand.Execute(true);
+            //        break;
+            //    case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished == 0:
+            //        Parts.Remove((PartInfoModel)p);
+            //        break;
+            //}
+            //OnPropertyChanged(nameof(WorkIsNotInProgress));
+            //OverlayOff();
         }
         private static bool CanEndDetailCommandExecute(object p) => true;
         #endregion

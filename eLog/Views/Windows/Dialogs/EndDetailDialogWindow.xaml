@@ -4,15 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
-        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands" 
-        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        xmlns:vm="clr-namespace:eLog.ViewModels" 
+        xmlns:m="clr-namespace:eLog.Models" 
+        xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
+        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
+        xmlns:ctrl="clr-namespace:eLog.Views.Controls"
         mc:Ignorable="d" FontSize="19" WindowStyle="None"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="Завершение наладки" Height="200" Width="720" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize">
     <Window.Resources>
-        <Style TargetType="Button" x:Key="keyboardButton">
-            <Setter Property="Margin" Value="1"/>
-            <Setter Property="Focusable" Value="False"/>
-        </Style>
+        <cnv:TimeSpanConverter x:Key="TimeSpanConverter"/>
+        <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
+        <cnv:PositiveIntConverter x:Key="PositiveIntConverter"/>
     </Window.Resources>
     <Border BorderThickness="1" BorderBrush="LightGray">
         <Grid Margin="5 0">
@@ -35,7 +38,8 @@
                         <cmd:CloseEndDetailDialogCommand EndDetailResult="Cancel"/>
                     </Button.Command>
                 </Button>
-                <Button Margin="1 2 1 0" IsEnabled="{Binding CanBeFinished}"
+                <Button Margin="1 2 1 0"
+                        IsEnabled="{Binding Valid}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}">
                     <Button.Content>
                         <TextBlock Text="✓" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -44,7 +48,8 @@
                         <cmd:CloseEndDetailDialogCommand EndDetailResult="Finish"/>
                     </Button.Command>
                 </Button>
-                <Button Margin="1 2 5 0" IsDefault="True" IsEnabled="{Binding CanBeFinished}"
+                <Button Margin="1 2 5 0" IsDefault="True" 
+                        IsEnabled="{Binding Valid}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}">
                     <Button.Content>
                         <TextBlock Text="✓+" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -58,59 +63,13 @@
                 <TextBlock DockPanel.Dock="Left" Text="Количество: " VerticalAlignment="Center" FontSize="18"/>
                 <TextBox x:Name="PartsCountTextBox" Width="100" Height="43"
                          VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="24"
-                         Text="{Binding _PartsCount, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
+                         Text="{Binding PartsFinishedText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
                 <TextBlock DockPanel.Dock="Left" Text="Машинное время: " VerticalAlignment="Center" FontSize="18" Margin="9 0 0 0"/>
                 <TextBox Width="100" Height="43" VerticalAlignment="Center"  VerticalContentAlignment="Center" FontSize="24"
-                          Text="{Binding _MachineTime, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
+                          Text="{Binding MachineTimeText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
             </DockPanel>
             <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" BorderBrush="LightGray" BorderThickness="1" Margin="0 15"/>
-            <Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Margin="4 9 5 9" >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Button Grid.Row="0" Grid.Column="0" x:Name="Button7"
-                        Content="7" Style="{StaticResource keyboardButton}" Click="Button7_Click"/>
-                <Button Grid.Row="0" Grid.Column="1" x:Name="Button8"
-                        Content="8" Style="{StaticResource keyboardButton}" Click="Button8_Click"/>
-                <Button Grid.Row="0" Grid.Column="2" x:Name="Button9"
-                        Content="9" Style="{StaticResource keyboardButton}" Click="Button9_Click"/>
-                <Button Grid.Row="0" Grid.Column="3" x:Name="ButtonBackspace"
-                        Content="◀" Style="{StaticResource keyboardButton}" Click="ButtonBackspace_Click"/>
-
-                <Button Grid.Row="1" Grid.Column="0" x:Name="Button4"
-                        Content="4" Style="{StaticResource keyboardButton}" Click="Button4_Click"/>
-                <Button Grid.Row="1" Grid.Column="1" x:Name="Button5"
-                        Content="5" Style="{StaticResource keyboardButton}" Click="Button5_Click"/>
-                <Button Grid.Row="1" Grid.Column="2"  x:Name="Button6"
-                        Content="6" Style="{StaticResource keyboardButton}" Click="Button6_Click"/>
-                <Button Grid.Row="1" Grid.Column="3" x:Name="ButtonDel" FontSize="14"
-                        Content="Del" Style="{StaticResource keyboardButton}" Click="ButtonDel_Click"/>
-                
-                <Button Grid.Row="2" Grid.Column="0" x:Name="Button1"
-                        Content="1" Style="{StaticResource keyboardButton}" Click="Button1_Click"/>
-                <Button Grid.Row="2" Grid.Column="1" x:Name="Button2"
-                        Content="2" Style="{StaticResource keyboardButton}" Click="Button2_Click"/>
-                <Button Grid.Row="2" Grid.Column="2" x:Name="Button3"
-                        Content="3" Style="{StaticResource keyboardButton}" Click="Button3_Click"/>
-                <Button Grid.Row="2" Grid.Column="3" x:Name="ButtonClear" FontSize="14"
-                        Content="Clear" Style="{StaticResource keyboardButton}" Click="ButtonClear_Click"/>
-
-                <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" x:Name="Button0"
-                        Content="0" Style="{StaticResource keyboardButton}" Click="Button0_Click"/>
-                <Button Grid.Row="3" Grid.Column="2" x:Name="ButtonDot"
-                        Content="." Style="{StaticResource keyboardButton}" Click="ButtonDot_Click" />
-                <Button Grid.Row="3" Grid.Column="3" x:Name="ButtonColon"
-                        Content=":" Style="{StaticResource keyboardButton}" Click="ButtonColon_Click" />
-            </Grid>
+            <ctrl:NumericKeyboard Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Margin="4 9 5 9"/>
         </Grid>
     </Border>
 </Window>
