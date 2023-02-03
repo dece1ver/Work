@@ -98,7 +98,6 @@ namespace eLog.Infrastructure.Extensions
                 foreach (var xlRow in ws.Rows())
                 {
                     if (xlRow is null) continue;
-                    MessageBox.Show(xlRow.ToString());
                     if (!xlRow.Cell(6).Value.IsBlank)
                     {
                         prevRow = xlRow;
