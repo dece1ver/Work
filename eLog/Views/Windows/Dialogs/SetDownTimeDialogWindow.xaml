@@ -3,10 +3,100 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:eLog.Views.Windows.Dialogs"
-        mc:Ignorable="d"
-        Title="SetDownTimeDialogWindow" Height="450" Width="800">
-    <Grid>
-        
+        xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
+        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands" 
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        mc:Ignorable="d" FontSize="18" ShowInTaskbar="False" ShowActivated="True"
+        WindowStartupLocation="CenterOwner" Topmost="True" WindowStyle="None" ResizeMode="NoResize"
+        Title="Выбор простоя" Height="320" Width="640">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Focusable" Value="False"></Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Button Grid.Row="0" Grid.Column="0" Margin="0 0 2 2"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="Обслуживание" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
+        <Button Grid.Row="0" Grid.Column="1" Margin="2 0 2 2"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="Прогрев" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
+        <Button Grid.Row="0" Grid.Column="2" Margin="2 0 2 2"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="Поиск и получение инструмента" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
+        <Button Grid.Row="0" Grid.Column="3" Margin="2 0 0 2"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="Помощь, наставничество, обучение" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
+
+        <Button Grid.Row="1" Grid.Column="0" Margin="0 2 2 0"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="Участие в мероприятиях" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
+        <Button Grid.Row="1" Grid.Column="1" Margin="2 2 2 0"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="Изготовление оснастки и калибров" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
+        <Button Grid.Row="1" Grid.Column="2" Margin="2 2 2 0"
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="Отказ оборудования" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
+        <Button Grid.Row="1" Grid.Column="3" Margin="2 2 0 0" 
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button.Content>
+                <TextBlock Text="✗" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+            </Button.Content>
+            <Button.Command>
+                <cmd:CloseDialogCommand DialogResult="False"></cmd:CloseDialogCommand>
+            </Button.Command>
+        </Button>
     </Grid>
 </Window>

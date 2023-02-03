@@ -95,6 +95,8 @@ namespace eLog.ViewModels
         public Visibility ProgressBarVisibility => Progress is 0 || Math.Abs(Progress - ProgressMaxValue) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished);
 
+        public bool DownTimeInProgress => Parts.Count == Parts.Count(x => x.DownTimes.Count > 0);
+
         public bool Overlay { get; set; }
 
         /// <summary>
@@ -125,7 +127,7 @@ namespace eLog.ViewModels
         private void OnEditSettingsCommandExecuted(object p)
         {
             OverlayOn();
-            var settings = new AppSettingsModel(Machine, AppSettings.XlPath, Operators);
+            var settings = new AppSettingsModel(Machine, AppSettings.XlPath, AppSettings.OrdersSourcePath, Operators);
             WindowsUserDialogService windowsUserDialogService = new();
 
             if (windowsUserDialogService.Edit(settings))
@@ -133,6 +135,7 @@ namespace eLog.ViewModels
                 AppSettings.Machine = settings.Machine;
                 Machine = AppSettings.Machine;
                 AppSettings.XlPath = settings.XlPath;
+                AppSettings.OrdersSourcePath = settings.OrdersSourcePath;
                 AppSettings.RewriteConfig();
             }
             OverlayOff();
@@ -174,27 +177,63 @@ namespace eLog.ViewModels
         private void OnStartDetailCommandExecuted(object p)
         {
             OverlayOn();
-            WindowsUserDialogService windowsUserDialogService = new();
-            var barCode = string.Empty;
-            if (WindowsUserDialogService.GetBarCode(ref barCode))
+
+            var part = new PartInfoModel();
+            if (WindowsUserDialogService.EditDetail(ref part))
             {
-                var part = barCode.GetPartFromBarCode();
-                if (windowsUserDialogService.Confirm("Наладка?", "Наладка"))
+                switch (part)
                 {
-                    part.StartSetupTime = DateTime.Now;
-                    part.StartMachiningTime = DateTime.MinValue;
-                }
-                else
-                {
-                    part.StartSetupTime = DateTime.Now;
-                    part.StartMachiningTime = part.StartSetupTime;
+                    case { Id: -1, IsFinished: true }:
+                        part.Id = part.WriteToXl();
+                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        break;
+                    case { Id: > 0, IsFinished: true }:
+                    {
+                        if (part.RewriteToXl())
+                        {
+                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                        }
+                        break;
+                    }
                 }
                 Parts.Add(part);
             }
-            OnPropertyChanged(nameof(WorkIsNotInProgress));
+            //WindowsUserDialogService windowsUserDialogService = new();
+            //var barCode = string.Empty;
+            //if (WindowsUserDialogService.GetBarCode(ref barCode))
+            //{
+            //    var part = barCode.GetPartFromBarCode();
+            //    if (windowsUserDialogService.Confirm("Наладка?", "Наладка"))
+            //    {
+            //        part.StartSetupTime = DateTime.Now;
+            //        part.StartMachiningTime = DateTime.MinValue;
+            //    }
+            //    else
+            //    {
+            //        part.StartSetupTime = DateTime.Now;
+            //        part.StartMachiningTime = part.StartSetupTime;
+            //    }
+            //    Parts.Add(part);
+            //}
+            //OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
+        #endregion
+
+        #region SetDownTime
+        public ICommand SetDownTimeCommand { get; }
+        private void OnSetDownTimeCommandExecuted(object p)
+        {
+            OverlayOn();
+            var downTimeType = WindowsUserDialogService.SetDownTimeType();
+            if (downTimeType is { } type)
+            {
+                // Parts[Parts.IndexOf((PartInfoModel)p)].DownTimes.Add(new DownTime(type));
+            }
+            OverlayOff();
+        }
+        private static bool CanSetDownTimeCommandExecute(object p) => true;
         #endregion
 
         #region EndSetup
@@ -237,11 +276,9 @@ namespace eLog.ViewModels
                         {
                             Status = $"Информация об изготовлении id{part.Id} обновлена.";
                         }
-
                         break;
                     }
                 }
-
                 Parts[Parts.IndexOf((PartInfoModel)p)] = part;
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
@@ -271,27 +308,6 @@ namespace eLog.ViewModels
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
-
-            //OverlayOn();
-            //var (result, partsFinished, machineTime) = WindowsUserDialogService.GetFinishResult();
-            //switch (result)
-            //{
-            //    case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished > 0:
-            //        var part = Parts[Parts.IndexOf((PartInfoModel)p)];
-            //        part.PartsFinished = partsFinished > part.PartsCount ? part.PartsCount : partsFinished;
-            //        part.MachineTime = machineTime;
-            //        part.EndMachiningTime = DateTime.Now;
-            //        var id = part.WriteToXl();
-            //        part.Id = id;
-            //        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-            //        if (result is EndDetailResult.FinishAndNext) StartDetailCommand.Execute(true);
-            //        break;
-            //    case EndDetailResult.Finish or EndDetailResult.FinishAndNext when partsFinished == 0:
-            //        Parts.Remove((PartInfoModel)p);
-            //        break;
-            //}
-            //OnPropertyChanged(nameof(WorkIsNotInProgress));
-            //OverlayOff();
         }
         private static bool CanEndDetailCommandExecute(object p) => true;
         #endregion
@@ -311,12 +327,15 @@ namespace eLog.ViewModels
             OnPropertyChanged(nameof(Overlay));
         }
 
+        
+
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
+            SetDownTimeCommand = new LambdaCommand(OnSetDownTimeCommandExecuted, CanSetDownTimeCommandExecute);
             EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
             EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
             EditDetailCommand = new LambdaCommand(OnEditDetailCommandExecuted, CanEditDetailCommandExecute);

@@ -22,7 +22,7 @@ namespace eLog.Infrastructure
     public static class AppSettings
     {
         /// <summary>
-        /// Локальный путь для записи изготовлений при неудачной записи в общую таблицу на случай отстутствия интернета, занятости файла и тд. 
+        /// Локальный путь для записи изготовлений при неудачной записи в общую таблицу на случай отсутствия интернета, занятости файла и тд. 
         /// </summary>
         public const string XlReservedPath = "C:\\ProgramData\\dece1ver\\eLog\\XL";
 
@@ -45,6 +45,11 @@ namespace eLog.Infrastructure
         /// Путь к общей таблице
         /// </summary>
         public static string XlPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Путь к таблице с номенклатурой
+        /// </summary>
+        public static string OrdersSourcePath { get; set; } = string.Empty;
 
         /// <summary>
         /// Список операторов
@@ -72,6 +77,7 @@ namespace eLog.Infrastructure
                     },
                 };
             XlPath = string.Empty;
+            OrdersSourcePath = string.Empty;
             RewriteConfig();
         }
 
@@ -89,6 +95,7 @@ namespace eLog.Infrastructure
                 if (appSettings is null) throw new ArgumentNullException();
                 Machine = appSettings.Machine;
                 XlPath = appSettings.XlPath;
+                OrdersSourcePath = appSettings.OrdersSourcePath;
                 Operators = appSettings.Operators;
                 CurrentOperator = appSettings.CurrentOperator;
                 if (appSettings.CurrentOperator is null && Operators.Count > 0) CurrentOperator = Operators[0];
@@ -105,7 +112,7 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void RewriteConfig()
         {
-            var appSettings = new AppSettingsModel(Machine, XlPath, Operators, CurrentOperator);
+            var appSettings = new AppSettingsModel(Machine, XlPath, OrdersSourcePath, Operators, CurrentOperator);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented));
         }

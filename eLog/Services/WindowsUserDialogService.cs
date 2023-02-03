@@ -102,7 +102,7 @@ namespace eLog.Services
         public static bool EditDetail(ref PartInfoModel part)
         {
             var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.PartsCount,
-                part.SetupTimePlan, part.MachineTimePlan)
+                part.SetupTimePlan, part.PartProductionTimePlan)
             {
                 StartSetupTime = part.StartSetupTime,
                 StartMachiningTime = part.StartMachiningTime,
@@ -119,14 +119,14 @@ namespace eLog.Services
             if (dlg.ShowDialog() != true) return false;
             part = dlg.Part;
             if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
-            if (part.EndMachiningTime != DateTime.MinValue && part.MachineTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
+            if (part.EndMachiningTime != DateTime.MinValue && part.FullProductionTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
             return true;
         }
 
         public static EndDetailResult FinishDetail(ref PartInfoModel part)
         {
             var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.PartsCount,
-                part.SetupTimePlan, part.MachineTimePlan)
+                part.SetupTimePlan, part.PartProductionTimePlan)
             {
                 StartSetupTime = part.StartSetupTime,
                 StartMachiningTime = part.StartMachiningTime,
@@ -148,6 +148,17 @@ namespace eLog.Services
             dlg.Part.EndMachiningTime = DateTime.Now;
             part = dlg.Part;
             return dlg.EndDetailResult;
+        }
+
+        public static DownTime.Types? SetDownTimeType()
+        {
+            var dlg = new SetDownTimeDialogWindow()
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (dlg.ShowDialog() is true) return dlg.Type;
+            return null;
         }
     }
 }

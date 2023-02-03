@@ -28,7 +28,7 @@ namespace eLog.Models
             Types.WarmingUp => "Прогрев",
             Types.ToolSearching => "Поиск и получение инструмента",
             Types.Mentoring => "Помощь / наставничество / обучение",
-            Types.AttendingTheEvent => "Мероприятия",
+            Types.AttendingTheEvent => "Участие в мероприятиях",
             Types.FixtureMaking => "Изготовление оснастки и калибров",
             Types.EquipmentFailure => "Отказ оборудования",
             _ => throw new ArgumentOutOfRangeException()
@@ -37,7 +37,7 @@ namespace eLog.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public TimeSpan Time => EndTime - StartTime;
-        public bool IsFinished => EndTime > StartTime;
+        public bool InProgress => EndTime < StartTime;
 
         public DownTime(Types type)
         {

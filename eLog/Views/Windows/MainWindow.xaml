@@ -74,7 +74,7 @@
             </StatusBar>
             <DockPanel LastChildFill="True">
 
-                <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0">
+                <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0" >
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <GroupBox Header="{Binding FullName}">
@@ -100,7 +100,7 @@
                                                    Text="{Binding PartsCountInfo}" />
                                         <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" Text="Начало наладки:" />
                                         <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 0" 
-                                                   Text="{Binding StringFormat={}{0:dd.MM.yyy HH:mm}, Path=StartSetupTime}" />
+                                                   Text="{Binding StartSetupTime, StringFormat={}{0:dd.MM.yyy HH:mm}}" />
                                         <TextBlock Grid.Column="0" Grid.Row="2" Margin="5 0" Text="Завершение наладки:" />
                                         <TextBlock Grid.Column="1" Grid.Row="2" Margin="5 0" 
                                                    Text="{Binding EndSetupInfo}" />
@@ -111,7 +111,9 @@
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 -6 0 0">
                                         <StackPanel Margin="0" Orientation="Horizontal" HorizontalAlignment="Right" 
                                                 Visibility="{Binding IsStarted, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}">
-                                            <Button Style="{StaticResource lvButton}">
+                                            <Button Style="{StaticResource lvButton}" 
+                                                    Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
+                                                    CommandParameter="{Binding}">
                                                 <Button.Content>
                                                     <TextBlock Text="Простой" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
                                                 </Button.Content>

@@ -21,8 +21,8 @@ namespace eLog.Models
         private int _Setup;
         private int _PartsCount;
         private int _PartsFinished;
-        private readonly double _SetupTimePlan;
-        private readonly double _MachineTimePlan;
+        private double _SetupTimePlan;
+        private double _PartProductionTimePlan;
         private TimeSpan _MachineTime;
         private DateTime _StartSetupTime;
         private DateTime _StartMachiningTime;
@@ -85,14 +85,14 @@ namespace eLog.Models
         public double SetupTimePlan
         {
             get => _SetupTimePlan;
-            init => Set(ref _SetupTimePlan, value);
+            set => Set(ref _SetupTimePlan, value);
         }
 
         /// <summary> Плановое штучное время. Может быть присвоено только при инициализации (предполагается получение из БД). </summary>
-        public double MachineTimePlan
+        public double PartProductionTimePlan
         {
-            get => _MachineTimePlan;
-            init => Set(ref _MachineTimePlan, value);
+            get => _PartProductionTimePlan;
+            set => Set(ref _PartProductionTimePlan, value);
         }
 
         /// <summary> Фактическое машинное время, фиксируемое оператором. В расчетах выработки не участвует </summary>
@@ -176,12 +176,12 @@ namespace eLog.Models
         {
             get
             {
-                if (MachineTimeFact.TotalMinutes <= 0)
+                if (FullProductionTimeFact.TotalMinutes <= 0)
                 {
                     var setup = SetupTimeFact.TotalMinutes > 0 ? SetupTimeFact.TotalMinutes : SetupTimePlan;
-                    return $"{StartSetupTime.AddMinutes(setup).AddMinutes(PartsCount * MachineTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {PartsCount} шт по {MachineTimePlan} мин.)";
+                    return $"{StartSetupTime.AddMinutes(setup).AddMinutes(PartsCount * PartProductionTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {PartsCount} шт по {PartProductionTimePlan} мин.)";
                 }
-                return $"{EndMachiningTime:dd.MM.yyyy HH:mm}{(MachineTimeFact == TimeSpan.Zero ? string.Empty : $" ({MachineTimePlan * PartsFinished / MachineTimeFact.TotalMinutes * 100:N0}%)")}";
+                return $"{EndMachiningTime:dd.MM.yyyy HH:mm}{(FullProductionTimeFact == TimeSpan.Zero ? string.Empty : $" ({PartProductionTimePlan * PartsFinished / FullProductionTimeFact.TotalMinutes * 100:N0}%)")}";
             }
         }
 
@@ -191,8 +191,8 @@ namespace eLog.Models
         /// <summary> Полное название детали (наименование + обозначение) </summary>
         public string FullName => $"{Name} {Number}";
 
-        /// <summary>Фактическое машинное время </summary>
-        public TimeSpan MachineTimeFact => EndMachiningTime - StartMachiningTime;
+        /// <summary>Фактическое время изготовления </summary>
+        public TimeSpan FullProductionTimeFact => EndMachiningTime - StartMachiningTime;
 
         /// <summary>
         /// Может ли быть завершена деталь.
@@ -202,9 +202,9 @@ namespace eLog.Models
 
         /// <summary>
         /// Завершено ли изготовление детали.
-        /// True если время завершения изготовления больше, чем время начала наладки и если завершена наладка (SetupIsFinished == true).
+        /// True если время завершения изготовления больше, чем время начала наладки, также если завершена наладка (SetupIsFinished == true) и количество выпущенных деталей больше 0.
         /// </summary>
-        public bool IsFinished => EndMachiningTime > StartMachiningTime && SetupIsFinished;
+        public bool IsFinished => EndMachiningTime > StartMachiningTime && SetupIsFinished && PartsFinished > 0;
 
         /// <summary>
         /// Завершена ли наладка.
@@ -224,7 +224,7 @@ namespace eLog.Models
         /// </summary>
         public bool IsStarted => !IsFinished;
 
-        public bool ValidParameters => PartsFinished > 0 && MachineTimeFact.TotalMinutes > 0 && MachineTime.TotalMinutes > 0 || PartsFinished == 0;
+        public bool ValidParameters => PartsFinished > 0 && FullProductionTimeFact.TotalMinutes > 0 && MachineTime.TotalMinutes > 0 || PartsFinished == 0;
 
         /// <summary>
         /// Информация о детали.
@@ -236,8 +236,8 @@ namespace eLog.Models
         /// <param name="order">Заказ</param>
         /// <param name="partsCount">Количество</param>
         /// <param name="setupTimePlan">Плановое время наладки</param>
-        /// <param name="machineTimePlan">Плановое штучное время</param>
-        public PartInfoModel(string name, string number, int setup, string order, int partsCount, double setupTimePlan, double machineTimePlan)
+        /// <param name="partProductionTimePlan">Плановое штучное время</param>
+        public PartInfoModel(string name, string number, int setup, string order, int partsCount, double setupTimePlan, double partProductionTimePlan)
         {
             _Name = name;
             _Number = number;
@@ -246,9 +246,19 @@ namespace eLog.Models
             PartsFinished = -1;
             PartsCount = partsCount;
             SetupTimePlan = setupTimePlan;
-            MachineTimePlan = machineTimePlan;
+            PartProductionTimePlan = partProductionTimePlan;
             Id = -1;
             _DownTimes = new ObservableCollection<DownTime>();
+        }
+
+        public PartInfoModel()
+        {
+            _Name = string.Empty;
+            _Number = string.Empty;
+            _Order = string.Empty;
+            StartSetupTime = DateTime.Now;
+            _DownTimes = new ObservableCollection<DownTime>();
+            Id = -1;
         }
     }
 }

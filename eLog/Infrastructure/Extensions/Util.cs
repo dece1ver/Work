@@ -29,11 +29,16 @@ namespace eLog.Infrastructure.Extensions
             return new string(letters);
         }
 
+        /// <summary>
+        /// Получение информации о заказе по номеру М/Л (имитация)
+        /// </summary>
+        /// <param name="orderNumber">Номер М/Л</param>
+        public static PartInfoModel GetPartFromOrder(this string orderNumber) => string.Empty.GetPartFromBarCode();
 
         /// <summary>
         /// Получение информации о детали с БД (пока имитация)
         /// </summary>
-        /// <param name="barCode"></param>
+        /// <param name="barCode">Шрихкод</param>
         /// <returns></returns>
         public static PartInfoModel GetPartFromBarCode(this string barCode)
         {
@@ -55,7 +60,6 @@ namespace eLog.Infrastructure.Extensions
         /// Запись изготовления в Excel таблицу
         /// </summary>
         /// <param name="part">Информация об изготовлении</param>
-        /// <param name="pathToXl">Путь к таблице</param>
         /// <returns>Int32 - Id записи в таблице</returns>
         /// <exception cref="NotImplementedException"></exception>
         public static int WriteToXl(this PartInfoModel part)
@@ -64,9 +68,23 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
+                IXLRow? prevRow = null;
                 foreach (var xlRow in wb.Worksheet("Для заполнения").Rows())
                 {
-                    if (xlRow is null || !xlRow.Cell(6).Value.IsBlank) continue;
+                    if (xlRow is null) continue;
+                    if (!xlRow.Cell(6).Value.IsBlank)
+                    {
+                        prevRow = xlRow;
+                        continue;
+                    }
+
+                    id = (int)prevRow!.Cell(1).Value.GetNumber() + 1;
+                    xlRow.Style = prevRow!.Style;
+                    xlRow.Cell(1).Value = id;
+                    xlRow.Cell(2).FormulaR1C1 = prevRow.Cell(2).FormulaR1C1;
+                    xlRow.Cell(3).FormulaR1C1 = prevRow.Cell(3).FormulaR1C1;
+                    xlRow.Cell(4).FormulaR1C1 = prevRow.Cell(4).FormulaR1C1;
+                    xlRow.Cell(5).Value = prevRow.Cell(5).Value;
                     xlRow.Cell(6).Value = DateTime.Today.ToString("dd.MM.yyyy");
                     xlRow.Cell(7).Value = AppSettings.Machine.Name;
                     xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName;
@@ -75,12 +93,20 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(11).Value = part.PartsFinished;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(15).FormulaR1C1 = prevRow.Cell(15).FormulaR1C1;
                     xlRow.Cell(16).Value = part.SetupTimePlan;
+                    xlRow.Cell(17).FormulaR1C1 = prevRow.Cell(17).FormulaR1C1;
+                    xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(22).Value = part.MachineTimePlan;
+                    xlRow.Cell(21).FormulaR1C1 = prevRow.Cell(21).FormulaR1C1;
+                    xlRow.Cell(22).Value = part.PartProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                    id = (int)xlRow.Cell(1).Value.GetNumber();
+                    for (var i = 24; i <= 32; i++)
+                    {
+                        xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
+                    }
+
                     break;
                 }
                 wb.Save();
@@ -116,10 +142,10 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(19).Value = part.SetupTimeFact.TotalMinutes > 0
                         ? part.StartMachiningTime.ToString("HH:mm")
                         : "-";
-                    xlRow.Cell(20).Value = part.MachineTimeFact.TotalMinutes > 0
+                    xlRow.Cell(20).Value = part.FullProductionTimeFact.TotalMinutes > 0
                         ? part.EndMachiningTime.ToString("HH:mm")
                         : "-";
-                    xlRow.Cell(22).Value = part.MachineTimePlan;
+                    xlRow.Cell(22).Value = part.PartProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     result = true;
                     break;

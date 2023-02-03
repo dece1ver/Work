@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using eLog.Models;
 
 namespace eLog.Views.Windows.Dialogs
 {
@@ -19,6 +20,7 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class SetDownTimeDialogWindow : Window
     {
+        public DownTime.Types Type { get; set; }
         public SetDownTimeDialogWindow()
         {
             InitializeComponent();

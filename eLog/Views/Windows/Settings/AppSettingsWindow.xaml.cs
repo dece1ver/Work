@@ -42,14 +42,25 @@ namespace eLog.Views.Windows.Settings
 
         private void SetXlPathButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new();
-            openFileDialog.Filter = "Excel таблица (*.xlsx)|*.xlsx";
-            openFileDialog.DefaultExt = "xslx";
-            if (openFileDialog.ShowDialog() == true)
+            OpenFileDialog openFileDialog = new()
             {
-                AppSettings.XlPath = openFileDialog.FileName;
-                XlPathTextBox.Text = AppSettings.XlPath;
-            }
+                Filter = "Excel таблица (*.xlsx)|*.xlsx",
+                DefaultExt = "xslx"
+            };
+            if (openFileDialog.ShowDialog() != true) return;
+            AppSettings.XlPath = openFileDialog.FileName;
+            XlPathTextBox.Text = AppSettings.XlPath;
+        }
+        private void SetOrdersSourceButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new()
+            {
+                Filter = "Excel таблица (*.xls)|*.xls",
+                DefaultExt = "xsl"
+            };
+            if (openFileDialog.ShowDialog() != true) return;
+            AppSettings.OrdersSourcePath = openFileDialog.FileName;
+            OrdersSourcePathTextBox.Text = AppSettings.OrdersSourcePath;
         }
 
         #region PropertyChanged
@@ -86,5 +97,7 @@ namespace eLog.Views.Windows.Settings
         }
 
         #endregion
+
+        
     }
 }
