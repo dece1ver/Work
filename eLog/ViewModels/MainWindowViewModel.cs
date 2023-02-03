@@ -17,9 +17,7 @@ namespace eLog.ViewModels
     internal class MainWindowViewModel : ViewModel
     {
         private Machine _Machine = AppSettings.Machine;
-        /// <summary>
-        /// Станок
-        /// </summary>
+        /// <summary> Станок </summary>
         public Machine Machine
         {
             get => _Machine;
@@ -27,9 +25,7 @@ namespace eLog.ViewModels
         }
 
         private Operator? _CurrentOperator = AppSettings.CurrentOperator;
-        /// <summary>
-        /// Текущий оператор
-        /// </summary>
+        /// <summary> Текущий оператор </summary>
         public Operator? CurrentOperator
         {
             get => _CurrentOperator;
@@ -41,9 +37,7 @@ namespace eLog.ViewModels
         }
 
         private ObservableCollection<Operator> _Operators = AppSettings.Operators;
-        /// <summary>
-        /// Список операторов
-        /// </summary>
+        /// <summary> Список операторов </summary>
         public ObservableCollection<Operator> Operators
         {
             get => _Operators;
@@ -55,9 +49,7 @@ namespace eLog.ViewModels
         }
 
         private string _Status = string.Empty;
-        /// <summary>
-        /// Статус
-        /// </summary>
+        /// <summary> Статус </summary>
         public string Status
         {
             get => _Status;
@@ -65,9 +57,7 @@ namespace eLog.ViewModels
         }
 
         private double _Progress;
-        /// <summary>
-        /// Значение прогрессбара
-        /// </summary>
+        /// <summary> Значение прогрессбара </summary>
         public double Progress
         {
             get => _Progress;
@@ -79,9 +69,7 @@ namespace eLog.ViewModels
         }
 
         private double _ProgressMaxValue;
-        /// <summary>
-        /// Максимальное значение прогрессбара
-        /// </summary>
+        /// <summary> Максимальное значение прогрессбара </summary>
         public double ProgressMaxValue
         {
             get => _ProgressMaxValue;
@@ -99,9 +87,7 @@ namespace eLog.ViewModels
 
         public bool Overlay { get; set; }
 
-        /// <summary>
-        /// Детали
-        /// </summary>
+        /// <summary> Детали </summary>
         private ObservableCollection<PartInfoModel> _Parts = new();
 
         public ObservableCollection<PartInfoModel> Parts

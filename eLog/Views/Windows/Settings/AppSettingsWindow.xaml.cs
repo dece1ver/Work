@@ -45,7 +45,7 @@ namespace eLog.Views.Windows.Settings
             OpenFileDialog openFileDialog = new()
             {
                 Filter = "Excel таблица (*.xlsx)|*.xlsx",
-                DefaultExt = "xslx"
+                DefaultExt = "xlsx"
             };
             if (openFileDialog.ShowDialog() != true) return;
             AppSettings.XlPath = openFileDialog.FileName;
@@ -55,8 +55,8 @@ namespace eLog.Views.Windows.Settings
         {
             OpenFileDialog openFileDialog = new()
             {
-                Filter = "Excel таблица (*.xls)|*.xls",
-                DefaultExt = "xsl"
+                Filter = "Excel таблица (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx"
             };
             if (openFileDialog.ShowDialog() != true) return;
             AppSettings.OrdersSourcePath = openFileDialog.FileName;

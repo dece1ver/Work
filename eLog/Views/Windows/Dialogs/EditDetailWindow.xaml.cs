@@ -39,6 +39,11 @@ namespace eLog.Views.Windows.Dialogs
             else
             {
                 var tempPart = Part.Order.GetPartFromOrder();
+                if (tempPart is null)
+                {
+                    MessageBox.Show("Заказ не найден.", "Заказ не найден.", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
                 Part.Name = tempPart.Name;
                 Part.Number = tempPart.Number;
                 Part.PartsCount = tempPart.PartsCount;
