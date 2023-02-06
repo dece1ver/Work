@@ -27,14 +27,24 @@ namespace eLog.Infrastructure
         public const string XlReservedPath = "C:\\ProgramData\\dece1ver\\eLog\\XL";
 
         /// <summary>
-        /// Директория с файлом конфигурации
+        /// Директория для хранения всякого
         /// </summary>
-        public const string ConfigPath = "C:\\ProgramData\\dece1ver\\eLog";
+        public const string BasePath = "C:\\ProgramData\\dece1ver\\eLog";
 
         /// <summary>
         /// Путь к файлу конфигурации
         /// </summary>
-        public static readonly string ConfigFilePath = Path.Combine(ConfigPath, "config.json");
+        public static readonly string ConfigFilePath = Path.Combine(BasePath, "config.json");
+
+        /// <summary>
+        /// Путь к локальному списку заказов
+        /// </summary>
+        public static readonly string LocalOrdersFile = Path.Combine(BasePath, "orders.xlsx");
+
+        /// <summary>
+        /// Путь к резервному списку заказов
+        /// </summary>
+        public static readonly string BackupOrdersFile = Path.Combine(BasePath, "orders-backup.xlsx");
 
         /// <summary>
         /// Текущий станок
@@ -67,7 +77,7 @@ namespace eLog.Infrastructure
         private static void CreateBaseConfig()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
-            if (!Directory.Exists(ConfigPath)) Directory.CreateDirectory(ConfigPath);
+            if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
             Machine = new Machine(0);
             Operators = new ObservableCollection<Operator>() {
                 new() {

@@ -37,7 +37,7 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                var wb = new XLWorkbook(AppSettings.OrdersSourcePath);
+                var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
                 foreach (var xlRow in wb.Worksheet(1).Rows())
                 {
                     if (xlRow is {} && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper()))

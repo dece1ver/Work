@@ -219,7 +219,7 @@ namespace eLog.Models
         public bool SetupIsNotFinished => !SetupIsFinished;
 
         /// <summary>
-        /// Не завершена ли наладка. Нужно для привязок разметки.
+        /// Не завершено ли изготовление. Нужно для привязок разметки.
         /// Инвертированное значение свойства IsFinished.
         /// </summary>
         public bool IsStarted => !IsFinished;

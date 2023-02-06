@@ -9,7 +9,7 @@
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
-        Title="Редактирование детали" Height="340" Width="1024" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize">
+        Title="Редактирование детали" Height="368" Width="1024" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
         <cnv:DateTimeConverter x:Key="DateTimeConverter"/>
         <cnv:TimeSpanConverter x:Key="TimeSpanConverter"/>
@@ -31,125 +31,132 @@
         </Style>
     </Window.Resources>
     <Border BorderThickness="1" BorderBrush="Gray">
-        <Grid Margin="10 9 10 10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150"/>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="155"/>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="260"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition />
-            </Grid.RowDefinitions>
+        <DockPanel>
+            <StatusBar DockPanel.Dock="Bottom">
+                <StatusBarItem>
+                    <TextBlock Text="{Binding Status}" d:Text="Статус"/>
+                </StatusBarItem>
+            </StatusBar>
+            <Grid Margin="10 9 10 10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="260"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition />
+                </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" 
-                       Text="Наименование:"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
-                     d:Text="Корпус клапана"
-                     Text="{Binding Part.Name}"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" 
+                           Text="Наименование:"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                         d:Text="Корпус клапана"
+                         Text="{Binding Part.Name}"/>
 
-            <TextBlock Grid.Row="1" Grid.Column="0"
-                       Text="Обозначение:"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
-                     d:Text="АР110-01-001"
-                     Text="{Binding Part.Number}"/>
+                <TextBlock Grid.Row="1" Grid.Column="0"
+                           Text="Обозначение:"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                         d:Text="АР110-01-001"
+                         Text="{Binding Part.Number}"/>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" 
-                       Text="М/Л:"/>
-            <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" >
-                <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
-                        DockPanel.Dock="Right" 
-                        Content="🔎" FontSize="18" Click="FindOrderDetailsButton_Click"/>
-                <TextBox d:Text="УЧ-1/001.1.1" 
-                         Text="{Binding Part.Order}"/>
-            </DockPanel>
+                <TextBlock Grid.Row="2" Grid.Column="0" 
+                           Text="М/Л:"/>
+                <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" >
+                    <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
+                            DockPanel.Dock="Right" 
+                            Content="🔎" FontSize="18" Click="FindOrderDetailsButton_Click"/>
+                    <TextBox d:Text="УЧ-1/001.1.1" 
+                             Text="{Binding Part.Order}"/>
+                </DockPanel>
 
-            <TextBlock Grid.Row="2" Grid.Column="2"
-                       Text="Количество:"/>
-            <TextBox Grid.Row="2" Grid.Column="3" d:Text="100500"
-                     Text="{Binding Part.PartsFinished}"/>
+                <TextBlock Grid.Row="2" Grid.Column="2"
+                           Text="Количество:"/>
+                <TextBox Grid.Row="2" Grid.Column="3" d:Text="100500"
+                         Text="{Binding Part.PartsFinished}"/>
 
-            <TextBlock Grid.Row="3" Grid.Column="0"
-                       Text="Начало наладки:"/>
-            <DockPanel Margin="0" Grid.Row="3" Grid.Column="1">
-                <Button x:Name="EndSetupButton"  Style="{StaticResource OperationButton}"
-                        DockPanel.Dock="Right" HorizontalAlignment="Stretch"
-                        Content="⇒" FontSize="22" Padding="0 0 0 5" Click="EndSetupButton_Click"/>
-                <TextBox d:Text="01.01.2023 00:00"
-                         Text="{Binding Part.StartSetupTime, Converter={StaticResource DateTimeConverter}}"/>
-            </DockPanel>
+                <TextBlock Grid.Row="3" Grid.Column="0"
+                           Text="Начало наладки:"/>
+                <DockPanel Margin="0" Grid.Row="3" Grid.Column="1">
+                    <Button x:Name="EndSetupButton"  Style="{StaticResource OperationButton}"
+                            DockPanel.Dock="Right" HorizontalAlignment="Stretch"
+                            Content="⇒" FontSize="22" Padding="0 0 0 5" Click="EndSetupButton_Click"/>
+                    <TextBox d:Text="01.01.2023 00:00"
+                             Text="{Binding Part.StartSetupTime, Converter={StaticResource DateTimeConverter}}"/>
+                </DockPanel>
 
-            <TextBlock Grid.Row="3" Grid.Column="2"
-                       Text="Конец наладки:"/>
-            <DockPanel Grid.Row="3" Grid.Column="3" >
-                <Button x:Name="EndSetupTimeButton" Style="{StaticResource OperationButton}"
-                        DockPanel.Dock="Right" HorizontalAlignment="Stretch" 
-                        Content="⏱" FontSize="20" Click="EndSetupTimeButton_Click"/>
-                <TextBox d:Text="01.01.2023 01:00"
-                         Text="{Binding Part.StartMachiningTime, Converter={StaticResource DateTimeConverter}}"/>
-            </DockPanel>
+                <TextBlock Grid.Row="3" Grid.Column="2"
+                           Text="Конец наладки:"/>
+                <DockPanel Grid.Row="3" Grid.Column="3" >
+                    <Button x:Name="EndSetupTimeButton" Style="{StaticResource OperationButton}"
+                            DockPanel.Dock="Right" HorizontalAlignment="Stretch" 
+                            Content="⏱" FontSize="20" Click="EndSetupTimeButton_Click"/>
+                    <TextBox d:Text="01.01.2023 01:00"
+                             Text="{Binding Part.StartMachiningTime, Converter={StaticResource DateTimeConverter}}"/>
+                </DockPanel>
 
-            <TextBlock Grid.Row="4" Grid.Column="0"
-                       Text="Время завершения:"/>
-            <DockPanel Grid.Row="4" Grid.Column="1">
-                <Button x:Name="EndProductionTimeButton" Style="{StaticResource OperationButton}"
-                        DockPanel.Dock="Right" HorizontalAlignment="Stretch" 
-                        Content="⏱" FontSize="20" Click="EndProductionTimeButton_Click"/>
-                <TextBox d:Text="01.01.2023 07:00"
-                         Text="{Binding Part.EndMachiningTime, Converter={StaticResource DateTimeConverter}}"/>
-            </DockPanel>
+                <TextBlock Grid.Row="4" Grid.Column="0"
+                           Text="Время завершения:"/>
+                <DockPanel Grid.Row="4" Grid.Column="1">
+                    <Button x:Name="EndProductionTimeButton" Style="{StaticResource OperationButton}"
+                            DockPanel.Dock="Right" HorizontalAlignment="Stretch" 
+                            Content="⏱" FontSize="20" Click="EndProductionTimeButton_Click"/>
+                    <TextBox d:Text="01.01.2023 07:00"
+                             Text="{Binding Part.EndMachiningTime, Converter={StaticResource DateTimeConverter}}"/>
+                </DockPanel>
 
-            <TextBlock Grid.Row="4" Grid.Column="2"
-                       Text="Машинное время:"/>
-            <TextBox Grid.Row="4" Grid.Column="3" d:Text="00:04:45"
-                     Text="{Binding Part.MachineTime, Converter={StaticResource TimeSpanConverter}}"/>
+                <TextBlock Grid.Row="4" Grid.Column="2"
+                           Text="Машинное время:"/>
+                <TextBox Grid.Row="4" Grid.Column="3" d:Text="00:04:45"
+                         Text="{Binding Part.MachineTime, Converter={StaticResource TimeSpanConverter}}"/>
 
-            <TextBlock Grid.Row="5" Grid.Column="0"
-                       Text="Наладка норматив:"/>
-            <TextBox Grid.Row="5" Grid.Column="1" d:Text="90"
-                     Text="{Binding Part.SetupTimePlan}"/>
+                <TextBlock Grid.Row="5" Grid.Column="0"
+                           Text="Наладка норматив:"/>
+                <TextBox Grid.Row="5" Grid.Column="1" d:Text="90"
+                         Text="{Binding Part.SetupTimePlan}"/>
 
-            <TextBlock Grid.Row="5" Grid.Column="2"
-                       Text="Штучное норматив:"/>
-            <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
-                     Text="{Binding Part.PartProductionTimePlan}"/>
+                <TextBlock Grid.Row="5" Grid.Column="2"
+                           Text="Штучное норматив:"/>
+                <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
+                         Text="{Binding Part.PartProductionTimePlan}"/>
 
-            <Button Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2"
-                    Margin="0 15 0 0" IsDefault="True" Width="150" Height="60"
-                    HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
-                <Button.Content>
-                    <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                </Button.Content>
-                <Button.Command>
-                    <cmd:CloseDialogCommand DialogResult="False"/>
-                </Button.Command>
-            </Button>
+                <Button Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2"
+                        Margin="0 15 0 0" Width="150" Height="60"
+                        HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
+                    <Button.Content>
+                        <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </Button.Content>
+                    <Button.Command>
+                        <cmd:CloseDialogCommand DialogResult="False"/>
+                    </Button.Command>
+                </Button>
 
-            <Button Grid.Column="5" Grid.Row="6" 
-                    Margin="0 15 0 0" IsDefault="True" Width="260" Height="60"
-                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
-                <Button.Content>
-                    <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                </Button.Content>
-                <Button.Command>
-                    <cmd:CloseDialogCommand DialogResult="True"/>
-                </Button.Command>
-            </Button>
+                <Button Grid.Column="5" Grid.Row="6" 
+                        Margin="0 15 0 0" IsDefault="True" Width="260" Height="60"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
+                    <Button.Content>
+                        <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </Button.Content>
+                    <Button.Command>
+                        <cmd:CloseDialogCommand DialogResult="True"/>
+                    </Button.Command>
+                </Button>
 
-            <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="6" 
-                    BorderBrush="LightGray" BorderThickness="1" 
-                    Margin="5 15"/>
-            <ctrl:NumericKeyboard Grid.Column="5" Grid.Row="0" Grid.RowSpan="6" Margin="0"/>
-        </Grid>
+                <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="6" 
+                        BorderBrush="LightGray" BorderThickness="1" 
+                        Margin="5 15"/>
+                <ctrl:NumericKeyboard Grid.Column="5" Grid.Row="0" Grid.RowSpan="6" Margin="0"/>
+            </Grid>
+        </DockPanel>
     </Border>
 </Window>
