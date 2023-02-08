@@ -33,29 +33,32 @@ namespace eLog.Infrastructure.Extensions
         /// Получение информации о заказе по номеру М/Л (имитация)
         /// </summary>
         /// <param name="orderNumber">Номер М/Л</param>
-        public static PartInfoModel? GetPartFromOrder(this string orderNumber)
+        public static List<PartInfoModel> GetPartsFromOrder(this string orderNumber)
         {
             try
             {
                 var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
-                foreach (var xlRow in wb.Worksheet(1).Rows())
-                {
-                    if (xlRow is {} && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper()))
-                    {
-                        return new PartInfoModel()
-                        {
-                            Name = xlRow.Cell(4).Value.GetText(),
-                            PartsCount = (int)xlRow.Cell(5).Value.GetNumber(),
-                        };
-                    }
-                }
+                return (from xlRow in wb.Worksheet(1).Rows() 
+                    where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper()) 
+                    select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), PartsCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
             }
-            catch (Exception e)
+            catch (Exception ex1)
             {
-                MessageBox.Show(e.Message);
+                try
+                {
+                    var wb = new XLWorkbook(AppSettings.BackupOrdersFile);
+                    return (from xlRow in wb.Worksheet(1).Rows()
+                        where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
+                        select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), PartsCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
+                }
+                catch (Exception ex2)
+                {
+                    MessageBox.Show(ex2.Message);
+                }
+                MessageBox.Show(ex1.Message);
                 
             }
-            return null;
+            return new List<PartInfoModel>();
         }
 
         /// <summary>
@@ -240,7 +243,7 @@ namespace eLog.Infrastructure.Extensions
         /// <summary>
         /// Список простоев с временами.
         /// </summary>
-        /// <param name="downtimes"></param>
+        /// <param name="downTimes"></param>
         /// <returns></returns>
         public static string Report(this ObservableCollection<DownTime> downTimes) => 
             downTimes.Aggregate(string.Empty, (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 2)} мин\n");

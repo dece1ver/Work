@@ -56,15 +56,15 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" 
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                            Text="Наименование:"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
-                         d:Text="Корпус клапана"
+                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
+                         d:Text="Корпус клапана" Height="78" TextWrapping="Wrap"
                          Text="{Binding Part.Name}"/>
 
-                <TextBlock Grid.Row="1" Grid.Column="0"
+                <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Collapsed"
                            Text="Обозначение:"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Visibility="Collapsed"
                          d:Text="АР110-01-001"
                          Text="{Binding Part.Number}"/>
 
@@ -75,7 +75,7 @@
                             DockPanel.Dock="Right" 
                             Content="🔎" FontSize="18" Click="FindOrderDetailsButton_Click"/>
                     <TextBox d:Text="УЧ-1/001.1.1" 
-                             Text="{Binding Part.Order}"/>
+                             Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged}"/>
                 </DockPanel>
 
                 <TextBlock Grid.Row="2" Grid.Column="2"
@@ -140,7 +140,7 @@
                     </Button.Command>
                 </Button>
 
-                <Button Grid.Column="5" Grid.Row="6" 
+                <Button Grid.Column="5" Grid.Row="6"
                         Margin="0 15 0 0" IsDefault="True" Width="260" Height="60"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
@@ -155,7 +155,7 @@
                 <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="6" 
                         BorderBrush="LightGray" BorderThickness="1" 
                         Margin="5 15"/>
-                <ctrl:NumericKeyboard Grid.Column="5" Grid.Row="0" Grid.RowSpan="6" Margin="0"/>
+                <ctrl:NumericKeyboard Grid.Column="5" Grid.Row="0" Grid.RowSpan="6" Margin="1 1 0 0"/>
             </Grid>
         </DockPanel>
     </Border>
