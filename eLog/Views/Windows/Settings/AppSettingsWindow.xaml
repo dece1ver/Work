@@ -6,8 +6,12 @@
         xmlns:l="clr-namespace:eLog.Views.Windows" mc:Ignorable="d"
         xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:settings="clr-namespace:eLog.Views.Windows.Settings"
+        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="Параметры" Height="480" Width="640" WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <cnv:ArrayConverter x:Key="ArrayConverter"/>
+    </Window.Resources>
     <DockPanel>
         <UniformGrid DockPanel.Dock="Bottom" Rows="1" HorizontalAlignment="Right" Margin="10">
             <Button Content="Отмена" Margin="0 0 5 0" IsCancel="True" Padding="20 5" 
@@ -34,6 +38,7 @@
                 <RowDefinition Height="24"/>
                 <RowDefinition Height="24"/>
                 <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Станок:" Margin="5 0 0 0" VerticalAlignment="Center"/>
             <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" Margin="0 1"
@@ -55,6 +60,9 @@
                 <TextBox x:Name="OrdersSourcePathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
                          Text="{Binding AppSettings.OrdersSourcePath}"/>
             </DockPanel>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Типы М/Л:" VerticalAlignment="Center" Margin="5 0 0 0" />
+            <TextBox Grid.Row="3" Grid.Column="1" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
+                     Text="{Binding AppSettings.OrderQualifiers, Converter={StaticResource ArrayConverter}}"/>
         </Grid>
     </DockPanel>
 </Window>

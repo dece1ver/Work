@@ -11,7 +11,7 @@ namespace eLog.Views.Windows.Settings
     /// <summary>
     /// Логика взаимодействия для AppSettingsWindow.xaml
     /// </summary>
-    public partial class AppSettingsWindow : Window
+    public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     {
         public static readonly DependencyProperty AppSettingsProperty =
             DependencyProperty.Register(

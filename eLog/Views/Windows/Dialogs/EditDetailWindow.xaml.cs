@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -30,8 +31,9 @@ namespace eLog.Views.Windows.Dialogs
     public partial class EditDetailWindow : Window, INotifyPropertyChanged
     {
         public List<PartInfoModel> Parts { get; set; } = new();
-        public int PartIndex { get; set; } = 0;
+        public int PartIndex { get; set; }
         public PartInfoModel Part { get; set; }
+        public int[] OrderMonths => Enumerable.Range(1, 12).ToArray();
 
         private string _Status;
         private string _OrderText = string.Empty;
@@ -101,7 +103,7 @@ namespace eLog.Views.Windows.Dialogs
                 Status =
                     $"Список заказов обновлен {File.GetLastWriteTime(AppSettings.LocalOrdersFile):dd.MM.yyyy HH:mm}";
             }
-            var updaterThread = new Thread(UpdateOrders);
+            var updaterThread = new Thread(UpdateOrders) {IsBackground = true};
             updaterThread.Start();
         }
 

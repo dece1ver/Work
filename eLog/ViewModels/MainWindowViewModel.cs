@@ -113,7 +113,7 @@ namespace eLog.ViewModels
         private void OnEditSettingsCommandExecuted(object p)
         {
             OverlayOn();
-            var settings = new AppSettingsModel(Machine, AppSettings.XlPath, AppSettings.OrdersSourcePath, Operators);
+            var settings = new AppSettingsModel(Machine, AppSettings.XlPath, AppSettings.OrdersSourcePath, AppSettings.OrderQualifiers, Operators);
             WindowsUserDialogService windowsUserDialogService = new();
 
             if (windowsUserDialogService.Edit(settings))
@@ -122,6 +122,7 @@ namespace eLog.ViewModels
                 Machine = AppSettings.Machine;
                 AppSettings.XlPath = settings.XlPath;
                 AppSettings.OrdersSourcePath = settings.OrdersSourcePath;
+                AppSettings.OrderQualifiers = settings.OrderQualifiers;
                 AppSettings.RewriteConfig();
             }
             OverlayOff();

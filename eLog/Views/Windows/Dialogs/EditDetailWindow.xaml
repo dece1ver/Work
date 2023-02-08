@@ -7,6 +7,7 @@
         xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
+        xmlns:inf="clr-namespace:eLog.Infrastructure"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
         Title="Редактирование детали" Height="368" Width="1024" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize" Loaded="Window_Loaded">
@@ -71,10 +72,18 @@
                 <TextBlock Grid.Row="2" Grid.Column="0" 
                            Text="М/Л:"/>
                 <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" >
+                    <!--<ComboBox Margin="1" Width="40" DockPanel.Dock="Left"
+                              ItemsSource="{x:Static inf:AppSettings.OrderQualifiers}" SelectedIndex="0"
+                              VerticalContentAlignment="Center" Padding="2"/>
+                    <TextBlock Text="-" Padding="0" Margin="0" FontSize="20"/>
+                    <ComboBox Margin="1" Width="40" DockPanel.Dock="Left"
+                              ItemsSource="{Binding OrderMonths}" SelectedIndex="0"
+                              VerticalContentAlignment="Center" Padding="2"/>
+                    <TextBlock Text="/" Padding="0" Margin="0" FontSize="20"/>-->
                     <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
                             DockPanel.Dock="Right" 
                             Content="🔎" FontSize="18" Click="FindOrderDetailsButton_Click"/>
-                    <TextBox d:Text="УЧ-1/001.1.1" 
+                    <TextBox d:Text="00001.1.1" 
                              Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged}"/>
                 </DockPanel>
 
