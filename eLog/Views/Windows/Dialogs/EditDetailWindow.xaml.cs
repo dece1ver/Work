@@ -33,10 +33,51 @@ namespace eLog.Views.Windows.Dialogs
         public List<PartInfoModel> Parts { get; set; } = new();
         public int PartIndex { get; set; }
         public PartInfoModel Part { get; set; }
-        public int[] OrderMonths => Enumerable.Range(1, 12).ToArray();
+        private static readonly string[] _orderMonths = Enumerable.Range(1, 12).Select(x => x.ToString("D2")).ToArray();
+
+        public string OrderQualifier
+        {
+            get => _OrderQualifier;
+            set
+            {
+                Set(ref _OrderQualifier, value);
+                OnPropertyChanged(nameof(OrderValidation));
+                OnPropertyChanged(nameof(NonEmptyOrder));
+                OnPropertyChanged(nameof(Part.Order));
+                Status = $"Выбран заказ: {Part.Order}";
+            }
+        }
+
+        public string OrderMonth
+        {
+            get => _OrderMonth;
+            set
+            {
+                Set(ref _OrderMonth, value);
+                OnPropertyChanged(nameof(OrderValidation));
+                OnPropertyChanged(nameof(CanBeClosed));
+                OnPropertyChanged(nameof(Part.Order));
+                Status = $"Выбран заказ: {Part.Order}";
+            }
+        }
+        public string OrderText
+        {
+            get => _OrderText;
+            set
+            {
+                Set(ref _OrderText, value);
+                Parts.Clear();
+                OnPropertyChanged(nameof(OrderValidation));
+                OnPropertyChanged(nameof(CanBeClosed));
+                OnPropertyChanged(nameof(Part.Order));
+                Status = $"Выбран заказ: {Part.Order}";
+            }
+        }
 
         private string _Status;
-        private string _OrderText = string.Empty;
+        private string _OrderText;
+        private string _OrderMonth = _orderMonths[0];
+        private string _OrderQualifier = AppSettings.OrderQualifiers[0];
 
         /// <summary> Статус </summary>
         public string Status
@@ -45,54 +86,85 @@ namespace eLog.Views.Windows.Dialogs
             set => Set(ref _Status, value);
         }
 
-        public bool CanBeClosed => (Part.IsFinished || Part is { SetupTimePlan: > 0, PartProductionTimePlan: > 0 } && OrderValidateType is not OrderValidateTypes.Error);
+        public bool CanBeClosed => (Part.IsFinished || Part is { SetupTimePlan: > 0, PartProductionTimePlan: > 0 } && OrderValidation is not OrderValidationTypes.Error);
 
-        public string OrderText
-        {
-            get => _OrderText;
-            set
-            {
-                Set(ref _OrderText, value);
-                Parts.Clear();
-                OnPropertyChanged(nameof(OrderValidateType));
-                OnPropertyChanged(nameof(CanBeClosed));
-            }
-        }
 
-        public enum OrderValidateTypes {Error, Empty, Valid}
+        public enum OrderValidationTypes {Error, Empty, Valid}
 
-        public OrderValidateTypes OrderValidateType
+        public OrderValidationTypes OrderValidation
         {
             get
             {
-                if (OrderText is "")
+                if (OrderQualifier is " ")
                 {
-                    return OrderValidateTypes.Empty;
+                    Part.Order = $"Без М/Л";
+                    return OrderValidationTypes.Empty;
                 }
 
-                if (OrderText.Length < 14 ||
-                    !char.IsLetter(OrderText[0]) ||
-                    !char.IsLetter(OrderText[1]) ||
-                    OrderText[2] != '-' ||
+                if (OrderText.Length < 9 ||
+                    !char.IsNumber(OrderText[0]) ||
+                    !char.IsNumber(OrderText[1]) ||
+                    !char.IsNumber(OrderText[2]) ||
                     !char.IsNumber(OrderText[3]) ||
                     !char.IsNumber(OrderText[4]) ||
-                    OrderText[5] != '/' ||
+                    OrderText[5] != '.' ||
                     !char.IsNumber(OrderText[6]) ||
-                    !char.IsNumber(OrderText[7]) ||
-                    !char.IsNumber(OrderText[8]) ||
-                    !char.IsNumber(OrderText[9]) ||
-                    !char.IsNumber(OrderText[10]) ||
-                    OrderText[11] != '.' ||
-                    !char.IsNumber(OrderText[12]) ||
-                    OrderText.Split('/')[1].Count(x => x is '.') != 2) return OrderValidateTypes.Error;
-                Part.Order = OrderText;
-                return OrderValidateTypes.Valid;
+                    !char.IsNumber(OrderText[^1]) ||
+                    OrderText.Count(x => x is '.') != 2)
+                {
+                    Part.Order = string.Empty;
+                    return OrderValidationTypes.Error;
+                }
+                Part.Order = $"{OrderQualifier}-{OrderMonth}/{OrderText}";
+                return OrderValidationTypes.Valid;
             }
         }
+
+        public bool NonEmptyOrder => OrderValidation is not OrderValidationTypes.Empty;
+
+        //public OrderValidation OrderValidateType
+        //{
+        //    get
+        //    {
+        //        if (OrderText is "")
+        //        {
+        //            return OrderValidationTypes.Empty;
+        //        }
+
+        //        if (OrderText.Length < 14 ||
+        //            !char.IsLetter(OrderText[0]) ||
+        //            !char.IsLetter(OrderText[1]) ||
+        //            OrderText[2] != '-' ||
+        //            !char.IsNumber(OrderText[3]) ||
+        //            !char.IsNumber(OrderText[4]) ||
+        //            OrderText[5] != '/' ||
+        //            !char.IsNumber(OrderText[6]) ||
+        //            !char.IsNumber(OrderText[7]) ||
+        //            !char.IsNumber(OrderText[8]) ||
+        //            !char.IsNumber(OrderText[9]) ||
+        //            !char.IsNumber(OrderText[10]) ||
+        //            OrderText[11] != '.' ||
+        //            !char.IsNumber(OrderText[12]) ||
+        //            OrderText.Split('/')[1].Count(x => x is '.') != 2) return OrderValidationTypes.Error;
+        //        Part.Order = OrderText;
+        //        return OrderValidationTypes.Valid;
+        //    }
+        //}
 
         public EditDetailWindow(PartInfoModel part)
         {
             Part = part;
+            OrderText = !string.IsNullOrWhiteSpace(Part.Order) && part.Order != "Без М/Л" && part.Order.Contains('/')
+                ? part.Order.Split('/')[1] 
+                : string.Empty;
+            OrderQualifier =
+                !string.IsNullOrWhiteSpace(Part.Order) && part.Order != "Без М/Л" && part.Order.Contains('-')
+                    ? part.Order.Split('-')[0]
+                    : "-";
+            OrderMonth =
+                !string.IsNullOrWhiteSpace(Part.Order) && part.Order != "Без М/Л" && part.Order.Contains('-') && part.Order.Contains('/')
+                    ? part.Order.Split('-')[1].Split('/')[0]
+                    : "01";
             InitializeComponent();
         }
 
@@ -110,11 +182,12 @@ namespace eLog.Views.Windows.Dialogs
         /// <summary> Реализация поиска номенклатуры по номеру М/Л (имитация) </summary>
         private void FindOrderDetailsButton_Click(object sender, RoutedEventArgs e)
         {
-            switch (OrderValidateType)
+            switch (OrderValidation)
             {
-                case OrderValidateTypes.Valid:
+                case OrderValidationTypes.Valid:
+                    
                     Status = "Поиск заказов...";
-                    if (Parts.Count == 0) Parts = OrderText.GetPartsFromOrder();
+                    if (Parts.Count == 0) Parts = Part.Order.GetPartsFromOrder();
                     if (PartIndex > Parts.Count - 1) PartIndex = 0;
 
                     switch (Parts.Count)
@@ -133,14 +206,16 @@ namespace eLog.Views.Windows.Dialogs
                             Part.Name = Parts[PartIndex].Name;
                             Part.Number = Parts[PartIndex].Number;
                             Part.PartsCount = Parts[PartIndex].PartsCount;
+                            Part.Order = $"";
                             PartIndex++;
                             break;
                     }
                     break;
-                case OrderValidateTypes.Empty:
+                case OrderValidationTypes.Empty:
+                    Part.Order = "Без М/Л";
                     Status = "Изготовление без м/л.";
                     break;
-                case OrderValidateTypes.Error:
+                case OrderValidationTypes.Error:
                     Status = "Номер заказа введен некорректно.";
                     break;
             }
@@ -201,6 +276,8 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
+
+
         #region PropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -235,6 +312,5 @@ namespace eLog.Views.Windows.Dialogs
         }
 
         #endregion
-
     }
 }

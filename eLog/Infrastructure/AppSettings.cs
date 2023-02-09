@@ -71,6 +71,7 @@ namespace eLog.Infrastructure
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
             {
+                "-",
                 "УЧ",
                 "ФЛ",
                 "БП",

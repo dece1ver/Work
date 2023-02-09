@@ -12,12 +12,20 @@ namespace eLog.Infrastructure.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is string[] { Length: > 0 } values ? string.Join("; ", values) : string.Empty;
+            return value is string[] { Length: > 0 } values ? string.Join("; ", values.Skip(1)) : string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value.ToString()?.Split(';').Select(q => q.Trim()).ToArray() ?? Array.Empty<string>();
+            var first = new[] { " " };
+            var arr = value.ToString()?.Split(';')
+                .Select(q => q.Trim())
+                .Where(q => !string.IsNullOrWhiteSpace(q))
+                .ToArray() ?? Array.Empty<string>();
+            var res = new string[first.Length + arr.Length];
+            first.CopyTo(res, 0);
+            arr.CopyTo(res, first.Length);
+            return res;
         }
     }
 }
