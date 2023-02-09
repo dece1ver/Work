@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
+using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -71,7 +72,7 @@ namespace eLog.Infrastructure
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
             {
-                "-",
+                Text.WithoutOrderItem,
                 "УЧ",
                 "ФЛ",
                 "БП",

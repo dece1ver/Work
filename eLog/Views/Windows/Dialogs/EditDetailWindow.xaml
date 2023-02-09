@@ -31,6 +31,9 @@
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="Margin" Value="3 0"/>
         </Style>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="FontSize" Value="19"/>
+        </Style>
     </Window.Resources>
     <Border BorderThickness="1" BorderBrush="Gray">
         <DockPanel>
@@ -62,7 +65,7 @@
                            Text="Наименование:"/>
                 <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
                          d:Text="Корпус клапана" Height="78" TextWrapping="Wrap"
-                         Text="{Binding Part.Name}"/>
+                         Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Collapsed"
                            Text="Обозначение:"/>
@@ -76,18 +79,18 @@
                     <Border BorderThickness="1" BorderBrush="{StaticResource ComboBox.Static.Editable.Border}" Margin="1">
                         <StackPanel Orientation="Horizontal">
                             <ComboBox Style="{DynamicResource DashComboBoxStyle}" Margin="0 0 0 0" Width="44" DockPanel.Dock="Left" 
-                                      SelectedValue="{Binding OrderQualifier}"
+                                      SelectedItem="{Binding OrderQualifier}"
                                       ItemsSource="{x:Static inf:AppSettings.OrderQualifiers}" FontSize="16" BorderThickness="0"
                                       VerticalContentAlignment="Center" Padding="3"/>
                             <ComboBox Style="{DynamicResource SlashComboBoxStyle}" Margin="0 0 0 0" Width="44" DockPanel.Dock="Left"
-                                      SelectedValue="{Binding OrderMonth, Mode=OneWayToSource}" IsEnabled="{Binding NonEmptyOrder}" 
+                                      SelectedItem="{Binding OrderMonth}" IsEnabled="{Binding NonEmptyOrder}" 
                                       Visibility="{Binding NonEmptyOrder, Converter={StaticResource VisibilityConverter}}"
                                       ItemsSource="{Binding OrderMonths, Mode=OneWay}" BorderThickness="0"
                                       VerticalContentAlignment="Center" Padding="3"/>
                         </StackPanel>
                     </Border>
                     <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
-                            DockPanel.Dock="Right" 
+                            DockPanel.Dock="Right" IsEnabled="{Binding NonEmptyOrder}" 
                             Content="🔎" FontSize="18" Click="FindOrderDetailsButton_Click"/>
                     <TextBox d:Text="00001.1.1" Margin="-2 0 1 0" IsEnabled="{Binding NonEmptyOrder}"
                              Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
@@ -95,8 +98,13 @@
 
                 <TextBlock Grid.Row="2" Grid.Column="2"
                            Text="Количество:"/>
-                <TextBox Grid.Row="2" Grid.Column="3" d:Text="100500"
-                         Text="{Binding Part.PartsFinished}"/>
+                <UniformGrid Grid.Row="2" Grid.Column="3" Columns="3">
+                    <TextBox d:Text="0"
+                             Text="{Binding Part.PartsFinished}"/>
+                    <TextBlock Text="/" HorizontalAlignment="Center" FontSize="20"/>
+                    <TextBox d:Text="1000"
+                             Text="{Binding PartsCount, UpdateSourceTrigger=PropertyChanged, StringFormat=0.;;#}"/>
+                </UniformGrid>
 
                 <TextBlock Grid.Row="3" Grid.Column="0"
                            Text="Начало наладки:"/>
@@ -136,12 +144,12 @@
                 <TextBlock Grid.Row="5" Grid.Column="0"
                            Text="Наладка норматив:"/>
                 <TextBox Grid.Row="5" Grid.Column="1" d:Text="90"
-                         Text="{Binding Part.SetupTimePlan}"/>
+                         Text="{Binding PartSetupTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0;;#}"/>
 
                 <TextBlock Grid.Row="5" Grid.Column="2"
                            Text="Штучное норматив:"/>
                 <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
-                         Text="{Binding Part.PartProductionTimePlan}"/>
+                         Text="{Binding PartPartProductionTimePlan, UpdateSourceTrigger=PropertyChanged, Delay=1000}"/>
 
                 <Button Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2"
                         Margin="0 15 0 0" Width="150" Height="60"
@@ -157,7 +165,7 @@
 
                 <Button Grid.Column="5" Grid.Row="6"
                         Margin="0 15 0 0" IsDefault="True" Width="260" Height="60"
-                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom" IsEnabled="{Binding CanBeClosed}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
                     <Button.Content>
                         <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>

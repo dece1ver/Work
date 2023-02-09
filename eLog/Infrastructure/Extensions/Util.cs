@@ -95,7 +95,7 @@ namespace eLog.Infrastructure.Extensions
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
                 var ws = wb.Worksheet("Для заполнения");
-                ws.LastRow().InsertRowsAbove(1);
+                ws.LastRowUsed().InsertRowsBelow(1);
                 IXLRow? prevRow = null;
                 
                 foreach (var xlRow in ws.Rows())
@@ -114,9 +114,11 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(3).FormulaR1C1 = prevRow.Cell(3).FormulaR1C1;
                     xlRow.Cell(4).FormulaR1C1 = prevRow.Cell(4).FormulaR1C1;
                     xlRow.Cell(5).Value = part.DownTimes.Report(); // потом добавить добавление этого отчета по простоям к комментариям
-                    xlRow.Cell(6).Value = DateTime.Today.ToString("dd.MM.yyyy");
+                    xlRow.Cell(6).Value = part.EndMachiningTime < DateTime.Today.AddHours(7).AddMinutes(5) 
+                        ? DateTime.Today.AddDays(-1).ToString("dd.MM.yyyy") 
+                        : DateTime.Today.ToString("dd.MM.yyyy");
                     xlRow.Cell(7).Value = AppSettings.Machine.Name;
-                    xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName;
+                    xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName.Trim();
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
                     xlRow.Cell(11).Value = part.PartsFinished;
