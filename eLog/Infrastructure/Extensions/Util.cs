@@ -252,5 +252,49 @@ namespace eLog.Infrastructure.Extensions
 
         public static double TotalMinutes(this ObservableCollection<DownTime> downTimes) =>
             downTimes.Aggregate(0.0, (sum, downTime) => sum + downTime.Time.TotalMinutes);
+
+        public enum GetNumberOption { Any, OnlyPositive }
+
+        /// <summary>
+        /// Получает число из строки
+        /// </summary>
+        /// <param name="stringNumber">Строка для получения</param>
+        /// <param name="defaultValue">Значение по умолчанию</param>
+        /// <param name="numberOption">Возвращаемое значение: только положительное или любое</param>
+        /// <returns>Значение Double, при неудаче возвращает значение по умолчанию</returns>
+        public static double GetDouble(this string stringNumber, double defaultValue = 0, GetNumberOption numberOption = GetNumberOption.OnlyPositive)
+        {
+            //if (stringNumber is "-") return double.NegativeInfinity;
+            NumberFormatInfo numberFormat = new() { NumberDecimalSeparator = "," };
+            if (!double.TryParse(stringNumber, NumberStyles.Any, numberFormat, out var result)) return defaultValue;
+            return numberOption switch
+            {
+                GetNumberOption.OnlyPositive when result >= 0 => result,
+                GetNumberOption.Any => result,
+                _ => defaultValue
+            };
+        }
+
+        /// <summary>
+        /// Получает число из строки
+        /// </summary>
+        /// <param name="stringNumber">Строка для получения</param>
+        /// <param name="defaultValue">Значение по умолчанию</param>
+        /// <param name="numberOption">Возвращаемое значение: только положительное или любое</param>
+        /// <returns>Значение Int32, при неудаче возвращает значение по умолчанию</returns>
+        public static int GetInt(this string stringNumber, int defaultValue = 0, GetNumberOption numberOption = GetNumberOption.OnlyPositive)
+        {
+            NumberFormatInfo numberFormat = new() { NumberDecimalSeparator = "," };
+            if (!int.TryParse(stringNumber, NumberStyles.Any, numberFormat, out var result)) return defaultValue;
+            if (numberOption == GetNumberOption.OnlyPositive && result > 0)
+            {
+                return result;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
     }
 }

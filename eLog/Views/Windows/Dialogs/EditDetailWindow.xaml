@@ -149,7 +149,7 @@
                 <TextBlock Grid.Row="5" Grid.Column="2"
                            Text="Штучное норматив:"/>
                 <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
-                         Text="{Binding PartPartProductionTimePlan, UpdateSourceTrigger=PropertyChanged, Delay=1000}"/>
+                         Text="{Binding PartPartProductionTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0.0;;#}"/>
 
                 <Button Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2"
                         Margin="0 15 0 0" Width="150" Height="60"

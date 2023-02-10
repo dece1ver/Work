@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -42,6 +43,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Set(ref _OrderQualifier, value);
+                Parts.Clear();
                 OnPropertyChanged(nameof(OrderValidation));
                 OnPropertyChanged(nameof(NonEmptyOrder));
                 OnPropertyChanged(nameof(Part.Order));
@@ -67,6 +69,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Set(ref _OrderMonth, value);
+                Parts.Clear();
                 OnPropertyChanged(nameof(OrderValidation));
                 OnPropertyChanged(nameof(Part.Order));
                 if (OrderValidation is OrderValidationTypes.Valid) Status = $"Выбран заказ: {Part.Order}";
@@ -265,19 +268,20 @@ namespace eLog.Views.Windows.Dialogs
                             return;
                         case 1:
                             Status = "Заказ найден.";
-                            Part.Name = Parts[0].Name;
+                            PartName = Parts[0].Name;
                             Part.Number = Parts[0].Number;
-                            Part.PartsCount = Parts[0].PartsCount;
+                            PartsCount = Parts[0].PartsCount;
                             break;
                         case > 1:
                             Status = $"Найдено несколько заказов: {Parts.Count}. Переключение на кнопку поиска.";
-                            Part.Name = Parts[PartIndex].Name;
+                            PartName = Parts[PartIndex].Name;
                             Part.Number = Parts[PartIndex].Number;
-                            Part.PartsCount = Parts[PartIndex].PartsCount;
-                            Part.Order = $"";
+                            PartsCount = Parts[PartIndex].PartsCount;
                             PartIndex++;
                             break;
                     }
+                    OnPropertyChanged(nameof(PartName));
+                    OnPropertyChanged(nameof(PartsCount));
                     break;
                 case OrderValidationTypes.Empty:
                     Part.Order = Text.WithoutOrderDescription;
