@@ -260,7 +260,7 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="stringNumber">Строка для получения</param>
         /// <param name="defaultValue">Значение по умолчанию</param>
-        /// <param name="numberOption">Возвращаемое значение: только положительное или любое</param>
+        /// <param name="numberOption">Возвращаемое значение: Any для любого, OnlyPositive для положительных</param>
         /// <returns>Значение Double, при неудаче возвращает значение по умолчанию</returns>
         public static double GetDouble(this string stringNumber, double defaultValue = 0, GetNumberOption numberOption = GetNumberOption.OnlyPositive)
         {

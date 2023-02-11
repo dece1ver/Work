@@ -47,12 +47,23 @@ namespace eLog.Views.Windows.Dialogs
                 OnPropertyChanged(nameof(OrderValidation));
                 OnPropertyChanged(nameof(NonEmptyOrder));
                 OnPropertyChanged(nameof(Part.Order));
+                Status = OrderValidation switch
+                {
+                    OrderValidationTypes.Error => string.Empty,
+                    OrderValidationTypes.Empty => $"Изготовление без М/Л",
+                    OrderValidationTypes.Valid => $"Выбран заказ: {Part.Order}",
+                    _ => Status
+                };
                 switch (OrderValidation)
                 {
                     case OrderValidationTypes.Error when OrderText == Text.WithoutOrderDescription:
                         OrderText = string.Empty;
                         break;
+                    case OrderValidationTypes.Error:
+                        Status = string.Empty;
+                        break;
                     case OrderValidationTypes.Empty:
+                        Status = "Изготовление без М/Л";
                         OrderText = Text.WithoutOrderDescription;
                         break;
                     case OrderValidationTypes.Valid:
@@ -72,7 +83,13 @@ namespace eLog.Views.Windows.Dialogs
                 Parts.Clear();
                 OnPropertyChanged(nameof(OrderValidation));
                 OnPropertyChanged(nameof(Part.Order));
-                if (OrderValidation is OrderValidationTypes.Valid) Status = $"Выбран заказ: {Part.Order}";
+                Status = OrderValidation switch
+                {
+                    OrderValidationTypes.Error => string.Empty,
+                    OrderValidationTypes.Empty => $"Изготовление без М/Л",
+                    OrderValidationTypes.Valid => $"Выбран заказ: {Part.Order}",
+                    _ => Status
+                };
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
@@ -85,7 +102,13 @@ namespace eLog.Views.Windows.Dialogs
                 Parts.Clear();
                 OnPropertyChanged(nameof(OrderValidation));
                 OnPropertyChanged(nameof(Part.Order));
-                if (OrderValidation is OrderValidationTypes.Valid) Status = $"Выбран заказ: {Part.Order}";
+                Status = OrderValidation switch
+                {
+                    OrderValidationTypes.Error => string.Empty,
+                    OrderValidationTypes.Empty => $"Изготовление без М/Л",
+                    OrderValidationTypes.Valid => $"Выбран заказ: {Part.Order}",
+                    _ => Status
+                };
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
@@ -103,11 +126,8 @@ namespace eLog.Views.Windows.Dialogs
         }
 
         public bool CanBeClosed => (Part.IsFinished || 
-                                    Part is { SetupTimePlan: > 0, PartProductionTimePlan: > 0 } && 
+                                    Part is { SetupTimePlan: > 0, PartProductionTimePlan: > 0, PartsCount: > 0} && 
                                     OrderValidation is not OrderValidationTypes.Error &&
-                                    Part.SetupTimePlan > 0 && 
-                                    Part.PartProductionTimePlan > 0 && 
-                                    Part.PartsCount > 0 && 
                                     !string.IsNullOrWhiteSpace(Part.FullName)
                                     );
 
@@ -176,7 +196,7 @@ namespace eLog.Views.Windows.Dialogs
         //} 
         #endregion
 
-        #region Обертки требуемых для валидации свойств детали, потому что я хз как отсюда заставить обновляться без этого.
+        #region Обертки требуемых для валидации свойств детали, потому что я хз как отсюда влиять на их сеттеры без влияния на геттеры (никак?).
         public string PartName
         {
             get => Part.Name;
@@ -187,32 +207,38 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        public double PartSetupTimePlan
+        private string _PartSetupTimePlan;
+        public string PartSetupTimePlan
         {
-            get => Part.SetupTimePlan;
+            get => _PartSetupTimePlan;
             set
             {
-                Part.SetupTimePlan = value;
+                _PartSetupTimePlan = value;
+                Part.SetupTimePlan = _PartSetupTimePlan.GetDouble(numberOption: Util.GetNumberOption.OnlyPositive);
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
 
-        public double PartPartProductionTimePlan
+        private string _PartPartProductionTimePlan;
+        public string PartPartProductionTimePlan
         {
-            get => Part.PartProductionTimePlan;
+            get => _PartPartProductionTimePlan;
             set
             {
-                Part.PartProductionTimePlan = value;
+                _PartPartProductionTimePlan = value; 
+                Part.PartProductionTimePlan = _PartPartProductionTimePlan.GetDouble(numberOption: Util.GetNumberOption.OnlyPositive); ;
                 OnPropertyChanged(nameof(CanBeClosed));
             }
-        } 
+        }
 
-        public int PartsCount
+        private string _PartsCount;
+        public string PartsCount
         {
-            get => Part.PartsCount;
+            get => _PartsCount;
             set
             {
-                Part.PartsCount = value;
+                _PartsCount = value;
+                Part.PartsCount = _PartsCount.GetInt(numberOption: Util.GetNumberOption.OnlyPositive);
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         } 
@@ -234,7 +260,9 @@ namespace eLog.Views.Windows.Dialogs
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
                     ? order.Split('-')[1].Split('/')[0]
                     : "01";
-            
+            PartName = Part.FullName;
+            PartsCount = Part.PartsCount.ToString(CultureInfo.InvariantCulture);
+            PartSetupTimePlan = Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
             InitializeComponent();
         }
 
@@ -264,19 +292,19 @@ namespace eLog.Views.Windows.Dialogs
                     switch (Parts.Count)
                     {
                         case 0:
-                            Status = "Заказы не найдены.";
+                            Status = $"По номеру {Part.Order} заказы не найдены.";
                             return;
                         case 1:
-                            Status = "Заказ найден.";
+                            Status = $"По номеру {Part.Order} найден заказ.";
                             PartName = Parts[0].Name;
-                            Part.Number = Parts[0].Number;
-                            PartsCount = Parts[0].PartsCount;
+                            //Part.Number = Parts[0].Number;
+                            PartsCount = Parts[0].PartsCount.ToString(CultureInfo.InvariantCulture);
                             break;
                         case > 1:
-                            Status = $"Найдено несколько заказов: {Parts.Count}. Переключение на кнопку поиска.";
+                            Status = $"По номеру {Part.Order} найдено несколько заказов: {Parts.Count}. Переключение на кнопку поиска.";
                             PartName = Parts[PartIndex].Name;
-                            Part.Number = Parts[PartIndex].Number;
-                            PartsCount = Parts[PartIndex].PartsCount;
+                            //Part.Number = Parts[PartIndex].Number;
+                            PartsCount = Parts[PartIndex].PartsCount.ToString(CultureInfo.InvariantCulture);
                             PartIndex++;
                             break;
                     }
@@ -322,11 +350,11 @@ namespace eLog.Views.Windows.Dialogs
                     {
                         
 
-                        // сохраняем список заказов локально
+                        // если локальный список совпадает с сетевым, то ничего не делаем
                         if (File.Exists(AppSettings.LocalOrdersFile) &&
                             File.GetLastWriteTime(AppSettings.LocalOrdersFile) ==
                             File.GetLastWriteTime(AppSettings.OrdersSourcePath)) break;
-                        // перед этим делаем бэкап
+                        // если обновляем локальный список, то предыдущий храним как бэкап
                         if (File.Exists(AppSettings.LocalOrdersFile))
                         {
                             if (!File.Exists(AppSettings.BackupOrdersFile) ||

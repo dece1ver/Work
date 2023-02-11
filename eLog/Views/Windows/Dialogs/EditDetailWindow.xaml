@@ -103,7 +103,7 @@
                              Text="{Binding Part.PartsFinished}"/>
                     <TextBlock Text="/" HorizontalAlignment="Center" FontSize="20"/>
                     <TextBox d:Text="1000"
-                             Text="{Binding PartsCount, UpdateSourceTrigger=PropertyChanged, StringFormat=0.;;#}"/>
+                             Text="{Binding PartsCount, UpdateSourceTrigger=PropertyChanged}"/>
                 </UniformGrid>
 
                 <TextBlock Grid.Row="3" Grid.Column="0"
@@ -144,12 +144,12 @@
                 <TextBlock Grid.Row="5" Grid.Column="0"
                            Text="Наладка норматив:"/>
                 <TextBox Grid.Row="5" Grid.Column="1" d:Text="90"
-                         Text="{Binding PartSetupTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0;;#}"/>
+                         Text="{Binding PartSetupTimePlan, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <TextBlock Grid.Row="5" Grid.Column="2"
                            Text="Штучное норматив:"/>
                 <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
-                         Text="{Binding PartPartProductionTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0.0;;#}"/>
+                         Text="{Binding PartPartProductionTimePlan, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <Button Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2"
                         Margin="0 15 0 0" Width="150" Height="60"
