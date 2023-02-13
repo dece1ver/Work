@@ -55,7 +55,7 @@ namespace eLog.Views.Windows.Dialogs
                 Set(ref _PartsFinishedText, value);
                 OnPropertyChanged(nameof(_PartsFinished));
                 OnPropertyChanged(nameof(Valid));
-                if (Valid) Part.PartsFinished = _PartsFinished;
+                if (Valid) Part.FinishedCount = _PartsFinished;
             }
         }
 
@@ -67,7 +67,7 @@ namespace eLog.Views.Windows.Dialogs
                              MachineTimeText.TimeParse(out _MachineTime) && _MachineTime.TotalSeconds > 0
                              || _PartsFinished == 0 && !string.IsNullOrWhiteSpace(_PartsFinishedText);
                 if (!result) return result;
-                Part.PartsFinished = _PartsFinished;
+                Part.FinishedCount = _PartsFinished;
                 Part.MachineTime = _MachineTime;
                 return result;
             }
@@ -82,9 +82,9 @@ namespace eLog.Views.Windows.Dialogs
 
         #region PropertyChanged
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
         {
             var handlers = PropertyChanged;
             if (handlers is null) return;
@@ -105,7 +105,7 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null)
+        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
         {
             if (Equals(field, value)) return false;
             field = value;

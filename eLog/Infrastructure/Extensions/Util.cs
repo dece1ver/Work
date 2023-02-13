@@ -40,7 +40,7 @@ namespace eLog.Infrastructure.Extensions
                 var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
                 return (from xlRow in wb.Worksheet(1).Rows() 
                     where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper()) 
-                    select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), PartsCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
+                    select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
             }
             catch (Exception ex1)
             {
@@ -49,7 +49,7 @@ namespace eLog.Infrastructure.Extensions
                     var wb = new XLWorkbook(AppSettings.BackupOrdersFile);
                     return (from xlRow in wb.Worksheet(1).Rows()
                         where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
-                        select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), PartsCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
+                        select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
                 }
                 catch (Exception ex2)
                 {
@@ -121,7 +121,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName.Trim();
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
-                    xlRow.Cell(11).Value = part.PartsFinished;
+                    xlRow.Cell(11).Value = part.FinishedCount;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(15).FormulaR1C1 = prevRow.Cell(15).FormulaR1C1;
@@ -131,7 +131,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
                     xlRow.Cell(21).FormulaR1C1 = prevRow.Cell(21).FormulaR1C1;
-                    xlRow.Cell(22).Value = part.PartProductionTimePlan;
+                    xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     for (var i = 24; i <= 32; i++)
                     {
@@ -169,13 +169,13 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName;
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
-                    xlRow.Cell(11).Value = part.PartsFinished;
+                    xlRow.Cell(11).Value = part.FinishedCount;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(16).Value = part.SetupTimePlan;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(22).Value = part.PartProductionTimePlan;
+                    xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     result = true;
                     break;
@@ -240,6 +240,22 @@ namespace eLog.Infrastructure.Extensions
             }
             time = TimeSpan.Zero;
             return false;
+        }
+
+        /// <summary>
+        /// Парсит строку в TimeSpan
+        /// </summary>
+        /// <param name="input">Строка с вводом</param>
+        /// <param name="time">Спарсеный промежуток времени</param>
+        /// <returns></returns>
+        public static bool DateTimeParse(this string input, out DateTime time)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                time = DateTime.MinValue; ;
+                return false;
+            }
+            return DateTime.TryParseExact(input, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out time);
         }
 
         /// <summary>

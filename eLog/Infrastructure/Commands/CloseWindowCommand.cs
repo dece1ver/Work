@@ -13,13 +13,13 @@ namespace eLog.Infrastructure.Commands
 {
     class CloseWindowCommand : Command
     {
-        public override bool CanExecute(object parameter) => parameter is Window;
+        public override bool CanExecute(object? parameter) => parameter is Window;
 
-        public override void Execute(object parameter)
+        public override void Execute(object? parameter)
         {
             if (!CanExecute(parameter)) return;
 
-            var window = (Window)parameter;
+            var window = (Window)parameter!;
             window.Close();
         }
     }
@@ -27,13 +27,13 @@ namespace eLog.Infrastructure.Commands
     class CloseDialogCommand : Command
     {
         public bool DialogResult { get; set; }
-        public override bool CanExecute(object parameter) => parameter is Window;
+        public override bool CanExecute(object? parameter) => parameter is Window;
 
-        public override void Execute(object parameter)
+        public override void Execute(object? parameter)
         {
             if (!CanExecute(parameter)) return;
 
-            var window = (Window)parameter;
+            var window = (Window)parameter!;
             window.DialogResult = DialogResult;
             window.Close();
         }
@@ -42,13 +42,13 @@ namespace eLog.Infrastructure.Commands
     class CloseEndSetupDialogCommand : Command
     {
         public EndSetupResult EndSetupResult { get; set; }
-        public override bool CanExecute(object parameter) => parameter is Window;
+        public override bool CanExecute(object? parameter) => parameter is Window;
 
-        public override void Execute(object parameter)
+        public override void Execute(object? parameter)
         {
             if (!CanExecute(parameter)) return;
 
-            var window = (EndSetupDialogWindow)parameter;
+            var window = (EndSetupDialogWindow)parameter!;
             window.EndSetupResult = EndSetupResult;
             window.Close();
         }
@@ -58,13 +58,13 @@ namespace eLog.Infrastructure.Commands
     class CloseEndDetailDialogCommand : Command
     {
         public EndDetailResult EndDetailResult { get; set; }
-        public override bool CanExecute(object parameter) => parameter is Window;
+        public override bool CanExecute(object? parameter) => parameter is Window;
 
-        public override void Execute(object parameter)
+        public override void Execute(object? parameter)
         {
             if (!CanExecute(parameter)) return;
 
-            var window = (EndDetailDialogWindow)parameter;
+            var window = (EndDetailDialogWindow)parameter!;
             window.EndDetailResult = EndDetailResult;
             window.Close();
         }

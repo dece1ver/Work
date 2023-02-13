@@ -101,15 +101,15 @@ namespace eLog.Services
 
         public static bool EditDetail(ref PartInfoModel part)
         {
-            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.PartsCount,
-                part.SetupTimePlan, part.PartProductionTimePlan)
+            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.TotalCount,
+                part.SetupTimePlan, part.SingleProductionTimePlan)
             {
                 StartSetupTime = part.StartSetupTime,
                 StartMachiningTime = part.StartMachiningTime,
                 EndMachiningTime = part.EndMachiningTime,
                 MachineTime = part.MachineTime,
                 Id = part.Id,
-                PartsFinished = part.PartsFinished
+                FinishedCount = part.FinishedCount
 
             };
             var dlg = new EditDetailWindow(tempPart)
@@ -125,21 +125,21 @@ namespace eLog.Services
 
         public static EndDetailResult FinishDetail(ref PartInfoModel part)
         {
-            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.PartsCount,
-                part.SetupTimePlan, part.PartProductionTimePlan)
+            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.TotalCount,
+                part.SetupTimePlan, part.SingleProductionTimePlan)
             {
                 StartSetupTime = part.StartSetupTime,
                 StartMachiningTime = part.StartMachiningTime,
                 EndMachiningTime = part.EndMachiningTime,
                 MachineTime = part.MachineTime,
                 Id = part.Id,
-                PartsFinished = part.PartsFinished
+                FinishedCount = part.FinishedCount
 
             };
             var dlg = new EndDetailDialogWindow(tempPart)
             {
                 Owner = Application.Current.MainWindow,
-                PartsFinishedText = tempPart.PartsFinished > 0 ? tempPart.PartsFinished.ToString() : string.Empty,
+                PartsFinishedText = tempPart.FinishedCount > 0 ? tempPart.FinishedCount.ToString() : string.Empty,
                 MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(@"hh\:mm\:ss") : string.Empty,
             };
             _ = dlg.ShowDialog();

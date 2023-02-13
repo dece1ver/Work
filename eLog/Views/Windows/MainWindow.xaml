@@ -97,7 +97,7 @@
                                         <TextBlock Grid.Column="0" Grid.Row="0" Margin="5 0" 
                                                    Text="{Binding Order}"/>
                                         <TextBlock Grid.Column="1" Grid.Row="0" Margin="5 0" 
-                                                   Text="{Binding PartsCountInfo}" />
+                                                   Text="{Binding TotalCountInfo}" />
                                         <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" Text="Начало наладки:" />
                                         <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 0" 
                                                    Text="{Binding StartSetupTime, StringFormat={}{0:dd.MM.yyy HH:mm}}" />

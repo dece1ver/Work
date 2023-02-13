@@ -6,9 +6,9 @@ namespace eLog.ViewModels.Base
 {
     public abstract class ViewModel : INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
         {
             var handlers = PropertyChanged;
             if (handlers is null) return;
@@ -29,7 +29,7 @@ namespace eLog.ViewModels.Base
             }
         }
 
-        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null)
+        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
         {
             if (Equals(field, value)) return false;
             field = value;

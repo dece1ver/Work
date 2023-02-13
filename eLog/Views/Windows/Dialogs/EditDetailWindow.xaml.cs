@@ -74,6 +74,8 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
+        public bool WithSetup => Part.StartSetupTime != Part.StartMachiningTime;
+
         public string OrderMonth
         {
             get => _OrderMonth;
@@ -125,11 +127,25 @@ namespace eLog.Views.Windows.Dialogs
             set => Set(ref _Status, value);
         }
 
-        public bool CanBeClosed => (Part.IsFinished || 
-                                    Part is { SetupTimePlan: > 0, PartProductionTimePlan: > 0, PartsCount: > 0} && 
-                                    OrderValidation is not OrderValidationTypes.Error &&
-                                    !string.IsNullOrWhiteSpace(Part.FullName)
-                                    );
+        public bool CanBeClosed
+        {
+            get
+            {
+                if (OrderValidation is OrderValidationTypes.Error || string.IsNullOrWhiteSpace(PartName)) return false;
+                if (Part.IsFinished) return true;
+                if (Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0, SetupIsNotFinished: true, EndMachiningTime.Ticks: 0 }) return true;
+                if (Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0, SetupIsFinished: true, EndMachiningTime.Ticks: 0, FinishedCount: 0 }) return true;
+                if (Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0, SetupIsFinished: true, EndMachiningTime.Ticks: > 0, FinishedCount: > 0, MachineTime.TotalSeconds: > 0 }) return true;
+
+                //var res = (Part.IsFinished ||
+                //           Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0 } &&
+                //           OrderValidation is not OrderValidationTypes.Error &&
+                //           !string.IsNullOrWhiteSpace(Part.FullName));
+                //if (res && Part.EndMachiningTime > Part.StartMachiningTime && Part.MachineTime <= TimeSpan.Zero)
+                //    res = false;
+                return false;
+            }
+        }
 
 
         public enum OrderValidationTypes {Error, Empty, Valid}
@@ -207,6 +223,87 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
+        private string _StartSetupTime;
+        public string StartSetupTime
+        {
+            get => _StartSetupTime;
+            set
+            {
+                _StartSetupTime = value;
+                Part.StartSetupTime = DateTime.TryParseExact(_StartSetupTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var startSetupTime) 
+                    ? startSetupTime 
+                    : DateTime.MinValue;
+                OnPropertyChanged(nameof(CanBeClosed));
+            }
+        }
+
+        private string _StartMachiningTime;
+        public string StartMachiningTime
+        {
+            get => _StartMachiningTime;
+            set
+            {
+                _StartMachiningTime = value;
+                Part.StartMachiningTime = DateTime.TryParseExact(_StartMachiningTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var startMachiningTime) 
+                    ? startMachiningTime 
+                    : DateTime.MinValue;
+                OnPropertyChanged(nameof(CanBeClosed));
+            }
+        }
+
+        private string _EndMachiningTime;
+        public string EndMachiningTime
+        {
+            get => _EndMachiningTime;
+            set
+            {
+                _EndMachiningTime = value;
+                Part.EndMachiningTime = DateTime.TryParseExact(_EndMachiningTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var endMachiningTime) 
+                    ? endMachiningTime 
+                    : DateTime.MinValue;
+                OnPropertyChanged(nameof(CanBeClosed));
+            }
+        }
+
+        private string _MachineTime;
+        public string MachineTime
+        {
+            get => _MachineTime;
+            set
+            {
+                _MachineTime = value;
+                Part.MachineTime = _MachineTime.TimeParse(out var machiningTime) 
+                    ? machiningTime 
+                    : TimeSpan.Zero;
+                OnPropertyChanged(nameof(CanBeClosed));
+            }
+        }
+
+
+        private string _FinishedCount;
+        public string FinishedCount
+        {
+            get => _FinishedCount;
+            set
+            {
+                _FinishedCount = value;
+                Part.FinishedCount = _FinishedCount.GetInt(numberOption: Util.GetNumberOption.OnlyPositive);
+                OnPropertyChanged(nameof(CanBeClosed));
+            }
+        }
+
+        private string _TotalCount;
+        public string TotalCount
+        {
+            get => _TotalCount;
+            set
+            {
+                _TotalCount = value;
+                Part.TotalCount = _TotalCount.GetInt(numberOption: Util.GetNumberOption.OnlyPositive);
+                OnPropertyChanged(nameof(CanBeClosed));
+            }
+        }
+
         private string _PartSetupTimePlan;
         public string PartSetupTimePlan
         {
@@ -219,50 +316,48 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        private string _PartPartProductionTimePlan;
-        public string PartPartProductionTimePlan
+        private string _SingleProductionTimePlan;
+        public string SingleProductionTimePlan
         {
-            get => _PartPartProductionTimePlan;
+            get => _SingleProductionTimePlan;
             set
             {
-                _PartPartProductionTimePlan = value; 
-                Part.PartProductionTimePlan = _PartPartProductionTimePlan.GetDouble(numberOption: Util.GetNumberOption.OnlyPositive); ;
+                _SingleProductionTimePlan = value;
+                Part.SingleProductionTimePlan = _SingleProductionTimePlan.GetDouble(numberOption: Util.GetNumberOption.OnlyPositive); ;
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
-
-        private string _PartsCount;
-        public string PartsCount
-        {
-            get => _PartsCount;
-            set
-            {
-                _PartsCount = value;
-                Part.PartsCount = _PartsCount.GetInt(numberOption: Util.GetNumberOption.OnlyPositive);
-                OnPropertyChanged(nameof(CanBeClosed));
-            }
-        } 
         #endregion
 
         public EditDetailWindow(PartInfoModel part)
         {
-            
+            _Status = string.Empty;
             Part = part;
             var order = Part.Order;
-            OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
+            _OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
                 ? order.Split('/')[1] 
-                : string.Empty;
-            OrderQualifier =
+                : Text.WithoutOrderDescription;
+            _OrderQualifier =
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
                     ? order.Split('-')[0]
                     : AppSettings.OrderQualifiers[0];
-            OrderMonth =
+            _OrderMonth =
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
                     ? order.Split('-')[1].Split('/')[0]
                     : "01";
             PartName = Part.FullName;
-            PartsCount = Part.PartsCount.ToString(CultureInfo.InvariantCulture);
-            PartSetupTimePlan = Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
+
+            _FinishedCount = Part.FinishedCount > 0 ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            _TotalCount = Part.TotalCount > 0 ? Part.TotalCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
+
+            _StartSetupTime = Part.StartSetupTime.ToString("dd.MM.yyyy HH:mm");
+            _StartMachiningTime = Part.StartMachiningTime != DateTime.MinValue ? Part.StartMachiningTime.ToString("dd.MM.yyyy HH:mm") : string.Empty;
+            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue ? Part.EndMachiningTime.ToString("dd.MM.yyyy HH:mm") : string.Empty;
+            _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(@"hh\:mm\:ss") : string.Empty;
+
+            _PartSetupTimePlan = Part.SetupTimePlan > 0 ? Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            _SingleProductionTimePlan = Part.SingleProductionTimePlan > 0 ? Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture) : string.Empty;
+
             InitializeComponent();
         }
 
@@ -298,18 +393,18 @@ namespace eLog.Views.Windows.Dialogs
                             Status = $"По номеру {Part.Order} найден заказ.";
                             PartName = Parts[0].Name;
                             //Part.Number = Parts[0].Number;
-                            PartsCount = Parts[0].PartsCount.ToString(CultureInfo.InvariantCulture);
+                            TotalCount = Parts[0].TotalCount.ToString(CultureInfo.InvariantCulture);
                             break;
                         case > 1:
                             Status = $"По номеру {Part.Order} найдено несколько заказов: {Parts.Count}. Переключение на кнопку поиска.";
                             PartName = Parts[PartIndex].Name;
                             //Part.Number = Parts[PartIndex].Number;
-                            PartsCount = Parts[PartIndex].PartsCount.ToString(CultureInfo.InvariantCulture);
+                            TotalCount = Parts[PartIndex].TotalCount.ToString(CultureInfo.InvariantCulture);
                             PartIndex++;
                             break;
                     }
                     OnPropertyChanged(nameof(PartName));
-                    OnPropertyChanged(nameof(PartsCount));
+                    OnPropertyChanged(nameof(TotalCount));
                     break;
                 case OrderValidationTypes.Empty:
                     Part.Order = Text.WithoutOrderDescription;
@@ -321,22 +416,42 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        /// <summary> Приравнивает окончание наладки к началу </summary>
-        private void EndSetupButton_Click(object sender, RoutedEventArgs e)
+        /// <summary> Убирает наладку </summary>
+        private void WithoutSetupButton_Click(object sender, RoutedEventArgs e)
         {
+            Part.StartSetupTime = new DateTime(
+                Part.StartSetupTime.Year,
+                Part.StartSetupTime.Month,
+                Part.StartSetupTime.Day,
+                Part.StartSetupTime.Hour,
+                Part.StartSetupTime.Minute,
+                0, 0);
+            StartMachiningTime = StartSetupTime;
             Part.StartMachiningTime = Part.StartSetupTime;
+            OnPropertyChanged(nameof(StartMachiningTime));
+            OnPropertyChanged(nameof(WithSetup));
+        }
+
+        /// <summary> Включает наладку </summary>
+        private void WithSetupButton_Click(object sender, RoutedEventArgs e)
+        {
+            StartMachiningTime = string.Empty;
+            OnPropertyChanged(nameof(StartMachiningTime));
+            OnPropertyChanged(nameof(WithSetup));
         }
 
         /// <summary> Вставляет текущее время как конец наладки</summary>
         private void EndSetupTimeButton_Click(object sender, RoutedEventArgs e)
         {
-            Part.StartMachiningTime = DateTime.Now;
+            StartMachiningTime = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
+            OnPropertyChanged(nameof(StartMachiningTime));
         }
 
         /// <summary> Вставляет текущее время как конец изготовления</summary>
         private void EndProductionTimeButton_Click(object sender, RoutedEventArgs e)
         {
-            Part.EndMachiningTime = DateTime.Now;
+            EndMachiningTime = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
+            OnPropertyChanged(nameof(EndMachiningTime));
         }
 
         private void UpdateOrders()
@@ -380,9 +495,9 @@ namespace eLog.Views.Windows.Dialogs
 
         #region PropertyChanged
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
         {
             var handlers = PropertyChanged;
             if (handlers is null) return;
@@ -403,7 +518,7 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null)
+        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
         {
             if (Equals(field, value)) return false;
             field = value;
@@ -412,5 +527,6 @@ namespace eLog.Views.Windows.Dialogs
         }
 
         #endregion
+
     }
 }

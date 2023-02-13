@@ -283,13 +283,13 @@ namespace eLog.ViewModels
             var res = WindowsUserDialogService.FinishDetail(ref part);
             switch (res)
             {
-                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when part.PartsFinished > 0:
+                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when part.FinishedCount > 0:
                     part.Id = part.WriteToXl();
                     Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                     Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                     if (res is EndDetailResult.FinishAndNext) StartDetailCommand.Execute(true);
                     break;
-                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when part.PartsFinished == 0:
+                case EndDetailResult.Finish or EndDetailResult.FinishAndNext when part.FinishedCount == 0:
                     Parts.Remove((PartInfoModel)p);
                     break;
             }
