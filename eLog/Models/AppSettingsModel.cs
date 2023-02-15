@@ -12,13 +12,15 @@ namespace eLog.Models
     /// </summary>
     public class AppSettingsModel
     {
-        public AppSettingsModel(Machine machine, string xlPath, string ordersSourcePath, string[] orderQualifiers, ObservableCollection<Operator> operators, Operator? currentOperator = null)
+        public AppSettingsModel(Machine machine, string xlPath, string ordersSourcePath, string[] orderQualifiers, ObservableCollection<Operator> operators, string currentShift, bool isShiftStarted = false, Operator? currentOperator = null)
         {
             Machine = machine;
             XlPath = xlPath;
             OrdersSourcePath = ordersSourcePath;
             OrderQualifiers = orderQualifiers;
             Operators = operators;
+            CurrentShift = currentShift;
+            IsShiftStarted = isShiftStarted;
             CurrentOperator = currentOperator;
         }
 
@@ -27,6 +29,8 @@ namespace eLog.Models
         public string OrdersSourcePath { get; set; }
         public string[] OrderQualifiers { get; set; }
         public ObservableCollection<Operator> Operators { get; set; }
+        public string CurrentShift { get; set; }
+        public bool IsShiftStarted { get; set; }
         public Operator? CurrentOperator { get; set; }
         
     }

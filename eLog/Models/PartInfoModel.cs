@@ -20,6 +20,7 @@ namespace eLog.Models
         private string _Order;
         private int _Setup;
         private int _TotalCount;
+        private string _Shift;
         private int _FinishedCount;
         private double _SetupTimePlan;
         private double _SingleProductionTimePlan;
@@ -62,6 +63,13 @@ namespace eLog.Models
         {
             get => _TotalCount;
             set => Set(ref _TotalCount, value);
+        }
+
+        /// <summary> Наименование </summary>
+        public string Shift
+        {
+            get => _Shift;
+            set => Set(ref _Shift, value);
         }
 
         /// <summary> Количество выпущено</summary>

@@ -87,6 +87,33 @@ namespace eLog.ViewModels
 
         public bool Overlay { get; set; }
 
+        private bool _ShiftStarted = AppSettings.IsShiftStarted;
+        public bool ShiftStarted
+        {
+            get => _ShiftStarted;
+            set 
+            {
+                AppSettings.IsShiftStarted = value;
+                AppSettings.RewriteConfig();
+                Set(ref _ShiftStarted, value);
+            } 
+        }
+
+        public static string[] Shifts => new []{ Text.DayShift, Text.NightShift };
+        private string _CurrentShift = AppSettings.CurrentShift;
+
+        public string CurrentShift
+        {
+            get => _CurrentShift;
+            set
+            {
+                AppSettings.CurrentShift = value;
+                AppSettings.RewriteConfig();
+                Set(ref _CurrentShift, value);
+                
+            }
+        }
+
         /// <summary> Детали </summary>
         private ObservableCollection<PartInfoModel> _Parts = new();
 
@@ -108,12 +135,24 @@ namespace eLog.ViewModels
         private static bool CanCloseApplicationCommandExecute(object p) => true;
         #endregion
 
+        #region StartShift
+        public ICommand StartShiftCommand { get; }
+        private void OnStartShiftCommandExecuted(object p) => ShiftStarted = true;
+        private static bool CanStartShiftCommandExecute(object p) => true;
+        #endregion
+
+        #region EndShift
+        public ICommand EndShiftCommand { get; }
+        private void OnEndShiftCommandExecuted(object p) => ShiftStarted = false;
+        private static bool CanEndShiftCommandExecute(object p) => true;
+        #endregion
+
         #region EditSettingsCommand
         public ICommand EditSettingsCommand { get; }
         private void OnEditSettingsCommandExecuted(object p)
         {
             OverlayOn();
-            var settings = new AppSettingsModel(Machine, AppSettings.XlPath, AppSettings.OrdersSourcePath, AppSettings.OrderQualifiers, Operators);
+            var settings = new AppSettingsModel(Machine, AppSettings.XlPath, AppSettings.OrdersSourcePath, AppSettings.OrderQualifiers, Operators, AppSettings.CurrentShift);
             WindowsUserDialogService windowsUserDialogService = new();
 
             if (windowsUserDialogService.Edit(settings))
@@ -183,26 +222,9 @@ namespace eLog.ViewModels
                         break;
                     }
                 }
+                part.Shift = AppSettings.CurrentShift;
                 Parts.Add(part);
             }
-            //WindowsUserDialogService windowsUserDialogService = new();
-            //var barCode = string.Empty;
-            //if (WindowsUserDialogService.GetBarCode(ref barCode))
-            //{
-            //    var part = barCode.GetPartFromBarCode();
-            //    if (windowsUserDialogService.Confirm("Наладка?", "Наладка"))
-            //    {
-            //        part.StartSetupTime = DateTime.Now;
-            //        part.StartMachiningTime = DateTime.MinValue;
-            //    }
-            //    else
-            //    {
-            //        part.StartSetupTime = DateTime.Now;
-            //        part.StartMachiningTime = part.StartSetupTime;
-            //    }
-            //    Parts.Add(part);
-            //}
-            //OnPropertyChanged(nameof(WorkIsNotInProgress));
             OverlayOff();
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
@@ -319,13 +341,18 @@ namespace eLog.ViewModels
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
-            EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
-            EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
+
+            StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
+            EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
+
             StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
-            SetDownTimeCommand = new LambdaCommand(OnSetDownTimeCommandExecuted, CanSetDownTimeCommandExecute);
             EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
-            EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
+            SetDownTimeCommand = new LambdaCommand(OnSetDownTimeCommandExecuted, CanSetDownTimeCommandExecute);
             EditDetailCommand = new LambdaCommand(OnEditDetailCommandExecuted, CanEditDetailCommandExecute);
+            EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
+
+            EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
+            EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
         }
     }
 }

@@ -14,6 +14,7 @@
     </Window.DataContext>
     <Window.Resources>
         <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
+        <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
         <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
         <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
         <Style TargetType="TextBlock">
@@ -47,19 +48,22 @@
             <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True">
                 <TextBlock Text="{Binding Machine.Name}" d:Text="Станок" Padding="0 3" Margin="9 0" DockPanel.Dock="Left"/>
                 <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
-                <!--<Button Content="Начать смену" DockPanel.Dock="Right" Visibility="{Binding StartShiftButtonVisibility}"
-                    Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
-            <Button Content="Завершить смену" DockPanel.Dock="Right" Visibility="{Binding EndShiftButtonVisibility}"
-                    Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>-->
-                <ComboBox ItemsSource="{Binding Operators}" 
-                      SelectedItem="{Binding CurrentOperator}"
-                      Text="{Binding CurrentOperator.DisplayName, FallbackValue={}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                      IsEnabled="{Binding WorkIsNotInProgress}"
-                      DisplayMemberPath="DisplayName"
-                      Width="250" Margin="4 0 0 0">
+                <ComboBox ItemsSource="{Binding Operators}" DockPanel.Dock="Left"
+                          SelectedItem="{Binding CurrentOperator}"
+                          Text="{Binding CurrentOperator.DisplayName, FallbackValue={}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                          IsEnabled="{Binding WorkIsNotInProgress}"
+                          DisplayMemberPath="DisplayName"
+                          Width="250" Margin="4 0 0 0">
                 </ComboBox>
-                <!--<ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding Shifts[1]}" IsEnabled="{Binding EditShiftInfoIsEnabled}" 
-                      Margin="4 0 0 0" />-->
+                <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding CurrentShift}" 
+                          Margin="4 0 0 0" Width="200"/>
+                <Button Content="Начать смену" DockPanel.Dock="Left" 
+                        Visibility="{Binding ShiftStarted, Converter={StaticResource InvertedVisibilityConverter}}"
+                        Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
+                <Button Content="Завершить смену" DockPanel.Dock="Left" Visibility="{Binding ShiftStarted, Converter={StaticResource VisibilityConverter}}"
+                    Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
+                
+                
                 <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4 0"
                     Command="{Binding StartDetailCommand}" IsEnabled="{Binding WorkIsNotInProgress}"/>
             </DockPanel>

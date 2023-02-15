@@ -10,5 +10,7 @@ namespace eLog.Infrastructure.Extensions
     {
         public const string WithoutOrderItem = " ";
         public const string WithoutOrderDescription = "Без М/Л";
+        public const string DayShift = "День";
+        public const string NightShift = "Ночь";
     }
 }

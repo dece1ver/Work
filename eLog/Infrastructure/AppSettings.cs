@@ -52,8 +52,14 @@ namespace eLog.Infrastructure
         /// <summary> Список операторов </summary>
         public static ObservableCollection<Operator> Operators { get; set; } = new();
 
+        /// <summary> Текущая смена </summary>
+        public static string CurrentShift { get; set; } = string.Empty;
+
         /// <summary> Текущий оператор </summary>
         public static Operator? CurrentOperator { get; set; }
+
+        /// <summary> Запущена ли смена </summary>
+        public static bool IsShiftStarted {get; set; }
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private static void CreateBaseConfig()
@@ -68,6 +74,7 @@ namespace eLog.Infrastructure
                     Patronymic = "Георгиевич",
                     },
                 };
+            CurrentShift = Text.DayShift;
             XlPath = string.Empty;
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
@@ -81,6 +88,7 @@ namespace eLog.Infrastructure
                 "ЗУ",
                 "СЛ",
             };
+            IsShiftStarted = false;
             RewriteConfig();
         }
 
@@ -101,7 +109,9 @@ namespace eLog.Infrastructure
                 OrdersSourcePath = appSettings.OrdersSourcePath;
                 OrderQualifiers = appSettings.OrderQualifiers;
                 Operators = appSettings.Operators;
+                CurrentShift = appSettings.CurrentShift;
                 CurrentOperator = appSettings.CurrentOperator;
+                IsShiftStarted = appSettings.IsShiftStarted;
                 if (appSettings.CurrentOperator is null && Operators.Count > 0) CurrentOperator = Operators[0];
             }
             catch
@@ -116,7 +126,7 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void RewriteConfig()
         {
-            var appSettings = new AppSettingsModel(Machine, XlPath, OrdersSourcePath, OrderQualifiers, Operators, CurrentOperator);
+            var appSettings = new AppSettingsModel(Machine, XlPath, OrdersSourcePath, OrderQualifiers, Operators, CurrentShift, IsShiftStarted, CurrentOperator);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented));
         }
