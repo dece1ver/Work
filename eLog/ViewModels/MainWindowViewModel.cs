@@ -393,7 +393,7 @@ namespace eLog.ViewModels
                     {
                         if (Parts[i] is { IsSynced: false, IsFinished: true } part)
                         {
-                            if (part.Id != -1 && part.RewriteToXl())
+                            if (part.Id != -1)
                             {
                                 if (!part.RewriteToXl()) continue;
                                 part.IsSynced = true;
@@ -422,7 +422,7 @@ namespace eLog.ViewModels
                 {
                     Status = e.Message;
                 }
-                Thread.Sleep(30000);
+                Thread.Sleep(10000);
             }
         }
     }
