@@ -15,6 +15,7 @@
     <Window.Resources>
         <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
         <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
+        <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
         <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
         <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
         <Style TargetType="TextBlock">
@@ -51,21 +52,25 @@
                 <ComboBox ItemsSource="{Binding Operators}" DockPanel.Dock="Left"
                           SelectedItem="{Binding CurrentOperator}"
                           Text="{Binding CurrentOperator.DisplayName, FallbackValue={}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                          IsEnabled="{Binding WorkIsNotInProgress}"
+                          IsEnabled="{Binding CanEditShiftAndParams}"
                           DisplayMemberPath="DisplayName"
                           Width="250" Margin="4 0 0 0">
                 </ComboBox>
-                <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding CurrentShift}" 
-                          Margin="4 0 0 0" Width="200"/>
-                <Button Content="Начать смену" DockPanel.Dock="Left" 
+                <ComboBox ItemsSource="{Binding Shifts}" 
+                          SelectedItem="{Binding CurrentShift}" 
+                          IsEnabled="{Binding CanEditShiftAndParams}"
+                          Width="200" Margin="4 0 0 0"/>
+
+                <Button Content="Начать смену" DockPanel.Dock="Left" Margin="4 0 0 0"
                         Visibility="{Binding ShiftStarted, Converter={StaticResource InvertedVisibilityConverter}}"
                         Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
-                <Button Content="Завершить смену" DockPanel.Dock="Left" Visibility="{Binding ShiftStarted, Converter={StaticResource VisibilityConverter}}"
-                    Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
-                
-                
+                <Button Content="Завершить смену" DockPanel.Dock="Left" Margin="4 0 0 0"
+                        Visibility="{Binding ShiftStarted, Converter={StaticResource VisibilityConverter}}"
+                        IsEnabled="{Binding CanEndShift}"
+                        Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
+
                 <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4 0"
-                    Command="{Binding StartDetailCommand}" IsEnabled="{Binding WorkIsNotInProgress}"/>
+                        Command="{Binding StartDetailCommand}" IsEnabled="{Binding CanAddPart}"/>
             </DockPanel>
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>
@@ -77,11 +82,10 @@
                 </StatusBarItem>
             </StatusBar>
             <DockPanel LastChildFill="True">
-
                 <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0" >
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <GroupBox Header="{Binding FullName}">
+                            <GroupBox Header="{Binding Title}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -164,7 +168,7 @@
                 </ListView>
             </DockPanel>
         </DockPanel>
-        <Grid Grid.Column="0" Background="Black" d:Background="Transparent"
+        <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
               Visibility="{Binding Overlay, Converter={StaticResource OverlayVisibilityConverter}}"
               Opacity="{Binding Overlay, Converter={StaticResource OverlayOpacityConverter}}"/>
     </Grid>

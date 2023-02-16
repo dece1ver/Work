@@ -2,6 +2,7 @@
 using eLog.Infrastructure.Commands;
 using eLog.ViewModels.Base;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -11,6 +12,7 @@ using MessageBox = System.Windows.MessageBox;
 using eLog.Models;
 using eLog.Services;
 using eLog.Infrastructure.Extensions;
+using System.Threading;
 
 namespace eLog.ViewModels
 {
@@ -83,6 +85,10 @@ namespace eLog.ViewModels
         public Visibility ProgressBarVisibility => Progress is 0 || Math.Abs(Progress - ProgressMaxValue) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished);
 
+        public bool CanAddPart => ShiftStarted && WorkIsNotInProgress;
+        public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;
+        public bool CanEndShift => ShiftStarted && WorkIsNotInProgress;
+
         public bool DownTimeInProgress => Parts.Count == Parts.Count(x => x.DownTimes.Count > 0);
 
         public bool Overlay { get; set; }
@@ -96,6 +102,9 @@ namespace eLog.ViewModels
                 AppSettings.IsShiftStarted = value;
                 AppSettings.RewriteConfig();
                 Set(ref _ShiftStarted, value);
+                OnPropertyChanged(nameof(WorkIsNotInProgress));
+                OnPropertyChanged(nameof(CanEditShiftAndParams));
+                OnPropertyChanged(nameof(CanAddPart));
             } 
         }
 
@@ -209,21 +218,21 @@ namespace eLog.ViewModels
             {
                 switch (part)
                 {
-                    case { Id: -1, IsFinished: true }:
+                    case { IsFinished: true }:
                         part.Id = part.WriteToXl();
-                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                        break;
-                    case { Id: > 0, IsFinished: true }:
-                    {
-                        if (part.RewriteToXl())
+                        if (part.Id > 0)
                         {
-                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                            part.IsSynced = true;
+                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                         }
                         break;
-                    }
                 }
                 part.Shift = AppSettings.CurrentShift;
                 Parts.Add(part);
+                OnPropertyChanged(nameof(WorkIsNotInProgress));
+                OnPropertyChanged(nameof(CanEditShiftAndParams));
+                OnPropertyChanged(nameof(CanAddPart));
+                OnPropertyChanged(nameof(CanEndShift));
             }
             OverlayOff();
         }
@@ -260,6 +269,9 @@ namespace eLog.ViewModels
                     break;
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
+            OnPropertyChanged(nameof(CanEditShiftAndParams));
+            OnPropertyChanged(nameof(CanAddPart));
+            OnPropertyChanged(nameof(CanEndShift));
             OverlayOff();
         }
         private static bool CanEndSetupCommandExecute(object p) => true;
@@ -273,16 +285,23 @@ namespace eLog.ViewModels
             var part = (PartInfoModel)p;
             if (WindowsUserDialogService.EditDetail(ref part))
             {
+                part.IsSynced = false;
+                OnPropertyChanged(nameof(part.Title));
                 switch (part)
                 {
                     case { Id: -1, IsFinished: true }:
                         part.Id = part.WriteToXl();
-                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        if (part.Id > 0)
+                        {
+                            part.IsSynced = true;
+                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        }
                         break;
                     case { Id: > 0, IsFinished: true }:
                     {
                         if (part.RewriteToXl())
                         {
+                            part.IsSynced = true;
                             Status = $"Информация об изготовлении id{part.Id} обновлена.";
                         }
                         break;
@@ -291,6 +310,9 @@ namespace eLog.ViewModels
                 Parts[Parts.IndexOf((PartInfoModel)p)] = part;
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
+            OnPropertyChanged(nameof(CanEditShiftAndParams));
+            OnPropertyChanged(nameof(CanAddPart));
+            OnPropertyChanged(nameof(CanEndShift));
             OverlayOff();
         }
         private static bool CanEditDetailCommandExecute(object p) => true;
@@ -316,6 +338,9 @@ namespace eLog.ViewModels
                     break;
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
+            OnPropertyChanged(nameof(CanEditShiftAndParams));
+            OnPropertyChanged(nameof(CanAddPart));
+            OnPropertyChanged(nameof(CanEndShift));
             OverlayOff();
         }
         private static bool CanEndDetailCommandExecute(object p) => true;
@@ -353,6 +378,52 @@ namespace eLog.ViewModels
 
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
+
+            var syncPartsThread = new Thread(SyncParts) { IsBackground = true };
+            syncPartsThread.Start();
+        }
+
+        private void SyncParts()
+        {
+            while (true)
+            {
+                try
+                {
+                    for (var i = 0; i < Parts.Count; i++)
+                    {
+                        if (Parts[i] is { IsSynced: false, IsFinished: true } part)
+                        {
+                            if (part.Id != -1 && part.RewriteToXl())
+                            {
+                                if (!part.RewriteToXl()) continue;
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} обновлена. (фон)";
+                            }
+                            else
+                            {
+                                part.Id = part.WriteToXl();
+                                if (part.Id == -1) continue;
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} зафиксирована. (фон)";
+                            }
+
+                            var index = i;
+                            Application.Current.Dispatcher.Invoke(delegate
+                            {
+                                Parts[index] = part;
+                            });
+                            OnPropertyChanged(nameof(part.Title));
+                            OnPropertyChanged(nameof(Parts));
+                        }
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Status = e.Message;
+                }
+                Thread.Sleep(30000);
+            }
         }
     }
 }

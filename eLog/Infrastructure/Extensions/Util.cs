@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ClosedXML.Excel;
 using System.Collections.ObjectModel;
+using System.IO;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -137,8 +138,10 @@ namespace eLog.Infrastructure.Extensions
                     {
                         xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                     }
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.TotalMinutes(), 2);
+                    xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
 
-                    for (var i = 1; i <= 32; i++)
+                    for (var i = 1; i <= 34; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
                     }
@@ -147,6 +150,10 @@ namespace eLog.Infrastructure.Extensions
                 }
                 wb.Save();
 
+            }
+            catch (IOException)
+            {
+                
             }
             catch (Exception e)
             {
@@ -177,11 +184,17 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                    result = true;
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.TotalMinutes(), 2);
+                    xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
                     break;
 
                 }
                 wb.Save();
+                result = true;
+            }
+            catch (IOException)
+            {
+
             }
             catch (Exception e)
             {
@@ -306,10 +319,7 @@ namespace eLog.Infrastructure.Extensions
             {
                 return result;
             }
-            else
-            {
-                return defaultValue;
-            }
+            return defaultValue;
         }
 
     }

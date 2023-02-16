@@ -29,6 +29,8 @@ namespace eLog.Models
         private DateTime _StartMachiningTime;
         private DateTime _EndMachiningTime;
         private ObservableCollection<DownTime> _DownTimes;
+        private int _Id;
+        private bool _IsSynced;
 
         /// <summary> Наименование </summary>
         public string Name
@@ -65,7 +67,7 @@ namespace eLog.Models
             set => Set(ref _TotalCount, value);
         }
 
-        /// <summary> Наименование </summary>
+        /// <summary> Смена </summary>
         public string Shift
         {
             get => _Shift;
@@ -120,7 +122,15 @@ namespace eLog.Models
         }
 
         /// <summary> Id присваивается после записи в таблицу. Нужен для поиска в таблице при редактировании.</summary>
-        public int Id { get; set; }
+        public int Id
+        {
+            get => _Id;
+            set
+            {
+                Set(ref _Id, value);
+                OnPropertyChanged(nameof(Title));
+            }
+        }
 
         /// <summary> Время начала наладки </summary>
         public DateTime StartSetupTime
@@ -134,6 +144,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
                 OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(Title));
             }
         }
 
@@ -149,6 +160,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
                 OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(Title));
             }
         }
 
@@ -165,6 +177,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(TotalCountInfo));
                 OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(Title));
             }
         }
 
@@ -193,6 +206,16 @@ namespace eLog.Models
 
         /// <summary> Полное название детали (наименование + обозначение) </summary>
         public string FullName => $"{Name} {Number}".Trim();
+
+        public string Title
+        {
+            get
+            {
+                if (!IsFinished) return FullName;
+                var symbol = IsSynced ? "✓" : "🗘";
+                return $"{FullName} {symbol}".Trim();
+            }
+        }
 
         /// <summary>Фактическое время изготовления </summary>
         public TimeSpan FullProductionTimeFact => EndMachiningTime - StartMachiningTime;
@@ -226,6 +249,19 @@ namespace eLog.Models
         /// Инвертированное значение свойства IsFinished.
         /// </summary>
         public bool IsStarted => !IsFinished;
+
+        /// <summary>
+        /// Записана ли актуальная информация о детали в таблицу
+        /// </summary>
+        public bool IsSynced
+        {
+            get => _IsSynced;
+            set
+            {
+                Set(ref _IsSynced, value);
+                OnPropertyChanged(nameof(Title));
+            }
+        }
 
         /// <summary>
         /// Информация о детали.
