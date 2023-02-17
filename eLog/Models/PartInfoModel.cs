@@ -31,6 +31,7 @@ namespace eLog.Models
         private ObservableCollection<DownTime> _DownTimes;
         private int _Id;
         private bool _IsSynced;
+        private string _OperatorComments;
 
         /// <summary> Наименование </summary>
         public string Name
@@ -217,6 +218,12 @@ namespace eLog.Models
             }
         }
 
+        public string OperatorComments
+        {
+            get => _OperatorComments;
+            set => Set(ref _OperatorComments, value);
+        }
+
         /// <summary>Фактическое время изготовления </summary>
         public TimeSpan FullProductionTimeFact => EndMachiningTime - StartMachiningTime;
 
@@ -286,6 +293,8 @@ namespace eLog.Models
             SingleProductionTimePlan = singleProductionTimePlan;
             Id = -1;
             _DownTimes = new ObservableCollection<DownTime>();
+            _OperatorComments = string.Empty;
+            _Shift = string.Empty;
         }
 
         public PartInfoModel()
@@ -296,6 +305,8 @@ namespace eLog.Models
             StartSetupTime = DateTime.Now;
             _DownTimes = new ObservableCollection<DownTime>();
             Id = -1;
+            _OperatorComments = string.Empty;
+            _Shift = string.Empty;
         }
     }
 }

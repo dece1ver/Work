@@ -109,8 +109,9 @@ namespace eLog.Services
                 EndMachiningTime = part.EndMachiningTime,
                 MachineTime = part.MachineTime,
                 Id = part.Id,
-                FinishedCount = part.FinishedCount
-
+                FinishedCount = part.FinishedCount,
+                Shift = part.Shift,
+                OperatorComments = part.OperatorComments
             };
             var dlg = new EditDetailWindow(tempPart)
             {
@@ -133,7 +134,9 @@ namespace eLog.Services
                 EndMachiningTime = part.EndMachiningTime,
                 MachineTime = part.MachineTime,
                 Id = part.Id,
-                FinishedCount = part.FinishedCount
+                FinishedCount = part.FinishedCount,
+                Shift = part.Shift,
+                OperatorComments = part.OperatorComments
 
             };
             var dlg = new EndDetailDialogWindow(tempPart)

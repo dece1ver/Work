@@ -15,9 +15,9 @@ namespace eLog.Models
             WarmingUp,
             ToolSearching,
             Mentoring,
-            AttendingTheEvent,
+            ContactingDepartments,
             FixtureMaking,
-            EquipmentFailure
+            HardwareFailure
         }
 
         public Types Type { get; set; }
@@ -28,9 +28,9 @@ namespace eLog.Models
             Types.WarmingUp => "Прогрев",
             Types.ToolSearching => "Поиск и получение инструмента",
             Types.Mentoring => "Помощь / наставничество / обучение",
-            Types.AttendingTheEvent => "Участие в мероприятиях",
+            Types.ContactingDepartments => "Участие в мероприятиях",
             Types.FixtureMaking => "Изготовление оснастки и калибров",
-            Types.EquipmentFailure => "Отказ оборудования",
+            Types.HardwareFailure => "Отказ оборудования",
             _ => throw new ArgumentOutOfRangeException()
         };
 

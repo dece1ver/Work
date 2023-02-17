@@ -99,9 +99,9 @@ namespace eLog.ViewModels
             get => _ShiftStarted;
             set 
             {
+                if (!Set(ref _ShiftStarted, value)) return;
                 AppSettings.IsShiftStarted = value;
                 AppSettings.RewriteConfig();
-                Set(ref _ShiftStarted, value);
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
@@ -116,10 +116,9 @@ namespace eLog.ViewModels
             get => _CurrentShift;
             set
             {
+                if (!Set(ref _CurrentShift, value)) return;
                 AppSettings.CurrentShift = value;
                 AppSettings.RewriteConfig();
-                Set(ref _CurrentShift, value);
-                
             }
         }
 
@@ -146,7 +145,12 @@ namespace eLog.ViewModels
 
         #region StartShift
         public ICommand StartShiftCommand { get; }
-        private void OnStartShiftCommandExecuted(object p) => ShiftStarted = true;
+        private void OnStartShiftCommandExecuted(object p)
+        {
+            ShiftStarted = true;
+            OnPropertyChanged(nameof(CanEndShift));
+        }
+
         private static bool CanStartShiftCommandExecute(object p) => true;
         #endregion
 

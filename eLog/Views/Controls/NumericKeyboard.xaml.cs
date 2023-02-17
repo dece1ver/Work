@@ -27,7 +27,6 @@ namespace eLog.Views.Controls
             InitializeComponent();
         }
 
-        #region Keyboard
         private void Button7_Click(object sender, RoutedEventArgs e)
         {
             Keyboard.KeyPress(Keys.D7);
@@ -116,6 +115,7 @@ namespace eLog.Views.Controls
                 Keyboard.KeyUp(Keys.LShiftKey);
             }
         }
-        #endregion
+
+        
     }
 }

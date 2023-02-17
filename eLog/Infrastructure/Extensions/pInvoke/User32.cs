@@ -20,7 +20,6 @@ namespace eLog.Infrastructure.Extensions.pInvoke
         /// <returns></returns>
         [DllImport(FileName, CharSet = CharSet.Auto, SetLastError = false)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WM Msg, IntPtr wParam, IntPtr lParam);
-
         #endregion
 
         #region PostMessage
@@ -51,6 +50,12 @@ namespace eLog.Infrastructure.Extensions.pInvoke
         [DllImport(FileName, SetLastError = true)]
         public static extern bool SetWindowText(IntPtr hWnd, string lpString);
 
+        [DllImport(FileName)]
+        public static extern IntPtr FindWindow(string lpClassName, string? lpWindowName);
+
+        [DllImport(FileName, CharSet = CharSet.Unicode)]
+        public static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string lclassName, string? windowTitle);
+
         /// <summary>
         /// Функция MoveWindow изменяет позицию и габариты определяемого окна. Для окна верхнего уровня, позиция и 
         /// габариты - относительно левого верхнего угла экрана. Для дочернего окна, они - относительно левого верхнего 
@@ -75,9 +80,11 @@ namespace eLog.Infrastructure.Extensions.pInvoke
         /// Цикл сообщений посылает сообщение WM_PAINT только после диспетчеризации всех других сообщений в очереди. 
         /// Функция MoveWindow посылает в окно сообщения WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, 
         /// WM_MOVE, WM_SIZE и WM_NCCALCSIZE.</remarks>
-
         [DllImport(FileName, SetLastError = true)]
         public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+        [DllImport(FileName)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport(FileName)]
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);

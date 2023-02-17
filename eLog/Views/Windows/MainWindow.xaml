@@ -26,7 +26,7 @@
         </Style>
         <Style TargetType="Button" x:Key="generalButton">
             <Setter Property="Margin" Value="4 0"/>
-            <Setter Property="Width" Value="250"/>
+            <Setter Property="FontSize" Value="18"/>
         </Style>
         <Style TargetType="Button" x:Key="lvButton">
             <Setter Property="Width" Value="125"/>
@@ -63,13 +63,13 @@
 
                 <Button Content="Начать смену" DockPanel.Dock="Left" Margin="4 0 0 0"
                         Visibility="{Binding ShiftStarted, Converter={StaticResource InvertedVisibilityConverter}}"
-                        Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}"/>
+                        Command="{Binding StartShiftCommand}" Style="{StaticResource generalButton}" Width="200"/>
                 <Button Content="Завершить смену" DockPanel.Dock="Left" Margin="4 0 0 0"
                         Visibility="{Binding ShiftStarted, Converter={StaticResource VisibilityConverter}}"
-                        IsEnabled="{Binding CanEndShift}"
-                        Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}"/>
+                        IsEnabled="{Binding CanEndShift, UpdateSourceTrigger=PropertyChanged}"
+                        Command="{Binding EndShiftCommand}" Style="{StaticResource generalButton}" Width="200"/>
 
-                <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4 0"
+                <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4 0" Style="{StaticResource generalButton}"
                         Command="{Binding StartDetailCommand}" IsEnabled="{Binding CanAddPart}"/>
             </DockPanel>
             <StatusBar DockPanel.Dock="Bottom">

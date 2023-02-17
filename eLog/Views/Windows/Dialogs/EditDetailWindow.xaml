@@ -10,7 +10,7 @@
         xmlns:inf="clr-namespace:eLog.Infrastructure"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
-        Title="Редактирование детали" Height="368" Width="1100" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize" Loaded="Window_Loaded">
+        Title="Редактирование детали" Height="445" Width="1100" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
         <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
         <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
@@ -51,6 +51,7 @@
                     <ColumnDefinition Width="260"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -181,7 +182,14 @@
                 <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
                          Text="{Binding SingleProductionTimePlan, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <Button Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2"
+                <TextBlock Grid.Row="6" Grid.Column="0"
+                           Text="Комментарий:"/>
+                <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" d:Text="Комментарий" Height="74" 
+                         TextWrapping="WrapWithOverflow" AcceptsReturn="True"
+                         Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}"/>
+
+
+                <Button Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2"
                         Margin="0 15 0 0" Width="150" Height="60"
                         HorizontalAlignment="Left" VerticalAlignment="Bottom"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
@@ -193,7 +201,7 @@
                     </Button.Command>
                 </Button>
 
-                <Button Grid.Column="5" Grid.Row="6"
+                <Button Grid.Column="5" Grid.Row="7"
                         Margin="0 15 0 0" IsDefault="True" Width="260" Height="60"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom" IsEnabled="{Binding CanBeClosed}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
@@ -205,10 +213,10 @@
                     </Button.Command>
                 </Button>
 
-                <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="6" 
+                <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="7" 
                         BorderBrush="LightGray" BorderThickness="1" 
                         Margin="5 15"/>
-                <ctrl:NumericKeyboard Grid.Column="5" Grid.Row="0" Grid.RowSpan="6" Margin="1 1 0 0"/>
+                <ctrl:NumericKeyboard Grid.Column="5" Grid.Row="0" Grid.RowSpan="7" Margin="1 1 0 1"/>
             </Grid>
         </DockPanel>
     </Border>

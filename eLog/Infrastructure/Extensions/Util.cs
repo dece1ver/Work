@@ -114,10 +114,11 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(2).FormulaR1C1 = prevRow.Cell(2).FormulaR1C1;
                     xlRow.Cell(3).FormulaR1C1 = prevRow.Cell(3).FormulaR1C1;
                     xlRow.Cell(4).FormulaR1C1 = prevRow.Cell(4).FormulaR1C1;
-                    xlRow.Cell(5).Value = part.DownTimes.Report(); // потом добавить добавление этого отчета по простоям к комментариям
-                    xlRow.Cell(6).Value = part.EndMachiningTime < DateTime.Today.AddHours(7).AddMinutes(5) 
-                        ? DateTime.Today.AddDays(-1).ToString("dd.MM.yyyy") 
-                        : DateTime.Today.ToString("dd.MM.yyyy");
+                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{part.DownTimes.Report()}".Trim();
+                    // если время завершения раньше 07:05, то отнимаем сутки для корректности отчетов
+                    xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(5)
+                        ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy") 
+                        : part.EndMachiningTime.ToString("dd.MM.yyyy");
                     xlRow.Cell(7).Value = AppSettings.Machine.Name;
                     xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName.Trim();
                     xlRow.Cell(9).Value = part.FullName;
@@ -171,7 +172,11 @@ namespace eLog.Infrastructure.Extensions
                 foreach (var xlRow in wb.Worksheet("Для заполнения").Rows())
                 {
                     if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
-                    xlRow.Cell(6).Value = DateTime.Today.ToString("dd.MM.yyyy");
+                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{part.DownTimes.Report()}".Trim();
+                    // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
+                    xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
+                        ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
+                        : part.EndMachiningTime.ToString("dd.MM.yyyy");
                     xlRow.Cell(7).Value = AppSettings.Machine.Name;
                     xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName;
                     xlRow.Cell(9).Value = part.FullName;

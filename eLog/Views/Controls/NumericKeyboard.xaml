@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:eLog.Views.Controls"
+             xmlns:ctr="clr-namespace:eLog.Views.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="200" d:DesignWidth="300">
     <UserControl.Resources>
@@ -20,6 +20,7 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
@@ -58,5 +59,6 @@
                         Content="." Style="{StaticResource keyboardButton}" Click="ButtonDot_Click" />
         <Button Grid.Row="3" Grid.Column="3" x:Name="ButtonColon"
                         Content=":" Style="{StaticResource keyboardButton}" Click="ButtonColon_Click" />
+        <ctr:TabTipButton Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" Margin="1"/>
     </Grid>
 </UserControl>
