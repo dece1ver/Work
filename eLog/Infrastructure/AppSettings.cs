@@ -55,6 +55,9 @@ namespace eLog.Infrastructure
         /// <summary> Текущая смена </summary>
         public static string CurrentShift { get; set; } = string.Empty;
 
+        /// <summary> Список деталей </summary>
+        public static ObservableCollection<PartInfoModel> Parts { get; set; } = new();
+
         /// <summary> Текущий оператор </summary>
         public static Operator? CurrentOperator { get; set; }
 
@@ -75,6 +78,7 @@ namespace eLog.Infrastructure
                     },
                 };
             CurrentShift = Text.DayShift;
+            Parts = new ObservableCollection<PartInfoModel>();
             XlPath = string.Empty;
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
@@ -110,6 +114,7 @@ namespace eLog.Infrastructure
                 OrderQualifiers = appSettings.OrderQualifiers;
                 Operators = appSettings.Operators;
                 CurrentShift = appSettings.CurrentShift;
+                Parts = appSettings.Parts ?? new ObservableCollection<PartInfoModel>();
                 CurrentOperator = appSettings.CurrentOperator;
                 IsShiftStarted = appSettings.IsShiftStarted;
                 if (appSettings.CurrentOperator is null && Operators.Count > 0) CurrentOperator = Operators[0];
@@ -126,7 +131,7 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void RewriteConfig()
         {
-            var appSettings = new AppSettingsModel(Machine, XlPath, OrdersSourcePath, OrderQualifiers, Operators, CurrentShift, IsShiftStarted, CurrentOperator);
+            var appSettings = new AppSettingsModel(Machine, XlPath, OrdersSourcePath, OrderQualifiers, Operators, CurrentShift, Parts, IsShiftStarted, CurrentOperator);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented));
         }

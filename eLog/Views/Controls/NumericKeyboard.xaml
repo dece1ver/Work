@@ -6,12 +6,6 @@
              xmlns:ctr="clr-namespace:eLog.Views.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="200" d:DesignWidth="300">
-    <UserControl.Resources>
-        <Style TargetType="Button" x:Key="keyboardButton">
-            <Setter Property="Margin" Value="1"/>
-            <Setter Property="Focusable" Value="False"/>
-        </Style>
-    </UserControl.Resources>
     <Grid Margin="-1">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -25,40 +19,43 @@
             <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
         <Button Grid.Row="0" Grid.Column="0" x:Name="Button7"
-                        Content="7" Style="{StaticResource keyboardButton}" Click="Button7_Click"/>
+                        Content="7" Style="{StaticResource KeyboardButton}" Click="Button7_Click"/>
         <Button Grid.Row="0" Grid.Column="1" x:Name="Button8"
-                        Content="8" Style="{StaticResource keyboardButton}" Click="Button8_Click"/>
+                        Content="8" Style="{StaticResource KeyboardButton}" Click="Button8_Click"/>
         <Button Grid.Row="0" Grid.Column="2" x:Name="Button9"
-                        Content="9" Style="{StaticResource keyboardButton}" Click="Button9_Click"/>
+                        Content="9" Style="{StaticResource KeyboardButton}" Click="Button9_Click"/>
         <Button Grid.Row="0" Grid.Column="3" x:Name="ButtonBackspace"
-                        Content="◀" Style="{StaticResource keyboardButton}" Click="ButtonBackspace_Click"/>
+                        Content="◀" Style="{StaticResource KeyboardButton}" Click="ButtonBackspace_Click"/>
 
         <Button Grid.Row="1" Grid.Column="0" x:Name="Button4"
-                        Content="4" Style="{StaticResource keyboardButton}" Click="Button4_Click"/>
+                        Content="4" Style="{StaticResource KeyboardButton}" Click="Button4_Click"/>
         <Button Grid.Row="1" Grid.Column="1" x:Name="Button5"
-                        Content="5" Style="{StaticResource keyboardButton}" Click="Button5_Click"/>
+                        Content="5" Style="{StaticResource KeyboardButton}" Click="Button5_Click"/>
         <Button Grid.Row="1" Grid.Column="2"  x:Name="Button6"
-                        Content="6" Style="{StaticResource keyboardButton}" Click="Button6_Click"/>
+                        Content="6" Style="{StaticResource KeyboardButton}" Click="Button6_Click"/>
         <Button Grid.Row="1" Grid.Column="3" x:Name="ButtonDel" FontSize="14"
-                        Content="Del" Style="{StaticResource keyboardButton}" Click="ButtonDel_Click"/>
+                        Content="Del" Style="{StaticResource KeyboardButton}" Click="ButtonDel_Click"/>
 
         <Button Grid.Row="2" Grid.Column="0" x:Name="Button1"
-                        Content="1" Style="{StaticResource keyboardButton}" Click="Button1_Click"/>
+                        Content="1" Style="{StaticResource KeyboardButton}" Click="Button1_Click"/>
         <Button Grid.Row="2" Grid.Column="1" x:Name="Button2"
-                        Content="2" Style="{StaticResource keyboardButton}" Click="Button2_Click"/>
+                        Content="2" Style="{StaticResource KeyboardButton}" Click="Button2_Click"/>
         <Button Grid.Row="2" Grid.Column="2" x:Name="Button3"
-                        Content="3" Style="{StaticResource keyboardButton}" Click="Button3_Click"/>
+                        Content="3" Style="{StaticResource KeyboardButton}" Click="Button3_Click"/>
         <Button Grid.Row="2" Grid.Column="3" x:Name="ButtonClear" FontSize="14"
-                        Content="Clear" Style="{StaticResource keyboardButton}" Click="ButtonClear_Click"/>
+                        Content="Clear" Style="{StaticResource KeyboardButton}" Click="ButtonClear_Click"/>
 
         <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" x:Name="Button0"
-                        Content="0" Style="{StaticResource keyboardButton}" Click="Button0_Click"/>
+                        Content="0" Style="{StaticResource KeyboardButton}" Click="Button0_Click"/>
         <Button Grid.Row="3" Grid.Column="2" x:Name="ButtonDot"
-                        Content="." Style="{StaticResource keyboardButton}" Click="ButtonDot_Click" />
+                        Content="." Style="{StaticResource KeyboardButton}" Click="ButtonDot_Click" />
         <Button Grid.Row="3" Grid.Column="3" x:Name="ButtonColon"
-                        Content=":" Style="{StaticResource keyboardButton}" Click="ButtonColon_Click" />
-        <ctr:TabTipButton Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" Margin="1"/>
+                        Content=":" Style="{StaticResource KeyboardButton}" Click="ButtonColon_Click" />
+        <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" x:Name="SpaceButton"
+                Content="SPACE" Style="{StaticResource KeyboardButton}" Click="SpaceButton_Click" />
+        <ctr:TabTipButton Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" Margin="1"/>
     </Grid>
 </UserControl>

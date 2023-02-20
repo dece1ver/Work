@@ -12,91 +12,104 @@
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
         mc:Ignorable="d" FontSize="19" WindowStyle="None"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Завершение наладки" Height="240" Width="760" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize">
+        Title="Завершение наладки" Height="306" Width="760" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize">
     <Window.Resources>
 
     </Window.Resources>
     <Border BorderThickness="1" BorderBrush="LightGray">
-        <Grid Margin="5 0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="480"/>
-                <ColumnDefinition Width="2"/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="42"/>
-                <RowDefinition Height="54"/>
-            </Grid.RowDefinitions>
-            <TextBox FontSize="16" Grid.Column="0" Grid.Row="0" Margin="5 10 5 2" 
+        <DockPanel LastChildFill="True">
+            <StatusBar DockPanel.Dock="Bottom">
+                <StatusBarItem>
+                    <TextBlock Text="{Binding Status}"/>
+                </StatusBarItem>
+            </StatusBar>
+            <Grid Margin="5 0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="480"/>
+                    <ColumnDefinition Width="2"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="42"/>
+                    <RowDefinition Height="54"/>
+                </Grid.RowDefinitions>
+                <TextBox FontSize="16" Grid.Column="0" Grid.Row="0" Margin="5 10 5 2" 
                      TextWrapping="WrapWithOverflow" AcceptsReturn="True"
                      Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}">
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Style.Resources>
-                            <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
-                                <VisualBrush.Visual>
-                                    <TextBlock Text="Комментарий" Foreground="LightGray" FontSize="20"/>
-                                </VisualBrush.Visual>
-                            </VisualBrush>
-                        </Style.Resources>
-                        <Style.Triggers>
-                            <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
-                                <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                            </Trigger>
-                            <Trigger Property="Text" Value="{x:Null}">
-                                <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter Property="Background" Value="{x:Null}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
-            
-            <DockPanel Grid.Column="0" Grid.Row="1" LastChildFill="True" Margin="4 0 4 0">
-                <TextBlock DockPanel.Dock="Left" Text="Количество: " VerticalAlignment="Center" FontSize="18"/>
-                <TextBox x:Name="PartsCountTextBox" Width="100" Height="42"
-                         VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="24"
-                         Text="{Binding PartsFinishedText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
-                <TextBlock DockPanel.Dock="Left" Text="Машинное время: " VerticalAlignment="Center" FontSize="18" Margin="9 0 0 0"/>
-                <TextBox Width="100" Height="42" VerticalAlignment="Center"  VerticalContentAlignment="Center" FontSize="24"
-                          Text="{Binding MachineTimeText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
-            </DockPanel>
-            <UniformGrid Grid.Column="0" Grid.Row="2" Columns="2" Margin="0 0 4 10">
-                <Button Margin="5 2 1 0" IsCancel="True"
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Style.Resources>
+                                <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
+                                    <VisualBrush.Visual>
+                                        <TextBlock Text="Комментарий" Foreground="LightGray" FontSize="20"/>
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </Style.Resources>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                    <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                </Trigger>
+                                <Trigger Property="Text" Value="{x:Null}">
+                                    <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter Property="Background" Value="{x:Null}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+
+                <Grid Grid.Column="0" Grid.Row="1" Margin="4 0 4 0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="90"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Количество: " VerticalAlignment="Center" FontSize="18" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="1" x:Name="PartsCountTextBox" Height="42" Margin="0 0 3 0"
+                             VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="24"
+                             Text="{Binding PartsFinishedText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
+                    <TextBlock Grid.Column="2" Text="Машинное время: " VerticalAlignment="Center" FontSize="16" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="3" Height="42" VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="24" Margin="0 0 1 0"
+                             Text="{Binding MachineTimeText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
+                </Grid>
+                <UniformGrid Grid.Column="0" Grid.Row="2" Columns="2" Margin="0 0 4 10">
+                    <Button Margin="5 2 1 0" IsCancel="True"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✗" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
-                    <Button.Command>
-                        <cmd:CloseEndDetailDialogCommand EndDetailResult="Cancel"/>
-                    </Button.Command>
-                </Button>
-                <Button Margin="1 2 1 0"
+                        <Button.Content>
+                            <TextBlock Text="✗" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </Button.Content>
+                        <Button.Command>
+                            <cmd:CloseDialogCommand DialogResult="False"/>
+                        </Button.Command>
+                    </Button>
+                    <Button Margin="1 2 1 0"
                         IsEnabled="{Binding Valid}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✓" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
-                    <Button.Command>
-                        <cmd:CloseEndDetailDialogCommand EndDetailResult="Finish"/>
-                    </Button.Command>
-                </Button>
-                <Button Margin="1 2 5 0" IsDefault="True" Visibility="Collapsed"
+                        <Button.Content>
+                            <TextBlock Text="✓" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </Button.Content>
+                        <Button.Command>
+                            <cmd:CloseDialogCommand DialogResult="True"/>
+                        </Button.Command>
+                    </Button>
+                    <Button Margin="1 2 5 0" IsDefault="True" Visibility="Collapsed"
                         IsEnabled="{Binding Valid}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✓+" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
-                    <Button.Command>
-                        <cmd:CloseEndDetailDialogCommand EndDetailResult="FinishAndNext"/>
-                    </Button.Command>
-                </Button>
-            </UniformGrid>
-            <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" BorderBrush="LightGray" BorderThickness="1" Margin="0 15"/>
-            <ctrl:NumericKeyboard Grid.Column="2" Grid.Row="0" Grid.RowSpan="3" Margin="5 10 5 10"/>
-        </Grid>
+                        <Button.Content>
+                            <TextBlock Text="✓+" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </Button.Content>
+                        <Button.Command>
+                            <cmd:CloseDialogCommand DialogResult="True"/>
+                        </Button.Command>
+                    </Button>
+                </UniformGrid>
+                <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" BorderBrush="LightGray" BorderThickness="1" Margin="0 15"/>
+                <ctrl:NumericKeyboard Grid.Column="2" Grid.Row="0" Grid.RowSpan="3" Margin="5 10 5 10"/>
+            </Grid>
+        </DockPanel>
     </Border>
 </Window>

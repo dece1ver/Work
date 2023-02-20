@@ -103,6 +103,14 @@ namespace eLog.Infrastructure.Extensions.pInvoke
         [DllImport(FileName, SetLastError = true)]
         public static extern ushort GetKeyboardLayout([In] int idThread);
 
+        [DllImport(FileName,
+            CallingConvention = CallingConvention.StdCall,
+            CharSet = CharSet.Unicode,
+            EntryPoint = "ActivateKeyboardLayout",
+            SetLastError = true,
+            ThrowOnUnmappableChar = false)]
+        public static extern uint ActivateKeyboardLayout(uint hkl, uint flags);
+
         [DllImport(FileName, SetLastError = true)]
         public static extern int GetWindowThreadProcessId([In] IntPtr hWnd, [Out, Optional] IntPtr lpdwProcessId);
 

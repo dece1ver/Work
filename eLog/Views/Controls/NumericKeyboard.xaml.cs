@@ -116,6 +116,9 @@ namespace eLog.Views.Controls
             }
         }
 
-        
+        private void SpaceButton_Click(object sender, RoutedEventArgs e)
+        {
+            Keyboard.KeyPress(Keys.Space);
+        }
     }
 }

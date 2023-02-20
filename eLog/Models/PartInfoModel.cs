@@ -84,6 +84,7 @@ namespace eLog.Models
                 Set(ref _FinishedCount, value);
                 OnPropertyChanged(nameof(TotalCountInfo));
                 OnPropertyChanged(nameof(IsStarted));
+                OnPropertyChanged(nameof(InProduction));
                 OnPropertyChanged(nameof(EndDetailInfo));
             }
         }
@@ -144,6 +145,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(SetupIsNotFinished));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
+                OnPropertyChanged(nameof(InProduction));
                 OnPropertyChanged(nameof(EndDetailInfo));
                 OnPropertyChanged(nameof(Title));
             }
@@ -160,6 +162,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(SetupIsNotFinished));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
+                OnPropertyChanged(nameof(InProduction));
                 OnPropertyChanged(nameof(EndDetailInfo));
                 OnPropertyChanged(nameof(Title));
             }
@@ -176,6 +179,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(CanBeFinished));
                 OnPropertyChanged(nameof(IsFinished));
                 OnPropertyChanged(nameof(IsStarted));
+                OnPropertyChanged(nameof(InProduction));
                 OnPropertyChanged(nameof(TotalCountInfo));
                 OnPropertyChanged(nameof(EndDetailInfo));
                 OnPropertyChanged(nameof(Title));
@@ -244,6 +248,12 @@ namespace eLog.Models
         /// True если время завершения наладки больше или равно времени начала наладки.
         /// </summary>
         public bool SetupIsFinished => StartMachiningTime >= StartSetupTime;
+
+        /// <summary>
+        /// Идет ли изготовление.
+        /// True если время завершена наладка, но не завершено изготовление.
+        /// </summary>
+        public bool InProduction => SetupIsFinished && !IsFinished;
 
         /// <summary>
         /// Не завершена ли наладка. Нужно для привязок разметки.

@@ -95,7 +95,7 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
-                var ws = wb.Worksheet("Для заполнения");
+                var ws = wb.Worksheet(1);
                 ws.LastRowUsed().InsertRowsBelow(1);
                 IXLRow? prevRow = null;
                 
@@ -169,7 +169,7 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
-                foreach (var xlRow in wb.Worksheet("Для заполнения").Rows())
+                foreach (var xlRow in wb.Worksheet(1).Rows())
                 {
                     if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
                     xlRow.Cell(5).Value = $"{part.OperatorComments}\n{part.DownTimes.Report()}".Trim();

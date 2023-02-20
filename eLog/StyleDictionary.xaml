@@ -550,4 +550,9 @@
     <Style x:Key="SlashComboBoxStyle" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource ComboBoxStyle}">
         <Setter Property="Template" Value="{StaticResource SlashComboBoxTemplate}"/>
     </Style>
+
+    <Style TargetType="Button" x:Key="KeyboardButton">
+        <Setter Property="Margin" Value="1"/>
+        <Setter Property="Focusable" Value="False"/>
+    </Style>
 </ResourceDictionary>

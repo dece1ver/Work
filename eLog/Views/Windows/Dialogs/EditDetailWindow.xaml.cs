@@ -230,9 +230,16 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 _StartSetupTime = value;
+                if (!WithSetup)
+                {
+                    StartMachiningTime = _StartSetupTime;
+                    OnPropertyChanged(nameof(StartMachiningTime));
+                }
                 Part.StartSetupTime = DateTime.TryParseExact(_StartSetupTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var startSetupTime) 
                     ? startSetupTime 
                     : DateTime.MinValue;
+                
+
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }

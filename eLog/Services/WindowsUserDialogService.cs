@@ -124,7 +124,7 @@ namespace eLog.Services
             return true;
         }
 
-        public static EndDetailResult FinishDetail(ref PartInfoModel part)
+        public static bool FinishDetail(ref PartInfoModel part)
         {
             var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.TotalCount,
                 part.SetupTimePlan, part.SingleProductionTimePlan)
@@ -145,12 +145,11 @@ namespace eLog.Services
                 PartsFinishedText = tempPart.FinishedCount > 0 ? tempPart.FinishedCount.ToString() : string.Empty,
                 MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(@"hh\:mm\:ss") : string.Empty,
             };
-            _ = dlg.ShowDialog();
 
-            if (dlg.EndDetailResult is EndDetailResult.Cancel) return dlg.EndDetailResult;
+            if (dlg.ShowDialog() != true) return false;
             dlg.Part.EndMachiningTime = DateTime.Now;
             part = dlg.Part;
-            return dlg.EndDetailResult;
+            return true;
         }
 
         public static DownTime.Types? SetDownTimeType()

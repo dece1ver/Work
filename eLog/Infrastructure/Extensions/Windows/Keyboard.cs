@@ -11,9 +11,11 @@ namespace eLog.Infrastructure.Extensions.Windows
     public class Keyboard
     {
 
-        private const int KeyeventExtendedkey = 1;
-        private const int KeyeventKeyup = 2;
+        private const int KeyEventExtendedKey = 1;
+        private const int KeyEventKeyUp = 2;
         private const int ScClose = 0xF060;
+        public const uint KlfActivate = 0x00000001;
+        public const uint KlfSetForProcess = 0x00000100;
 
         public static ushort GetKeyboardLayout()
         {
@@ -22,12 +24,12 @@ namespace eLog.Infrastructure.Extensions.Windows
 
         public static void KeyDown(Keys vKey)
         {
-           User32.keybd_event((byte)vKey, 0, KeyeventExtendedkey, 0);
+           User32.keybd_event((byte)vKey, 0, KeyEventExtendedKey, 0);
         }
 
         public static void KeyUp(Keys vKey)
         {
-            User32.keybd_event((byte)vKey, 0, KeyeventExtendedkey | KeyeventKeyup, 0);
+            User32.keybd_event((byte)vKey, 0, KeyEventExtendedKey | KeyEventKeyUp, 0);
         }
 
         public static void KeyPress(Keys vKey)

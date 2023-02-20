@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,22 +27,37 @@ namespace eLog.Views.Windows
         public MainWindow()
         {
             InitializeComponent();
-            Closing += OnWindowClosing;
+            Closing += OnWindowClosing!;
         }
 
         public void OnWindowClosing(object sender, CancelEventArgs e)
         {
-            if (!AppSettings.IsShiftStarted) return;
-            var res = MessageBox.Show("При продолжении смена будет завершена автоматически.", "Смена не завершена", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-            switch (res)
+            switch (AppSettings.IsShiftStarted)
             {
-                case MessageBoxResult.OK:
-                    AppSettings.IsShiftStarted = false;
-                    AppSettings.RewriteConfig();
+                case false:
+                    return;
+                case true when AppSettings.Parts.Count == AppSettings.Parts.Count(x => x.IsFinished):
+                {
+                    var res = MessageBox.Show("При продолжении смена будет завершена автоматически.", "Смена не завершена", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    switch (res)
+                    {
+                        case MessageBoxResult.OK:
+                            AppSettings.IsShiftStarted = false;
+                            AppSettings.RewriteConfig();
+                            break;
+                        case MessageBoxResult.Cancel or _:
+                            e.Cancel = true;
+                            break;
+                    }
+
                     break;
-                case MessageBoxResult.Cancel:
+                }
+                case true when AppSettings.Parts.Count != AppSettings.Parts.Count(x => x.IsFinished):
+                {
+                    _ = MessageBox.Show("Нельзя закрывать журнал пока запущены детали.", "Есть незавершенные детали", MessageBoxButton.OK, MessageBoxImage.Error);
                     e.Cancel = true;
-                    break;
+                        break;
+                }
             }
         }
     }

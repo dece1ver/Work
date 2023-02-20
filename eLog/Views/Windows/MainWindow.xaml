@@ -8,7 +8,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
         mc:Ignorable="d" xmlns:vm="clr-namespace:eLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
-        Title="Электронный журнал оператора" MinWidth="930" MinHeight="480" Width="1366" Height="768" WindowState="Maximized">
+        Title="Электронный журнал оператора" MinWidth="930" MinHeight="480" Width="1300" Height="710" WindowState="Maximized">
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
@@ -85,7 +85,14 @@
                 <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0" >
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <GroupBox Header="{Binding Title}">
+                            <GroupBox>
+                                <GroupBox.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="(наладка) " Visibility="{Binding SetupIsNotFinished, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
+                                        <TextBlock Text="(изготовление) " Visibility="{Binding InProduction, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Title}"/>
+                                    </StackPanel>
+                                </GroupBox.Header>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>

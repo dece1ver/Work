@@ -35,6 +35,8 @@ namespace eLog.Views.Windows.Dialogs
 
         public PartInfoModel Part { get; set; }
 
+        public string Status { get; set; }
+
         public string MachineTimeText
         {
             get => _MachineTimeText;
@@ -56,6 +58,7 @@ namespace eLog.Views.Windows.Dialogs
                 OnPropertyChanged(nameof(_PartsFinished));
                 OnPropertyChanged(nameof(Valid));
                 if (Valid) Part.FinishedCount = _PartsFinished;
+                if (Part.FinishedCount == 0) Status = "При завершении с 0 изготовление будет отменено.";
             }
         }
 
@@ -76,6 +79,7 @@ namespace eLog.Views.Windows.Dialogs
         public EndDetailDialogWindow(PartInfoModel part)
         {
             Part = part;
+            Status = string.Empty;
             InitializeComponent();
             PartsCountTextBox.Focus();
         }
