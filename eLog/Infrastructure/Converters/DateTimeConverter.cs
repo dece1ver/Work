@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows;
+using eLog.Infrastructure.Extensions;
 
 namespace eLog.Infrastructure.Converters
 {
@@ -15,7 +16,7 @@ namespace eLog.Infrastructure.Converters
         {
             if (value is DateTime dateTime)
             {
-                return dateTime == DateTime.MinValue ? string.Empty : dateTime.ToString("dd.MM.yyyy HH:mm");
+                return dateTime == DateTime.MinValue ? string.Empty : dateTime.ToString(Text.DateTimeFormat);
             }
             return value;
         }

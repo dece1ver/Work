@@ -17,11 +17,6 @@ namespace eLog.Infrastructure.Extensions.Windows
         public const uint KlfActivate = 0x00000001;
         public const uint KlfSetForProcess = 0x00000100;
 
-        public static ushort GetKeyboardLayout()
-        {
-            return User32.GetKeyboardLayout(User32.GetWindowThreadProcessId(User32.GetForegroundWindow(), IntPtr.Zero));
-        }
-
         public static void KeyDown(Keys vKey)
         {
            User32.keybd_event((byte)vKey, 0, KeyEventExtendedKey, 0);
@@ -37,6 +32,8 @@ namespace eLog.Infrastructure.Extensions.Windows
             KeyDown(vKey);
             KeyUp(vKey);
         }
+
+
 
         public static void KillTabTip(int killType)
         {

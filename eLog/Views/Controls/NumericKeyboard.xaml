@@ -19,7 +19,7 @@
             <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
-            <RowDefinition/>
+            <!--<RowDefinition/>-->
         </Grid.RowDefinitions>
         <Button Grid.Row="0" Grid.Column="0" x:Name="Button7"
                         Content="7" Style="{StaticResource KeyboardButton}" Click="Button7_Click"/>
@@ -56,6 +56,6 @@
                         Content=":" Style="{StaticResource KeyboardButton}" Click="ButtonColon_Click" />
         <Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" x:Name="SpaceButton"
                 Content="SPACE" Style="{StaticResource KeyboardButton}" Click="SpaceButton_Click" />
-        <ctr:TabTipButton Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" Margin="1"/>
+        <ctr:TabTipButton Visibility="Collapsed" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" Margin="1"/>
     </Grid>
 </UserControl>

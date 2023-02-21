@@ -16,7 +16,7 @@ namespace eLog.Infrastructure.Converters
         {
             if (value is TimeSpan timeSpan)
             {
-                return timeSpan == TimeSpan.Zero ? string.Empty : timeSpan.ToString(@"hh\:mm\:ss");
+                return timeSpan == TimeSpan.Zero ? string.Empty : timeSpan.ToString(Text.TimeSpanFormat);
             }
             return value;
         }

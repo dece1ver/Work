@@ -18,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
@@ -35,6 +36,17 @@ namespace eLog.Views.Windows.Dialogs
         public List<PartInfoModel> Parts { get; set; } = new();
         public int PartIndex { get; set; }
         public PartInfoModel Part { get; set; }
+
+        public Visibility KeyboardVisibility
+        {
+            get => _KeyboardVisibility;
+            set
+            {
+                Set(ref _KeyboardVisibility, value);
+                Height = KeyboardVisibility is Visibility.Visible ? 590 : 480;
+            }
+        }
+
         public static string[] OrderMonths => Enumerable.Range(1, 12).Select(x => x.ToString("D2")).ToArray();
 
         public string OrderQualifier
@@ -235,7 +247,7 @@ namespace eLog.Views.Windows.Dialogs
                     StartMachiningTime = _StartSetupTime;
                     OnPropertyChanged(nameof(StartMachiningTime));
                 }
-                Part.StartSetupTime = DateTime.TryParseExact(_StartSetupTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var startSetupTime) 
+                Part.StartSetupTime = DateTime.TryParseExact(_StartSetupTime, Text.DateTimeFormat, null, DateTimeStyles.None, out var startSetupTime) 
                     ? startSetupTime 
                     : DateTime.MinValue;
                 
@@ -251,7 +263,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 _StartMachiningTime = value;
-                Part.StartMachiningTime = DateTime.TryParseExact(_StartMachiningTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var startMachiningTime) 
+                Part.StartMachiningTime = DateTime.TryParseExact(_StartMachiningTime, Text.DateTimeFormat, null, DateTimeStyles.None, out var startMachiningTime) 
                     ? startMachiningTime 
                     : DateTime.MinValue;
                 OnPropertyChanged(nameof(CanBeClosed));
@@ -324,6 +336,8 @@ namespace eLog.Views.Windows.Dialogs
         }
 
         private string _SingleProductionTimePlan;
+        private Visibility _KeyboardVisibility;
+
         public string SingleProductionTimePlan
         {
             get => _SingleProductionTimePlan;
@@ -342,7 +356,7 @@ namespace eLog.Views.Windows.Dialogs
             Part = part;
             var order = Part.Order;
             _OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
-                ? order.Split('/')[1] 
+                ? order.Split('/')[1]
                 : Text.WithoutOrderDescription;
             _OrderQualifier =
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
@@ -357,10 +371,10 @@ namespace eLog.Views.Windows.Dialogs
             _FinishedCount = Part.FinishedCount > 0 ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
             _TotalCount = Part.TotalCount > 0 ? Part.TotalCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
 
-            _StartSetupTime = Part.StartSetupTime.ToString("dd.MM.yyyy HH:mm");
-            _StartMachiningTime = Part.StartMachiningTime != DateTime.MinValue ? Part.StartMachiningTime.ToString("dd.MM.yyyy HH:mm") : string.Empty;
-            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue ? Part.EndMachiningTime.ToString("dd.MM.yyyy HH:mm") : string.Empty;
-            _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(@"hh\:mm\:ss") : string.Empty;
+            _StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
+            _StartMachiningTime = Part.StartMachiningTime != DateTime.MinValue ? Part.StartMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
+            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
+            _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty;
 
             _PartSetupTimePlan = Part.SetupTimePlan > 0 ? Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture) : string.Empty;
             _SingleProductionTimePlan = Part.SingleProductionTimePlan > 0 ? Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture) : string.Empty;
@@ -376,6 +390,7 @@ namespace eLog.Views.Windows.Dialogs
                     $"Список заказов обновлен {File.GetLastWriteTime(AppSettings.LocalOrdersFile):dd.MM.yyyy HH:mm}";
             }
             OnPropertyChanged(nameof(NonEmptyOrder));
+            KeyboardVisibility = Visibility.Collapsed;
             var updaterThread = new Thread(UpdateOrders) {IsBackground = true};
             updaterThread.Start();
         }
@@ -450,15 +465,79 @@ namespace eLog.Views.Windows.Dialogs
         /// <summary> Вставляет текущее время как конец наладки</summary>
         private void EndSetupTimeButton_Click(object sender, RoutedEventArgs e)
         {
-            StartMachiningTime = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
+            StartMachiningTime = DateTime.Now.ToString(Text.DateTimeFormat);
             OnPropertyChanged(nameof(StartMachiningTime));
         }
 
         /// <summary> Вставляет текущее время как конец изготовления</summary>
         private void EndProductionTimeButton_Click(object sender, RoutedEventArgs e)
         {
-            EndMachiningTime = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
+            EndMachiningTime = DateTime.Now.ToString(Text.DateTimeFormat);
             OnPropertyChanged(nameof(EndMachiningTime));
+        }
+
+        private void KeyboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            KeyboardVisibility = KeyboardVisibility is Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void LoadPreviousPartButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (AppSettings.Parts.Count <= 0) return;
+            var prev = AppSettings.Parts[^1];
+            PartName = prev.FullName;
+            var order = prev.Order;
+            OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
+            ? order.Split('/')[1]
+            : Text.WithoutOrderDescription;
+            OrderQualifier =
+            !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
+            ? order.Split('-')[0]
+            : AppSettings.OrderQualifiers[0];
+            OrderMonth =
+            !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
+            ? order.Split('-')[1].Split('/')[0]
+                    : "01";
+            Part.Name = prev.Name;
+            Part.Number = prev.Number;
+            PartName = prev.FullName;
+            OnPropertyChanged(nameof(PartName));
+
+            Part.StartSetupTime = prev.EndMachiningTime;
+            StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
+            OnPropertyChanged(nameof(StartSetupTime));
+
+            if (prev.SetupIsFinished)
+            {
+                Part.StartSetupTime = new DateTime(
+                    Part.StartSetupTime.Year,
+                    Part.StartSetupTime.Month,
+                    Part.StartSetupTime.Day,
+                    Part.StartSetupTime.Hour,
+                    Part.StartSetupTime.Minute,
+                    0, 0);
+                StartMachiningTime = StartSetupTime;
+                Part.StartMachiningTime = Part.StartSetupTime;
+                StartMachiningTime = Part.StartMachiningTime.ToString(Text.DateTimeFormat);
+                OnPropertyChanged(nameof(StartMachiningTime));
+                OnPropertyChanged(nameof(WithSetup));
+            }
+
+            Part.SetupTimePlan = prev.SetupTimePlan;
+            PartSetupTimePlan = Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(PartSetupTimePlan));
+
+            Part.SingleProductionTimePlan = prev.SingleProductionTimePlan;
+            SingleProductionTimePlan = Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(SingleProductionTimePlan));
+
+            Part.MachineTime = prev.MachineTime;
+            MachineTime = Part.MachineTime.ToString(Text.TimeSpanFormat);
+            OnPropertyChanged(nameof(MachineTime));
+
+            Part.TotalCount = prev.TotalCount;
+            TotalCount = Part.TotalCount.ToString();
+            OnPropertyChanged(nameof(TotalCount));
         }
 
         private void UpdateOrders()
@@ -533,7 +612,9 @@ namespace eLog.Views.Windows.Dialogs
             return true;
         }
 
+
         #endregion
 
+        
     }
 }

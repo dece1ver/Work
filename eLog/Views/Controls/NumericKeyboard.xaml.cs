@@ -97,12 +97,12 @@ namespace eLog.Views.Controls
 
         private void ButtonDot_Click(object sender, RoutedEventArgs e)
         {
-            Keyboard.KeyPress(Keyboard.GetKeyboardLayout() == 1033 ? Keys.OemPeriod : Keys.Oem2);
+            Keyboard.KeyPress(KeyboardLayout.Current is KeyboardLayout.En ? Keys.OemPeriod : Keys.Oem2);
         }
 
         private void ButtonColon_Click(object sender, RoutedEventArgs e)
         {
-            if (Keyboard.GetKeyboardLayout() == 1033)
+            if (KeyboardLayout.Current is KeyboardLayout.En)
             {
                 Keyboard.KeyDown(Keys.LShiftKey);
                 Keyboard.KeyPress(Keys.Oem1);

@@ -313,10 +313,25 @@ namespace eLog.ViewModels
                         break;
                     case { Id: > 0, IsFinished: true }:
                     {
-                        if (part.RewriteToXl())
+                        switch (part.RewriteToXl())
                         {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                            case Util.WriteResult.Ok:
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                                    break;
+                            case Util.WriteResult.IOError:
+                                Status = $"Таблица занята, запись будет произведена позже.";
+                                    break;
+                            case Util.WriteResult.NotFinded:
+                                part.Id = part.WriteToXl();
+                                if (part.Id > 0)
+                                {
+                                    part.IsSynced = true;
+                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                }
+                                break;
+                            case Util.WriteResult.Error:
+                                break;
                         }
                         break;
                     }
@@ -355,14 +370,28 @@ namespace eLog.ViewModels
                         break;
                     case { Id: > 0, IsFinished: true }:
                     {
-                        if (part.RewriteToXl())
+                        switch (part.RewriteToXl())
                         {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                            Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                            case Util.WriteResult.Ok:
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                                break;
+                            case Util.WriteResult.IOError:
+                                Status = $"Таблица занята, запись будет произведена позже.";
+                                break;
+                            case Util.WriteResult.NotFinded:
+                                part.Id = part.WriteToXl();
+                                if (part.Id > 0)
+                                {
+                                    part.IsSynced = true;
+                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                }
+                                break;
+                            case Util.WriteResult.Error:
+                                break;
                         }
                         break;
-                    }
+                        }
                     case { FinishedCount: 0 }:
                     {
                         Status = "Изготовление отменено.";
@@ -431,7 +460,7 @@ namespace eLog.ViewModels
                         if (Parts[i] is not { IsSynced: false, IsFinished: true } part) continue;
                         if (part.Id != -1)
                         {
-                            if (!part.RewriteToXl()) continue;
+                            if (part.RewriteToXl() is not Util.WriteResult.Ok) continue;
                             part.IsSynced = true;
                             Status = $"Информация об изготовлении id{part.Id} обновлена. (фон)";
                         }

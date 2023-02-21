@@ -12,5 +12,7 @@ namespace eLog.Infrastructure.Extensions
         public const string WithoutOrderDescription = "Без М/Л";
         public const string DayShift = "День";
         public const string NightShift = "Ночь";
+        public const string DateTimeFormat = "dd.MM.yyyy HH:mm";
+        public const string TimeSpanFormat = @"hh\:mm\:ss";
     }
 }

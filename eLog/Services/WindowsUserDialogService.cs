@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using eLog.Infrastructure.Extensions;
 using eLog.Views.Windows.Settings;
 using OperatorsEditWindow = eLog.Views.Windows.Settings.OperatorsEditWindow;
 
@@ -143,7 +144,7 @@ namespace eLog.Services
             {
                 Owner = Application.Current.MainWindow,
                 PartsFinishedText = tempPart.FinishedCount > 0 ? tempPart.FinishedCount.ToString() : string.Empty,
-                MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(@"hh\:mm\:ss") : string.Empty,
+                MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty,
             };
 
             if (dlg.ShowDialog() != true) return false;

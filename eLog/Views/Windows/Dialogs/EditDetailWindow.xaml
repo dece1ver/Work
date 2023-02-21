@@ -10,7 +10,7 @@
         xmlns:inf="clr-namespace:eLog.Infrastructure"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
-        Title="Редактирование детали" Height="500" Width="1100" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize" Loaded="Window_Loaded">
+        Title="Редактирование детали" Height="590" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
         <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
         <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
@@ -43,7 +43,7 @@
             </StatusBar>
             <Grid Margin="10 9 10 10">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="147"/>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="155"/>
                     <ColumnDefinition/>
@@ -65,7 +65,7 @@
                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                            Text="Наименование:"/>
                 <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
-                         d:Text="Корпус клапана" Height="78" TextWrapping="Wrap"
+                         d:Text="Корпус клапана" Height="70" TextWrapping="Wrap" FontSize="18" Padding="0 -4" 
                          Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Collapsed"
@@ -159,7 +159,7 @@
                 </DockPanel>
 
                 <TextBlock Grid.Row="4" Grid.Column="0"
-                           Text="Время завершения:"/>
+                           Text="Время завершения:" Margin="0 0 3  0"/>
                 <DockPanel Grid.Row="4" Grid.Column="1">
                     <Button x:Name="EndProductionTimeButton" Style="{StaticResource OperationButton}"
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch" 
@@ -186,14 +186,14 @@
 
                 <TextBlock Grid.Row="6" Grid.Column="0"
                            Text="Комментарий:"/>
-                <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" d:Text="Комментарий" Height="60" 
+                <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" d:Text="Комментарий" Height="118" 
                          TextWrapping="WrapWithOverflow" AcceptsReturn="True" FontSize="16"
                          Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}"/>
 
 
-                <Button Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="2"
-                        Margin="0 15 0 0" Width="150" Height="60"
-                        HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                <Button Grid.Column="0" Grid.Row="8" 
+                        Margin="0 15 0 0" Height="60"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
                     <Button.Content>
                         <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -203,7 +203,9 @@
                     </Button.Command>
                 </Button>
 
-                <ctrl:CyrillicKeyboard Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="4"/>
+                <ctrl:KeyboardControl Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="4" Height="115" Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
+
+                <ctrl:TabTipButton Grid.Column="5" Grid.Row="7" Margin="1" Visibility="Collapsed"/>
 
                 <Button Grid.Column="5" Grid.Row="8"
                         Margin="0 15 0 0" IsDefault="True" Width="260" Height="60"
@@ -221,8 +223,16 @@
                         BorderBrush="LightGray" BorderThickness="1" 
                         Margin="5 15"/>
 
-                <ctrl:NumericKeyboard Grid.Column="5" Grid.Row="0" Grid.RowSpan="8" Margin="1 1 0 1"/>
-
+                <DockPanel Grid.Column="5" Grid.Row="0" Grid.RowSpan="7" >
+                    <Button DockPanel.Dock="Top" Content="Продолжить последнюю" Height="40"
+                            x:Name="LoadPreviousPartButton" Style="{StaticResource KeyboardButton}" Click="LoadPreviousPartButton_Click"/>
+                    <Button DockPanel.Dock="Bottom" Height="60" Style="{StaticResource KeyboardButton}"  Click="KeyboardButton_Click">
+                        <Button.Content>
+                            <TextBlock Text="🖮" FontSize="36" Margin="0 -10 0 0"/>
+                        </Button.Content>
+                    </Button>
+                    <ctrl:NumericKeyboard Margin="1" DockPanel.Dock="Top"/>
+                </DockPanel>
             </Grid>
         </DockPanel>
     </Border>

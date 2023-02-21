@@ -106,10 +106,22 @@ namespace eLog.Infrastructure.Extensions.pInvoke
         [DllImport(FileName,
             CallingConvention = CallingConvention.StdCall,
             CharSet = CharSet.Unicode,
+            EntryPoint = "LoadKeyboardLayout",
+            SetLastError = true,
+            ThrowOnUnmappableChar = false)]
+        public static extern uint LoadKeyboardLayout(
+            StringBuilder pwszKLID,
+            uint flags);
+
+        [DllImport(FileName,
+            CallingConvention = CallingConvention.StdCall,
+            CharSet = CharSet.Unicode,
             EntryPoint = "ActivateKeyboardLayout",
             SetLastError = true,
             ThrowOnUnmappableChar = false)]
-        public static extern uint ActivateKeyboardLayout(uint hkl, uint flags);
+        public static extern uint ActivateKeyboardLayout(
+            uint hkl,
+            uint flags);
 
         [DllImport(FileName, SetLastError = true)]
         public static extern int GetWindowThreadProcessId([In] IntPtr hWnd, [Out, Optional] IntPtr lpdwProcessId);
@@ -118,6 +130,5 @@ namespace eLog.Infrastructure.Extensions.pInvoke
         public static extern IntPtr GetForegroundWindow();
         public static string mss;
 
-        
     }
 }

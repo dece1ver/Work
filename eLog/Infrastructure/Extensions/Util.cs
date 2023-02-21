@@ -16,6 +16,10 @@ namespace eLog.Infrastructure.Extensions
 {
     internal static class Util
     {
+        public enum WriteResult
+        {
+            Ok, IOError, NotFinded, Error
+        }
         /// <summary>
         /// Капитализация строки (для имен, фамилий и тд)
         /// </summary>
@@ -89,9 +93,8 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="part">Информация об изготовлении</param>
         /// <returns>Int32 - Id записи в таблице</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static int WriteToXl(this PartInfoModel part)
+        public static int WriteToXl(this PartInfoModel part, int id = -1)
         {
-            var id = -1;
             try
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
@@ -163,9 +166,9 @@ namespace eLog.Infrastructure.Extensions
             return id;
         }
 
-        public static bool RewriteToXl(this PartInfoModel part)
+        public static WriteResult RewriteToXl(this PartInfoModel part)
         {
-            var result = false;
+            var result = WriteResult.NotFinded;
             try
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
@@ -191,19 +194,19 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     xlRow.Cell(33).Value = Math.Round(part.DownTimes.TotalMinutes(), 2);
                     xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
+                    result = WriteResult.Ok;
                     break;
-
                 }
                 wb.Save();
-                result = true;
             }
             catch (IOException)
             {
-
+                return WriteResult.IOError;
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
+                return WriteResult.Error;
             }
             return result;
         }
@@ -258,22 +261,6 @@ namespace eLog.Infrastructure.Extensions
             }
             time = TimeSpan.Zero;
             return false;
-        }
-
-        /// <summary>
-        /// Парсит строку в TimeSpan
-        /// </summary>
-        /// <param name="input">Строка с вводом</param>
-        /// <param name="time">Спарсеный промежуток времени</param>
-        /// <returns></returns>
-        public static bool DateTimeParse(this string input, out DateTime time)
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                time = DateTime.MinValue; ;
-                return false;
-            }
-            return DateTime.TryParseExact(input, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out time);
         }
 
         /// <summary>
