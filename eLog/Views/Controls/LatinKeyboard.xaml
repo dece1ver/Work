@@ -47,7 +47,7 @@
                 x:Name="OButton" Click="OButton_Click"/>
         <Button Grid.Column="9" Grid.Row="0" Content="P" Style="{StaticResource KeyboardButton}"
                 x:Name="PButton" Click="PButton_Click"/>
-        <Button Grid.Column="10" Grid.Row="0" Content="-" Style="{StaticResource KeyboardButton}"
+        <Button Grid.Column="10" Grid.Row="0" Content="/" Style="{StaticResource KeyboardButton}"
                 x:Name="LsbButton" Click="LsbButton_Click"/>
 
         <Button Grid.Column="0" Grid.Row="1" Content="A" Style="{StaticResource KeyboardButton}" 
@@ -68,9 +68,9 @@
                 x:Name="KButton" Click="KButton_Click"/>
         <Button Grid.Column="8" Grid.Row="1" Content="L" Style="{StaticResource KeyboardButton}" 
                 x:Name="LButton" Click="LButton_Click"/>
-        <Button Grid.Column="9" Grid.Row="1" Content="-" Style="{StaticResource KeyboardButton}" 
+        <Button Grid.Column="9" Grid.Row="1" Content="(" Style="{StaticResource KeyboardButton}" 
                 x:Name="ColonButton" Click="ColonButton_Click"/>
-        <Button Grid.Column="10" Grid.Row="1" Content="-" Style="{StaticResource KeyboardButton}"
+        <Button Grid.Column="10" Grid.Row="1" Content=")" Style="{StaticResource KeyboardButton}"
                 x:Name="ApButton" Click="ApButton_Click"/>
 
         <Button Grid.Column="0" Grid.Row="2" Content="Z" Style="{StaticResource KeyboardButton}" 
@@ -87,11 +87,11 @@
                 x:Name="NButton" Click="NButton_Click"/>
         <Button Grid.Column="6" Grid.Row="2" Content="M" Style="{StaticResource KeyboardButton}" 
                 x:Name="MButton" Click="MButton_Click"/>
-        <Button Grid.Column="7" Grid.Row="2" Content="-" Style="{StaticResource KeyboardButton}" 
+        <Button Grid.Column="7" Grid.Row="2" Content="," Style="{StaticResource KeyboardButton}" 
                 x:Name="LtButton" Click="LtButton_Click"/>
-        <Button Grid.Column="8" Grid.Row="2" Content="-" Style="{StaticResource KeyboardButton}" 
+        <Button Grid.Column="8" Grid.Row="2" Content="." Style="{StaticResource KeyboardButton}" 
                 x:Name="GtButton" Click="GtButton_Click"/>
-        <Button Grid.Column="9" Grid.Row="2" Content="-" Style="{StaticResource KeyboardButton}" 
+        <Button Grid.Column="9" Grid.Row="2"  Content="/" Style="{StaticResource KeyboardButton}" 
                 x:Name="QmButton" Click="QmButton_Click"/>
 
     </Grid>

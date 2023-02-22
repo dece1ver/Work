@@ -556,5 +556,6 @@
         <Setter Property="Focusable" Value="False"/>
         <Setter Property="FontWeight" Value="Normal"/>
         <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="16"/>
     </Style>
 </ResourceDictionary>

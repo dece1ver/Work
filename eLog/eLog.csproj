@@ -5,6 +5,10 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <Authors>dece1ver</Authors>
+    <Description>Электронный журнал</Description>
+    <Copyright>dece1ver © 2023</Copyright>
+    <RepositoryUrl>https://github.com/dece1ver/Work</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

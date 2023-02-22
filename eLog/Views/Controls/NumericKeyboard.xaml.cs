@@ -120,5 +120,10 @@ namespace eLog.Views.Controls
         {
             Keyboard.KeyPress(Keys.Space);
         }
+
+        private void ButtonDash_Click(object sender, RoutedEventArgs e)
+        {
+            Keyboard.KeyPress(Keys.OemMinus);
+        }
     }
 }

@@ -91,6 +91,7 @@ namespace eLog.Views.Controls
         private void LsbButton_Click(object sender, RoutedEventArgs e)
         {
             KeyboardLayout.Load(CultureInfo.GetCultureInfo(KeyboardLayout.En)).Activate();
+            Keyboard.KeyPress(Keys.Oem2);
         }
 
         private void AButton_Click(object sender, RoutedEventArgs e)
@@ -150,11 +151,17 @@ namespace eLog.Views.Controls
         private void ColonButton_Click(object sender, RoutedEventArgs e)
         {
             KeyboardLayout.Load(CultureInfo.GetCultureInfo(KeyboardLayout.En)).Activate();
+            Keyboard.KeyDown(Keys.LShiftKey);
+            Keyboard.KeyPress(Keys.D9);
+            Keyboard.KeyUp(Keys.LShiftKey);
         }
 
         private void ApButton_Click(object sender, RoutedEventArgs e)
         {
             KeyboardLayout.Load(CultureInfo.GetCultureInfo(KeyboardLayout.En)).Activate();
+            Keyboard.KeyDown(Keys.LShiftKey);
+            Keyboard.KeyPress(Keys.D0);
+            Keyboard.KeyUp(Keys.LShiftKey);
         }
 
         private void ZButton_Click(object sender, RoutedEventArgs e)
@@ -202,21 +209,19 @@ namespace eLog.Views.Controls
         private void LtButton_Click(object sender, RoutedEventArgs e)
         {
             KeyboardLayout.Load(CultureInfo.GetCultureInfo(KeyboardLayout.En)).Activate();
+            Keyboard.KeyPress(Keys.Oemcomma);
         }
 
         private void GtButton_Click(object sender, RoutedEventArgs e)
         {
             KeyboardLayout.Load(CultureInfo.GetCultureInfo(KeyboardLayout.En)).Activate();
+            Keyboard.KeyPress(Keys.OemPeriod);
         }
 
         private void QmButton_Click(object sender, RoutedEventArgs e)
         {
             KeyboardLayout.Load(CultureInfo.GetCultureInfo(KeyboardLayout.En)).Activate();
-        }
-
-        private void Add1Button_Click(object sender, RoutedEventArgs e)
-        {
-            KeyboardLayout.Load(CultureInfo.GetCultureInfo(KeyboardLayout.En)).Activate();
+            Keyboard.KeyPress(Keys.Oem2);
         }
     }
 }

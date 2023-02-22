@@ -10,29 +10,27 @@
         xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
-        mc:Ignorable="d" FontSize="19" WindowStyle="None"
+        mc:Ignorable="d" FontSize="18" WindowStyle="None"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="Завершение наладки" Height="306" Width="760" WindowStartupLocation="CenterOwner" Topmost="True" ResizeMode="NoResize">
-    <Window.Resources>
-
-    </Window.Resources>
+        Title="Завершение детали" Height="436" Width="840" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Border BorderThickness="1" BorderBrush="LightGray">
         <DockPanel LastChildFill="True">
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>
-                    <TextBlock Text="{Binding Status}"/>
+                    <TextBlock Text="{Binding Status}" Margin="7 0"/>
                 </StatusBarItem>
             </StatusBar>
             <Grid Margin="5 0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="480"/>
+                    <ColumnDefinition Width="560"/>
                     <ColumnDefinition Width="2"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="42"/>
+                    <RowDefinition Height="177"/>
+                    <RowDefinition Height="40"/>
                     <RowDefinition Height="54"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <TextBox FontSize="16" Grid.Column="0" Grid.Row="0" Margin="5 10 5 2" 
                      TextWrapping="WrapWithOverflow" AcceptsReturn="True"
@@ -64,16 +62,16 @@
                 <Grid Grid.Column="0" Grid.Row="1" Margin="4 0 4 0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
-                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="100"/>
                         <ColumnDefinition/>
-                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Количество: " VerticalAlignment="Center" FontSize="18" HorizontalAlignment="Right"/>
-                    <TextBox Grid.Column="1" x:Name="PartsCountTextBox" Height="42" Margin="0 0 3 0"
-                             VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="24"
+                    <TextBox Grid.Column="1" x:Name="PartsCountTextBox" Height="40" Margin="0 0 3 0"
+                             VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="22"
                              Text="{Binding PartsFinishedText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
-                    <TextBlock Grid.Column="2" Text="Машинное время: " VerticalAlignment="Center" FontSize="16" HorizontalAlignment="Right"/>
-                    <TextBox Grid.Column="3" Height="42" VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="24" Margin="0 0 1 0"
+                    <TextBlock Grid.Column="2" Text="Машинное время: " VerticalAlignment="Center" FontSize="18" HorizontalAlignment="Right"/>
+                    <TextBox Grid.Column="3" Height="40" VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="22" Margin="0 0 1 0"
                              Text="{Binding MachineTimeText, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch"/>
                 </Grid>
                 <UniformGrid Grid.Column="0" Grid.Row="2" Columns="2" Margin="0 0 4 10">
@@ -107,8 +105,17 @@
                         </Button.Command>
                     </Button>
                 </UniformGrid>
-                <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" BorderBrush="LightGray" BorderThickness="1" Margin="0 15"/>
-                <ctrl:NumericKeyboard Grid.Column="2" Grid.Row="0" Grid.RowSpan="3" Margin="5 10 5 10"/>
+                <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="4" BorderBrush="LightGray" BorderThickness="1" Margin="0 15"/>
+                <ctrl:NumericKeyboard Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Margin="5 10 5 0"/>
+                <Button Grid.Column="2" Grid.Row="2" Margin="5 2 5 10" Click="KeyboardButton_Click" Style="{StaticResource KeyboardButton}">
+                    <Button.Content>
+                        <TextBlock Text="🖮" FontSize="36" Margin="0 -10 0 0"/>
+                    </Button.Content>
+                </Button>
+                <ctrl:KeyboardControl Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Height="130"
+                                      Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}" Margin="4 0 6 10"/>
+                <ctrl:ControlKeyboardControl Grid.Column="2" Grid.Row="3" Height="130"
+                                             Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}"  Margin="4 0 4 10"/>
             </Grid>
         </DockPanel>
     </Border>

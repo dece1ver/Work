@@ -13,7 +13,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
@@ -22,6 +21,7 @@ using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
+using eLog.Infrastructure.Extensions.Windows;
 using eLog.Models;
 using eLog.Views.Windows.Settings;
 using Path = System.IO.Path;
@@ -43,7 +43,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Set(ref _KeyboardVisibility, value);
-                Height = KeyboardVisibility is Visibility.Visible ? 590 : 480;
+                Height = _KeyboardVisibility is Visibility.Visible ? 592 : 469;
             }
         }
 
@@ -540,6 +540,11 @@ namespace eLog.Views.Windows.Dialogs
             OnPropertyChanged(nameof(TotalCount));
         }
 
+        private void SpaceButton_Click(object sender, RoutedEventArgs e)
+        {
+            Keyboard.KeyPress(Keys.Space);
+        }
+
         private void UpdateOrders()
         {
             while (true)
@@ -611,6 +616,7 @@ namespace eLog.Views.Windows.Dialogs
             OnPropertyChanged(PropertyName);
             return true;
         }
+
 
 
         #endregion

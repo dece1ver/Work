@@ -8,9 +8,10 @@
         xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
         xmlns:inf="clr-namespace:eLog.Infrastructure"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
-        Title="Редактирование детали" Height="590" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
+        Title="Редактирование детали" Height="592" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
         <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
         <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
@@ -92,8 +93,8 @@
                     </Border>
                     <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
                             DockPanel.Dock="Right" IsEnabled="{Binding NonEmptyOrder}" 
-                            Content="🔎" FontSize="18" Click="FindOrderDetailsButton_Click" Width="40"/>
-                    <TextBox d:Text="00001.1.1" Margin="-2 0 1 0" IsEnabled="{Binding NonEmptyOrder}"
+                            Content="⌕" FontSize="18" Click="FindOrderDetailsButton_Click" Width="40"/>
+                    <TextBox d:Text="00001.1.1" Margin="-2 1 1 1" IsEnabled="{Binding NonEmptyOrder}"
                              Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged}"/>
                 </DockPanel>
 
@@ -106,10 +107,62 @@
                         <ColumnDefinition Width="89"/>
                     </Grid.ColumnDefinitions>
                     <TextBox Grid.Column="0" d:Text="0"
-                             Text="{Binding FinishedCount, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Grid.Column="1" Text="/" HorizontalAlignment="Center" FontSize="20" Margin="0"/>
+                             Text="{Binding FinishedCount, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="FontSize" Value="20"/>
+                                <Setter Property="Margin" Value="1"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Style.Resources>
+                                    <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
+                                        <VisualBrush.Visual>
+                                            <Label Content="факт" Foreground="LightGray" FontSize="18"/>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Style.Resources>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                        <Setter Property="Background" Value="{x:Null}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    <TextBlock Grid.Column="1" Text="/" HorizontalAlignment="Center" FontSize="18" Margin="0"/>
                     <TextBox Grid.Column="2" d:Text="1000"
-                             Text="{Binding TotalCount, UpdateSourceTrigger=PropertyChanged}"/>
+                             Text="{Binding TotalCount, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="FontSize" Value="20"/>
+                                <Setter Property="Margin" Value="1"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                <Style.Resources>
+                                    <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
+                                        <VisualBrush.Visual>
+                                            <Label Content="по М/Л" Foreground="LightGray" FontSize="18"/>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Style.Resources>
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="Text" Value="{x:Null}">
+                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsKeyboardFocused" Value="True">
+                                        <Setter Property="Background" Value="{x:Null}" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
                 </Grid>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
@@ -192,7 +245,7 @@
 
 
                 <Button Grid.Column="0" Grid.Row="8" 
-                        Margin="0 15 0 0" Height="60"
+                        Margin="0 0 2 0" Height="60"
                         HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
                     <Button.Content>
@@ -203,13 +256,20 @@
                     </Button.Command>
                 </Button>
 
-                <ctrl:KeyboardControl Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="4" Height="115" Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
+                <ctrl:KeyboardControl Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="4" Height="115" Margin="-1 8 0 0"
+                                      Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
 
-                <ctrl:TabTipButton Grid.Column="5" Grid.Row="7" Margin="1" Visibility="Collapsed"/>
+                <Button Grid.Column="1" Grid.Row="8" Grid.ColumnSpan="3" Height="36" 
+                        Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"
+                        Style="{StaticResource KeyboardButton}" 
+                        VerticalAlignment="Top" HorizontalAlignment="Stretch"
+                        Margin="74 1 75 1" Click="SpaceButton_Click"/>
+                <ctrl:ControlKeyboardControl Grid.Column="5" Grid.Row="7" Margin="0 8 -1 0"
+                                             Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
 
                 <Button Grid.Column="5" Grid.Row="8"
-                        Margin="0 15 0 0" IsDefault="True" Width="260" Height="60"
-                        HorizontalAlignment="Right" VerticalAlignment="Bottom" IsEnabled="{Binding CanBeClosed}"
+                        Margin="1 0 0 0" Height="60"
+                        VerticalAlignment="Bottom" IsEnabled="{Binding CanBeClosed}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
                     <Button.Content>
                         <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -221,17 +281,18 @@
 
                 <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="8" 
                         BorderBrush="LightGray" BorderThickness="1" 
-                        Margin="5 15"/>
+                        Margin="3 15"/>
 
                 <DockPanel Grid.Column="5" Grid.Row="0" Grid.RowSpan="7" >
-                    <Button DockPanel.Dock="Top" Content="Продолжить последнюю" Height="40"
+                    <Button DockPanel.Dock="Top" Content="Продолжить последнюю" Height="49" Margin="1 1 0 1"
                             x:Name="LoadPreviousPartButton" Style="{StaticResource KeyboardButton}" Click="LoadPreviousPartButton_Click"/>
-                    <Button DockPanel.Dock="Bottom" Height="60" Style="{StaticResource KeyboardButton}"  Click="KeyboardButton_Click">
+                    <Button DockPanel.Dock="Bottom" Height="49" Margin="1 1 0 1"
+                            Style="{StaticResource KeyboardButton}" Click="KeyboardButton_Click">
                         <Button.Content>
                             <TextBlock Text="🖮" FontSize="36" Margin="0 -10 0 0"/>
                         </Button.Content>
                     </Button>
-                    <ctrl:NumericKeyboard Margin="1" DockPanel.Dock="Top"/>
+                    <ctrl:NumericKeyboard Margin="1 1 0 1" DockPanel.Dock="Top"/>
                 </DockPanel>
             </Grid>
         </DockPanel>

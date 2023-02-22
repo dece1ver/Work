@@ -31,7 +31,18 @@ namespace eLog.Views.Windows.Dialogs
         private int _PartsFinished;
         private string _MachineTimeText = string.Empty;
         private string _PartsFinishedText = string.Empty;
+        private Visibility _KeyboardVisibility;
         public EndDetailResult EndDetailResult { get; set; }
+
+        public Visibility KeyboardVisibility
+        {
+            get => _KeyboardVisibility;
+            set
+            {
+                Set(ref _KeyboardVisibility, value);
+                Height = _KeyboardVisibility is Visibility.Visible ? 436 : 296;
+            }
+        }
 
         public PartInfoModel Part { get; set; }
 
@@ -58,7 +69,17 @@ namespace eLog.Views.Windows.Dialogs
                 OnPropertyChanged(nameof(_PartsFinished));
                 OnPropertyChanged(nameof(Valid));
                 if (Valid) Part.FinishedCount = _PartsFinished;
-                if (Part.FinishedCount == 0) Status = "При завершении с 0 изготовление будет отменено.";
+                Status = Part.FinishedCount switch
+                {
+                    0 when string.IsNullOrWhiteSpace(PartsFinishedText) => string.Empty,
+                    0 when !string.IsNullOrWhiteSpace(PartsFinishedText) &&
+                           PartsFinishedText.Replace("0", "").Length == 0 =>
+                        "При завершении с 0 изготовление будет отменено и деталь удалена из списка.",
+                    0 when !string.IsNullOrWhiteSpace(PartsFinishedText) =>
+                        "Неверно указано количество изготовленных деталей.",
+                    _ => string.Empty,
+                };
+                OnPropertyChanged(nameof(Status));
             }
         }
 
@@ -68,7 +89,8 @@ namespace eLog.Views.Windows.Dialogs
             {
                 var result = int.TryParse(PartsFinishedText, out _PartsFinished) && _PartsFinished > 0 &&
                              MachineTimeText.TimeParse(out _MachineTime) && _MachineTime.TotalSeconds > 0
-                             || _PartsFinished == 0 && !string.IsNullOrWhiteSpace(_PartsFinishedText);
+                             || _PartsFinished == 0 && !string.IsNullOrWhiteSpace(_PartsFinishedText) &&
+                             PartsFinishedText.Replace("0", "").Length == 0;
                 if (!result) return result;
                 Part.FinishedCount = _PartsFinished;
                 Part.MachineTime = _MachineTime;
@@ -81,7 +103,6 @@ namespace eLog.Views.Windows.Dialogs
             Part = part;
             Status = string.Empty;
             InitializeComponent();
-            PartsCountTextBox.Focus();
         }
 
         #region PropertyChanged
@@ -119,5 +140,15 @@ namespace eLog.Views.Windows.Dialogs
 
         #endregion
 
+        private void KeyboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            KeyboardVisibility = KeyboardVisibility is Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            PartsCountTextBox.Focus();
+            KeyboardVisibility = Visibility.Collapsed;
+        }
     }
 }
