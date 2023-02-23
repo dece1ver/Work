@@ -375,7 +375,8 @@ namespace eLog.ViewModels
                             case Util.WriteResult.Ok:
                                 part.IsSynced = true;
                                 Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                                break;
+                                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    break;
                             case Util.WriteResult.IOError:
                                 Status = $"Таблица занята, запись будет произведена позже.";
                                 break;
@@ -385,6 +386,7 @@ namespace eLog.ViewModels
                                 {
                                     part.IsSynced = true;
                                     Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                                 }
                                 break;
                             case Util.WriteResult.Error:
