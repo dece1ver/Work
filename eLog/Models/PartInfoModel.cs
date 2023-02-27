@@ -196,28 +196,50 @@ namespace eLog.Models
         }
 
         /// <summary> Информация об окончании наладки </summary>
-        public string EndSetupInfo =>
-            StartMachiningTime == DateTime.MinValue 
-                ? $"{StartSetupTime.AddMinutes(SetupTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {SetupTimePlan} мин.)" 
-                : $"{StartMachiningTime:dd.MM.yyyy HH:mm}{(SetupTimeFact == TimeSpan.Zero ? string.Empty : $" ({(SetupTimePlan / SetupTimeFact.TotalMinutes * 100):N0}%)")}";
+        public string EndSetupInfo
+        {
+            get
+            {
+                return (SetupIsFinished) switch
+                {
+                    false when Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan)).Ticks <= 0 =>
+                        $"{StartSetupTime.AddMinutes(SetupTimePlan).ToString(Text.DateTimeFormat)} " +
+                        $"(Плановое: норматив {SetupTimePlan} мин.)",
+                    false when Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan)).Ticks > 0 =>
+                        $"{StartSetupTime.AddMinutes(SetupTimePlan).Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan))).ToString(Text.DateTimeFormat)} " +
+                        $"(Плановое: норматив {SetupTimePlan} мин + {Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan)).TotalMinutes} мин перерывы)",
+                    true when Util.GetBreaksBetween(StartSetupTime, StartMachiningTime).Ticks <= 0 =>
+                        $"{StartMachiningTime.ToString(Text.DateTimeFormat)} ({SetupTimePlan / SetupTimeFact.TotalMinutes * 100:N0}%)",
+                    true when Util.GetBreaksBetween(StartSetupTime, StartMachiningTime).Ticks > 0 =>
+                        $"{StartMachiningTime.ToString(Text.DateTimeFormat)} ({SetupTimePlan / SetupTimeFact.TotalMinutes * 100:N0}%) - перерывы: {Util.GetBreaksBetween(StartSetupTime, StartMachiningTime).TotalMinutes} мин"
+                };
+            }
+        }
 
         /// <summary> Информация о завершении изготовления </summary>
         public string EndDetailInfo
         {
             get
             {
-                var setup = SetupTimeFact.TotalMinutes > 0 ? SetupTimeFact.TotalMinutes : SetupTimePlan;
-                switch (ProductionTimeFact.Ticks, Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime).Minutes)
-                {
-                    case (<= 0, _):
-                        return $"{StartSetupTime.AddMinutes(setup).AddMinutes(TotalCount * SingleProductionTimePlan).ToString(Text.DateTimeFormat)} (плановое, норматив {TotalCount} шт по {SingleProductionTimePlan} мин.)";
-                    case (> 0, 0):
-                        return $"{EndMachiningTime.ToString(Text.DateTimeFormat)} ({SingleProductionTimePlan * FinishedCount / ProductionTimeFact.TotalMinutes * 100:N0%)})";
-                    case ( > 0, > 0) breaks:
-                        return $"{EndMachiningTime.ToString(Text.DateTimeFormat)} ({SingleProductionTimePlan * FinishedCount / ProductionTimeFact.TotalMinutes * 100:N0%)} - {breaks.Minutes} мин перерывов)";
-                }
+                var startMachiningTime = FullSetupTimeFact.TotalMinutes > 0 
+                    ? StartMachiningTime 
+                    : StartSetupTime
+                        .AddMinutes(SetupTimePlan)
+                        .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan)));
 
-                return $"{EndMachiningTime.ToString(Text.DateTimeFormat)}{(FullProductionTimeFact == TimeSpan.Zero ? string.Empty : $" ({SingleProductionTimePlan * FinishedCount / ProductionTimeFact.TotalMinutes * 100:N0}%)")}";
+                var endMachiningTime = EndMachiningTime > StartMachiningTime
+                    ? EndMachiningTime
+                    : StartMachiningTime
+                        .AddMinutes(TotalCount * SingleProductionTimePlan)
+                        .Add(Util.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(TotalCount * SingleProductionTimePlan)));
+                var breaks = Util.GetBreaksBetween(startMachiningTime, endMachiningTime);
+                var result = endMachiningTime.ToString(Text.DateTimeFormat);
+                var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
+                var planInfo = SingleProductionTimePlan > 0
+                    ? $" (Плановое: {TotalCount} шт по {SingleProductionTimePlan} мин{breaksInfo.Replace('+','-')})"
+                    : string.Empty;
+                var productivity = $" ({TotalCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)";
+                return $"{result}{(ProductionTimeFact.Ticks > 0 ? productivity : planInfo)}{(breaks.Ticks > 0 ? breaksInfo : string.Empty)}";
             }
         }
 
