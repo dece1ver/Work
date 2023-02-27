@@ -31,7 +31,7 @@ namespace eLog.Views.Windows.Dialogs
     /// <summary>
     /// Логика взаимодействия для EditDetailWindow.xaml
     /// </summary>
-    public partial class EditDetailWindow : Window, INotifyPropertyChanged
+    public partial class EditDetailWindow : Window, INotifyPropertyChanged, IDataErrorInfo
     {
         public List<PartInfoModel> Parts { get; set; } = new();
         public int PartIndex { get; set; }
@@ -85,6 +85,8 @@ namespace eLog.Views.Windows.Dialogs
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
+
+        public bool NewDetail { get; set; }
 
         public bool WithSetup => Part.StartSetupTime != Part.StartMachiningTime;
 
@@ -281,6 +283,7 @@ namespace eLog.Views.Windows.Dialogs
                     ? endMachiningTime 
                     : DateTime.MinValue;
                 OnPropertyChanged(nameof(CanBeClosed));
+                OnPropertyChanged(nameof(FinishedCount));
             }
         }
 
@@ -350,8 +353,76 @@ namespace eLog.Views.Windows.Dialogs
         }
         #endregion
 
-        public EditDetailWindow(PartInfoModel part)
+        public string Error { get; }
+
+        public string this[string columnName]
         {
+            get
+            {
+                var error = string.Empty;
+                switch (columnName)
+                {
+                    case nameof(PartName):
+                        if (string.IsNullOrWhiteSpace(Part.Name)) error = "Пустое имя";
+                        break;
+                    case nameof(StartSetupTime):
+                        if (Part.StartSetupTime == DateTime.MinValue) error = "Некорректное время начала наладки";
+                        break;
+                    case nameof(StartMachiningTime):
+                        if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.StartMachiningTime == DateTime.MinValue) error = "Некорректное время начала изготовления";
+                        break;
+                    case nameof(EndMachiningTime):
+                        if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime) error = "Некорректное время завершения изготовления";
+                        break;
+                    case nameof(MachineTime):
+                        if (Part.MachineTime == TimeSpan.Zero && (Part.FullProductionTimeFact > TimeSpan.Zero || Part.FinishedCount > 0)) error = "Некорректное машинное время";
+                        break;
+                    case nameof(FinishedCount):
+                        error = Part.FinishedCount switch
+                        {
+                            0 when string.IsNullOrWhiteSpace(FinishedCount) && Part.FullProductionTimeFact > TimeSpan.Zero => "Обязательный параметр если указано время завершения изготовления.",
+                            0 when !string.IsNullOrWhiteSpace(FinishedCount) => "Некорректное количество завершенных деталей",
+                            _ => error
+                        };
+                        break;
+                    case nameof(TotalCount):
+                        error = Part.TotalCount switch
+                        {
+                            0 when string.IsNullOrWhiteSpace(FinishedCount) => "Обязательный параметр.",
+                            0 when Part.EndMachiningTime > Part.StartMachiningTime =>
+                                "Некорректное плановое количество деталей",
+                            _ => error
+                        };
+                        if (Part.TotalCount == 0) error = "Некорректное плановое количество деталей";
+                        break;
+                    case nameof(PartSetupTimePlan):
+                        error = Part.SetupTimePlan switch
+                        {
+                            0 when string.IsNullOrWhiteSpace(PartSetupTimePlan) => "Обязательный параметр. При отсутствии указать \"-\"",
+                            0 when !string.IsNullOrWhiteSpace(PartSetupTimePlan) &&
+                                   PartSetupTimePlan != "-" => "Некорректный норматив на наладку",
+                            _ => error
+                        };
+                        break;
+                    case nameof(SingleProductionTimePlan):
+                        error = Part.SingleProductionTimePlan switch
+                        {
+                            0 when string.IsNullOrWhiteSpace(SingleProductionTimePlan) => "Обязательный параметр. При отсутствии указать \"-\"",
+                            0 when !string.IsNullOrWhiteSpace(SingleProductionTimePlan) && SingleProductionTimePlan != "-" => "Некорректный норматив на изготовление",
+                            _ => error
+                        };
+                        break;
+                    case nameof(OrderText):
+                        if (OrderValidation is OrderValidationTypes.Error) error = "Некорректный номер заказа.";
+                        break;
+                }
+                return error;
+            }
+        }
+
+        public EditDetailWindow(PartInfoModel part, bool newDetail = false)
+        {
+            NewDetail = newDetail;
             _Status = string.Empty;
             Part = part;
             var order = Part.Order;
@@ -581,7 +652,13 @@ namespace eLog.Views.Windows.Dialogs
                 Thread.Sleep(3000);
             }
         }
-
+        private void EditCreatorButton_Click(object sender, RoutedEventArgs e)
+        {
+            var makerDialog = new EditMakerDialogWindow(Part) {Owner = this};
+            if (makerDialog.ShowDialog() != true) return;
+            Part.Operator = makerDialog.Operator;
+            Part.Shift = makerDialog.Shift;
+        }
 
 
         #region PropertyChanged
@@ -619,7 +696,9 @@ namespace eLog.Views.Windows.Dialogs
 
 
 
+
         #endregion
+
 
         
     }

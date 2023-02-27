@@ -123,7 +123,7 @@ namespace eLog.Infrastructure.Extensions
                         ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy") 
                         : part.EndMachiningTime.ToString("dd.MM.yyyy");
                     xlRow.Cell(7).Value = AppSettings.Machine.Name;
-                    xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName.Trim();
+                    xlRow.Cell(8).Value = part.Operator.FullName.Trim();
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
                     xlRow.Cell(11).Value = part.FinishedCount;
@@ -181,7 +181,7 @@ namespace eLog.Infrastructure.Extensions
                         ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
                         : part.EndMachiningTime.ToString("dd.MM.yyyy");
                     xlRow.Cell(7).Value = AppSettings.Machine.Name;
-                    xlRow.Cell(8).Value = AppSettings.CurrentOperator?.FullName;
+                    xlRow.Cell(8).Value = part.Operator.FullName.Trim();
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
                     xlRow.Cell(11).Value = part.FinishedCount;

@@ -14,5 +14,7 @@ namespace eLog.Infrastructure.Extensions
         public const string NightShift = "Ночь";
         public const string DateTimeFormat = "dd.MM.yyyy HH:mm";
         public const string TimeSpanFormat = @"hh\:mm\:ss";
+
+        public static readonly string[] Shifts = { DayShift, NightShift };
     }
 }

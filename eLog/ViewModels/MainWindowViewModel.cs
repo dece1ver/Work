@@ -108,7 +108,7 @@ namespace eLog.ViewModels
             } 
         }
 
-        public static string[] Shifts => new []{ Text.DayShift, Text.NightShift };
+        public static string[] Shifts => Text.Shifts;
         private string _CurrentShift = AppSettings.CurrentShift;
 
         public string CurrentShift
@@ -223,8 +223,12 @@ namespace eLog.ViewModels
         {
             OverlayOn();
 
-            var part = new PartInfoModel();
-            if (WindowsUserDialogService.EditDetail(ref part))
+            var part = new PartInfoModel
+            {
+                Operator = CurrentOperator!,
+                Shift = AppSettings.CurrentShift,
+            };
+            if (WindowsUserDialogService.EditDetail(ref part, true))
             {
                 switch (part)
                 {
@@ -237,8 +241,8 @@ namespace eLog.ViewModels
                         }
                         break;
                 }
-                part.Shift = AppSettings.CurrentShift;
-                Parts.Add(part);
+                Parts.Insert(0, part);
+                RemoveExcessParts();
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
@@ -344,6 +348,7 @@ namespace eLog.ViewModels
             OnPropertyChanged(nameof(CanEditShiftAndParams));
             OnPropertyChanged(nameof(CanAddPart));
             OnPropertyChanged(nameof(CanEndShift));
+            RemoveExcessParts();
             OverlayOff();
         }
         private static bool CanEditDetailCommandExecute(object p) => true;
@@ -365,8 +370,8 @@ namespace eLog.ViewModels
                         {
                             part.IsSynced = true;
                             Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                            Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                         }
+                        Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                         break;
                     case { Id: > 0, IsFinished: true }:
                     {
@@ -379,16 +384,17 @@ namespace eLog.ViewModels
                                     break;
                             case Util.WriteResult.IOError:
                                 Status = $"Таблица занята, запись будет произведена позже.";
-                                break;
+                                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    break;
                             case Util.WriteResult.NotFinded:
                                 part.Id = part.WriteToXl();
                                 if (part.Id > 0)
                                 {
                                     part.IsSynced = true;
                                     Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                                 }
-                                break;
+                                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    break;
                             case Util.WriteResult.Error:
                                 break;
                         }
@@ -403,6 +409,7 @@ namespace eLog.ViewModels
                 }
                 AppSettings.Parts = Parts;
                 AppSettings.RewriteConfig();
+                RemoveExcessParts();
             };
             
             OnPropertyChanged(nameof(WorkIsNotInProgress));
@@ -483,6 +490,10 @@ namespace eLog.ViewModels
                         OnPropertyChanged(nameof(Parts));
                     }
 
+                    Application.Current.Dispatcher.Invoke(delegate
+                    {
+                        RemoveExcessParts();
+                    });
                 }
                 catch (Exception e)
                 {
@@ -490,6 +501,20 @@ namespace eLog.ViewModels
                 }
                 Thread.Sleep(10000);
             }
+        }
+
+        private void RemoveExcessParts(int remains = 10)
+        {
+            while (Parts.Count(p => p.IsSynced) > remains)
+            {
+                foreach (var part in Parts.Skip(remains))
+                {
+                    var i = Parts.IndexOf(part);
+                    if (part.IsSynced) Parts.RemoveAt(i);
+                    break;
+                }
+            }
+            OnPropertyChanged(nameof(Parts));
         }
     }
 }

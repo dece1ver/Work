@@ -100,7 +100,7 @@ namespace eLog.Services
             return dlg.EndSetupResult;
         }
 
-        public static bool EditDetail(ref PartInfoModel part)
+        public static bool EditDetail(ref PartInfoModel part, bool newDetail = false)
         {
             var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.TotalCount,
                 part.SetupTimePlan, part.SingleProductionTimePlan)
@@ -112,11 +112,12 @@ namespace eLog.Services
                 Id = part.Id,
                 FinishedCount = part.FinishedCount,
                 Shift = part.Shift,
+                Operator = part.Operator,
                 OperatorComments = part.OperatorComments
             };
-            var dlg = new EditDetailWindow(tempPart)
+            var dlg = new EditDetailWindow(tempPart, newDetail)
             {
-                Owner = Application.Current.MainWindow
+                Owner = Application.Current.MainWindow,
             };
             if (dlg.ShowDialog() != true) return false;
             part = dlg.Part;
@@ -137,6 +138,7 @@ namespace eLog.Services
                 Id = part.Id,
                 FinishedCount = part.FinishedCount,
                 Shift = part.Shift,
+                Operator = part.Operator,
                 OperatorComments = part.OperatorComments
 
             };

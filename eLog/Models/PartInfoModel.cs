@@ -24,6 +24,7 @@ namespace eLog.Models
         private int _FinishedCount;
         private double _SetupTimePlan;
         private double _SingleProductionTimePlan;
+        private Operator _Operator;
         private TimeSpan _MachineTime;
         private DateTime _StartSetupTime;
         private DateTime _StartMachiningTime;
@@ -73,6 +74,13 @@ namespace eLog.Models
         {
             get => _Shift;
             set => Set(ref _Shift, value);
+        }
+
+        /// <summary> Оператор </summary>
+        public Operator Operator
+        {
+            get => _Operator;
+            set => Set(ref _Operator, value);
         }
 
         /// <summary> Количество выпущено</summary>

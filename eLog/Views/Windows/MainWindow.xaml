@@ -82,7 +82,7 @@
                 </StatusBarItem>
             </StatusBar>
             <DockPanel LastChildFill="True">
-                <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0" >
+                <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <GroupBox>
@@ -108,19 +108,24 @@
                                             <RowDefinition/>
                                             <RowDefinition/>
                                             <RowDefinition/>
+                                            <RowDefinition/>
                                         </Grid.RowDefinitions>
                                         <TextBlock Grid.Column="0" Grid.Row="0" Margin="5 0" 
-                                                   Text="{Binding Order}"/>
+                                                   Text="{Binding Operator.DisplayName}"/>
                                         <TextBlock Grid.Column="1" Grid.Row="0" Margin="5 0" 
-                                                   Text="{Binding TotalCountInfo}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" Text="Начало наладки:" />
+                                                   Text="{Binding Shift}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" 
+                                                   Text="{Binding Order}"/>
                                         <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 0" 
-                                                   Text="{Binding StartSetupTime, StringFormat={}{0:dd.MM.yyy HH:mm}}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="2" Margin="5 0" Text="Завершение наладки:" />
+                                                   Text="{Binding TotalCountInfo}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Margin="5 0" Text="Начало наладки:" />
                                         <TextBlock Grid.Column="1" Grid.Row="2" Margin="5 0" 
-                                                   Text="{Binding EndSetupInfo}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="3" Margin="5 0" Text="Завершение изготовления:" />
+                                                   Text="{Binding StartSetupTime, StringFormat={}{0:dd.MM.yyy HH:mm}}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="3" Margin="5 0" Text="Завершение наладки:" />
                                         <TextBlock Grid.Column="1" Grid.Row="3" Margin="5 0" 
+                                                   Text="{Binding EndSetupInfo}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="4" Margin="5 0" Text="Завершение изготовления:" />
+                                        <TextBlock Grid.Column="1" Grid.Row="4" Margin="5 0" 
                                                    Text="{Binding EndDetailInfo}" />
                                     </Grid>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 -6 0 0">
