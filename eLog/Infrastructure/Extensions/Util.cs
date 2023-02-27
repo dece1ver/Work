@@ -314,5 +314,39 @@ namespace eLog.Infrastructure.Extensions
             return defaultValue;
         }
 
+        /// <summary>
+        /// Суммарное время перерывов между двумя датами.
+        /// </summary>
+        /// <param name="startDateTime">Начало</param>
+        /// <param name="endDateTime">Завершение</param>
+        /// <returns>TimeSpan с суммарным временем перерывов</returns>
+        public static TimeSpan GetBreaksBetween(DateTime startDateTime, DateTime endDateTime)
+        {
+            var dayShiftFirstBreak = WorkTime.DayShiftFirstBreak;
+            var dayShiftSecondBreak = WorkTime.DayShiftSecondBreak;
+            var dayShiftThirdBreak = WorkTime.DayShiftThirdBreak;
+            var nightShiftFirstBreak = WorkTime.NightShiftFirstBreak;
+            var nightShiftSecondBreak = WorkTime.NightShiftSecondBreak;
+            var nightShiftThirdBreak = WorkTime.NightShiftThirdBreak;
+
+            var breaks = TimeSpan.Zero;
+            var startTime = new DateTime(1,1,1, startDateTime.Hour, startDateTime.Minute, startDateTime.Second);
+            var endTime = new DateTime(1, 1, 1, endDateTime.Hour, endDateTime.Minute, endDateTime.Second);
+            if (startTime > endTime)
+            {
+                nightShiftSecondBreak = nightShiftSecondBreak.AddDays(1);
+                nightShiftThirdBreak = nightShiftThirdBreak.AddDays(1);
+                endTime = endTime.AddDays(1);
+            }
+            
+            if (dayShiftFirstBreak > startTime && dayShiftFirstBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
+            if (dayShiftSecondBreak > startTime && dayShiftSecondBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+            if (dayShiftThirdBreak > startTime && dayShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
+            if (nightShiftFirstBreak > startTime && nightShiftFirstBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+            if (nightShiftSecondBreak > startTime && nightShiftSecondBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+            if (nightShiftThirdBreak > startTime && nightShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+
+            return breaks;
+        }
     }
 }

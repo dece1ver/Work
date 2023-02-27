@@ -147,17 +147,21 @@ namespace eLog.Views.Windows.Dialogs
             {
                 if (OrderValidation is OrderValidationTypes.Error || string.IsNullOrWhiteSpace(PartName)) return false;
                 if (Part.IsFinished) return true;
-                if (Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0, SetupIsNotFinished: true, EndMachiningTime.Ticks: 0 }) return true;
-                if (Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0, SetupIsFinished: true, EndMachiningTime.Ticks: 0, FinishedCount: 0 }) return true;
-                if (Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0, SetupIsFinished: true, EndMachiningTime.Ticks: > 0, FinishedCount: > 0, MachineTime.TotalSeconds: > 0 }) return true;
+                var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
+                                     (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
 
-                //var res = (Part.IsFinished ||
-                //           Part is { SetupTimePlan: > 0, SingleProductionTimePlan: > 0, TotalCount: > 0 } &&
-                //           OrderValidation is not OrderValidationTypes.Error &&
-                //           !string.IsNullOrWhiteSpace(Part.FullName));
-                //if (res && Part.EndMachiningTime > Part.StartMachiningTime && Part.MachineTime <= TimeSpan.Zero)
-                //    res = false;
-                return false;
+                switch (validPlanTimes)
+                {
+                    // старт наладки
+                    case true when Part is { FinishedCount: 0, TotalCount: > 0, StartSetupTime.Ticks: > 0 }:
+                    // старт изготовления
+                    case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && EndMachiningTime == string.Empty:
+                    // полная отметка
+                    case true when Part is { FinishedCount: > 0, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
+                        return true;
+                    default:
+                        return false;
+                }
             }
         }
 
@@ -282,8 +286,10 @@ namespace eLog.Views.Windows.Dialogs
                 Part.EndMachiningTime = DateTime.TryParseExact(_EndMachiningTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var endMachiningTime) 
                     ? endMachiningTime 
                     : DateTime.MinValue;
-                OnPropertyChanged(nameof(CanBeClosed));
                 OnPropertyChanged(nameof(FinishedCount));
+                OnPropertyChanged(nameof(MachineTime));
+                OnPropertyChanged(nameof(CanBeClosed));
+                
             }
         }
 
@@ -310,6 +316,8 @@ namespace eLog.Views.Windows.Dialogs
             {
                 _FinishedCount = value;
                 Part.FinishedCount = _FinishedCount.GetInt(numberOption: Util.GetNumberOption.OnlyPositive);
+                OnPropertyChanged(nameof(EndMachiningTime));
+                OnPropertyChanged(nameof(MachineTime));
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
@@ -372,10 +380,14 @@ namespace eLog.Views.Windows.Dialogs
                         if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.StartMachiningTime == DateTime.MinValue) error = "Некорректное время начала изготовления";
                         break;
                     case nameof(EndMachiningTime):
-                        if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime) error = "Некорректное время завершения изготовления";
+                        if (!string.IsNullOrWhiteSpace(EndMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime) error = "Некорректное время завершения изготовления";
+                        else if (string.IsNullOrWhiteSpace(EndMachiningTime) && Part.FinishedCount > 0) error = "Обязательный параметр при указании выполненных деталей";
                         break;
                     case nameof(MachineTime):
-                        if (Part.MachineTime == TimeSpan.Zero && (Part.FullProductionTimeFact > TimeSpan.Zero || Part.FinishedCount > 0)) error = "Некорректное машинное время";
+                        if (Part.MachineTime == TimeSpan.Zero && !string.IsNullOrWhiteSpace(MachineTime)) error = "Некорректный ввод машинного времени.\n" +
+                            "Допускается указание следующего вида (пример для 2 мин 30 сек):\n* 00:02:30\n* 2:30\n* 2.5 или 2,5";
+                        else if (Part.MachineTime == TimeSpan.Zero && (Part.FullProductionTimeFact > TimeSpan.Zero || Part.FinishedCount > 0) && string.IsNullOrWhiteSpace(MachineTime))
+                            error = "Обязательный параметр при указании завершения изготовления";
                         break;
                     case nameof(FinishedCount):
                         error = Part.FinishedCount switch
@@ -388,12 +400,10 @@ namespace eLog.Views.Windows.Dialogs
                     case nameof(TotalCount):
                         error = Part.TotalCount switch
                         {
-                            0 when string.IsNullOrWhiteSpace(FinishedCount) => "Обязательный параметр.",
-                            0 when Part.EndMachiningTime > Part.StartMachiningTime =>
-                                "Некорректное плановое количество деталей",
+                            0 when string.IsNullOrWhiteSpace(TotalCount) => "Обязательный параметр.",
+                            0 when !string.IsNullOrWhiteSpace(TotalCount) => "Некорректное плановое количество деталей",
                             _ => error
                         };
-                        if (Part.TotalCount == 0) error = "Некорректное плановое количество деталей";
                         break;
                     case nameof(PartSetupTimePlan):
                         error = Part.SetupTimePlan switch
@@ -555,7 +565,7 @@ namespace eLog.Views.Windows.Dialogs
         private void LoadPreviousPartButton_Click(object sender, RoutedEventArgs e)
         {
             if (AppSettings.Parts.Count <= 0) return;
-            var prev = AppSettings.Parts[^1];
+            var prev = AppSettings.Parts[0];
             PartName = prev.FullName;
             var order = prev.Order;
             OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using eLog.Infrastructure.Extensions;
 
 namespace eLog.Models
 {
@@ -205,17 +206,27 @@ namespace eLog.Models
         {
             get
             {
-                if (FullProductionTimeFact.TotalMinutes <= 0)
+                var setup = SetupTimeFact.TotalMinutes > 0 ? SetupTimeFact.TotalMinutes : SetupTimePlan;
+                switch (ProductionTimeFact.Ticks, Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime).Minutes)
                 {
-                    var setup = SetupTimeFact.TotalMinutes > 0 ? SetupTimeFact.TotalMinutes : SetupTimePlan;
-                    return $"{StartSetupTime.AddMinutes(setup).AddMinutes(TotalCount * SingleProductionTimePlan):dd.MM.yyyy HH:mm} (плановое, норматив {TotalCount} шт по {SingleProductionTimePlan} мин.)";
+                    case (<= 0, _):
+                        return $"{StartSetupTime.AddMinutes(setup).AddMinutes(TotalCount * SingleProductionTimePlan).ToString(Text.DateTimeFormat)} (плановое, норматив {TotalCount} шт по {SingleProductionTimePlan} мин.)";
+                    case (> 0, 0):
+                        return $"{EndMachiningTime.ToString(Text.DateTimeFormat)} ({SingleProductionTimePlan * FinishedCount / ProductionTimeFact.TotalMinutes * 100:N0%)})";
+                    case ( > 0, > 0) breaks:
+                        return $"{EndMachiningTime.ToString(Text.DateTimeFormat)} ({SingleProductionTimePlan * FinishedCount / ProductionTimeFact.TotalMinutes * 100:N0%)} - {breaks.Minutes} мин перерывов)";
                 }
-                return $"{EndMachiningTime:dd.MM.yyyy HH:mm}{(FullProductionTimeFact == TimeSpan.Zero ? string.Empty : $" ({SingleProductionTimePlan * FinishedCount / FullProductionTimeFact.TotalMinutes * 100:N0}%)")}";
+
+                return $"{EndMachiningTime.ToString(Text.DateTimeFormat)}{(FullProductionTimeFact == TimeSpan.Zero ? string.Empty : $" ({SingleProductionTimePlan * FinishedCount / ProductionTimeFact.TotalMinutes * 100:N0}%)")}";
             }
         }
 
         /// <summary> Фактическое время наладки </summary>
-        public TimeSpan SetupTimeFact => StartMachiningTime - StartSetupTime;
+        public TimeSpan FullSetupTimeFact => StartMachiningTime - StartSetupTime;
+
+
+        /// <summary> Фактическое время наладки с учетом перерывов </summary>
+        public TimeSpan SetupTimeFact => FullSetupTimeFact - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime);
 
         /// <summary> Полное название детали (наименование + обозначение) </summary>
         public string FullName => $"{Name} {Number}".Trim();
@@ -238,6 +249,10 @@ namespace eLog.Models
 
         /// <summary>Фактическое время изготовления </summary>
         public TimeSpan FullProductionTimeFact => EndMachiningTime - StartMachiningTime;
+
+        /// <summary> Время изготовления с учетом перерывов </summary>
+        public TimeSpan ProductionTimeFact =>
+            FullProductionTimeFact - Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime);
 
         /// <summary>
         /// Может ли быть завершена деталь.
