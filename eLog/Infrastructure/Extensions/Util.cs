@@ -320,7 +320,7 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="startDateTime">Начало</param>
         /// <param name="endDateTime">Завершение</param>
         /// <returns>TimeSpan с суммарным временем перерывов</returns>
-        public static TimeSpan GetBreaksBetween(DateTime startDateTime, DateTime endDateTime)
+        public static TimeSpan GetBreaksBetween(DateTime startDateTime, DateTime endDateTime, bool calcOnEnd = true)
         {
             var dayShiftFirstBreak = WorkTime.DayShiftFirstBreak;
             var dayShiftSecondBreak = WorkTime.DayShiftSecondBreak;
@@ -328,6 +328,16 @@ namespace eLog.Infrastructure.Extensions
             var nightShiftFirstBreak = WorkTime.NightShiftFirstBreak;
             var nightShiftSecondBreak = WorkTime.NightShiftSecondBreak;
             var nightShiftThirdBreak = WorkTime.NightShiftThirdBreak;
+
+            if (!calcOnEnd)
+            {
+                dayShiftFirstBreak = dayShiftFirstBreak.AddMinutes(-15);
+                dayShiftSecondBreak = dayShiftSecondBreak.AddMinutes(-30);
+                dayShiftThirdBreak = dayShiftThirdBreak.AddMinutes(-15);
+                nightShiftFirstBreak = nightShiftFirstBreak.AddMinutes(-30);
+                nightShiftSecondBreak = nightShiftSecondBreak.AddMinutes(-30);
+                nightShiftThirdBreak = dayShiftThirdBreak.AddMinutes(-30);
+            }
 
             var breaks = TimeSpan.Zero;
             var startTime = new DateTime(1,1,1, startDateTime.Hour, startDateTime.Minute, startDateTime.Second);
