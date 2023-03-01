@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
@@ -565,7 +566,42 @@ namespace eLog.Views.Windows.Dialogs
         private void LoadPreviousPartButton_Click(object sender, RoutedEventArgs e)
         {
             if (AppSettings.Parts.Count <= 0) return;
-            var prev = AppSettings.Parts[0];
+            PartInfoModel prev;
+            var parts = AppSettings.Parts
+                .Where(x => x.IsFinished)
+                .GroupBy(x => new { x.FullName, x.Order })
+                .Select(x => new PartInfoModel()
+                {
+                    Name = x.Key.FullName, 
+                    Order = x.Key.Order,
+                    StartSetupTime = DateTime.Now,
+                    SetupTimePlan = x.First().SetupTimePlan,
+                    SingleProductionTimePlan = x.First().SingleProductionTimePlan,
+                    MachineTime = x.First().MachineTime,
+                    TotalCount = x.First().TotalCount, 
+                    FinishedCount = x.Sum(p => p.FinishedCount)
+                }).Where(x => x.FinishedCount < x.TotalCount).ToList();
+            switch (parts.Count)
+            {
+                case 1:
+                    prev = AppSettings.Parts.First(x => x.FinishedCount < x.TotalCount);
+                    break;
+                case > 1:
+                    var dlg = new SetPreviousPartDialogWindow(parts) {Owner = this};
+                    this.IsEnabled = false;
+                    if (dlg.ShowDialog() != true)
+                    {
+                        Status = "Отмена заполнения.";
+                        this.IsEnabled = true;
+                        return;
+                    }
+                    this.IsEnabled = true;
+                    prev = dlg.Part!;
+                    break;
+                default:
+                    Status = "Не найдено подходящих деталей.";
+                    return;
+            }
             PartName = prev.FullName;
             var order = prev.Order;
             OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
@@ -584,7 +620,6 @@ namespace eLog.Views.Windows.Dialogs
             PartName = prev.FullName;
             OnPropertyChanged(nameof(PartName));
 
-            Part.StartSetupTime = prev.EndMachiningTime;
             StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
             OnPropertyChanged(nameof(StartSetupTime));
 

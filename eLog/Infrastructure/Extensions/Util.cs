@@ -11,6 +11,7 @@ using System.Windows;
 using ClosedXML.Excel;
 using System.Collections.ObjectModel;
 using System.IO;
+using eLog.Infrastructure.Extensions.Windows;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -357,6 +358,60 @@ namespace eLog.Infrastructure.Extensions
             if (nightShiftThirdBreak > startTime && nightShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
 
             return breaks;
+        }
+
+        public static DateTime GetStartShiftTime()
+        {
+            return AppSettings.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(7) :
+                DateTime.Now.Hour < 7 ? DateTime.Today.AddDays(-1).AddHours(19) : DateTime.Today.AddHours(19);
+        }
+
+        public static DateTime GetEndShiftTime()
+        {
+            return AppSettings.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(19) :
+                DateTime.Now.Hour < 7 ? DateTime.Today.AddHours(7) : DateTime.Today.AddDays(1).AddHours(7);
+        }
+
+        /// <summary>
+        /// Получить массив клавиш для набора времени
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public static Keys[] GetKeys(this DateTime dateTime)
+        {
+            // d  d  .  M  M  .  y  y  y  y     H  H  :  m  m
+            // 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15
+            var text = dateTime.ToString(Text.DateTimeFormat);
+            var res = new Keys[16];
+            for (var i = 0; i < 16; i++)
+            {
+                res[i] = i switch
+                {
+                    2 or 5 => KeyboardLayout.Current is KeyboardLayout.En ? Keys.OemPeriod : Keys.Oem2,
+                    10 => Keys.Space,
+                    13 => KeyboardLayout.Current is KeyboardLayout.En ? Keys.Oem1 : Keys.D6,
+                    _ => text[i].DKeyFromChar()
+                };
+            }
+            return res;
+        }
+
+        public static Keys DKeyFromChar(this char ch)
+        {
+            return ch switch
+            {
+                '0' => Keys.D0,
+                '1' => Keys.D1,
+                '2' => Keys.D2,
+                '3' => Keys.D3,
+                '4' => Keys.D4,
+                '5' => Keys.D5,
+                '6' => Keys.D6,
+                '7' => Keys.D7,
+                '8' => Keys.D8,
+                '9' => Keys.D9,
+                _ => throw new ArgumentException("Символ должен быть арабской цифрой"),
+            };
         }
     }
 }

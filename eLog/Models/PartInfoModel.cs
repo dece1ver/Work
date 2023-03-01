@@ -223,7 +223,7 @@ namespace eLog.Models
         {
             get
             {
-                var startMachiningTime = FullSetupTimeFact.TotalMinutes > 0 
+                var startMachiningTime = SetupIsFinished
                     ? StartMachiningTime 
                     : StartSetupTime
                         .AddMinutes(SetupTimePlan)
@@ -241,7 +241,7 @@ namespace eLog.Models
                 var planInfo = SingleProductionTimePlan > 0
                     ? $" (Плановое: {TotalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                     : string.Empty;
-                var productivity = $" ({TotalCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)";
+                var productivity = $" ({FinishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)";
                 return $"{result}{(ProductionTimeFact.Ticks > 0 ? productivity : planInfo)}{(breaks.Ticks > 0 && ProductionTimeFact.Ticks > 0 ? breaksInfo : string.Empty)}";
             }
         }

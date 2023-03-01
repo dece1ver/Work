@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:eLog.Views.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="240" d:DesignWidth="320">
+             d:DesignHeight="120" d:DesignWidth="300">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -37,7 +37,7 @@
         <Button x:Name="RedoButton" Grid.Column="3" Grid.Row="1" Content="↻" FontSize="28" Padding="-5"
                 Style="{StaticResource KeyboardButton}" Click="RedoButton_Click" />
 
-        <Button x:Name="EnterButton" Grid.Column="0" Grid.Row="2" Content="⏎" FontSize="28"
+        <Button x:Name="EnterButton" Grid.Column="0" Grid.Row="2" Content="⏎" FontSize="28" Padding="-5"
                 Style="{StaticResource KeyboardButton}" Click="EnterButton_Click"/>
         <Button x:Name="ArrowLeftButton" Grid.Column="1" Grid.Row="2" Content="◀"
                 Style="{StaticResource KeyboardButton}" Click="ArrowLeftButton_Click"/>

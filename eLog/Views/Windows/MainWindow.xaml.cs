@@ -38,25 +38,29 @@ namespace eLog.Views.Windows
                     return;
                 case true when AppSettings.Parts.Count == AppSettings.Parts.Count(x => x.IsFinished):
                 {
-                    var res = MessageBox.Show("При продолжении смена будет завершена автоматически.", "Смена не завершена", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    var res = MessageBox.Show("Смена не завершена.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                     switch (res)
                     {
                         case MessageBoxResult.OK:
-                            AppSettings.IsShiftStarted = false;
-                            AppSettings.RewriteConfig();
                             break;
                         case MessageBoxResult.Cancel or _:
                             e.Cancel = true;
                             break;
                     }
-
                     break;
                 }
                 case true when AppSettings.Parts.Count != AppSettings.Parts.Count(x => x.IsFinished):
                 {
-                    _ = MessageBox.Show("Нельзя закрывать журнал пока запущены детали.", "Есть незавершенные детали", MessageBoxButton.OK, MessageBoxImage.Error);
-                    e.Cancel = true;
-                        break;
+                    var res = MessageBox.Show("Есть незавершенные детали.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    switch (res)
+                    {
+                        case MessageBoxResult.OK:
+                            break;
+                        case MessageBoxResult.Cancel or _:
+                            e.Cancel = true;
+                            break;
+                    }
+                    break;
                 }
             }
         }

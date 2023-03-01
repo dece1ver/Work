@@ -1,0 +1,81 @@
+﻿<Window x:Class="eLog.Views.Windows.Dialogs.SetPreviousPartDialogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:eLog.Views.Controls"
+        xmlns:inf="clr-namespace:eLog.Infrastructure"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        xmlns:commands="clr-namespace:eLog.Infrastructure.Commands"
+        xmlns:dialogs="clr-namespace:eLog.Views.Windows.Dialogs"
+        WindowStartupLocation="CenterOwner" WindowStyle="None"
+        ResizeMode="NoResize" FontSize="22"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        mc:Ignorable="d"
+        Title="Выбор предыдущей детали" Height="385" Width="700">
+    <Border BorderBrush="Gray" BorderThickness="1">
+        <DockPanel>
+            <UniformGrid DockPanel.Dock="Bottom" Columns="2">
+                <Button Margin="20" Width="120"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=dialogs:SetPreviousPartDialogWindow}}">
+                    <Button.Content>
+                        <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </Button.Content>
+                    <Button.Command>
+                        <commands:CloseDialogCommand DialogResult="False"/>
+                    </Button.Command>
+                </Button>
+
+                <Button Margin="20" Width="120" x:Name="OkButton"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=dialogs:SetPreviousPartDialogWindow}}">
+                    <Button.Content>
+                        <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </Button.Content>
+                    <Button.Command>
+                        <commands:CloseDialogCommand DialogResult="True"/>
+                    </Button.Command>
+                </Button>
+            </UniformGrid>
+            <ListView ItemsSource="{Binding Parts}" 
+                          FontSize="16" DockPanel.Dock="Top" Focusable="True" 
+                          BorderBrush="Transparent" BorderThickness="0" Margin="0 0 0 0"
+                          SelectedItem="{Binding Part}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <GroupBox>
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding FullName}"/>
+                                </StackPanel>
+                            </GroupBox.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" 
+                                           Text="{Binding Order}"/>
+                                <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 0" 
+                                                   Text="{Binding TotalCountInfo}" />
+                            </Grid>
+                        </GroupBox>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </DockPanel>
+    </Border>
+</Window>

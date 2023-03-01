@@ -198,19 +198,21 @@
                 <TextBlock Grid.Row="3" Grid.Column="0" Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
                            Text="Начало наладки:"/>
                 <TextBlock Grid.Row="3" Grid.Column="0" Visibility="{Binding WithSetup, Converter={StaticResource InvertedVisibilityConverter}}"
-                           d:Visibility="Collapsed"
-                           Text="Время начала:"/>
+                           Text="Время начала:" d:Visibility="Collapsed"/>
                 <DockPanel Margin="0" Grid.Row="3" Grid.Column="1">
+                    <TextBox d:Text="01.01.2023 00:00"
+                             Text="{Binding StartSetupTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                             Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
+                </DockPanel>
+
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="Конец наладки:"/>
+                <DockPanel Grid.Row="3" Grid.Column="3" >
                     <Button x:Name="WithoutSetupButton" Style="{StaticResource OperationButton}"
                             Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch"
                             FontSize="22" Padding="0 0 0 5" Click="WithoutSetupButton_Click">
                         <Button.Content>
-                            <!--<StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚙"/>
-                                <TextBlock Text="✓" Margin="-7 5 0 -10"/>
-                            </StackPanel>-->
-                            <TextBlock Text="С наладкой" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0 5 0 0"/>
+                            <TextBlock Text="Убрать наладку" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="2 2 2 -3"/>
                         </Button.Content>
                     </Button>
                     <Button x:Name="WithSetupButton"  Style="{StaticResource OperationButton}"
@@ -219,25 +221,13 @@
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch"
                             FontSize="22" Padding="0 0 0 5" Click="WithSetupButton_Click">
                         <Button.Content>
-                            <!--<StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚙"/>
-                                <TextBlock Text="✗" Margin="-8 5 0 -10"/>
-                            </StackPanel>-->
-                            <TextBlock Text="Без наладки" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0 5 0 0"/>
+                            <TextBlock Text="Включить наладку" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0 2 0 -3" />
                         </Button.Content>
                     </Button>
-                    <TextBox d:Text="01.01.2023 00:00"
-                             Text="{Binding StartSetupTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
-                             Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
-                </DockPanel>
-
-                <TextBlock Grid.Row="3" Grid.Column="2"
-                           Text="Конец наладки:"/>
-                <DockPanel Grid.Row="3" Grid.Column="3" >
                     <Button x:Name="EndSetupTimeButton" Style="{StaticResource OperationButton}"
                             IsEnabled="{Binding WithSetup}"
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch" 
-                            Content="⏱" FontSize="20" Click="EndSetupTimeButton_Click"/>
+                            Content="⏱" FontSize="20" Click="EndSetupTimeButton_Click" Visibility="Collapsed"/>
                     <TextBox d:Text="01.01.2023 01:00" IsEnabled="{Binding WithSetup, ValidatesOnDataErrors=True}"
                              Text="{Binding StartMachiningTime, UpdateSourceTrigger=PropertyChanged}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
@@ -247,7 +237,7 @@
                            Text="Время завершения:" Margin="0 0 3  0"/>
                 <DockPanel Grid.Row="4" Grid.Column="1">
                     <Button x:Name="EndProductionTimeButton" Style="{StaticResource OperationButton}"
-                            DockPanel.Dock="Left" HorizontalAlignment="Stretch" 
+                            DockPanel.Dock="Left" HorizontalAlignment="Stretch" Visibility="Collapsed"
                             Content="⏱" FontSize="20" Click="EndProductionTimeButton_Click"/>
                     <TextBox d:Text="01.01.2023 07:00"
                              Text="{Binding EndMachiningTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
@@ -319,22 +309,23 @@
                         BorderBrush="LightGray" BorderThickness="1" 
                         Margin="3 15"/>
 
-                <DockPanel Grid.Column="5" Grid.Row="0" Grid.RowSpan="7" >
-                    <DockPanel DockPanel.Dock="Top" Margin="1 1 0 1" >
+                <DockPanel Grid.Column="5" Grid.Row="0" Grid.RowSpan="7" LastChildFill="True">
+                    <DockPanel DockPanel.Dock="Top" Margin="1 1 0 1" Height="40" >
                         <Button x:Name="EditCreatorButton" Content="Edit" Width="63" Click="EditCreatorButton_Click" 
                                 Margin="0 0 2 0"
                                 Visibility="{Binding NewDetail, Converter={StaticResource InvertedVisibilityConverter}}"/>
-                        <Button Content="Продолжить последнюю" Height="49" Margin="0 0 0 0" 
+                        <Button Content="Заполнить из списка" Margin="0 0 0 0" 
                                 x:Name="LoadPreviousPartButton" Style="{StaticResource KeyboardButton}"
                                 Click="LoadPreviousPartButton_Click"/>
                     </DockPanel>
-                    <Button DockPanel.Dock="Bottom" Height="49" Margin="1 1 0 1"
+                    <Button DockPanel.Dock="Bottom" Margin="1 1 0 1"
                             Style="{StaticResource KeyboardButton}" Click="KeyboardButton_Click">
                         <Button.Content>
-                            <TextBlock Text="🖮" FontSize="36" Margin="0 -10 0 0"/>
+                            <TextBlock Text="🖮" FontSize="34" Height="40" Margin="0 -5 0 5" Padding="0"/>
                         </Button.Content>
                     </Button>
-                    <ctrl:NumericKeyboard Margin="1 1 0 1" DockPanel.Dock="Top"/>
+                    <ctrl:TimeInsertKeyboard DockPanel.Dock="Bottom" Margin="0 0 -1 0"/>
+                    <ctrl:NumericKeyboard Margin="1 1 0 1"/>
                 </DockPanel>
             </Grid>
         </DockPanel>
