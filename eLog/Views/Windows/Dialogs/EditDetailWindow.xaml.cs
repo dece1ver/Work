@@ -584,7 +584,7 @@ namespace eLog.Views.Windows.Dialogs
             switch (parts.Count)
             {
                 case 1:
-                    prev = AppSettings.Parts.First(x => x.FinishedCount < x.TotalCount);
+                    prev = parts.First();
                     break;
                 case > 1:
                     var dlg = new SetPreviousPartDialogWindow(parts) {Owner = this};
