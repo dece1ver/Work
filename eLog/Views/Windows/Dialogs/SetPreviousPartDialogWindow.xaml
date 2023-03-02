@@ -8,11 +8,15 @@
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         xmlns:commands="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:dialogs="clr-namespace:eLog.Views.Windows.Dialogs"
+        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         WindowStartupLocation="CenterOwner" WindowStyle="None"
         ResizeMode="NoResize" FontSize="22"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d"
         Title="Выбор предыдущей детали" Height="385" Width="700">
+    <Window.Resources>
+        <cnv:SetupsVisibilityConverter x:Key="SetupsVisibilityConverter"/>
+    </Window.Resources>
     <Border BorderBrush="Gray" BorderThickness="1">
         <DockPanel>
             <UniformGrid DockPanel.Dock="Bottom" Columns="2">
@@ -48,25 +52,25 @@
                             <GroupBox.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding FullName}"/>
+                                    <StackPanel Orientation="Horizontal" 
+                                                Visibility="Collapsed"
+                                                d:Visibility="{Binding Setup, Converter={StaticResource SetupsVisibilityConverter}}">
+                                        <TextBlock Margin="5 0" Text=" - "/> 
+                                        <TextBlock Text="{Binding Setup}"/> 
+                                        <TextBlock Margin="5 0" Text="уст."/>
+                                    </StackPanel>
                                 </StackPanel>
                             </GroupBox.Header>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" 
-                                           Text="{Binding Order}"/>
-                                <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 0" 
-                                                   Text="{Binding TotalCountInfo}" />
-                            </Grid>
+                            <UniformGrid Columns="3">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <TextBlock Text="Установка:"/>
+                                    <TextBlock Margin="5 0 0 0" Text="{Binding Setup}"/> 
+                                </StackPanel>
+                                <TextBlock Text="{Binding Order}" HorizontalAlignment="Center"/>
+                                
+                                <TextBlock Text="{Binding TotalCountInfo}" HorizontalAlignment="Right"/>
+                                
+                            </UniformGrid>
                         </GroupBox>
                     </DataTemplate>
                 </ListView.ItemTemplate>

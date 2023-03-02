@@ -370,7 +370,7 @@ namespace eLog.Views.Windows.Dialogs
 
         private string _SingleProductionTimePlan;
         private Visibility _KeyboardVisibility;
-        private bool _WithSetup = true;
+        private bool _WithSetup;
 
         public string SingleProductionTimePlan
         {
@@ -458,6 +458,7 @@ namespace eLog.Views.Windows.Dialogs
             NewDetail = newDetail;
             _Status = string.Empty;
             Part = part;
+            WithSetup = !newDetail && part.StartSetupTime != part.StartMachiningTime;
             var order = Part.Order;
             _OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
                 ? order.Split('/')[1]
@@ -480,8 +481,12 @@ namespace eLog.Views.Windows.Dialogs
             _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
             _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty;
 
-            _PartSetupTimePlan = Part.SetupTimePlan > 0 ? Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture) : string.Empty;
-            _SingleProductionTimePlan = Part.SingleProductionTimePlan > 0 ? Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            _PartSetupTimePlan = Part.SetupTimePlan > 0 
+                ? Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture) 
+                : newDetail ? string.Empty : "-";
+            _SingleProductionTimePlan = Part.SingleProductionTimePlan > 0 
+                ? Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture) 
+                : newDetail ? string.Empty : "-";
 
             InitializeComponent();
         }
@@ -578,18 +583,19 @@ namespace eLog.Views.Windows.Dialogs
             PartInfoModel prev;
             var parts = AppSettings.Parts
                 .Where(x => x.IsFinished)
-                .GroupBy(x => new { x.FullName, x.Order })
+                .GroupBy(x => new { x.FullName, x.Order, x.Setup })
                 .Select(x => new PartInfoModel()
                 {
                     Name = x.Key.FullName, 
                     Order = x.Key.Order,
+                    Setup = x.Key.Setup,
                     StartSetupTime = DateTime.Now,
                     SetupTimePlan = x.First().SetupTimePlan,
                     SingleProductionTimePlan = x.First().SingleProductionTimePlan,
                     MachineTime = x.First().MachineTime,
                     TotalCount = x.First().TotalCount, 
                     FinishedCount = x.Sum(p => p.FinishedCount)
-                }).Where(x => x.FinishedCount < x.TotalCount).ToList();
+                }).ToList();
             switch (parts.Count)
             {
                 case 1:
