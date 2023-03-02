@@ -227,6 +227,7 @@ namespace eLog.ViewModels
             {
                 Operator = CurrentOperator!,
                 Shift = AppSettings.CurrentShift,
+                Setup = 1,
             };
             if (WindowsUserDialogService.EditDetail(ref part, true))
             {

@@ -11,7 +11,7 @@
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
-        Title="Редактирование детали" Height="592" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
+        Title="Редактирование детали" Height="598" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
         <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
         <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
@@ -80,10 +80,40 @@
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                            Text="Наименование:"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
-                         d:Text="Корпус клапана" Height="70" TextWrapping="Wrap" FontSize="18" Padding="0 -4" 
-                         Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
-                         Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
+                <DockPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2">
+                    <UniformGrid Rows="2" DockPanel.Dock="Right" Width="89" Margin="0">
+                        <TextBox Padding="5 0 45 0" Text="{Binding Part.Setup}" 
+                                 Margin="1 1 1 -1" FontSize="22">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Style.Resources>
+                                        <VisualBrush x:Key="CueBannerBrush" AlignmentX="Right" AlignmentY="Center" Stretch="None">
+                                            <VisualBrush.Visual>
+                                                <Label Content="уст. " FontSize="22" HorizontalAlignment="Right"/>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </Style.Resources>
+                                    <Setter Property="IsReadOnly" Value="True"/>
+                                    <Setter Property="Focusable" Value="False"/>
+                                    <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                    <Setter Property="TextAlignment" Value="Center" />
+                                    <Setter Property="VerticalAlignment" Value="Stretch" />
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        <UniformGrid Columns="2" Margin="1">
+                            <Button Content="▼" IsEnabled="{Binding CanDecreaseSetup}"
+                                    Style="{StaticResource KeyboardButton}" Margin="0 -1 -1 0" Click="DecrementSetupButton_Click"/>
+                            <Button Content="▲" IsEnabled="{Binding CanIncreaseSetup}"
+                                    Style="{StaticResource KeyboardButton}" Margin="0 -1 0 0" Click="IncrementSetupButton_Click"/>
+                        </UniformGrid>
+                    </UniformGrid>
+                    <TextBox 
+                             d:Text="Корпус клапана АР110-01-001" Height="76" TextWrapping="Wrap" FontSize="18" Padding="0 -4" 
+                             Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                             Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
+                </DockPanel>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Collapsed"
                            Text="Обозначение:"/>
@@ -111,7 +141,8 @@
                             DockPanel.Dock="Right" IsEnabled="{Binding NonEmptyOrder}" 
                             Content="⌕" FontSize="18" Click="FindOrderDetailsButton_Click" Width="40"/>
                     <TextBox d:Text="00001.1.1" Margin="-2 1 1 1" IsEnabled="{Binding NonEmptyOrder}"
-                             Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                             Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                             Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
                 </DockPanel>
 
                 <TextBlock Grid.Row="2" Grid.Column="2"
@@ -266,7 +297,7 @@
                 <TextBlock Grid.Row="6" Grid.Column="0"
                            Text="Комментарий:"/>
                 <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" d:Text="Комментарий" Height="118" 
-                         TextWrapping="WrapWithOverflow" AcceptsReturn="True" FontSize="16"
+                         TextWrapping="WrapWithOverflow" AcceptsReturn="True" FontSize="16" TextAlignment="Left" VerticalContentAlignment="Top"
                          Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}"/>
 
 
@@ -310,13 +341,17 @@
                         Margin="3 15"/>
 
                 <DockPanel Grid.Column="5" Grid.Row="0" Grid.RowSpan="7" LastChildFill="True">
-                    <DockPanel DockPanel.Dock="Top" Margin="1 1 0 1" Height="40" >
+                    <DockPanel DockPanel.Dock="Top" Margin="1 0 0 1" Height="40" >
                         <Button x:Name="EditCreatorButton" Content="Edit" Width="63" Click="EditCreatorButton_Click" 
-                                Margin="0 0 2 0"
+                                Margin="0 1 2 0"
                                 Visibility="{Binding NewDetail, Converter={StaticResource InvertedVisibilityConverter}}"/>
-                        <Button Content="Заполнить из списка" Margin="0 0 0 0" 
+                        <Button Margin="0 1 0 0"
                                 x:Name="LoadPreviousPartButton" Style="{StaticResource KeyboardButton}"
-                                Click="LoadPreviousPartButton_Click"/>
+                                Click="LoadPreviousPartButton_Click">
+                            <Button.Content>
+                                <TextBlock Text="Заполнить из списка" Margin="-2"/>
+                            </Button.Content>
+                        </Button>
                     </DockPanel>
                     <Button DockPanel.Dock="Bottom" Margin="1 1 0 1"
                             Style="{StaticResource KeyboardButton}" Click="KeyboardButton_Click">

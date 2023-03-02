@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 
 namespace eLog.Models
@@ -19,7 +20,7 @@ namespace eLog.Models
         private string _Name;
         private string _Number;
         private string _Order;
-        private int _Setup;
+        private byte _Setup;
         private int _TotalCount;
         private string _Shift;
         private int _FinishedCount;
@@ -57,7 +58,7 @@ namespace eLog.Models
         }
 
         /// <summary> Текущий установ </summary>
-        public int Setup
+        public byte Setup
         {
             get => _Setup;
             set => Set(ref _Setup, value);
@@ -339,7 +340,7 @@ namespace eLog.Models
         /// <param name="totalCount">Количество</param>
         /// <param name="setupTimePlan">Плановое время наладки</param>
         /// <param name="singleProductionTimePlan">Плановое штучное время</param>
-        public PartInfoModel(string name, string number, int setup, string order, int totalCount, double setupTimePlan, double singleProductionTimePlan)
+        public PartInfoModel(string name, string number, byte setup, string order, int totalCount, double setupTimePlan, double singleProductionTimePlan)
         {
             _Name = name;
             _Number = number;
@@ -364,6 +365,7 @@ namespace eLog.Models
             _DownTimes = new ObservableCollection<DownTime>();
             Id = -1;
             _OperatorComments = string.Empty;
+            _Operator = AppSettings.CurrentOperator!;
             _Shift = string.Empty;
         }
     }

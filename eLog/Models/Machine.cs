@@ -22,8 +22,8 @@ namespace eLog.Models
             {
                 0 => "Goodway GS-1500",
                 1 => "Hyundai L320A",
-                2 => "Hyundai WIA SKT21 #1",
-                3 => "Hyundai WIA SKT21 #2",
+                2 => "Hyundai WIA SKT21 №105",
+                3 => "Hyundai WIA SKT21 №104",
                 4 => "Hyundai XH6300",
                 5 => "Mazak QTS200ML",
                 6 => "Mazak QTS350",

@@ -32,7 +32,7 @@ namespace eLog.Views.Windows.Dialogs
     /// <summary>
     /// Логика взаимодействия для EditDetailWindow.xaml
     /// </summary>
-    public partial class EditDetailWindow : Window, INotifyPropertyChanged, IDataErrorInfo
+    public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo
     {
         public List<PartInfoModel> Parts { get; set; } = new();
         public int PartIndex { get; set; }
@@ -44,7 +44,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Set(ref _KeyboardVisibility, value);
-                Height = _KeyboardVisibility is Visibility.Visible ? 592 : 469;
+                Height = _KeyboardVisibility is Visibility.Visible ? 598 : 475;
             }
         }
 
@@ -89,7 +89,25 @@ namespace eLog.Views.Windows.Dialogs
 
         public bool NewDetail { get; set; }
 
-        public bool WithSetup => Part.StartSetupTime != Part.StartMachiningTime;
+        public bool WithSetup
+        {
+            get => _WithSetup;
+            set
+            {
+                Set(ref _WithSetup, value);
+                if (_WithSetup) return;
+                Part.StartSetupTime = new DateTime(
+                    Part.StartSetupTime.Year,
+                    Part.StartSetupTime.Month,
+                    Part.StartSetupTime.Day,
+                    Part.StartSetupTime.Hour,
+                    Part.StartSetupTime.Minute,
+                    0, 0);
+                StartMachiningTime = StartSetupTime;
+                Part.StartMachiningTime = Part.StartSetupTime;
+                OnPropertyChanged(nameof(StartMachiningTime));
+            }
+        }
 
         public string OrderMonth
         {
@@ -132,7 +150,7 @@ namespace eLog.Views.Windows.Dialogs
 
         private string _Status;
         private string _OrderText;
-        private string _OrderMonth = OrderMonths[0];
+        private string _OrderMonth;
         private string _OrderQualifier;
 
         /// <summary> Статус </summary>
@@ -200,6 +218,9 @@ namespace eLog.Views.Windows.Dialogs
 
         public bool NonEmptyOrder => OrderValidation is not OrderValidationTypes.Empty;
 
+        public bool CanIncreaseSetup => Part.Setup < 24;
+        public bool CanDecreaseSetup => Part.Setup > 1;
+
         #region Валидация полного номера М/Л (уже не нужно, оставил на всякий случай)
         //public OrderValidation OrderValidateType
         //{
@@ -249,7 +270,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 _StartSetupTime = value;
-                if (!WithSetup)
+                if (!WithSetup && string.IsNullOrWhiteSpace(StartSetupTime))
                 {
                     StartMachiningTime = _StartSetupTime;
                     OnPropertyChanged(nameof(StartMachiningTime));
@@ -349,6 +370,7 @@ namespace eLog.Views.Windows.Dialogs
 
         private string _SingleProductionTimePlan;
         private Visibility _KeyboardVisibility;
+        private bool _WithSetup = true;
 
         public string SingleProductionTimePlan
         {
@@ -469,7 +491,7 @@ namespace eLog.Views.Windows.Dialogs
             if (File.Exists(AppSettings.LocalOrdersFile))
             {
                 Status =
-                    $"Список заказов обновлен {File.GetLastWriteTime(AppSettings.LocalOrdersFile):dd.MM.yyyy HH:mm}";
+                    $"Список заказов обновлен {File.GetLastWriteTime(AppSettings.LocalOrdersFile).ToString(Text.DateTimeFormat)}";
             }
             OnPropertyChanged(nameof(NonEmptyOrder));
             KeyboardVisibility = Visibility.Collapsed;
@@ -483,7 +505,6 @@ namespace eLog.Views.Windows.Dialogs
             switch (OrderValidation)
             {
                 case OrderValidationTypes.Valid:
-                    
                     Status = "Поиск заказов...";
                     if (Parts.Count == 0) Parts = Part.Order.GetPartsFromOrder();
                     if (PartIndex > Parts.Count - 1) PartIndex = 0;
@@ -523,25 +544,13 @@ namespace eLog.Views.Windows.Dialogs
         /// <summary> Убирает наладку </summary>
         private void WithoutSetupButton_Click(object sender, RoutedEventArgs e)
         {
-            Part.StartSetupTime = new DateTime(
-                Part.StartSetupTime.Year,
-                Part.StartSetupTime.Month,
-                Part.StartSetupTime.Day,
-                Part.StartSetupTime.Hour,
-                Part.StartSetupTime.Minute,
-                0, 0);
-            StartMachiningTime = StartSetupTime;
-            Part.StartMachiningTime = Part.StartSetupTime;
-            OnPropertyChanged(nameof(StartMachiningTime));
-            OnPropertyChanged(nameof(WithSetup));
+            WithSetup = false;
         }
 
         /// <summary> Включает наладку </summary>
         private void WithSetupButton_Click(object sender, RoutedEventArgs e)
         {
-            StartMachiningTime = string.Empty;
-            OnPropertyChanged(nameof(StartMachiningTime));
-            OnPropertyChanged(nameof(WithSetup));
+            WithSetup = true;
         }
 
         /// <summary> Вставляет текущее время как конец наладки</summary>
@@ -602,6 +611,8 @@ namespace eLog.Views.Windows.Dialogs
                     Status = "Не найдено подходящих деталей.";
                     return;
             }
+
+            WithSetup = false;
             PartName = prev.FullName;
             var order = prev.Order;
             OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
@@ -661,6 +672,29 @@ namespace eLog.Views.Windows.Dialogs
             Keyboard.KeyPress(Keys.Space);
         }
 
+
+
+        private void IncrementSetupButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Part.Setup < 24)
+            {
+                Part.Setup++;
+                if (!WithSetup) WithSetup = true;
+            }
+            OnPropertyChanged(nameof(CanIncreaseSetup));
+            OnPropertyChanged(nameof(CanDecreaseSetup));
+        }
+
+        private void DecrementSetupButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Part.Setup > 1)
+            {
+                Part.Setup--;
+            }
+            OnPropertyChanged(nameof(CanIncreaseSetup));
+            OnPropertyChanged(nameof(CanDecreaseSetup));
+        }
+
         private void UpdateOrders()
         {
             while (true)
@@ -670,8 +704,6 @@ namespace eLog.Views.Windows.Dialogs
                     if (File.Exists(AppSettings.OrdersSourcePath) &&
                         Path.GetExtension(AppSettings.OrdersSourcePath).ToLower() == ".xlsx")
                     {
-                        
-
                         // если локальный список совпадает с сетевым, то ничего не делаем
                         if (File.Exists(AppSettings.LocalOrdersFile) &&
                             File.GetLastWriteTime(AppSettings.LocalOrdersFile) ==
@@ -686,7 +718,7 @@ namespace eLog.Views.Windows.Dialogs
                         }
                         File.Copy(AppSettings.OrdersSourcePath, AppSettings.LocalOrdersFile, true);
 
-                        Status = $"Список заказов обновлен {File.GetLastWriteTime(AppSettings.LocalOrdersFile):dd.MM.yyyy HH:mm}";
+                        Status = $"Список заказов обновлен {File.GetLastWriteTime(AppSettings.LocalOrdersFile).ToString(Text.DateTimeFormat)}";
                         break;
                     }
                 }
@@ -739,12 +771,7 @@ namespace eLog.Views.Windows.Dialogs
             return true;
         }
 
-
-
-
         #endregion
 
-
-        
     }
 }

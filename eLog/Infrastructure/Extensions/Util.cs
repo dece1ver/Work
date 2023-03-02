@@ -81,7 +81,7 @@ namespace eLog.Infrastructure.Extensions
             return new PartInfoModel(
                 names[new Random().Next(0, names.Length)],
                 numbers[new Random().Next(0, numbers.Length)],
-                new Random().Next(1, 4),
+                (byte)new Random().Next(1, 4),
                 orders[new Random().Next(0, orders.Length)],
                 new Random().Next(1, 20) * 10,
                 new Random().Next(4, 18) * 10,
@@ -128,6 +128,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
                     xlRow.Cell(11).Value = part.FinishedCount;
+                    xlRow.Cell(12).Value = part.Setup;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(15).FormulaR1C1 = prevRow.Cell(15).FormulaR1C1;
@@ -186,6 +187,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
                     xlRow.Cell(11).Value = part.FinishedCount;
+                    xlRow.Cell(12).Value = part.Setup;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(16).Value = part.SetupTimePlan;

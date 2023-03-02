@@ -5,13 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:eLog.Views.Controls"
              mc:Ignorable="d" Focusable="False"
-             d:DesignHeight="80" d:DesignWidth="320">
+             d:DesignHeight="40" d:DesignWidth="220">
     <UniformGrid Columns="4">
         <Button x:Name="StartShiftButton" 
                 Style="{StaticResource KeyboardButton}" Click="StartShiftButton_Click">
             <Button.Content>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⏳" FontSize="20"
+                    <TextBlock Text="⏳" FontSize="20" 
                                TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
                     <TextBlock Text="Н" FontSize="12"
                                TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
