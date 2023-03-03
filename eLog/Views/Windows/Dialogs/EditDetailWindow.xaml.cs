@@ -270,7 +270,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 _StartSetupTime = value;
-                if (!WithSetup && string.IsNullOrWhiteSpace(StartSetupTime))
+                if (!WithSetup)
                 {
                     StartMachiningTime = _StartSetupTime;
                     OnPropertyChanged(nameof(StartMachiningTime));
