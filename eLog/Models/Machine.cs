@@ -21,7 +21,7 @@ namespace eLog.Models
             Id switch
             {
                 0 => "Goodway GS-1500",
-                1 => "Hyundai L320A",
+                1 => "Hyundai L230A",
                 2 => "Hyundai WIA SKT21 №105",
                 3 => "Hyundai WIA SKT21 №104",
                 4 => "Hyundai XH6300",
