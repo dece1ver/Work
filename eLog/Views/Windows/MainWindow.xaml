@@ -18,6 +18,7 @@
         <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
         <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
         <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
+        <cnv:PreviousShiftsLineConverter x:Key="PreviousShiftsLineConverter"/>
         <Style TargetType="TextBlock">
             <Setter Property="Margin" Value="9 2"/>
         </Style>
@@ -85,96 +86,134 @@
                 <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0">
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <GroupBox>
-                                <GroupBox.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="(наладка) " Visibility="{Binding SetupIsNotFinished, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
-                                        <TextBlock Text="(изготовление) " Visibility="{Binding InProduction, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding Title}"/>
-                                    </StackPanel>
-                                </GroupBox.Header>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid Grid.Column="0">
+                            <StackPanel Orientation="Vertical">
+                                <GroupBox>
+                                    <GroupBox.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="(наладка) " Visibility="{Binding SetupIsNotFinished, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
+                                            <TextBlock Text="(изготовление) " Visibility="{Binding InProduction, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Title}"/>
+
+                                        </StackPanel>
+                                    </GroupBox.Header>
+                                    <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                            <RowDefinition/>
-                                        </Grid.RowDefinitions>
-                                        <TextBlock Grid.Column="0" Grid.Row="0" Margin="5 0" 
+                                        <Grid Grid.Column="0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Column="0" Grid.Row="0" Margin="5 -1" 
+                                                   Text="Установка:"/>
+                                            <TextBlock Grid.Column="1" Grid.Row="0" Margin="5 -1" 
+                                                   Text="{Binding Setup}" />
+                                            <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 -1" 
                                                    Text="{Binding Operator.DisplayName}"/>
-                                        <TextBlock Grid.Column="1" Grid.Row="0" Margin="5 0" 
+                                            <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 -1" 
                                                    Text="{Binding Shift}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 0" 
+                                            <TextBlock Grid.Column="0" Grid.Row="2" Margin="5 -1" 
                                                    Text="{Binding Order}"/>
-                                        <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 0" 
+                                            <TextBlock Grid.Column="1" Grid.Row="2" Margin="5 -1" 
                                                    Text="{Binding TotalCountInfo}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="2" Margin="5 0" Text="Начало наладки:" />
-                                        <TextBlock Grid.Column="1" Grid.Row="2" Margin="5 0" 
+                                            <TextBlock Grid.Column="0" Grid.Row="3" Margin="5 -1" Text="Начало наладки:" />
+                                            <TextBlock Grid.Column="1" Grid.Row="3" Margin="5 -1" 
                                                    Text="{Binding StartSetupTime, StringFormat={}{0:dd.MM.yyy HH:mm}}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="3" Margin="5 0" Text="Завершение наладки:" />
-                                        <TextBlock Grid.Column="1" Grid.Row="3" Margin="5 0" 
+                                            <TextBlock Grid.Column="0" Grid.Row="4" Margin="5 -1" Text="Завершение наладки:" />
+                                            <TextBlock Grid.Column="1" Grid.Row="4" Margin="5 -1" 
                                                    Text="{Binding EndSetupInfo}" />
-                                        <TextBlock Grid.Column="0" Grid.Row="4" Margin="5 0" Text="Завершение изготовления:" />
-                                        <TextBlock Grid.Column="1" Grid.Row="4" Margin="5 0" 
+                                            <TextBlock Grid.Column="0" Grid.Row="5" Margin="5 -1" Text="Завершение изготовления:" />
+                                            <TextBlock Grid.Column="1" Grid.Row="5" Margin="5 -1" 
                                                    Text="{Binding EndDetailInfo}" />
-                                    </Grid>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 -6 0 0">
-                                        <StackPanel Margin="0" Orientation="Horizontal" HorizontalAlignment="Right" 
+                                        </Grid>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 -6 0 0">
+                                            <StackPanel Margin="0" Orientation="Horizontal" HorizontalAlignment="Right" 
                                                 Visibility="{Binding IsStarted, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}">
-                                            <Button Style="{StaticResource lvButton}" 
+                                                <Button Style="{StaticResource lvButton}" 
                                                     Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
                                                     CommandParameter="{Binding}">
-                                                <Button.Content>
-                                                    <TextBlock Text="Простой" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
-                                                </Button.Content>
-                                            </Button>
-                                            <Button Style="{StaticResource lvButton}"
+                                                    <Button.Content>
+                                                        <TextBlock Text="Простой" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                                                    </Button.Content>
+                                                </Button>
+                                                <Button Style="{StaticResource lvButton}"
                                                     Visibility="{Binding SetupIsNotFinished, Converter={StaticResource VisibilityConverter}}" 
                                                     Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EndSetupCommand}" 
                                                     CommandParameter="{Binding}">
-                                                <Button.Content>
-                                                    <TextBlock Text="Завершить наладку" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
-                                                </Button.Content>
-                                            </Button>
-                                            <Button Style="{StaticResource lvButton}"
+                                                    <Button.Content>
+                                                        <TextBlock Text="Завершить наладку" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                                                    </Button.Content>
+                                                </Button>
+                                                <Button Style="{StaticResource lvButton}"
                                                     Visibility="{Binding CanBeFinished, Converter={StaticResource VisibilityConverter}}"
                                                     Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EndDetailCommand}"
                                                     CommandParameter="{Binding}">
+                                                    <Button.Content>
+                                                        <TextBlock Text="Завершить изготовление" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                                                    </Button.Content>
+                                                </Button>
+                                            </StackPanel>
+                                            <Button Margin="4 0 0 0" 
+                                                CommandParameter="{Binding}" 
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EditDetailCommand}">
                                                 <Button.Content>
-                                                    <TextBlock Text="Завершить изготовление" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                                                    <StackPanel Orientation="Vertical" Margin="0 -10 0 0">
+                                                        <TextBlock Text="." Margin="10 0 10 0"/>
+                                                        <TextBlock Text="." Margin="10 -10"/>
+                                                        <TextBlock Text="." Margin="10 0 10 0"/>
+                                                    </StackPanel>
                                                 </Button.Content>
                                             </Button>
                                         </StackPanel>
-                                        <Button Margin="4 0 0 0" 
-                                                CommandParameter="{Binding}" 
-                                                Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EditDetailCommand}">
-                                            <Button.Content>
-                                                <StackPanel Orientation="Vertical" Margin="0 -10 0 0">
-                                                    <TextBlock Text="." Margin="10 0 10 0"/>
-                                                    <TextBlock Text="." Margin="10 -10"/>
-                                                    <TextBlock Text="." Margin="10 0 10 0"/>
-                                                </StackPanel>
-                                            </Button.Content>
-                                        </Button>
-                                    </StackPanel>
+                                    </Grid>
+                                </GroupBox>
+                                <Grid Visibility="{Binding Converter={StaticResource PreviousShiftsLineConverter}}" Margin="5 15 5 -5" >
+                                    <Border Grid.Row="0" BorderBrush="Gray" BorderThickness="1" Height="1"/>
+                                    <TextBlock Grid.Row="0" Text="Прошлые смены" FontSize="14" Background="White" TextAlignment="Center" HorizontalAlignment="Center" Width="150"/>
                                 </Grid>
-                            </GroupBox>
+                            </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                             <Setter Property="Focusable" Value="false"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                        <Border x:Name="Bd" 
+                                            BorderBrush="{TemplateBinding BorderBrush}" 
+                                            BorderThickness="{TemplateBinding BorderThickness}" 
+                                            Background="{TemplateBinding Background}" 
+                                            Padding="{TemplateBinding Padding}" 
+                                            SnapsToDevicePixels="true">
+                                            <ContentPresenter 
+                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsMouseOver" Value="True" />
+                                                </MultiTrigger.Conditions>
+                                                <Setter TargetName="Bd" Property="Background" Value="Transparent" />
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="Transparent" />
+                                            </MultiTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
