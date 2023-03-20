@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using eLog.Models;
 
 namespace eLog.Views.Windows
 {
@@ -36,7 +37,7 @@ namespace eLog.Views.Windows
             {
                 case false:
                     return;
-                case true when AppSettings.Parts.Count == AppSettings.Parts.Count(x => x.IsFinished):
+                case true when AppSettings.Parts.Count == AppSettings.Parts.Count(x => x.IsFinished is not PartInfoModel.State.InProgress):
                 {
                     var res = MessageBox.Show("Смена не завершена.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                     switch (res)
@@ -49,7 +50,7 @@ namespace eLog.Views.Windows
                     }
                     break;
                 }
-                case true when AppSettings.Parts.Count != AppSettings.Parts.Count(x => x.IsFinished):
+                case true when AppSettings.Parts.Count != AppSettings.Parts.Count(x => x.IsFinished is not PartInfoModel.State.InProgress):
                 {
                     var res = MessageBox.Show("Есть незавершенные детали.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                     switch (res)

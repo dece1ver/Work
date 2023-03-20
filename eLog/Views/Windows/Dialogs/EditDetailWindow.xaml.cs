@@ -165,16 +165,23 @@ namespace eLog.Views.Windows.Dialogs
             get
             {
                 if (OrderValidation is OrderValidationTypes.Error || string.IsNullOrWhiteSpace(PartName)) return false;
-                if (Part.IsFinished) return true;
+                if (Part.IsFinished is PartInfoModel.State.Finished) return true;
                 var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                      (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
 
                 switch (validPlanTimes)
                 {
                     // старт наладки
-                    case true when Part is { FinishedCount: 0, TotalCount: > 0, StartSetupTime.Ticks: > 0 }:
+                    case true when Part is { FinishedCount: 0, TotalCount: > 0, StartSetupTime.Ticks: > 0 } && 
+                                   string.IsNullOrWhiteSpace(StartMachiningTime) && 
+                                   string.IsNullOrWhiteSpace(EndMachiningTime):
+                        return true;
                     // старт изготовления
-                    case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && EndMachiningTime == string.Empty:
+                    case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && string.IsNullOrWhiteSpace(EndMachiningTime):
+                        return true;
+                    // частичная наладка
+                    case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && FinishedCount == "0" && EndMachiningTime == StartMachiningTime:
+                        return true;
                     // полная отметка
                     case true when Part is { FinishedCount: > 0, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
                         return true;
@@ -278,8 +285,6 @@ namespace eLog.Views.Windows.Dialogs
                 Part.StartSetupTime = DateTime.TryParseExact(_StartSetupTime, Text.DateTimeFormat, null, DateTimeStyles.None, out var startSetupTime) 
                     ? startSetupTime 
                     : DateTime.MinValue;
-                
-
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
@@ -403,7 +408,7 @@ namespace eLog.Views.Windows.Dialogs
                         if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.StartMachiningTime == DateTime.MinValue) error = "Некорректное время начала изготовления";
                         break;
                     case nameof(EndMachiningTime):
-                        if (!string.IsNullOrWhiteSpace(EndMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime) error = "Некорректное время завершения изготовления";
+                        if (!string.IsNullOrWhiteSpace(EndMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime && FinishedCount != "0") error = "Некорректное время завершения изготовления";
                         else if (string.IsNullOrWhiteSpace(EndMachiningTime) && Part.FinishedCount > 0) error = "Обязательный параметр при указании выполненных деталей";
                         break;
                     case nameof(MachineTime):
@@ -416,7 +421,7 @@ namespace eLog.Views.Windows.Dialogs
                         error = Part.FinishedCount switch
                         {
                             0 when string.IsNullOrWhiteSpace(FinishedCount) && Part.FullProductionTimeFact > TimeSpan.Zero => "Обязательный параметр если указано время завершения изготовления.",
-                            0 when !string.IsNullOrWhiteSpace(FinishedCount) => "Некорректное количество завершенных деталей",
+                            0 when !string.IsNullOrWhiteSpace(FinishedCount) && FinishedCount != "0" => "Некорректное количество завершенных деталей",
                             _ => error
                         };
                         break;
@@ -458,7 +463,7 @@ namespace eLog.Views.Windows.Dialogs
             NewDetail = newDetail;
             _Status = string.Empty;
             Part = part;
-            WithSetup = !newDetail && part.StartSetupTime != part.StartMachiningTime;
+            WithSetup = newDetail || part.StartSetupTime != part.StartMachiningTime;
             var order = Part.Order;
             _OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
                 ? order.Split('/')[1]
@@ -478,7 +483,7 @@ namespace eLog.Views.Windows.Dialogs
 
             _StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
             _StartMachiningTime = Part.StartMachiningTime != DateTime.MinValue ? Part.StartMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
-            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
+            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue && Part.EndMachiningTime != Part.StartMachiningTime ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
             _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty;
 
             _PartSetupTimePlan = Part.SetupTimePlan > 0 
@@ -550,12 +555,14 @@ namespace eLog.Views.Windows.Dialogs
         private void WithoutSetupButton_Click(object sender, RoutedEventArgs e)
         {
             WithSetup = false;
+            OnPropertyChanged(nameof(CanBeClosed));
         }
 
         /// <summary> Включает наладку </summary>
         private void WithSetupButton_Click(object sender, RoutedEventArgs e)
         {
             WithSetup = true;
+            OnPropertyChanged(nameof(CanBeClosed));
         }
 
         /// <summary> Вставляет текущее время как конец наладки</summary>
@@ -563,6 +570,7 @@ namespace eLog.Views.Windows.Dialogs
         {
             StartMachiningTime = DateTime.Now.ToString(Text.DateTimeFormat);
             OnPropertyChanged(nameof(StartMachiningTime));
+            OnPropertyChanged(nameof(CanBeClosed));
         }
 
         /// <summary> Вставляет текущее время как конец изготовления</summary>
@@ -570,6 +578,7 @@ namespace eLog.Views.Windows.Dialogs
         {
             EndMachiningTime = DateTime.Now.ToString(Text.DateTimeFormat);
             OnPropertyChanged(nameof(EndMachiningTime));
+            OnPropertyChanged(nameof(CanBeClosed));
         }
 
         private void KeyboardButton_Click(object sender, RoutedEventArgs e)
@@ -582,7 +591,7 @@ namespace eLog.Views.Windows.Dialogs
             if (AppSettings.Parts.Count <= 0) return;
             PartInfoModel prev;
             var parts = AppSettings.Parts
-                .Where(x => x.IsFinished)
+                .Where(x => x.IsFinished is not PartInfoModel.State.InProgress)
                 .GroupBy(x => new { x.FullName, x.Order, x.Setup })
                 .Select(x => new PartInfoModel()
                 {
@@ -657,15 +666,15 @@ namespace eLog.Views.Windows.Dialogs
             }
 
             Part.SetupTimePlan = prev.SetupTimePlan;
-            PartSetupTimePlan = Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
+            PartSetupTimePlan = Part.SetupTimePlan is 0 ? "-" : Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
             OnPropertyChanged(nameof(PartSetupTimePlan));
 
             Part.SingleProductionTimePlan = prev.SingleProductionTimePlan;
-            SingleProductionTimePlan = Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture);
+            SingleProductionTimePlan = Part.SingleProductionTimePlan is 0 ? "-" : Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture);
             OnPropertyChanged(nameof(SingleProductionTimePlan));
 
             Part.MachineTime = prev.MachineTime;
-            MachineTime = Part.MachineTime.ToString(Text.TimeSpanFormat);
+            MachineTime = Part.MachineTime.Ticks is 0 ? string.Empty : Part.MachineTime.ToString(Text.TimeSpanFormat);
             OnPropertyChanged(nameof(MachineTime));
 
             Part.TotalCount = prev.TotalCount;
@@ -677,7 +686,6 @@ namespace eLog.Views.Windows.Dialogs
         {
             Keyboard.KeyPress(Keys.Space);
         }
-
 
 
         private void IncrementSetupButton_Click(object sender, RoutedEventArgs e)

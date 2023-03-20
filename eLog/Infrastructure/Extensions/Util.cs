@@ -12,6 +12,7 @@ using ClosedXML.Excel;
 using System.Collections.ObjectModel;
 using System.IO;
 using eLog.Infrastructure.Extensions.Windows;
+using eLog.Views.Windows.Dialogs;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -102,7 +103,13 @@ namespace eLog.Infrastructure.Extensions
                 var ws = wb.Worksheet(1);
                 ws.LastRowUsed().InsertRowsBelow(1);
                 IXLRow? prevRow = null;
+                var index = AppSettings.Parts.IndexOf(part);
+                var prevPart = index != -1 && AppSettings.Parts.Count > index + 1 ? AppSettings.Parts[index + 1] : null;
+                var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
+                              prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
                 
+                if (partial) part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup){StartTime = part.StartSetupTime, EndTime = part.EndMachiningTime });
+
                 foreach (var xlRow in ws.Rows())
                 {
                     if (xlRow is null) continue;
@@ -144,10 +151,10 @@ namespace eLog.Infrastructure.Extensions
                     {
                         xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                     }
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.TotalMinutes(), 2);
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0);
                     xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
-
-                    for (var i = 1; i <= 34; i++)
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0);
+                    for (var i = 1; i <= 35; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
                     }
@@ -161,6 +168,10 @@ namespace eLog.Infrastructure.Extensions
             {
                 
             }
+            catch (ArgumentException)
+            {
+                MessageBox.Show("Неверно указан путь к таблице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
@@ -173,6 +184,15 @@ namespace eLog.Infrastructure.Extensions
             var result = WriteResult.NotFinded;
             try
             {
+                var index = AppSettings.Parts.IndexOf(part);
+                var prevPart = index != -1 && AppSettings.Parts.Count > index + 1 ? AppSettings.Parts[index + 1] : null;
+                var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
+                              prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
+                if (partial)
+                {
+                    part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as ObservableCollection<DownTime> ?? new ObservableCollection<DownTime>();
+                    part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup) { StartTime = part.StartSetupTime, EndTime = part.EndMachiningTime });
+                }
                 var wb = new XLWorkbook(AppSettings.XlPath);
                 foreach (var xlRow in wb.Worksheet(1).Rows())
                 {
@@ -195,8 +215,9 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.TotalMinutes(), 2);
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0);
                     xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
+                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0);
                     result = WriteResult.Ok;
                     break;
                 }
@@ -274,7 +295,7 @@ namespace eLog.Infrastructure.Extensions
         public static string Report(this ObservableCollection<DownTime> downTimes) => 
             downTimes.Aggregate(string.Empty, (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 2)} мин\n");
 
-        public static double TotalMinutes(this ObservableCollection<DownTime> downTimes) =>
+        public static double TotalMinutes(this IEnumerable<DownTime> downTimes) =>
             downTimes.Aggregate(0.0, (sum, downTime) => sum + downTime.Time.TotalMinutes);
 
         public enum GetNumberOption { Any, OnlyPositive }

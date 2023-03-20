@@ -36,6 +36,8 @@ namespace eLog.Models
         private bool _IsSynced;
         private string _OperatorComments;
 
+        public enum State { Finished, PartialSetup, InProgress }
+
         /// <summary> Наименование </summary>
         public string Name
         {
@@ -170,6 +172,7 @@ namespace eLog.Models
                 Set(ref _StartMachiningTime, value);
                 OnPropertyChanged(nameof(EndSetupInfo));
                 OnPropertyChanged(nameof(SetupIsNotFinished));
+                OnPropertyChanged(nameof(IsFinished));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
                 OnPropertyChanged(nameof(InProduction));
@@ -191,6 +194,7 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(InProduction));
                 OnPropertyChanged(nameof(TotalCountInfo));
+                OnPropertyChanged(nameof(EndSetupInfo));
                 OnPropertyChanged(nameof(EndDetailInfo));
                 OnPropertyChanged(nameof(Title));
             }
@@ -215,7 +219,19 @@ namespace eLog.Models
                 var productivity = SetupTimePlan > 0
                     ? $" ({SetupTimePlan / SetupTimeFact.TotalMinutes * 100:N0}%)"
                     : string.Empty;
-                return $"{result}{(SetupTimeFact.Ticks > 0 ? productivity : planInfo)}{(breaks.Ticks > 0 && SetupTimeFact.Ticks > 0 ? breaksInfo : string.Empty)}";
+                switch (IsFinished)
+                {
+                    case State.Finished:
+                        result += productivity;
+                        break;
+                    case State.PartialSetup:
+                        result += " (Неполная наладка)";
+                        break;
+                    case State.InProgress:
+                        result += planInfo;
+                        break;
+                }
+                return $"{result}{(breaks.Ticks > 0 && SetupTimeFact.Ticks > 0 && IsFinished is State.InProgress ? breaksInfo : string.Empty)}";
             }
         }
 
@@ -243,7 +259,19 @@ namespace eLog.Models
                     ? $" (Плановое: {TotalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                     : string.Empty;
                 var productivity = $" ({FinishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)";
-                return $"{result}{(ProductionTimeFact.Ticks > 0 ? productivity : planInfo)}{(breaks.Ticks > 0 && ProductionTimeFact.Ticks > 0 ? breaksInfo : string.Empty)}";
+                switch (IsFinished)
+                {
+                    case State.Finished or State.InProgress when FullSetupTimeFact.Ticks > 0:
+                        result += productivity;
+                        break;
+                    case State.Finished or State.InProgress when FullSetupTimeFact.Ticks > 0:
+                        result += productivity;
+                        break;
+                    case State.PartialSetup:
+                        result = "Без изготовления";
+                        break;
+                }
+                return $"{result}{(breaks.Ticks > 0 && ProductionTimeFact.Ticks > 0 && IsFinished is State.InProgress ? breaksInfo : string.Empty)}";
             }
         }
 
@@ -261,9 +289,9 @@ namespace eLog.Models
         {
             get
             {
-                if (!IsFinished) return FullName;
+                if (IsFinished == State.InProgress) return FullName;
                 var symbol = IsSynced ? "✓" : "🗘";
-                return $"{FullName} {symbol}".Trim();
+                return $"{symbol} {FullName}".Trim();
             }
         }
 
@@ -287,10 +315,20 @@ namespace eLog.Models
         public bool CanBeFinished => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime;
 
         /// <summary>
-        /// Завершено ли изготовление детали.
-        /// True если время завершения изготовления больше, чем время начала наладки, также если завершена наладка (SetupIsFinished == true) и количество выпущенных деталей больше 0.
+        /// Статус изготовления детали.
+        /// Finished если время завершения изготовления больше, чем время начала наладки, также если завершена наладка (SetupIsFinished == true) и количество выпущенных деталей больше 0.
+        /// PartialSetup если время завершения изготовления больше равно времени завершения наладки и количество выпущенных деталей 0.
         /// </summary>
-        public bool IsFinished => EndMachiningTime > StartMachiningTime && SetupIsFinished && FinishedCount > 0 && MachineTime > TimeSpan.Zero;
+        public State IsFinished
+        {
+            get
+            {
+                if (EndMachiningTime > StartMachiningTime && SetupIsFinished && FinishedCount > 0 &&
+                    MachineTime > TimeSpan.Zero) return State.Finished;
+                if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount == 0) return State.PartialSetup;
+                return State.InProgress;
+            }
+        }
 
         /// <summary>
         /// Завершена ли наладка.
@@ -302,7 +340,7 @@ namespace eLog.Models
         /// Идет ли изготовление.
         /// True если время завершена наладка, но не завершено изготовление.
         /// </summary>
-        public bool InProduction => SetupIsFinished && !IsFinished;
+        public bool InProduction => SetupIsFinished && IsFinished == State.InProgress;
 
         /// <summary>
         /// Не завершена ли наладка. Нужно для привязок разметки.
@@ -314,7 +352,7 @@ namespace eLog.Models
         /// Не завершено ли изготовление. Нужно для привязок разметки.
         /// Инвертированное значение свойства IsFinished.
         /// </summary>
-        public bool IsStarted => !IsFinished;
+        public bool IsStarted => IsFinished == State.InProgress;
 
         /// <summary>
         /// Записана ли актуальная информация о детали в таблицу

@@ -8,6 +8,6 @@ namespace eLog.Infrastructure
 {
     public enum EndSetupResult
     {
-        Success, Cancel, Stop
+        Success, Cancel, Stop, PartialComplete
     }
 }

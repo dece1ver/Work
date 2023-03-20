@@ -83,7 +83,7 @@ namespace eLog.ViewModels
         }
 
         public Visibility ProgressBarVisibility => Progress is 0 || Math.Abs(Progress - ProgressMaxValue) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
-        public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished);
+        public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not PartInfoModel.State.InProgress);
 
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress;
         public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;
@@ -154,6 +154,7 @@ namespace eLog.ViewModels
         {
             ShiftStarted = true;
             OnPropertyChanged(nameof(CanEndShift));
+            OnPropertyChanged(nameof(Parts));
         }
 
         private static bool CanStartShiftCommandExecute(object p) => true;
@@ -161,7 +162,13 @@ namespace eLog.ViewModels
 
         #region EndShift
         public ICommand EndShiftCommand { get; }
-        private void OnEndShiftCommandExecuted(object p) => ShiftStarted = false;
+
+        private void OnEndShiftCommandExecuted(object p)
+        {
+            ShiftStarted = false;
+            OnPropertyChanged(nameof(CanEndShift));
+            OnPropertyChanged(nameof(Parts));
+        }
         private static bool CanEndShiftCommandExecute(object p) => true;
         #endregion
 
@@ -233,7 +240,7 @@ namespace eLog.ViewModels
             {
                 switch (part)
                 {
-                    case { IsFinished: true }:
+                    case { IsFinished: not PartInfoModel.State.InProgress }:
                         part.Id = part.WriteToXl();
                         if (part.Id > 0)
                         {
@@ -284,6 +291,35 @@ namespace eLog.ViewModels
                 case EndSetupResult.Stop:
                     Parts.Remove((PartInfoModel)p);
                     break;
+                case EndSetupResult.PartialComplete:
+                    var now = DateTime.Now;
+                    var part = Parts[Parts.IndexOf((PartInfoModel)p)];
+                    part.StartMachiningTime = now;
+                    part.EndMachiningTime = now;
+                    part.FinishedCount = 0;
+                    
+
+                    if (part.Id != -1)
+                    {
+                        if (part.RewriteToXl() is Util.WriteResult.Ok)
+                        {
+                            part.IsSynced = true;
+                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                        }
+                    }
+                    else
+                    {
+                        part.Id = part.WriteToXl();
+                        if (part.Id > 0)
+                        {
+                            part.IsSynced = true;
+                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        }
+                    }
+                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
             OnPropertyChanged(nameof(CanEditShiftAndParams));
@@ -308,7 +344,7 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(part.Title));
                 switch (part)
                 {
-                    case { Id: -1, IsFinished: true }:
+                    case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
                         part.Id = part.WriteToXl();
                         if (part.Id > 0)
                         {
@@ -316,7 +352,7 @@ namespace eLog.ViewModels
                             Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                         }
                         break;
-                    case { Id: > 0, IsFinished: true }:
+                    case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
                     {
                         switch (part.RewriteToXl())
                         {
@@ -365,7 +401,7 @@ namespace eLog.ViewModels
             {
                 switch (part)
                 {
-                    case { Id: -1, IsFinished: true}:
+                    case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
                         part.Id = part.WriteToXl();
                         if (part.Id > 0)
                         {
@@ -374,7 +410,7 @@ namespace eLog.ViewModels
                         }
                         Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                         break;
-                    case { Id: > 0, IsFinished: true }:
+                    case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
                     {
                         switch (part.RewriteToXl())
                         {
@@ -403,9 +439,18 @@ namespace eLog.ViewModels
                         }
                     case { FinishedCount: 0 }:
                     {
-                        Status = "Изготовление отменено.";
-                        Parts.Remove(Parts[Parts.IndexOf((PartInfoModel)p)]);
-                        break;
+                        var now = DateTime.Now;
+                        part.StartMachiningTime = now;
+                        part.EndMachiningTime = now;
+                        part.FinishedCount = 0;
+                        part.Id = part.WriteToXl();
+                        if (part.Id > 0)
+                        {
+                            part.IsSynced = true;
+                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        }
+                        Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                            break;
                     }
                 }
                 AppSettings.Parts = Parts;
@@ -467,7 +512,7 @@ namespace eLog.ViewModels
                 {
                     for (var i = 0; i < Parts.Count; i++)
                     {
-                        if (Parts[i] is not { IsSynced: false, IsFinished: true } part) continue;
+                        if (Parts[i] is not { IsSynced: false, IsFinished: not PartInfoModel.State.InProgress } part) continue;
                         if (part.Id != -1)
                         {
                             if (part.RewriteToXl() is not Util.WriteResult.Ok) continue;
@@ -504,7 +549,7 @@ namespace eLog.ViewModels
             }
         }
 
-        private void RemoveExcessParts(int remains = 10)
+        private void RemoveExcessParts(int remains = 20)
         {
             while (Parts.Count(p => p.IsSynced) > remains)
             {

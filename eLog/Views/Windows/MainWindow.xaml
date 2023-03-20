@@ -90,10 +90,9 @@
                                 <GroupBox>
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="(наладка) " Visibility="{Binding SetupIsNotFinished, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
-                                            <TextBlock Text="(изготовление) " Visibility="{Binding InProduction, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
-                                            <TextBlock Text="{Binding Title}"/>
-
+                                            <TextBlock FontSize="18" Text="(наладка) " Visibility="{Binding SetupIsNotFinished, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
+                                            <TextBlock FontSize="18" Text="(изготовление) " Visibility="{Binding InProduction, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
+                                            <TextBlock FontSize="18" Text="{Binding Title}"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <Grid>

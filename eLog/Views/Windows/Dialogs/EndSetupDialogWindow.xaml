@@ -7,10 +7,10 @@
         xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands" 
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="19" ShowInTaskbar="False" ShowActivated="True"
-        Title="Завершение наладки" Height="169" Width="479" WindowStartupLocation="CenterOwner" Topmost="True" WindowStyle="None" ResizeMode="NoResize">
+        Title="Завершение наладки" Height="169" Width="760" WindowStartupLocation="CenterOwner" Topmost="True" WindowStyle="None" ResizeMode="NoResize">
     <Border BorderThickness="1" BorderBrush="LightGray">
-        <UniformGrid Columns="3" Margin="5 0">
-            <Button Margin="5 10 5 10" IsCancel="True"
+        <UniformGrid Columns="4" Margin="5 0">
+            <Button Margin="5 10 2 10" IsCancel="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
                 <Button.Content>
                     <TextBlock Text="✗" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -19,7 +19,7 @@
                     <cmd:CloseEndSetupDialogCommand EndSetupResult="Cancel"/>
                 </Button.Command>
             </Button>
-            <Button Margin="5 10 5 10" IsCancel="True"
+            <Button Margin="2 10 2 10" IsCancel="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
                 <Button.Content>
                     <TextBlock Text="Отмена изготовления" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -28,7 +28,16 @@
                     <cmd:CloseEndSetupDialogCommand EndSetupResult="Stop"/>
                 </Button.Command>
             </Button>
-            <Button Margin="5 10 5 10" IsDefault="True"
+            <Button Margin="2 10 2 10"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
+                <Button.Content>
+                    <TextBlock Text="Неполное завершение" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+                <Button.Command>
+                    <cmd:CloseEndSetupDialogCommand EndSetupResult="PartialComplete"/>
+                </Button.Command>
+            </Button>
+            <Button Margin="2 10 5 10" IsDefault="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndSetupDialogWindow}}">
                 <Button.Content>
                     <TextBlock Text="✓" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>

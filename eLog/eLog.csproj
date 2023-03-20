@@ -9,6 +9,8 @@
     <Description>Электронный журнал</Description>
     <Copyright>dece1ver © 2023</Copyright>
     <RepositoryUrl>https://github.com/dece1ver/Work</RepositoryUrl>
+    <PackageIcon>eLog.png</PackageIcon>
+    <ApplicationIcon>Resources\eLog.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <Content Include="Resources\eLog.ico" />
   </ItemGroup>
-
+    
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.100.3" />
     <PackageReference Include="DotNetProjects.WpfToolkit.Input" Version="6.1.94" />

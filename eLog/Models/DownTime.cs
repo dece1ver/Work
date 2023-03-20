@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using eLog.Infrastructure.Extensions;
 
 namespace eLog.Models
 {
@@ -12,25 +13,31 @@ namespace eLog.Models
         public enum Types
         {
             Maintenance,
-            WarmingUp,
             ToolSearching,
             Mentoring,
             ContactingDepartments,
             FixtureMaking,
-            HardwareFailure
+            HardwareFailure,
+            PartialSetup // используется для игнорирования времени наладки при частичном выполнении наладки
+        }
+
+        public enum Relations
+        {
+            Setup, Machining
         }
 
         public Types Type { get; set; }
+        public Relations Relation { get; set; }
 
         public string Name => Type switch
         {
-            Types.Maintenance => "Обслуживание",
-            Types.WarmingUp => "Прогрев",
-            Types.ToolSearching => "Поиск и получение инструмента",
-            Types.Mentoring => "Помощь / наставничество / обучение",
-            Types.ContactingDepartments => "Участие в мероприятиях",
-            Types.FixtureMaking => "Изготовление оснастки и калибров",
-            Types.HardwareFailure => "Отказ оборудования",
+            Types.Maintenance => Text.Maintenance,
+            Types.ToolSearching => Text.ToolSearching,
+            Types.Mentoring => Text.Mentoring,
+            Types.ContactingDepartments => Text.ContactingDepartments,
+            Types.FixtureMaking => Text.FixtureMaking,
+            Types.HardwareFailure => Text.HardwareFailure,
+            Types.PartialSetup => Text.PartialSetup,
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -39,11 +46,13 @@ namespace eLog.Models
         public TimeSpan Time => EndTime - StartTime;
         public bool InProgress => EndTime < StartTime;
 
-        public DownTime(Types type)
+        public DownTime(Types type, Relations relation)
         {
             Type = type;
             StartTime = DateTime.Now;
             EndTime = DateTime.MinValue;
+            Relation = relation;
         }
+
     }
 }

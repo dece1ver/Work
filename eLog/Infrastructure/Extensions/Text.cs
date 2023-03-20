@@ -15,6 +15,14 @@ namespace eLog.Infrastructure.Extensions
         public const string DateTimeFormat = "dd.MM.yyyy HH:mm";
         public const string TimeSpanFormat = @"hh\:mm\:ss";
 
+        public const string Maintenance = "Обслуживание";
+        public const string ToolSearching = "Поиск и получение инструмента";
+        public const string Mentoring = "Помощь / наставничество / обучение";
+        public const string ContactingDepartments = "Обращение в другие службы";
+        public const string FixtureMaking = "Изготовление оснастки и калибров";
+        public const string HardwareFailure = "Отказ оборудования";
+        public const string PartialSetup = "Частичная наладка";
+
         public static readonly string[] Shifts = { DayShift, NightShift };
     }
 }

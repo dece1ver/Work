@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Infrastructure.Extensions.Windows;
+using eLog.Models;
 
 namespace eLog.Views.Controls
 {
@@ -63,9 +64,9 @@ namespace eLog.Views.Controls
 
         private void PreviousPartEndTimeButton_Click(object sender, RoutedEventArgs e)
         {
-            if (AppSettings.Parts.Any(x => x.IsFinished))
+            if (AppSettings.Parts.Any(x => x.IsFinished is not PartInfoModel.State.InProgress))
             {
-                InputTime(AppSettings.Parts.First(x => x.IsFinished).EndMachiningTime);
+                InputTime(AppSettings.Parts.First(x => x.IsFinished is not PartInfoModel.State.InProgress).EndMachiningTime);
             }
             else
             {
