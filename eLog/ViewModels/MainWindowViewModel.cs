@@ -4,7 +4,9 @@ using eLog.ViewModels.Base;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using Application = System.Windows.Application;
@@ -223,7 +225,22 @@ namespace eLog.ViewModels
         }
         private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
-        
+
+        #region EditSettingsCommand
+        public ICommand ShowAboutCommand { get; }
+        private void OnShowAboutCommandExecuted(object p)
+        {
+            var exe = Environment.ProcessPath;
+            var date = exe is null ? string.Empty : $" от {File.GetCreationTime(exe).ToString(Text.DateTimeFormat)}";
+            MessageBox.Show(
+                $"Версия программы: {Assembly.GetExecutingAssembly().GetName().Version}{date}", 
+                "Версия программы", 
+                MessageBoxButton.OK, 
+                MessageBoxImage.Information);
+        }
+        private static bool CanShowAboutCommandExecute(object p) => true;
+        #endregion
+
         #region StartDetail
         public ICommand StartDetailCommand { get; }
         private void OnStartDetailCommandExecuted(object p)
@@ -318,8 +335,6 @@ namespace eLog.ViewModels
                     }
                     Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                     break;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
             OnPropertyChanged(nameof(CanEditShiftAndParams));
@@ -499,6 +514,7 @@ namespace eLog.ViewModels
 
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
+            ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
 
             var syncPartsThread = new Thread(SyncParts) { IsBackground = true };
             syncPartsThread.Start();

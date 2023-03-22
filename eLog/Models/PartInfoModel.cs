@@ -227,7 +227,10 @@ namespace eLog.Models
                     case State.PartialSetup:
                         result += " (Неполная наладка)";
                         break;
-                    case State.InProgress:
+                    case State.InProgress when FullSetupTimeFact.Ticks > 0:
+                        result += productivity;
+                        break;
+                    case State.InProgress when FullSetupTimeFact.Ticks < 0:
                         result += planInfo;
                         break;
                 }
@@ -251,7 +254,7 @@ namespace eLog.Models
                     : startMachiningTime
                         .AddMinutes(TotalCount * SingleProductionTimePlan)
                         .Add(Util.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(TotalCount * SingleProductionTimePlan)));
-                var result = endMachiningTime > startMachiningTime ? endMachiningTime.ToString(Text.DateTimeFormat) : "-";
+                var result = endMachiningTime > startMachiningTime && EndSetupInfo != "-" ? endMachiningTime.ToString(Text.DateTimeFormat) : "-";
                 if (result == "-") return result;
                 var breaks = Util.GetBreaksBetween(startMachiningTime, endMachiningTime);
                 var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
@@ -261,17 +264,17 @@ namespace eLog.Models
                 var productivity = $" ({FinishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)";
                 switch (IsFinished)
                 {
-                    case State.Finished or State.InProgress when FullSetupTimeFact.Ticks > 0:
+                    case State.Finished:
                         result += productivity;
                         break;
-                    case State.Finished or State.InProgress when FullSetupTimeFact.Ticks > 0:
-                        result += productivity;
+                    case State.InProgress:
+                        result += planInfo;
                         break;
                     case State.PartialSetup:
                         result = "Без изготовления";
                         break;
                 }
-                return $"{result}{(breaks.Ticks > 0 && ProductionTimeFact.Ticks > 0 && IsFinished is State.InProgress ? breaksInfo : string.Empty)}";
+                return $"{result}{(breaks.Ticks > 0 && ProductionTimeFact.Ticks > 0 && IsFinished is not State.InProgress ? breaksInfo : string.Empty)}";
             }
         }
 
