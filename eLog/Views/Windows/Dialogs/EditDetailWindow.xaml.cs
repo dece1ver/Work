@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -389,7 +390,7 @@ namespace eLog.Views.Windows.Dialogs
         }
         #endregion
 
-        public string Error { get; }
+        public string Error { get; } = string.Empty;
 
         public string this[string columnName]
         {
@@ -399,59 +400,58 @@ namespace eLog.Views.Windows.Dialogs
                 switch (columnName)
                 {
                     case nameof(PartName):
-                        if (string.IsNullOrWhiteSpace(Part.Name)) error = "Пустое имя";
+                        if (string.IsNullOrWhiteSpace(Part.Name)) error = Text.ValidationErrors.PartName;
                         break;
                     case nameof(StartSetupTime):
-                        if (Part.StartSetupTime == DateTime.MinValue) error = "Некорректное время начала наладки";
+                        if (Part.StartSetupTime == DateTime.MinValue) error = Text.ValidationErrors.StartSetupTime;
                         break;
                     case nameof(StartMachiningTime):
-                        if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.StartMachiningTime == DateTime.MinValue) error = "Некорректное время начала изготовления";
+                        if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.StartMachiningTime == DateTime.MinValue) error = Text.ValidationErrors.StartMachiningTime;
                         break;
                     case nameof(EndMachiningTime):
-                        if (!string.IsNullOrWhiteSpace(EndMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime && FinishedCount != "0") error = "Некорректное время завершения изготовления";
-                        else if (string.IsNullOrWhiteSpace(EndMachiningTime) && Part.FinishedCount > 0) error = "Обязательный параметр при указании выполненных деталей";
+                        if ((!string.IsNullOrWhiteSpace(EndMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime && FinishedCount != "0") || (string.IsNullOrWhiteSpace(EndMachiningTime) && Part.FinishedCount > 0)) 
+                            error = Text.ValidationErrors.EndMachiningTime;
                         break;
                     case nameof(MachineTime):
-                        if (Part.MachineTime == TimeSpan.Zero && !string.IsNullOrWhiteSpace(MachineTime)) error = "Некорректный ввод машинного времени.\n" +
-                            "Допускается указание следующего вида (пример для 2 мин 30 сек):\n* 00:02:30\n* 2:30\n* 2.5 или 2,5";
-                        else if (Part.MachineTime == TimeSpan.Zero && (Part.FullProductionTimeFact > TimeSpan.Zero || Part.FinishedCount > 0) && string.IsNullOrWhiteSpace(MachineTime))
-                            error = "Обязательный параметр при указании завершения изготовления";
+                        if ((Part.MachineTime == TimeSpan.Zero && !string.IsNullOrWhiteSpace(MachineTime)) ||
+                            (Part.MachineTime == TimeSpan.Zero &&
+                             (Part.FullProductionTimeFact > TimeSpan.Zero || Part.FinishedCount > 0) &&
+                             string.IsNullOrWhiteSpace(MachineTime)))
+                            error = Text.ValidationErrors.MachineTime;
                         break;
                     case nameof(FinishedCount):
                         error = Part.FinishedCount switch
                         {
-                            0 when string.IsNullOrWhiteSpace(FinishedCount) && Part.FullProductionTimeFact > TimeSpan.Zero => "Обязательный параметр если указано время завершения изготовления.",
-                            0 when !string.IsNullOrWhiteSpace(FinishedCount) && FinishedCount != "0" => "Некорректное количество завершенных деталей",
+                            0 when string.IsNullOrWhiteSpace(FinishedCount) && Part.FullProductionTimeFact > TimeSpan.Zero => Text.ValidationErrors.FinishedCount,
+                            0 when !string.IsNullOrWhiteSpace(FinishedCount) && FinishedCount != "0" => Text.ValidationErrors.FinishedCount,
                             _ => error
                         };
                         break;
                     case nameof(TotalCount):
                         error = Part.TotalCount switch
                         {
-                            0 when string.IsNullOrWhiteSpace(TotalCount) => "Обязательный параметр.",
-                            0 when !string.IsNullOrWhiteSpace(TotalCount) => "Некорректное плановое количество деталей",
-                            _ => error
+                            0 => Text.ValidationErrors.TotalCount,
+                            _ => error,
                         };
                         break;
                     case nameof(PartSetupTimePlan):
                         error = Part.SetupTimePlan switch
                         {
-                            0 when string.IsNullOrWhiteSpace(PartSetupTimePlan) => "Обязательный параметр. При отсутствии указать \"-\"",
-                            0 when !string.IsNullOrWhiteSpace(PartSetupTimePlan) &&
-                                   PartSetupTimePlan != "-" => "Некорректный норматив на наладку",
+                            0 when string.IsNullOrWhiteSpace(PartSetupTimePlan) => Text.ValidationErrors.PartSetupTimePlan,
+                            0 when !string.IsNullOrWhiteSpace(PartSetupTimePlan) && PartSetupTimePlan != "-" => Text.ValidationErrors.PartSetupTimePlan,
                             _ => error
                         };
                         break;
                     case nameof(SingleProductionTimePlan):
                         error = Part.SingleProductionTimePlan switch
                         {
-                            0 when string.IsNullOrWhiteSpace(SingleProductionTimePlan) => "Обязательный параметр. При отсутствии указать \"-\"",
-                            0 when !string.IsNullOrWhiteSpace(SingleProductionTimePlan) && SingleProductionTimePlan != "-" => "Некорректный норматив на изготовление",
+                            0 when string.IsNullOrWhiteSpace(SingleProductionTimePlan) => Text.ValidationErrors.SingleProductionTimePlan,
+                            0 when !string.IsNullOrWhiteSpace(SingleProductionTimePlan) && SingleProductionTimePlan != "-" => Text.ValidationErrors.SingleProductionTimePlan,
                             _ => error
                         };
                         break;
                     case nameof(OrderText):
-                        if (OrderValidation is OrderValidationTypes.Error) error = "Некорректный номер заказа.";
+                        if (OrderValidation is OrderValidationTypes.Error) error = Text.ValidationErrors.OrderText;
                         break;
                 }
                 return error;
@@ -787,5 +787,18 @@ namespace eLog.Views.Windows.Dialogs
 
         #endregion
 
+        private void TextBlock_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is not TextBlock { Parent: Grid grid }) return;
+
+            foreach (UIElement gridChild in grid.Children)
+            {
+                if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBox textBox } && Validation.GetErrors(textBox) is ICollection<ValidationError> {Count: > 0} errors)
+                {
+                    MessageBox.Show(errors.First().ErrorContent.ToString(), "Некорректный ввод", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+
+        }
     }
 }

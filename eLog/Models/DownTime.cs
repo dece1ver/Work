@@ -31,13 +31,13 @@ namespace eLog.Models
 
         public string Name => Type switch
         {
-            Types.Maintenance => Text.Maintenance,
-            Types.ToolSearching => Text.ToolSearching,
-            Types.Mentoring => Text.Mentoring,
-            Types.ContactingDepartments => Text.ContactingDepartments,
-            Types.FixtureMaking => Text.FixtureMaking,
-            Types.HardwareFailure => Text.HardwareFailure,
-            Types.PartialSetup => Text.PartialSetup,
+            Types.Maintenance => Text.DownTimes.Maintenance,
+            Types.ToolSearching => Text.DownTimes.ToolSearching,
+            Types.Mentoring => Text.DownTimes.Mentoring,
+            Types.ContactingDepartments => Text.DownTimes.ContactingDepartments,
+            Types.FixtureMaking => Text.DownTimes.FixtureMaking,
+            Types.HardwareFailure => Text.DownTimes.HardwareFailure,
+            Types.PartialSetup => Text.DownTimes.PartialSetup,
             _ => throw new ArgumentOutOfRangeException()
         };
 

@@ -27,9 +27,6 @@
             <Setter Property="Height" Value="38"/>
             <Style.Triggers>
                 <Trigger Property="Validation.HasError" Value="True">
-                    <Setter Property="ToolTip"
-                            Value="{Binding RelativeSource={RelativeSource Self},
-                    Path=(Validation.Errors)[0].ErrorContent, FallbackValue={}}" />
                     <Setter Property="Foreground" Value="Red" />
                 </Trigger>
             </Style.Triggers>
@@ -46,7 +43,7 @@
         <ControlTemplate x:Key="ValidationFailed">
             <Grid>
                 <AdornedElementPlaceholder />
-                <TextBlock Text="!" Foreground="Red" Margin="0 0 4 0" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="22"/>
+                <TextBlock Text="  !" Foreground="Red" Width="25" Margin="1 0" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="22" MouseLeftButtonUp="TextBlock_MouseLeftButtonUp"/>
             </Grid>
         </ControlTemplate>
     </Window.Resources>
@@ -129,12 +126,12 @@
                             <ComboBox Style="{DynamicResource DashComboBoxStyle}" Margin="0 0 0 0" Width="44" DockPanel.Dock="Left" 
                                       SelectedItem="{Binding OrderQualifier}"
                                       ItemsSource="{x:Static inf:AppSettings.OrderQualifiers}" FontSize="16" BorderThickness="0"
-                                      VerticalContentAlignment="Center" Padding="3"/>
+                                      VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="Auto"/>
                             <ComboBox Style="{DynamicResource SlashComboBoxStyle}" Margin="-2 0 0 0" Width="44" DockPanel.Dock="Left"
                                       SelectedItem="{Binding OrderMonth}" IsEnabled="{Binding NonEmptyOrder}" 
                                       Visibility="{Binding NonEmptyOrder, Converter={StaticResource VisibilityConverter}}"
                                       ItemsSource="{Binding OrderMonths, Mode=OneWay}" BorderThickness="0"
-                                      VerticalContentAlignment="Center" Padding="3"/>
+                                      VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="400"/>
                         </StackPanel>
                     </Border>
                     <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
@@ -179,9 +176,6 @@
                                         <Setter Property="Background" Value="{x:Null}" />
                                     </Trigger>
                                     <Trigger Property="Validation.HasError" Value="True">
-                                        <Setter Property="ToolTip"
-                                                Value="{Binding RelativeSource={RelativeSource Self},
-                                                Path=(Validation.Errors)[0].ErrorContent, FallbackValue={}}" />
                                         <Setter Property="Foreground" Value="Red" />
                                     </Trigger>
                                 </Style.Triggers>
@@ -215,9 +209,6 @@
                                         <Setter Property="Background" Value="{x:Null}" />
                                     </Trigger>
                                     <Trigger Property="Validation.HasError" Value="True">
-                                        <Setter Property="ToolTip"
-                                                Value="{Binding RelativeSource={RelativeSource Self},
-                                                Path=(Validation.Errors)[0].ErrorContent, FallbackValue={}}" />
                                         <Setter Property="Foreground" Value="Red" />
                                     </Trigger>
                                 </Style.Triggers>
@@ -259,8 +250,8 @@
                             IsEnabled="{Binding WithSetup}"
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch" 
                             Content="⏱" FontSize="20" Click="EndSetupTimeButton_Click" Visibility="Collapsed"/>
-                    <TextBox d:Text="01.01.2023 01:00" IsEnabled="{Binding WithSetup, ValidatesOnDataErrors=True}"
-                             Text="{Binding StartMachiningTime, UpdateSourceTrigger=PropertyChanged}" 
+                    <TextBox d:Text="01.01.2023 01:00" IsEnabled="{Binding WithSetup}"
+                             Text="{Binding StartMachiningTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
                 </DockPanel>
 

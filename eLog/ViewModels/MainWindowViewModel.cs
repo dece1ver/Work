@@ -231,10 +231,10 @@ namespace eLog.ViewModels
         private void OnShowAboutCommandExecuted(object p)
         {
             var exe = Environment.ProcessPath;
-            var date = exe is null ? string.Empty : $" от {File.GetCreationTime(exe).ToString(Text.DateTimeFormat)}";
+            var date = exe is null ? string.Empty : $" от {File.GetLastWriteTime(exe).ToString(Text.DateTimeFormat)}";
             MessageBox.Show(
                 $"Версия программы: {Assembly.GetExecutingAssembly().GetName().Version}{date}", 
-                "Версия программы", 
+                "О программе", 
                 MessageBoxButton.OK, 
                 MessageBoxImage.Information);
         }
