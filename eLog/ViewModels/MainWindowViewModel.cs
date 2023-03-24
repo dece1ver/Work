@@ -526,7 +526,7 @@ namespace eLog.ViewModels
             {
                 try
                 {
-                    for (var i = 0; i < Parts.Count; i++)
+                    for (var i = Parts.Count - 1; i >= 0; i--)
                     {
                         if (Parts[i] is not { IsSynced: false, IsFinished: not PartInfoModel.State.InProgress } part) continue;
                         if (part.Id != -1)
