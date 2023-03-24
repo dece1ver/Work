@@ -292,17 +292,22 @@
                          Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}"/>
 
 
-                <Button Grid.Column="0" Grid.Row="8" 
-                        Margin="0 0 2 0" Height="60"
-                        HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
-                    <Button.Command>
-                        <cmd:CloseDialogCommand DialogResult="False"/>
-                    </Button.Command>
-                </Button>
+                <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0" Height="60"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Bottom" LastChildFill="True">
+                    <Button Click="Button_Click" Content="SCAN" DockPanel.Dock="Right" Visibility="Collapsed"/>
+                    <Button Grid.Column="0" Grid.Row="8"
+                            Margin="0 0 2 0" Height="60"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
+                        <Button.Content>
+                            <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </Button.Content>
+                        <Button.Command>
+                            <cmd:CloseDialogCommand DialogResult="False"/>
+                        </Button.Command>
+                    </Button>
+                    
+                </DockPanel>
 
                 <ctrl:KeyboardControl Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="4" Height="115" Margin="-1 8 0 0"
                                       Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>

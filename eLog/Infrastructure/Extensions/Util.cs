@@ -77,7 +77,7 @@ namespace eLog.Infrastructure.Extensions
         {
             var names = new[] {"Ниппель", "Корпус", "Гайка", "Фланец", "Штуцер", "Седло", "Крышка", "Корпус приводной камеры", "Корпус проточной части" };
             var numbers = new[] { "АР110-01-001", "АР110-01-002", "АР110-01-003", "АР110-01-004", "АР110-01-005", "АРМ2-31.4-02-340-Х6-081-01", "АРМ2-31.4-02-340-Х6-071" };
-            var orders = new[] { "УЧ-1/0001.1.1", "УЧ-1/0001.1.2", "УЧ-1/0001.1.3", "УЧ-1/0001.1.4", "УЧ-1/0001.1.5", "УЧ-1/0001.1.6", "УЧ-1/0001.1.7", "УЧ-1/0001.1.8" };
+            var orders = new[] { "УЧ-1/00001.1.1", "УЧ-1/00001.1.2", "УЧ-1/00001.1.3", "УЧ-1/00001.1.4", "УЧ-1/00001.1.5", "УЧ-1/00001.1.6", "УЧ-1/00001.1.7", "УЧ-1/00001.1.8" };
 
             return new PartInfoModel(
                 names[new Random().Next(0, names.Length)],
@@ -139,7 +139,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(15).FormulaR1C1 = prevRow.Cell(15).FormulaR1C1;
-                    xlRow.Cell(16).Value = part.SetupTimePlan;
+                    xlRow.Cell(16).Value = part.SetupTimeFact.Ticks > 0 ? part.SetupTimePlan : 0;
                     xlRow.Cell(17).FormulaR1C1 = prevRow.Cell(17).FormulaR1C1;
                     xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
@@ -153,7 +153,7 @@ namespace eLog.Infrastructure.Extensions
                     }
                     xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0);
                     xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0);
+                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0);
                     for (var i = 1; i <= 35; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
@@ -210,7 +210,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(12).Value = part.Setup;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(16).Value = part.SetupTimePlan;
+                    xlRow.Cell(16).Value = part.SetupTimeFact.Ticks > 0 ? part.SetupTimePlan : 0;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;

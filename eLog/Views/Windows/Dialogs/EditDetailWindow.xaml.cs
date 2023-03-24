@@ -25,6 +25,7 @@ using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Infrastructure.Extensions.Windows;
 using eLog.Models;
+using eLog.Services;
 using eLog.Views.Windows.Settings;
 using Path = System.IO.Path;
 
@@ -798,7 +799,36 @@ namespace eLog.Views.Windows.Dialogs
                     MessageBox.Show(errors.First().ErrorContent.ToString(), "Некорректный ввод", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
+        }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var s = "666";
+            if (WindowsUserDialogService.GetBarCode(ref s))
+            {
+                var tempPart = s.GetPartFromBarCode();
+                PartName = tempPart.FullName;
+                OnPropertyChanged(nameof(PartName));
+                PartSetupTimePlan = tempPart.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
+                OnPropertyChanged(nameof(PartSetupTimePlan));
+                SingleProductionTimePlan = tempPart.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture);
+                OnPropertyChanged(nameof(SingleProductionTimePlan));
+                TotalCount = tempPart.TotalCount.ToString(CultureInfo.InvariantCulture);
+                OnPropertyChanged(nameof(TotalCount));
+
+                var order = tempPart.Order;
+                OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
+                    ? order.Split('/')[1]
+                    : Text.WithoutOrderDescription;
+                OrderQualifier =
+                    !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
+                        ? order.Split('-')[0]
+                        : AppSettings.OrderQualifiers[0];
+                OrderMonth =
+                    !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
+                        ? order.Split('-')[1].Split('/')[0]
+                        : "01";
+            }
         }
     }
 }

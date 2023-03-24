@@ -19,18 +19,21 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
 using eLog.Infrastructure.Extensions;
+using DocumentFormat.OpenXml.Wordprocessing;
+using static eLog.Views.Windows.Dialogs.EditDetailWindow;
+using Text = eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.Views.Windows.Dialogs
 {
     /// <summary>
     /// Логика взаимодействия для EndSetupDialogWindow.xaml
     /// </summary>
-    public partial class EndDetailDialogWindow : Window, INotifyPropertyChanged
+    public partial class EndDetailDialogWindow : Window, INotifyPropertyChanged, IDataErrorInfo
     {
         private TimeSpan _MachineTime = TimeSpan.Zero;
         private int _PartsFinished;
         private string _MachineTimeText = string.Empty;
-        private string _PartsFinishedText = string.Empty;
+        private string _FinishedCount = string.Empty;
         private Visibility _KeyboardVisibility;
         public EndDetailResult EndDetailResult { get; set; }
 
@@ -54,31 +57,36 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Set(ref _MachineTimeText, value);
-                OnPropertyChanged(nameof(_MachineTime));
+                if (_MachineTimeText.TimeParse(out _MachineTime))
+                {
+                    Part.MachineTime = _MachineTime;
+                }
                 OnPropertyChanged(nameof(Valid));
-                if (Valid) Part.MachineTime = _MachineTime;
+                OnPropertyChanged(nameof(FinishedCount));
+                Part.MachineTime = _MachineTime;
             }
         }
 
-        public string PartsFinishedText
+        public string FinishedCount
         {
-            get => _PartsFinishedText;
+            get => _FinishedCount;
             set
             {
-                Set(ref _PartsFinishedText, value);
-                OnPropertyChanged(nameof(_PartsFinished));
+                Set(ref _FinishedCount, value);
                 OnPropertyChanged(nameof(Valid));
-                if (Valid) Part.FinishedCount = _PartsFinished;
+                Part.FinishedCount = _FinishedCount.GetInt();
                 Status = Part.FinishedCount switch
                 {
-                    0 when string.IsNullOrWhiteSpace(PartsFinishedText) => string.Empty,
-                    0 when !string.IsNullOrWhiteSpace(PartsFinishedText) &&
-                           PartsFinishedText.Replace("0", "").Length == 0 =>
-                        "При завершении с 0 изготовление будет отменено и деталь удалена из списка.",
-                    0 when !string.IsNullOrWhiteSpace(PartsFinishedText) =>
+                    0 when string.IsNullOrWhiteSpace(FinishedCount) => string.Empty,
+                    0 when !string.IsNullOrWhiteSpace(FinishedCount) &&
+                           FinishedCount.Replace("0", "").Length == 0 =>
+                        "При завершении с 0 будет выполнено неполное завершение наладки. (Машинное время должно быть пустым)",
+                    0 when !string.IsNullOrWhiteSpace(FinishedCount) =>
                         "Неверно указано количество изготовленных деталей.",
                     _ => string.Empty,
                 };
+                
+                
                 OnPropertyChanged(nameof(Status));
             }
         }
@@ -87,10 +95,10 @@ namespace eLog.Views.Windows.Dialogs
         {
             get
             {
-                var result = int.TryParse(PartsFinishedText, out _PartsFinished) && _PartsFinished > 0 &&
+                var result = int.TryParse(FinishedCount, out _PartsFinished) && _PartsFinished > 0 &&
                              MachineTimeText.TimeParse(out _MachineTime) && _MachineTime.TotalSeconds > 0
-                             || _PartsFinished == 0 && !string.IsNullOrWhiteSpace(_PartsFinishedText) &&
-                             PartsFinishedText.Replace("0", "").Length == 0;
+                             || _PartsFinished == 0 && !string.IsNullOrWhiteSpace(_FinishedCount) &&
+                             FinishedCount.Replace("0", "").Length == 0;
                 if (!result) return result;
                 Part.FinishedCount = _PartsFinished;
                 Part.MachineTime = _MachineTime;
@@ -103,6 +111,26 @@ namespace eLog.Views.Windows.Dialogs
             Part = part;
             Status = string.Empty;
             InitializeComponent();
+        }
+
+        public string Error { get; } = string.Empty;
+
+        public string this[string columnName]
+        {
+            get
+            {
+                var error = string.Empty;
+                switch (columnName)
+                {
+                    case nameof(MachineTimeText):
+                        if (Part.MachineTime == TimeSpan.Zero && FinishedCount != "0") error = Text.ValidationErrors.MachineTime;
+                        break;
+                    case nameof(FinishedCount):
+                        if (Part.FinishedCount == 0 && FinishedCount != "0") error = Text.ValidationErrors.FinishedCount;
+                        break;
+                }
+                return error;
+            }
         }
 
         #region PropertyChanged
@@ -149,6 +177,19 @@ namespace eLog.Views.Windows.Dialogs
         {
             PartsCountTextBox.Focus();
             KeyboardVisibility = Visibility.Collapsed;
+        }
+
+        private void TextBlock_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not TextBlock { Parent: Grid grid }) return;
+
+            foreach (UIElement gridChild in grid.Children)
+            {
+                if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBox textBox } && Validation.GetErrors(textBox) is ICollection<ValidationError> { Count: > 0 } errors)
+                {
+                    MessageBox.Show(errors.First().ErrorContent.ToString(), "Некорректный ввод", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
         }
     }
 }

@@ -145,7 +145,7 @@ namespace eLog.Services
             var dlg = new EndDetailDialogWindow(tempPart)
             {
                 Owner = Application.Current.MainWindow,
-                PartsFinishedText = tempPart.FinishedCount > 0 ? tempPart.FinishedCount.ToString() : string.Empty,
+                FinishedCount = tempPart.FinishedCount > 0 ? tempPart.FinishedCount.ToString() : string.Empty,
                 MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty,
             };
 
