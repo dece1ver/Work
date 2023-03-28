@@ -152,7 +152,7 @@ namespace eLog.Infrastructure.Extensions
                         xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                     }
                     xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0);
-                    xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
+                    xlRow.Cell(34).Value = part.Shift;
                     xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0);
                     for (var i = 1; i <= 35; i++)
                     {
@@ -216,7 +216,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0);
-                    xlRow.Cell(34).Value = part.Shift == Text.DayShift ? 0 : 1;
+                    xlRow.Cell(34).Value = part.Shift;
                     xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0);
                     result = WriteResult.Ok;
                     break;
