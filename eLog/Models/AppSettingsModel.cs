@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace eLog.Models
 {
     /// <summary>
-    /// Не статический т.к. для записи/чтения json нужен экземпляр
+    /// Не статический т.к. для записи/чтения json нужен экземпляр, потом синглтон сделаю наверно
     /// </summary>
     public class AppSettingsModel
     {

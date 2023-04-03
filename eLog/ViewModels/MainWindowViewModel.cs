@@ -132,7 +132,7 @@ namespace eLog.ViewModels
             get => _Parts;
             set
             {
-                Set(ref _Parts, value);
+                if (!Set(ref _Parts, value)) return;
                 AppSettings.Parts = _Parts;
                 AppSettings.RewriteConfig();
             }
@@ -542,18 +542,21 @@ namespace eLog.ViewModels
                             part.IsSynced = true;
                             Status = $"Информация об изготовлении id{part.Id} зафиксирована. (фон)";
                         }
-
+                        OnPropertyChanged(nameof(part.Title));
                         var index = i;
                         Application.Current.Dispatcher.Invoke(delegate
                         {
                             Parts[index] = part;
                         });
-                        OnPropertyChanged(nameof(part.Title));
-                        OnPropertyChanged(nameof(Parts));
+                        AppSettings.Parts = _Parts;
+                        AppSettings.RewriteConfig();
+
                     }
 
                     Application.Current.Dispatcher.Invoke(delegate
                     {
+                        
+                        OnPropertyChanged(nameof(Parts));
                         RemoveExcessParts();
                     });
                 }

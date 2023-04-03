@@ -18,15 +18,17 @@ using Newtonsoft.Json.Linq;
 namespace eLog.Infrastructure
 {
     /// <summary>
-    /// Основной класс с настройками, статический для доступа откуда угодно.
+    /// Основной класс с настройками, статический для доступа откуда угодно, потом синглтон сделаю наверно.
     /// </summary>
     public static class AppSettings
     {
-        /// <summary> Локальный путь для записи изготовлений при неудачной записи в общую таблицу на случай отсутствия интернета, занятости файла и тд. </summary>
-        public const string XlReservedPath = "C:\\ProgramData\\dece1ver\\eLog\\XL";
+        
 
         /// <summary> Директория для хранения всякого </summary>
         public const string BasePath = "C:\\ProgramData\\dece1ver\\eLog";
+
+        /// <summary> Локальный путь для бэкапа таблицы. </summary>
+        public static readonly string XlReservedPath = Path.Combine(BasePath, "backup.xlsx");
 
         /// <summary> Путь к файлу конфигурации </summary>
         public static readonly string ConfigFilePath = Path.Combine(BasePath, "config.json");
@@ -36,6 +38,9 @@ namespace eLog.Infrastructure
 
         /// <summary> Путь к резервному списку заказов </summary>
         public static readonly string BackupOrdersFile = Path.Combine(BasePath, "orders-backup.xlsx");
+
+        /// <summary> Путь к файлу логов </summary>
+        public static readonly string LogFile = Path.Combine(BasePath, "log");
 
         /// <summary> Текущий станок </summary>
         public static Machine Machine { get; set; } = new (0);
@@ -96,6 +101,14 @@ namespace eLog.Infrastructure
             RewriteConfig();
         }
 
+        public static Dictionary<string, string> GetPropertiesValues()
+        {
+            return typeof(AppSettings)
+                .GetProperties(BindingFlags.Public | BindingFlags.Static)
+                .Where(f => f.PropertyType == typeof(string))
+                .ToDictionary(f => f.Name,
+                    f => (string)f.GetValue(null)!);
+        }
 
         /// <summary>
         /// Читает конфиг, если возникает исключение, то создает конфиг по-умолчанию.

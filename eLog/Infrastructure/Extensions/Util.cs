@@ -10,9 +10,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using ClosedXML.Excel;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
+using System.Windows.Controls;
 using eLog.Infrastructure.Extensions.Windows;
 using eLog.Views.Windows.Dialogs;
+using DocumentFormat.OpenXml.Office2010.Excel;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -89,17 +92,33 @@ namespace eLog.Infrastructure.Extensions
                 new Random().Next(1, 5));
         }
 
+        public static bool ValidXl()
+        {
+            try
+            {
+                _ = new XLWorkbook(AppSettings.XlPath);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Запись изготовления в Excel таблицу
         /// </summary>
         /// <param name="part">Информация об изготовлении</param>
         /// <returns>Int32 - Id записи в таблице</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static int WriteToXl(this PartInfoModel part, int id = -1)
+        public static int WriteToXl(this PartInfoModel part)
         {
+            var id = -1;
+            if (!File.Exists(AppSettings.XlPath)) return id;
             try
             {
                 var wb = new XLWorkbook(AppSettings.XlPath);
+                File.Copy(AppSettings.XlPath, AppSettings.XlReservedPath, true);
                 var ws = wb.Worksheet(1);
                 ws.LastRowUsed().InsertRowsBelow(1);
                 IXLRow? prevRow = null;
@@ -138,22 +157,22 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(12).Value = part.Setup;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(15).FormulaR1C1 = prevRow.Cell(15).FormulaR1C1;
+                    xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
                     xlRow.Cell(16).Value = part.SetupTimeFact.Ticks > 0 ? part.SetupTimePlan : 0;
                     xlRow.Cell(17).FormulaR1C1 = prevRow.Cell(17).FormulaR1C1;
                     xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(21).FormulaR1C1 = prevRow.Cell(21).FormulaR1C1;
+                    xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     for (var i = 24; i <= 32; i++)
                     {
                         xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                     }
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0);
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0) + GetBreaksBetween(part.StartSetupTime, part.StartMachiningTime).TotalMinutes;
                     xlRow.Cell(34).Value = part.Shift;
-                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0);
+                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0) + GetBreaksBetween(part.StartMachiningTime, part.EndMachiningTime).TotalMinutes;
                     for (var i = 1; i <= 35; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
@@ -174,13 +193,15 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                WriteLog(e, $"   Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                TryCopyLog();
             }
             return id;
         }
 
         public static WriteResult RewriteToXl(this PartInfoModel part)
         {
+            if (!File.Exists(AppSettings.XlPath)) return WriteResult.IOError;
             var result = WriteResult.NotFinded;
             try
             {
@@ -194,6 +215,7 @@ namespace eLog.Infrastructure.Extensions
                     part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup) { StartTime = part.StartSetupTime, EndTime = part.EndMachiningTime });
                 }
                 var wb = new XLWorkbook(AppSettings.XlPath);
+                File.Copy(AppSettings.XlPath, AppSettings.XlReservedPath, true);
                 foreach (var xlRow in wb.Worksheet(1).Rows())
                 {
                     if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
@@ -210,9 +232,11 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(12).Value = part.Setup;
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
                     xlRow.Cell(16).Value = part.SetupTimeFact.Ticks > 0 ? part.SetupTimePlan : 0;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
+                    xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
                     xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0);
@@ -229,10 +253,35 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                WriteLog(e, $"   Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                TryCopyLog();
                 return WriteResult.Error;
             }
             return result;
+        }
+
+        public static void WriteLog(Exception exception, string additionMessage = "")
+        {
+            try
+            {
+                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(Text.DateTimeFormat)}]: {exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n   Caller: {exception.TargetSite}")}\n" +
+                                                       $"{exception.GetType()}\n" +
+                                                       $"{exception.StackTrace}\n" +
+                                                       $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"Дополнительная информация:\n{additionMessage}")}\n\n");
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public static void TryCopyLog()
+        {
+            if (Directory.GetParent(AppSettings.XlPath) is not { Exists: true } parent) return;
+            var logsPath = Path.Combine(parent.FullName, "logs");
+            if (!Directory.Exists(logsPath)) { Directory.CreateDirectory(logsPath); }
+            File.Copy(AppSettings.LogFile, Path.Combine(logsPath, $"{Environment.UserName}.log"), true);
+
         }
 
         /// <summary>
@@ -245,7 +294,7 @@ namespace eLog.Infrastructure.Extensions
         {
             if (string.IsNullOrEmpty(input))
             {
-                time = TimeSpan.Zero;;
+                time = TimeSpan.Zero;
                 return false;
             }
             input = input.Replace(",", ".");
@@ -343,6 +392,7 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="startDateTime">Начало</param>
         /// <param name="endDateTime">Завершение</param>
+        /// <param name="calcOnEnd">Считать по времени завершения перерывов. Это вариант по-умолчанию для выполняемых действий, по началам перерывов считается при расчете планируемого времени.</param>
         /// <returns>TimeSpan с суммарным временем перерывов</returns>
         public static TimeSpan GetBreaksBetween(DateTime startDateTime, DateTime endDateTime, bool calcOnEnd = true)
         {
@@ -433,7 +483,7 @@ namespace eLog.Infrastructure.Extensions
                 '7' => Keys.D7,
                 '8' => Keys.D8,
                 '9' => Keys.D9,
-                _ => throw new ArgumentException("Символ должен быть арабской цифрой"),
+                _ => throw new ArgumentException("Переданный символ не является арабской цифрой."),
             };
         }
     }

@@ -9,7 +9,6 @@ namespace eLog.Infrastructure.Extensions
 {
     public class Text
     {
-        
         public const string WithoutOrderItem = " ";
         public const string WithoutOrderDescription = "Без М/Л";
         public const string DayShift = "День";
