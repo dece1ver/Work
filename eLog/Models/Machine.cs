@@ -29,7 +29,7 @@ namespace eLog.Models
                 6 => "Mazak QTS350",
                 7 => "Mazak Integrex i200",
                 8 => "Mazak Nexus 5000",
-                9 => "Quaser MV143",
+                9 => "Quaser MV134",
                 10 => "Victor A110",
 
                 _ => "-//-",

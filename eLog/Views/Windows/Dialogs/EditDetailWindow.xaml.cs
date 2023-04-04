@@ -97,16 +97,23 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Set(ref _WithSetup, value);
-                if (_WithSetup) return;
-                Part.StartSetupTime = new DateTime(
-                    Part.StartSetupTime.Year,
-                    Part.StartSetupTime.Month,
-                    Part.StartSetupTime.Day,
-                    Part.StartSetupTime.Hour,
-                    Part.StartSetupTime.Minute,
-                    0, 0);
-                StartMachiningTime = StartSetupTime;
-                Part.StartMachiningTime = Part.StartSetupTime;
+                if (_WithSetup && Part.StartSetupTime == Part.StartMachiningTime)
+                {
+                    StartMachiningTime = string.Empty;
+                }
+                else if (!_WithSetup)
+                {
+                    Part.StartSetupTime = new DateTime(
+                        Part.StartSetupTime.Year,
+                        Part.StartSetupTime.Month,
+                        Part.StartSetupTime.Day,
+                        Part.StartSetupTime.Hour,
+                        Part.StartSetupTime.Minute,
+                        0, 0);
+                    StartMachiningTime = StartSetupTime;
+                    Part.StartMachiningTime = Part.StartSetupTime;
+                }
+                
                 OnPropertyChanged(nameof(StartMachiningTime));
             }
         }
@@ -177,17 +184,22 @@ namespace eLog.Views.Windows.Dialogs
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, StartSetupTime.Ticks: > 0 } && 
                                    string.IsNullOrWhiteSpace(StartMachiningTime) && 
                                    string.IsNullOrWhiteSpace(EndMachiningTime):
+                        Status = "При подтверждении будет запущена наладка.";
                         return true;
                     // старт изготовления
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && string.IsNullOrWhiteSpace(EndMachiningTime):
+                        Status = "При подтверждении будет запущено изготовление.";
                         return true;
                     // частичная наладка
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && FinishedCount == "0" && EndMachiningTime == StartMachiningTime:
+                        Status = "При подтверждении будет отмечена частичная наладка.";
                         return true;
                     // полная отметка
                     case true when Part is { FinishedCount: > 0, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
+                        Status = "При подтверждении будет отмечено полное изготовление.";
                         return true;
                     default:
+                        Status = string.Empty;
                         return false;
                 }
             }
@@ -408,6 +420,7 @@ namespace eLog.Views.Windows.Dialogs
                         break;
                     case nameof(StartMachiningTime):
                         if (!string.IsNullOrWhiteSpace(StartMachiningTime) && Part.StartMachiningTime == DateTime.MinValue) error = Text.ValidationErrors.StartMachiningTime;
+                        if (string.IsNullOrWhiteSpace(StartMachiningTime) && Part.EndMachiningTime > Part.StartSetupTime) error = Text.ValidationErrors.StartMachiningTime;
                         break;
                     case nameof(EndMachiningTime):
                         if ((!string.IsNullOrWhiteSpace(EndMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime && FinishedCount != "0") || (string.IsNullOrWhiteSpace(EndMachiningTime) && Part.FinishedCount > 0)) 
@@ -423,7 +436,7 @@ namespace eLog.Views.Windows.Dialogs
                     case nameof(FinishedCount):
                         error = Part.FinishedCount switch
                         {
-                            0 when string.IsNullOrWhiteSpace(FinishedCount) && Part.FullProductionTimeFact > TimeSpan.Zero => Text.ValidationErrors.FinishedCount,
+                            0 when Part.FullProductionTimeFact > TimeSpan.Zero => Text.ValidationErrors.FinishedCount,
                             0 when !string.IsNullOrWhiteSpace(FinishedCount) && FinishedCount != "0" => Text.ValidationErrors.FinishedCount,
                             _ => error
                         };
@@ -479,7 +492,7 @@ namespace eLog.Views.Windows.Dialogs
                     : "01";
             PartName = Part.FullName;
 
-            _FinishedCount = Part.FinishedCount > 0 || Part.StartMachiningTime == Part.EndMachiningTime ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            _FinishedCount = Part.FinishedCount > 0 || Part.StartMachiningTime == Part.EndMachiningTime && Part.EndMachiningTime != DateTime.MinValue ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
             _TotalCount = Part.TotalCount > 0 ? Part.TotalCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
 
             _StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
