@@ -479,12 +479,12 @@ namespace eLog.Views.Windows.Dialogs
                     : "01";
             PartName = Part.FullName;
 
-            _FinishedCount = Part.FinishedCount > 0 ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            _FinishedCount = Part.FinishedCount > 0 || Part.StartMachiningTime == Part.EndMachiningTime ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
             _TotalCount = Part.TotalCount > 0 ? Part.TotalCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
 
             _StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
             _StartMachiningTime = Part.StartMachiningTime != DateTime.MinValue ? Part.StartMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
-            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue && Part.EndMachiningTime != Part.StartMachiningTime ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
+            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue && Part.EndMachiningTime >= Part.StartMachiningTime ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
             _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty;
 
             _PartSetupTimePlan = Part.SetupTimePlan > 0 
@@ -804,31 +804,29 @@ namespace eLog.Views.Windows.Dialogs
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var s = "666";
-            if (WindowsUserDialogService.GetBarCode(ref s))
-            {
-                var tempPart = s.GetPartFromBarCode();
-                PartName = tempPart.FullName;
-                OnPropertyChanged(nameof(PartName));
-                PartSetupTimePlan = tempPart.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
-                OnPropertyChanged(nameof(PartSetupTimePlan));
-                SingleProductionTimePlan = tempPart.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture);
-                OnPropertyChanged(nameof(SingleProductionTimePlan));
-                TotalCount = tempPart.TotalCount.ToString(CultureInfo.InvariantCulture);
-                OnPropertyChanged(nameof(TotalCount));
+            if (!WindowsUserDialogService.GetBarCode(ref s)) return;
+            var tempPart = s.GetPartFromBarCode();
+            PartName = tempPart.FullName;
+            OnPropertyChanged(nameof(PartName));
+            PartSetupTimePlan = tempPart.SetupTimePlan.ToString(CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(PartSetupTimePlan));
+            SingleProductionTimePlan = tempPart.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(SingleProductionTimePlan));
+            TotalCount = tempPart.TotalCount.ToString(CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(TotalCount));
 
-                var order = tempPart.Order;
-                OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
-                    ? order.Split('/')[1]
-                    : Text.WithoutOrderDescription;
-                OrderQualifier =
-                    !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
-                        ? order.Split('-')[0]
-                        : AppSettings.OrderQualifiers[0];
-                OrderMonth =
-                    !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
-                        ? order.Split('-')[1].Split('/')[0]
-                        : "01";
-            }
+            var order = tempPart.Order;
+            OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
+                ? order.Split('/')[1]
+                : Text.WithoutOrderDescription;
+            OrderQualifier =
+                !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
+                    ? order.Split('-')[0]
+                    : AppSettings.OrderQualifiers[0];
+            OrderMonth =
+                !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
+                    ? order.Split('-')[1].Split('/')[0]
+                    : "01";
         }
     }
 }
