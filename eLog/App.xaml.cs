@@ -17,16 +17,7 @@ namespace eLog
     {
         public App()
         {
-            SingleInstanceWatcher();
             AppSettings.ReadConfig();
-        }
-
-        private const string UniqueEventName = "{0E54B49C-DADB-4A87-8DA3-47133B69D56E}";
-        private EventWaitHandle _EventWaitHandle;
-
-        private void SingleInstanceWatcher()
-        {
-            // check if it is already open.
             try
             {
                 // try to open it - if another instance is running, it will exist , if not it will throw
@@ -43,13 +34,20 @@ namespace eLog
                 // listen to a new event (this app instance will be the new "master")
                 _EventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
             }
+            SingleInstanceWatcher();
+        }
 
+        private const string UniqueEventName = "{0E54B49C-DADB-4A87-8DA3-47133B69D56E}";
+        private readonly EventWaitHandle _EventWaitHandle;
+
+        private void SingleInstanceWatcher()
+        {
             // if this instance gets the signal to show the main window
             new Task(() =>
                 {
                     while (_EventWaitHandle.WaitOne())
                     {
-                        _ = Current.Dispatcher.BeginInvoke((Action)(() =>
+                        _ = Current.Dispatcher.BeginInvoke(() =>
                         {
                             if (Current.MainWindow!.Equals(null)) return;
                             var mw = Current.MainWindow;
@@ -64,7 +62,7 @@ namespace eLog
                             mw.Topmost = true;
                             mw.Topmost = false;
                             mw.Focus();
-                        }));
+                        });
                     }
                 })
                 .Start();

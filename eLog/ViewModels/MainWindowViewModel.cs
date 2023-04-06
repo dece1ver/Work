@@ -570,8 +570,9 @@ namespace eLog.ViewModels
 
         private void RemoveExcessParts(int remains = 20)
         {
-            while (Parts.Count(p => p.IsSynced) > remains)
+            if (Parts.Count(p => p.IsSynced) > remains)
             {
+                
                 foreach (var part in Parts.Skip(remains))
                 {
                     var i = Parts.IndexOf(part);
