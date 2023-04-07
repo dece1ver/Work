@@ -531,9 +531,25 @@ namespace eLog.ViewModels
                         if (Parts[i] is not { IsSynced: false, IsFinished: not PartInfoModel.State.InProgress } part) continue;
                         if (part.Id != -1)
                         {
+                            switch (part.RewriteToXl())
+                            {
+                                case Util.WriteResult.Ok:
+                                    part.IsSynced = true;
+                                    Status = $"Информация об изготовлении id{part.Id} обновлена. (фон)";
+                                    break;
+                                case Util.WriteResult.IOError or Util.WriteResult.Error:
+                                    continue;
+                                case Util.WriteResult.NotFinded:
+                                    part.Id = part.WriteToXl();
+                                    if (part.Id == -1) continue;
+                                    part.IsSynced = true;
+                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована. (фон)";
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
                             if (part.RewriteToXl() is not Util.WriteResult.Ok) continue;
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} обновлена. (фон)";
+                           
                         }
                         else
                         {
@@ -563,6 +579,7 @@ namespace eLog.ViewModels
                 catch (Exception e)
                 {
                     Status = e.Message;
+                    Util.WriteLog(e, "Ошибка синхронизации.");
                 }
                 Thread.Sleep(10000);
             }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
+using Newtonsoft.Json;
 
 namespace eLog.Models
 {
@@ -102,6 +103,7 @@ namespace eLog.Models
         }
 
         /// <summary> Описание количества деталей </summary>
+        [JsonIgnore]
         public string TotalCountInfo => $"{FinishedCount} / {TotalCount} шт";
 
         /// <summary> Плановое время наладки. Может быть присвоено только при инициализации (предполагается получение из БД). </summary>
@@ -201,6 +203,7 @@ namespace eLog.Models
         }
 
         /// <summary> Информация об окончании наладки </summary>
+        [JsonIgnore]
         public string EndSetupInfo
         {
             get
@@ -239,6 +242,7 @@ namespace eLog.Models
         }
 
         /// <summary> Информация о завершении изготовления </summary>
+        [JsonIgnore]
         public string EndDetailInfo
         {
             get
@@ -279,15 +283,16 @@ namespace eLog.Models
         }
 
         /// <summary> Фактическое время наладки </summary>
-        public TimeSpan FullSetupTimeFact => StartMachiningTime - StartSetupTime;
+        [JsonIgnore] public TimeSpan FullSetupTimeFact => StartMachiningTime - StartSetupTime;
 
 
         /// <summary> Фактическое время наладки с учетом перерывов </summary>
-        public TimeSpan SetupTimeFact => FullSetupTimeFact - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime);
+        [JsonIgnore] public TimeSpan SetupTimeFact => FullSetupTimeFact - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime);
 
         /// <summary> Полное название детали (наименование + обозначение) </summary>
-        public string FullName => $"{Name} {Number}".Trim();
+        [JsonIgnore] public string FullName => $"{Name} {Number}".Trim();
 
+        [JsonIgnore]
         public string Title
         {
             get
@@ -305,9 +310,10 @@ namespace eLog.Models
         }
 
         /// <summary>Фактическое время изготовления </summary>
-        public TimeSpan FullProductionTimeFact => EndMachiningTime - StartMachiningTime;
+        [JsonIgnore] public TimeSpan FullProductionTimeFact => EndMachiningTime - StartMachiningTime;
 
         /// <summary> Время изготовления с учетом перерывов </summary>
+        [JsonIgnore]
         public TimeSpan ProductionTimeFact =>
             FullProductionTimeFact - Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime);
 
@@ -315,13 +321,14 @@ namespace eLog.Models
         /// Может ли быть завершена деталь.
         /// True если время начала изготовления больше или равно времени начала наладки и если время начала изготовления раньше текущего.
         /// </summary>
-        public bool CanBeFinished => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime;
+        [JsonIgnore] public bool CanBeFinished => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime;
 
         /// <summary>
         /// Статус изготовления детали.
         /// Finished если время завершения изготовления больше, чем время начала наладки, также если завершена наладка (SetupIsFinished == true) и количество выпущенных деталей больше 0.
         /// PartialSetup если время завершения изготовления больше равно времени завершения наладки и количество выпущенных деталей 0.
         /// </summary>
+        [JsonIgnore]
         public State IsFinished
         {
             get
@@ -337,25 +344,25 @@ namespace eLog.Models
         /// Завершена ли наладка.
         /// True если время завершения наладки больше или равно времени начала наладки.
         /// </summary>
-        public bool SetupIsFinished => StartMachiningTime >= StartSetupTime;
+        [JsonIgnore] public bool SetupIsFinished => StartMachiningTime >= StartSetupTime;
 
         /// <summary>
         /// Идет ли изготовление.
         /// True если время завершена наладка, но не завершено изготовление.
         /// </summary>
-        public bool InProduction => SetupIsFinished && IsFinished == State.InProgress;
+        [JsonIgnore] public bool InProduction => SetupIsFinished && IsFinished == State.InProgress;
 
         /// <summary>
         /// Не завершена ли наладка. Нужно для привязок разметки.
         /// Инвертированное значение свойства SetupIsFinished.
         /// </summary>
-        public bool SetupIsNotFinished => !SetupIsFinished;
+        [JsonIgnore] public bool SetupIsNotFinished => !SetupIsFinished;
 
         /// <summary>
         /// Не завершено ли изготовление. Нужно для привязок разметки.
         /// Инвертированное значение свойства IsFinished.
         /// </summary>
-        public bool IsStarted => IsFinished == State.InProgress;
+        [JsonIgnore] public bool IsStarted => IsFinished == State.InProgress;
 
         /// <summary>
         /// Записана ли актуальная информация о детали в таблицу

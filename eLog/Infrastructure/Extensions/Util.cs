@@ -128,17 +128,16 @@ namespace eLog.Infrastructure.Extensions
                               prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
                 
                 if (partial) part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup){StartTime = part.StartSetupTime, EndTime = part.EndMachiningTime });
-
                 foreach (var xlRow in ws.Rows())
                 {
                     if (xlRow is null) continue;
+                    var num = xlRow.Cell(1).Value.IsNumber ? (int)xlRow.Cell(1).Value.GetNumber() : 0;
+                    if (id <= num) id = num + 1;
                     if (!xlRow.Cell(6).Value.IsBlank)
                     {
                         prevRow = xlRow;
                         continue;
                     }
-
-                    id = (int)prevRow!.Cell(1).Value.GetNumber() + 1;
                     xlRow.Style = prevRow!.Style;
                     xlRow.Cell(1).Value = id;
                     xlRow.Cell(2).FormulaR1C1 = prevRow.Cell(2).FormulaR1C1;
