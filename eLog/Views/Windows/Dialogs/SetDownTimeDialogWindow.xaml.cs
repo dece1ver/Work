@@ -20,7 +20,7 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class SetDownTimeDialogWindow : Window
     {
-        public DownTime.Types Type { get; set; }
+        public DownTime.Types? Type { get; set; } = null;
         public SetDownTimeDialogWindow()
         {
             InitializeComponent();

@@ -134,7 +134,13 @@ namespace eLog.Models
         public ObservableCollection<DownTime> DownTimes
         {
             get => _DownTimes;
-            set => Set(ref _DownTimes, value);
+            set
+            {
+                if (Set(ref _DownTimes, value))
+                {
+                    OnPropertyChanged(nameof(DownTimesIsClosed));
+                }
+            }
         }
 
         /// <summary> Id присваивается после записи в таблицу. Нужен для поиска в таблице при редактировании.</summary>
@@ -339,6 +345,18 @@ namespace eLog.Models
                 return State.InProgress;
             }
         }
+
+        /// <summary>
+        /// Завершена ли наладка.
+        /// True если нет незавершенных простоев.
+        /// </summary>
+        public bool DownTimesIsClosed => LastDownTime is null || !LastDownTime.InProgress;
+
+        /// <summary>
+        /// Завершена ли наладка.
+        /// True если нет незавершенных простоев.
+        /// </summary>
+        [JsonIgnore] public DownTime? LastDownTime => DownTimes.LastOrDefault();
 
         /// <summary>
         /// Завершена ли наладка.

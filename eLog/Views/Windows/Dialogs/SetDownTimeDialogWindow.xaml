@@ -31,16 +31,7 @@
                 <TextBlock Text="Обслуживание" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Button.Content>
             <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
-            </Button.Command>
-        </Button>
-        <Button Grid.Row="0" Grid.Column="1" Margin="2 0 2 2"
-                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
-            <Button.Content>
-                <TextBlock Text="Прогрев" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-            </Button.Content>
-            <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+                <cmd:SetDownTimeDialogCommand DialogResult="Maintenance"/>
             </Button.Command>
         </Button>
         <Button Grid.Row="0" Grid.Column="2" Margin="2 0 2 2"
@@ -49,7 +40,7 @@
                 <TextBlock Text="Поиск и получение инструмента" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Button.Content>
             <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+                <cmd:SetDownTimeDialogCommand DialogResult="ToolSearching"/>
             </Button.Command>
         </Button>
         <Button Grid.Row="0" Grid.Column="3" Margin="2 0 0 2"
@@ -58,7 +49,7 @@
                 <TextBlock Text="Помощь, наставничество, обучение" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Button.Content>
             <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+                <cmd:SetDownTimeDialogCommand DialogResult="Mentoring"/>
             </Button.Command>
         </Button>
 
@@ -68,7 +59,7 @@
                 <TextBlock Text="Участие в мероприятиях" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Button.Content>
             <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+                <cmd:SetDownTimeDialogCommand DialogResult="ContactingDepartments"/>
             </Button.Command>
         </Button>
         <Button Grid.Row="1" Grid.Column="1" Margin="2 2 2 0"
@@ -77,7 +68,7 @@
                 <TextBlock Text="Изготовление оснастки и калибров" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Button.Content>
             <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+                <cmd:SetDownTimeDialogCommand DialogResult="FixtureMaking"/>
             </Button.Command>
         </Button>
         <Button Grid.Row="1" Grid.Column="2" Margin="2 2 2 0"
@@ -86,16 +77,16 @@
                 <TextBlock Text="Отказ оборудования" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Button.Content>
             <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="True"></cmd:CloseDialogCommand>
+                <cmd:SetDownTimeDialogCommand DialogResult="HardwareFailure"/>
             </Button.Command>
         </Button>
-        <Button Grid.Row="1" Grid.Column="3" Margin="2 2 0 0" 
+        <Button Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="2 2 0 0" 
                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
             <Button.Content>
                 <TextBlock Text="✗" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Button.Content>
             <Button.Command>
-                <cmd:CloseDialogCommand DialogResult="False"></cmd:CloseDialogCommand>
+                <cmd:SetDownTimeDialogCommand DialogResult="{x:Null}"/>
             </Button.Command>
         </Button>
     </Grid>

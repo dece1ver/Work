@@ -132,7 +132,7 @@ namespace eLog.ViewModels
             get => _Parts;
             set
             {
-                if (!Set(ref _Parts, value)) return;
+                Set(ref _Parts, value);
                 AppSettings.Parts = _Parts;
                 AppSettings.RewriteConfig();
             }
@@ -197,7 +197,7 @@ namespace eLog.ViewModels
         }
         private static bool CanEditSettingsCommandExecute(object p) => true;
         #endregion
-
+        
         #region EditOperatorsCommand
         public ICommand EditOperatorsCommand { get; }
         private void OnEditOperatorsCommandExecuted(object p)
@@ -288,11 +288,46 @@ namespace eLog.ViewModels
             var downTimeType = WindowsUserDialogService.SetDownTimeType();
             if (downTimeType is { } type)
             {
-                // Parts[Parts.IndexOf((PartInfoModel)p)].DownTimes.Add(new DownTime(type));
+                var part = (PartInfoModel)p;
+                var downTimes = part.DownTimes;
+                downTimes.Add(new DownTime(type, part.SetupIsFinished ? DownTime.Relations.Machining : DownTime.Relations.Setup));
+                part.DownTimes = downTimes;
+                OnPropertyChanged(nameof(part.DownTimes));
+                OnPropertyChanged(nameof(part.DownTimesIsClosed));
+                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                OnPropertyChanged(nameof(Parts));
+                AppSettings.Parts = Parts;
+                AppSettings.RewriteConfig();
             }
             OverlayOff();
         }
         private static bool CanSetDownTimeCommandExecute(object p) => true;
+        #endregion
+
+        #region EndDownTime
+        public ICommand EndDownTimeCommand { get; }
+        private void OnEndDownTimeCommandExecuted(object p)
+        {
+            OverlayOn();
+            var part = Parts[Parts.IndexOf((PartInfoModel)p)];
+            if (part.LastDownTime is {InProgress: true} 
+                && MessageBox.Show($"Завершить простой \"{part.DownTimes[0].Name}\"?",
+                    "Подтверждение",
+                    MessageBoxButton.OKCancel, 
+                    MessageBoxImage.Question) 
+                == MessageBoxResult.OK)
+            {
+                part.LastDownTime.EndTime = DateTime.Now;
+                OnPropertyChanged(nameof(part.DownTimes));
+                OnPropertyChanged(nameof(part.DownTimesIsClosed));
+                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                OnPropertyChanged(nameof(Parts));
+                AppSettings.Parts = Parts;
+                AppSettings.RewriteConfig();
+            }
+            OverlayOff();
+        }
+        private static bool CanEndDownTimeCommandExecute(object p) => true;
         #endregion
 
         #region EndSetup
@@ -509,6 +544,7 @@ namespace eLog.ViewModels
             StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
             EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
             SetDownTimeCommand = new LambdaCommand(OnSetDownTimeCommandExecuted, CanSetDownTimeCommandExecute);
+            EndDownTimeCommand = new LambdaCommand(OnEndDownTimeCommandExecuted, CanEndDownTimeCommandExecute);
             EditDetailCommand = new LambdaCommand(OnEditDetailCommandExecuted, CanEditDetailCommandExecute);
             EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
 
@@ -564,7 +600,7 @@ namespace eLog.ViewModels
                         {
                             Parts[index] = part;
                         });
-                        AppSettings.Parts = _Parts;
+                        AppSettings.Parts = Parts;
                         AppSettings.RewriteConfig();
 
                     }

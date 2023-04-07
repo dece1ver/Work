@@ -113,7 +113,8 @@ namespace eLog.Services
                 FinishedCount = part.FinishedCount,
                 Shift = part.Shift,
                 Operator = part.Operator,
-                OperatorComments = part.OperatorComments
+                OperatorComments = part.OperatorComments,
+                DownTimes = part.DownTimes
             };
             var dlg = new EditDetailWindow(tempPart, newDetail)
             {
@@ -139,7 +140,8 @@ namespace eLog.Services
                 FinishedCount = part.FinishedCount,
                 Shift = part.Shift,
                 Operator = part.Operator,
-                OperatorComments = part.OperatorComments
+                OperatorComments = part.OperatorComments,
+                DownTimes = part.DownTimes,
 
             };
             var dlg = new EndDetailDialogWindow(tempPart)
@@ -162,8 +164,8 @@ namespace eLog.Services
                 Owner = Application.Current.MainWindow
             };
 
-            if (dlg.ShowDialog() is true) return dlg.Type;
-            return null;
+            _ = dlg.ShowDialog();
+            return dlg.Type;
         }
     }
 }

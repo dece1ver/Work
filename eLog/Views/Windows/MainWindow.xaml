@@ -144,10 +144,26 @@
                                             <StackPanel Margin="0" Orientation="Horizontal" HorizontalAlignment="Right" 
                                                 Visibility="{Binding IsStarted, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}">
                                                 <Button Style="{StaticResource lvButton}" 
-                                                    Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
-                                                    CommandParameter="{Binding}">
+                                                        Visibility="{Binding DownTimesIsClosed, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}"
+                                                        Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
+                                                        CommandParameter="{Binding}">
                                                     <Button.Content>
                                                         <TextBlock Text="Простой" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                                                    </Button.Content>
+                                                </Button>
+                                                <Button Style="{StaticResource lvButton}" 
+                                                        Visibility="{Binding DownTimesIsClosed, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource InvertedVisibilityConverter}}"
+                                                        Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EndDownTimeCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Content>
+                                                        <StackPanel>
+                                                            <TextBlock Text="Завершить" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                                                            <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center">
+                                                                <Run Text="&quot;"/>
+                                                                <Run Text="{Binding LastDownTime.Name, FallbackValue={}, Mode=OneWay}"/>
+                                                                <Run Text="&quot;"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
                                                     </Button.Content>
                                                 </Button>
                                                 <Button Style="{StaticResource lvButton}"
