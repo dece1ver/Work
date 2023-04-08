@@ -158,11 +158,8 @@
                                                     <Button.Content>
                                                         <StackPanel>
                                                             <TextBlock Text="Завершить" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
-                                                            <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center">
-                                                                <Run Text="&quot;"/>
-                                                                <Run Text="{Binding LastDownTime.Name, FallbackValue={}, Mode=OneWay}"/>
-                                                                <Run Text="&quot;"/>
-                                                            </TextBlock>
+                                                            <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" 
+                                                                       Text="{Binding LastDownTime.Name, FallbackValue={}, Mode=OneWay}"/>
                                                         </StackPanel>
                                                     </Button.Content>
                                                 </Button>

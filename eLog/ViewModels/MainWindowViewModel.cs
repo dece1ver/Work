@@ -289,12 +289,14 @@ namespace eLog.ViewModels
             if (downTimeType is { } type)
             {
                 var part = (PartInfoModel)p;
+                var index = Parts.IndexOf(part);
+                Parts.RemoveAt(index);
                 var downTimes = part.DownTimes;
                 downTimes.Add(new DownTime(type, part.SetupIsFinished ? DownTime.Relations.Machining : DownTime.Relations.Setup));
                 part.DownTimes = downTimes;
                 OnPropertyChanged(nameof(part.DownTimes));
                 OnPropertyChanged(nameof(part.DownTimesIsClosed));
-                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                Parts.Insert(index, part);
                 OnPropertyChanged(nameof(Parts));
                 AppSettings.Parts = Parts;
                 AppSettings.RewriteConfig();
@@ -309,7 +311,9 @@ namespace eLog.ViewModels
         private void OnEndDownTimeCommandExecuted(object p)
         {
             OverlayOn();
-            var part = Parts[Parts.IndexOf((PartInfoModel)p)];
+            var part = (PartInfoModel)p;
+            var index = Parts.IndexOf((PartInfoModel)p);
+            
             if (part.LastDownTime is {InProgress: true} 
                 && MessageBox.Show($"Завершить простой \"{part.DownTimes[0].Name}\"?",
                     "Подтверждение",
@@ -317,10 +321,12 @@ namespace eLog.ViewModels
                     MessageBoxImage.Question) 
                 == MessageBoxResult.OK)
             {
+                
+                Parts.RemoveAt(index);
                 part.LastDownTime.EndTime = DateTime.Now;
                 OnPropertyChanged(nameof(part.DownTimes));
                 OnPropertyChanged(nameof(part.DownTimesIsClosed));
-                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                Parts.Insert(index, part);
                 OnPropertyChanged(nameof(Parts));
                 AppSettings.Parts = Parts;
                 AppSettings.RewriteConfig();
