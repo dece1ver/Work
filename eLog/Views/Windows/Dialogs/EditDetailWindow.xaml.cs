@@ -46,7 +46,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Set(ref _KeyboardVisibility, value);
-                Height = _KeyboardVisibility is Visibility.Visible ? 598 : 475;
+                Height = _KeyboardVisibility is Visibility.Visible ? 600 : 477;
             }
         }
 
@@ -765,6 +765,19 @@ namespace eLog.Views.Windows.Dialogs
             Part.Shift = makerDialog.Shift;
         }
 
+        private void EditDownTimesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var tempPart = new PartInfoModel(Part);
+            var dlg = new EditDownTimesDialogWindow(tempPart)
+            {
+                Owner = this,
+                Width = Width,
+                Height = Height,
+            };
+            if (dlg.ShowDialog() != true) return;
+            Part = dlg.Part;
+        }
+
 
         #region PropertyChanged
 
@@ -841,5 +854,7 @@ namespace eLog.Views.Windows.Dialogs
                     ? order.Split('-')[1].Split('/')[0]
                     : "01";
         }
+
+        
     }
 }

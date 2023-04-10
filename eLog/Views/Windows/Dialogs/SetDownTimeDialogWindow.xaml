@@ -11,7 +11,7 @@
         Title="Выбор простоя" Height="320" Width="640">
     <Window.Resources>
         <Style TargetType="Button">
-            <Setter Property="Focusable" Value="False"></Setter>
+            <Setter Property="Focusable" Value="False"/>
         </Style>
     </Window.Resources>
     <Grid Margin="10">
@@ -34,7 +34,7 @@
                 <cmd:SetDownTimeDialogCommand DialogResult="Maintenance"/>
             </Button.Command>
         </Button>
-        <Button Grid.Row="0" Grid.Column="2" Margin="2 0 2 2"
+        <Button Grid.Row="0" Grid.Column="1" Margin="2 0 2 2"
                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
             <Button.Content>
                 <TextBlock Text="Поиск и получение инструмента" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -43,7 +43,7 @@
                 <cmd:SetDownTimeDialogCommand DialogResult="ToolSearching"/>
             </Button.Command>
         </Button>
-        <Button Grid.Row="0" Grid.Column="3" Margin="2 0 0 2"
+        <Button Grid.Row="0" Grid.Column="2" Margin="2 0 2 2"
                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
             <Button.Content>
                 <TextBlock Text="Помощь, наставничество, обучение" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -53,7 +53,7 @@
             </Button.Command>
         </Button>
 
-        <Button Grid.Row="1" Grid.Column="0" Margin="0 2 2 0"
+        <Button Grid.Row="0" Grid.Column="3" Margin="2 0 0 2"
                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
             <Button.Content>
                 <TextBlock Text="Участие в мероприятиях" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -62,7 +62,7 @@
                 <cmd:SetDownTimeDialogCommand DialogResult="ContactingDepartments"/>
             </Button.Command>
         </Button>
-        <Button Grid.Row="1" Grid.Column="1" Margin="2 2 2 0"
+        <Button Grid.Row="1" Grid.Column="0" Margin="0 2 2 0"
                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
             <Button.Content>
                 <TextBlock Text="Изготовление оснастки и калибров" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
@@ -71,7 +71,7 @@
                 <cmd:SetDownTimeDialogCommand DialogResult="FixtureMaking"/>
             </Button.Command>
         </Button>
-        <Button Grid.Row="1" Grid.Column="2" Margin="2 2 2 0"
+        <Button Grid.Row="1" Grid.Column="1" Margin="2 2 2 0"
                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
             <Button.Content>
                 <TextBlock Text="Отказ оборудования" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>

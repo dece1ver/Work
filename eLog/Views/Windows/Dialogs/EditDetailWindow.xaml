@@ -11,7 +11,7 @@
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
-        Title="Редактирование детали" Height="598" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
+        Title="Редактирование детали" Height="600" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
         <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
         <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
@@ -107,7 +107,7 @@
                         </UniformGrid>
                     </UniformGrid>
                     <TextBox 
-                             d:Text="Корпус клапана АР110-01-001" Height="76" TextWrapping="Wrap" FontSize="18" Padding="0 -4" 
+                             d:Text="Корпус клапана АР110-01-001" Height="78" TextWrapping="Wrap" FontSize="18" Padding="0 -4" 
                              Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
                 </DockPanel>
@@ -290,11 +290,10 @@
                          Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}"/>
 
 
-                <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0" Height="60"
+                <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom" LastChildFill="True">
                     <Button Click="Button_Click" Content="SCAN" DockPanel.Dock="Right" Visibility="Collapsed"/>
-                    <Button Grid.Column="0" Grid.Row="8"
-                            Margin="0 0 2 0" Height="60"
+                    <Button Margin="0 0 0 0" Height="60"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
                         <Button.Content>
@@ -334,26 +333,29 @@
                         BorderBrush="LightGray" BorderThickness="1" 
                         Margin="3 15"/>
 
-                <DockPanel Grid.Column="5" Grid.Row="0" Grid.RowSpan="7" LastChildFill="True">
-                    <DockPanel DockPanel.Dock="Top" Margin="1 0 0 1" Height="40" >
-                        <Button x:Name="EditCreatorButton" Width="63" Click="EditCreatorButton_Click" 
-                                Margin="0 1 2 0" Content="{StaticResource OperatorIcon}" Padding="-5"
-                                Visibility="{Binding NewDetail, Converter={StaticResource InvertedVisibilityConverter}}"/>
-                        <Button Margin="0 1 0 0"
-                                x:Name="LoadPreviousPartButton" Style="{StaticResource KeyboardButton}"
-                                Click="LoadPreviousPartButton_Click">
-                            <Button.Content>
-                                <TextBlock Text="Заполнить из списка" Margin="-2"/>
-                            </Button.Content>
-                        </Button>
-                    </DockPanel>
-                    <Button DockPanel.Dock="Bottom" Margin="1 1 0 1"
-                            Style="{StaticResource KeyboardButton}" Click="KeyboardButton_Click">
+                <DockPanel Grid.Row="0" Grid.Column="5" Margin="1 0 0 1" Height="39">
+                    <Button x:Name="EditCreatorButton" Width="63" Click="EditCreatorButton_Click" 
+                            Margin="0 1 2 0" Content="{StaticResource OperatorIcon}" Padding="-5"
+                            Visibility="{Binding NewDetail, Converter={StaticResource InvertedVisibilityConverter}}"/>
+                    <Button Margin="0 1 0 0"
+                            x:Name="LoadPreviousPartButton" Style="{StaticResource KeyboardButton}"
+                            Click="LoadPreviousPartButton_Click">
                         <Button.Content>
-                            <TextBlock Text="🖮" FontSize="34" Height="40" Margin="0 -5 0 5" Padding="0"/>
+                            <TextBlock Text="Заполнить из списка" Margin="-2"/>
                         </Button.Content>
                     </Button>
-                    <ctrl:TimeInsertKeyboard DockPanel.Dock="Bottom" Margin="0 0 -1 0"/>
+                </DockPanel>
+                <Button Grid.Row="1" Grid.Column="5" Margin="1 0 0 1"
+                    x:Name="EditDownTimesButton" DockPanel.Dock="Top" Content="Простои" Style="{StaticResource KeyboardButton}" Height="38" Click="EditDownTimesButton_Click"/>
+                <DockPanel Grid.Row="2" Grid.Column="5" Grid.RowSpan="5" LastChildFill="True">
+                    
+                    <Button DockPanel.Dock="Bottom" Margin="1 1 0 1" Height="38"
+                            Style="{StaticResource KeyboardButton}" Click="KeyboardButton_Click">
+                        <Button.Content>
+                            <TextBlock Text="🖮" FontSize="34" Margin="0 -5 0 5" Padding="0"/>
+                        </Button.Content>
+                    </Button>
+                    <ctrl:TimeInsertKeyboard DockPanel.Dock="Bottom" Margin="0 0 -1 0" Height="40"/>
                     <ctrl:NumericKeyboard Margin="1 1 0 1"/>
                 </DockPanel>
             </Grid>

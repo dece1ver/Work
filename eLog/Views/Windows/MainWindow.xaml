@@ -88,7 +88,7 @@
                 </StatusBarItem>
             </StatusBar>
             <DockPanel LastChildFill="True">
-                <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0">
+                <ListView ItemsSource="{Binding Parts}" FontSize="16" DockPanel.Dock="Top" Focusable="True" BorderBrush="Transparent" Margin="-4 0" ItemContainerStyle="{StaticResource ListViewItemsStyle}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Vertical">
@@ -148,7 +148,7 @@
                                                         Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
                                                         CommandParameter="{Binding}">
                                                     <Button.Content>
-                                                        <TextBlock Text="Простой" TextWrapping="WrapWithOverflow" TextAlignment="Center"/>
+                                                        <TextBlock Text="Начать простой" TextWrapping="WrapWithOverflow" TextAlignment="Center" Padding="4"/>
                                                     </Button.Content>
                                                 </Button>
                                                 <Button Style="{StaticResource lvButton}" 
@@ -201,38 +201,7 @@
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="Focusable" Value="false"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                                        <Border x:Name="Bd" 
-                                            BorderBrush="{TemplateBinding BorderBrush}" 
-                                            BorderThickness="{TemplateBinding BorderThickness}" 
-                                            Background="{TemplateBinding Background}" 
-                                            Padding="{TemplateBinding Padding}" 
-                                            SnapsToDevicePixels="true">
-                                            <ContentPresenter 
-                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <MultiTrigger>
-                                                <MultiTrigger.Conditions>
-                                                    <Condition Property="IsMouseOver" Value="True" />
-                                                </MultiTrigger.Conditions>
-                                                <Setter TargetName="Bd" Property="Background" Value="Transparent" />
-                                                <Setter TargetName="Bd" Property="BorderBrush" Value="Transparent" />
-                                            </MultiTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListView.ItemContainerStyle>
+                    
                 </ListView>
             </DockPanel>
         </DockPanel>

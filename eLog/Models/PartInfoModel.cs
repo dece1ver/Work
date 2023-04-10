@@ -434,5 +434,25 @@ namespace eLog.Models
             _Operator = AppSettings.CurrentOperator!;
             _Shift = string.Empty;
         }
+
+        public PartInfoModel(PartInfoModel part)
+        {
+            _Name = part.Name;
+            _Number = part.Number;
+            _Setup = part.Setup;
+            _Order = part.Order;
+            _TotalCount = part.TotalCount;
+            _FinishedCount = part.FinishedCount;
+            _StartSetupTime = part.StartSetupTime;
+            _StartMachiningTime = part.StartMachiningTime;
+            _EndMachiningTime = part.EndMachiningTime;
+            _MachineTime = part.MachineTime;
+            _DownTimes = part.DownTimes;
+            _Id = part.Id;
+            _OperatorComments = part.OperatorComments;
+            _Operator = part.Operator;
+            _Shift = part.Shift;
+            _IsSynced = part.IsSynced;
+        }
     }
 }

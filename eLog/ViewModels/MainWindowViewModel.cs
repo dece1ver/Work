@@ -351,7 +351,8 @@ namespace eLog.ViewModels
                     break;
                 case EndSetupResult.PartialComplete:
                     var now = DateTime.Now;
-                    var part = Parts[Parts.IndexOf((PartInfoModel)p)];
+                    var index = Parts.IndexOf((PartInfoModel)p);
+                    var part = Parts[index];
                     part.StartMachiningTime = now;
                     part.EndMachiningTime = now;
                     part.FinishedCount = 0;
@@ -374,7 +375,8 @@ namespace eLog.ViewModels
                             Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                         }
                     }
-                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                    Parts.RemoveAt(index);
+                    Parts.Insert(index, part);
                     break;
             }
             OnPropertyChanged(nameof(WorkIsNotInProgress));
@@ -393,7 +395,9 @@ namespace eLog.ViewModels
         private void OnEditDetailCommandExecuted(object p)
         {
             OverlayOn();
-            var part = (PartInfoModel)p;
+            var part = new PartInfoModel((PartInfoModel)p);
+            var index = Parts.IndexOf(part);
+            
             if (WindowsUserDialogService.EditDetail(ref part))
             {
                 part.IsSynced = false;
@@ -433,7 +437,8 @@ namespace eLog.ViewModels
                         break;
                     }
                 }
-                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                Parts.RemoveAt(index);
+                Parts.Insert(index, part);
                 AppSettings.Parts = Parts;
                 AppSettings.RewriteConfig();
             }
@@ -571,6 +576,7 @@ namespace eLog.ViewModels
                     for (var i = Parts.Count - 1; i >= 0; i--)
                     {
                         if (Parts[i] is not { IsSynced: false, IsFinished: not PartInfoModel.State.InProgress } part) continue;
+                        var index = i;
                         if (part.Id != -1)
                         {
                             switch (part.RewriteToXl())
@@ -601,14 +607,11 @@ namespace eLog.ViewModels
                             Status = $"Информация об изготовлении id{part.Id} зафиксирована. (фон)";
                         }
                         OnPropertyChanged(nameof(part.Title));
-                        var index = i;
                         Application.Current.Dispatcher.Invoke(delegate
                         {
-                            Parts[index] = part;
+                            Parts.RemoveAt(index);
+                            Parts.Insert(index, part);
                         });
-                        AppSettings.Parts = Parts;
-                        AppSettings.RewriteConfig();
-
                     }
 
                     Application.Current.Dispatcher.Invoke(delegate
