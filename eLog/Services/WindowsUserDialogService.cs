@@ -102,20 +102,7 @@ namespace eLog.Services
 
         public static bool EditDetail(ref PartInfoModel part, bool newDetail = false)
         {
-            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.TotalCount,
-                part.SetupTimePlan, part.SingleProductionTimePlan)
-            {
-                StartSetupTime = part.StartSetupTime,
-                StartMachiningTime = part.StartMachiningTime,
-                EndMachiningTime = part.EndMachiningTime,
-                MachineTime = part.MachineTime,
-                Id = part.Id,
-                FinishedCount = part.FinishedCount,
-                Shift = part.Shift,
-                Operator = part.Operator,
-                OperatorComments = part.OperatorComments,
-                DownTimes = part.DownTimes
-            };
+            var tempPart = new PartInfoModel(part);
             var dlg = new EditDetailWindow(tempPart, newDetail)
             {
                 Owner = Application.Current.MainWindow,
@@ -129,21 +116,7 @@ namespace eLog.Services
 
         public static bool FinishDetail(ref PartInfoModel part)
         {
-            var tempPart = new PartInfoModel(part.Name, part.Number, part.Setup, part.Order, part.TotalCount,
-                part.SetupTimePlan, part.SingleProductionTimePlan)
-            {
-                StartSetupTime = part.StartSetupTime,
-                StartMachiningTime = part.StartMachiningTime,
-                EndMachiningTime = part.EndMachiningTime,
-                MachineTime = part.MachineTime,
-                Id = part.Id,
-                FinishedCount = part.FinishedCount,
-                Shift = part.Shift,
-                Operator = part.Operator,
-                OperatorComments = part.OperatorComments,
-                DownTimes = part.DownTimes,
-
-            };
+            var tempPart = new PartInfoModel(part);
             var dlg = new EndDetailDialogWindow(tempPart)
             {
                 Owner = Application.Current.MainWindow,

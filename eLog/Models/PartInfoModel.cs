@@ -447,7 +447,11 @@ namespace eLog.Models
             _StartMachiningTime = part.StartMachiningTime;
             _EndMachiningTime = part.EndMachiningTime;
             _MachineTime = part.MachineTime;
-            _DownTimes = part.DownTimes;
+            _DownTimes = new ObservableCollection<DownTime>();
+            foreach (var downTime in part.DownTimes)
+            {
+                _DownTimes.Add(new DownTime(downTime));
+            }
             _Id = part.Id;
             _OperatorComments = part.OperatorComments;
             _Operator = part.Operator;

@@ -96,5 +96,12 @@ namespace eLog.Models
             Relation = relation;
         }
 
+        public DownTime(DownTime downTime)
+        {
+            _Type = downTime.Type;
+            _StartTime = downTime.StartTime;
+            _EndTime = downTime.EndTime;
+            _Relation = downTime.Relation;
+        }
     }
 }
