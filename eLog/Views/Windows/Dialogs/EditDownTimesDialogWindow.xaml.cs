@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -21,13 +22,14 @@ using eLog.Models;
 using eLog.Services;
 using static eLog.Views.Windows.Dialogs.EditDetailWindow;
 using Text = eLog.Infrastructure.Extensions.Text;
+using ValidationResult = System.Windows.Controls.ValidationResult;
 
 namespace eLog.Views.Windows.Dialogs
 {
     /// <summary>
     /// Логика взаимодействия для EditDownTimesDialogWindow.xaml
     /// </summary>
-    public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged
+    public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged, IDataErrorInfo
     {
         private PartInfoModel _Part;
         private string _Status;
@@ -58,7 +60,7 @@ namespace eLog.Views.Windows.Dialogs
             var downTimeType = WindowsUserDialogService.SetDownTimeType();
             if (downTimeType is { } type)
             {
-                Part.DownTimes.Add(new DownTime(type, DownTime.Relations.Machining));
+                Part.DownTimes.Add(new DownTime(Part, type, DownTime.Relations.Machining));
             }
             OnPropertyChanged(nameof(Part.DownTimesIsClosed));
             OnPropertyChanged(nameof(DownTimesIsClosed));
@@ -112,5 +114,30 @@ namespace eLog.Views.Windows.Dialogs
 
         #endregion
 
+        public string Error => null;
+
+        public string this[string columnName]
+        {
+            get
+            {
+                string error = null;
+                if (columnName == "StartTimeText" || columnName == "EndTimeText")
+                {
+                    foreach (var downTime in Part.DownTimes)
+                    {
+                        error = downTime[columnName];
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            break;
+                        }
+                    }
+                }
+                return error;
+            }
+        }
+        private object GetPropertyValue(string propertyName)
+        {
+            return GetType().GetProperty(propertyName)?.GetValue(this, null);
+        }
     }
 }

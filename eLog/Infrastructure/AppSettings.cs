@@ -146,7 +146,11 @@ namespace eLog.Infrastructure
         {
             var appSettings = new AppSettingsModel(Machine, XlPath, OrdersSourcePath, OrderQualifiers, Operators, CurrentShift, Parts, IsShiftStarted, CurrentOperator);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
-            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented));
+            var settings = new JsonSerializerSettings()
+            {
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects
+            };
+            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented, settings));
         }
     }
 }

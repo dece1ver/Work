@@ -292,7 +292,7 @@ namespace eLog.ViewModels
                 var index = Parts.IndexOf(part);
                 Parts.RemoveAt(index);
                 var downTimes = part.DownTimes;
-                downTimes.Add(new DownTime(type, part.SetupIsFinished ? DownTime.Relations.Machining : DownTime.Relations.Setup));
+                downTimes.Add(new DownTime(part, type, part.SetupIsFinished ? DownTime.Relations.Machining : DownTime.Relations.Setup));
                 part.DownTimes = downTimes;
                 OnPropertyChanged(nameof(part.DownTimes));
                 OnPropertyChanged(nameof(part.DownTimesIsClosed));

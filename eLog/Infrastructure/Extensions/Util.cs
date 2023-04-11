@@ -127,7 +127,7 @@ namespace eLog.Infrastructure.Extensions
                 var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
                               prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
                 
-                if (partial) part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup) {
+                if (partial) part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup, DownTime.Relations.Setup) {
                     StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
                     EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
                 var combinedDownTimes = part.DownTimes.Combine();
@@ -214,7 +214,7 @@ namespace eLog.Infrastructure.Extensions
                 if (partial)
                 {
                     part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as ObservableCollection<DownTime> ?? new ObservableCollection<DownTime>();
-                    part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup) { 
+                    part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup, DownTime.Relations.Setup) { 
                         StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
                         EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
                 }

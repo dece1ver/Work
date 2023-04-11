@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 using eLog.Infrastructure.Extensions;
 using eLog.ViewModels.Base;
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
 
 namespace eLog.Models
 {
-    public class DownTime : ViewModel
+    public class DownTime : ViewModel, IDataErrorInfo
     {
         private Types _Type;
         private Relations _Relation;
@@ -20,6 +21,8 @@ namespace eLog.Models
         private DateTime _EndTime;
         private string _StartTimeText;
         private string _EndTimeText;
+
+        public PartInfoModel ParentPart { get; init; }
 
         public enum Types
         {
@@ -67,6 +70,7 @@ namespace eLog.Models
             _ => throw new ArgumentOutOfRangeException()
         };
 
+        [Required(ErrorMessage = "Начало простоя обязательно")]
         public DateTime StartTime
         {
             get => _StartTime;
@@ -105,6 +109,8 @@ namespace eLog.Models
         }
 
         [JsonIgnore]
+        [Required(ErrorMessage = "Конец простоя обязателен")]
+        [CustomValidation(typeof(DownTime), nameof(CheckEndTime))]
         public string EndTimeText
         {
             get => _EndTimeText;
@@ -121,8 +127,9 @@ namespace eLog.Models
         [JsonIgnore] public bool InProgress => EndTime < StartTime;
 
         [JsonConstructor]
-        public DownTime(Types type, Relations relation, DateTime startTime, DateTime endTime)
+        public DownTime(PartInfoModel part, Types type, Relations relation, DateTime startTime, DateTime endTime)
         {
+            ParentPart = part;
             _Type = type;
             _StartTime = startTime;
             _StartTimeText = _StartTime.ToString(Text.DateTimeFormat);
@@ -131,8 +138,9 @@ namespace eLog.Models
             _Relation = relation;
         }
 
-        public DownTime(Types type, Relations relation)
+        public DownTime(PartInfoModel part, Types type, Relations relation)
         {
+            ParentPart = part;
             _Type = type;
             var now = DateTime.Now;
             _StartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
@@ -149,12 +157,55 @@ namespace eLog.Models
 
         public DownTime(DownTime downTime)
         {
+            ParentPart = downTime.ParentPart;
             _Type = downTime.Type;
             _StartTime = downTime.StartTime;
             _StartTimeText = downTime.StartTimeText;
             _EndTime = downTime.EndTime;
             _EndTimeText = downTime.EndTimeText;
             _Relation = downTime.Relation;
+        }
+
+        public static ValidationResult CheckEndTime(object value, ValidationContext context)
+        {
+            var endTime = (DateTime)value;
+            var downTime = (DownTime)context.ObjectInstance;
+
+            if (endTime < downTime.StartTime)
+            {
+                return new ValidationResult("Время окончания простоя должно быть позже времени начала");
+            }
+
+            return ValidationResult.Success;
+        }
+
+        public string this[string columnName]
+        {
+            get
+            {
+                string error = null;
+                if (columnName == "StartTimeText")
+                {
+                    if (StartTime == DateTime.MinValue)
+                    {
+                        
+                        error = "ОШИБКА";
+                    }
+                }
+                else if (columnName == "EndTimeText")
+                {
+                    
+                }
+                return error;
+            }
+        }
+
+        public string Error
+        {
+            get
+            {
+                return null;
+            }
         }
     }
 }
