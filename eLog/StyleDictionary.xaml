@@ -567,15 +567,14 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ListBoxItem}">
                     <Border x:Name="Bd" 
-                                            BorderBrush="{TemplateBinding BorderBrush}" 
-                                            BorderThickness="{TemplateBinding BorderThickness}" 
-                                            Background="{TemplateBinding Background}" 
-                                            Padding="{TemplateBinding Padding}" 
-                                            SnapsToDevicePixels="true">
-                        <ContentPresenter 
-                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            Background="{TemplateBinding Background}" 
+                            Padding="{TemplateBinding Padding}" 
+                            SnapsToDevicePixels="true">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <MultiTrigger>
@@ -589,6 +588,15 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <Style TargetType="Button" x:Key="GeneralButton">
+        <Setter Property="Margin" Value="4 0"/>
+        <Setter Property="FontSize" Value="18"/>
+    </Style>
+    <Style TargetType="Button" x:Key="LvButton">
+        <Setter Property="Width" Value="125"/>
+        <Setter Property="Margin" Value="4 0 0 0"/>
     </Style>
 
 </ResourceDictionary>

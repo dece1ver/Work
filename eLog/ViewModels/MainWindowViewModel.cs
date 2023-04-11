@@ -315,15 +315,25 @@ namespace eLog.ViewModels
             var index = Parts.IndexOf((PartInfoModel)p);
             
             if (part.LastDownTime is {InProgress: true} 
-                && MessageBox.Show($"Завершить простой \"{part.DownTimes[0].Name}\"?",
+                && MessageBox.Show($"Завершить простой {part.LastDownTimeName}?",
                     "Подтверждение",
                     MessageBoxButton.OKCancel, 
                     MessageBoxImage.Question) 
                 == MessageBoxResult.OK)
             {
-                
+                var now = DateTime.Now;
+                var endTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
                 Parts.RemoveAt(index);
-                part.LastDownTime.EndTime = DateTime.Now;
+                if (part.LastDownTime.StartTime == endTime)
+                {
+                    part.DownTimes.Remove(part.LastDownTime);
+                }
+                else
+                {
+                    
+                    part.LastDownTime.EndTimeText = DateTime.Now.ToString(Text.DateTimeFormat);
+                    
+                }
                 OnPropertyChanged(nameof(part.DownTimes));
                 OnPropertyChanged(nameof(part.DownTimesIsClosed));
                 Parts.Insert(index, part);
@@ -396,7 +406,7 @@ namespace eLog.ViewModels
         {
             OverlayOn();
             var part = new PartInfoModel((PartInfoModel)p);
-            var index = Parts.IndexOf(part);
+            var index = Parts.IndexOf((PartInfoModel)p);
             
             if (WindowsUserDialogService.EditDetail(ref part))
             {
@@ -437,8 +447,8 @@ namespace eLog.ViewModels
                         break;
                     }
                 }
-                Parts.RemoveAt(index);
-                Parts.Insert(index, part);
+
+                Parts[index] = part;
                 AppSettings.Parts = Parts;
                 AppSettings.RewriteConfig();
             }

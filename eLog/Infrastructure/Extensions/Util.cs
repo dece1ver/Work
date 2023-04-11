@@ -127,7 +127,10 @@ namespace eLog.Infrastructure.Extensions
                 var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
                               prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
                 
-                if (partial) part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup){StartTime = part.StartSetupTime, EndTime = part.EndMachiningTime });
+                if (partial) part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup) {
+                    StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
+                    EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
+                var combinedDownTimes = part.DownTimes.Combine();
                 foreach (var xlRow in ws.Rows())
                 {
                     if (xlRow is null) continue;
@@ -143,7 +146,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(2).FormulaR1C1 = prevRow.Cell(2).FormulaR1C1;
                     xlRow.Cell(3).FormulaR1C1 = prevRow.Cell(3).FormulaR1C1;
                     xlRow.Cell(4).FormulaR1C1 = prevRow.Cell(4).FormulaR1C1;
-                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{part.DownTimes.Report()}".Trim();
+                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
                     // если время завершения раньше 07:05, то отнимаем сутки для корректности отчетов
                     xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(5)
                         ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy") 
@@ -211,14 +214,17 @@ namespace eLog.Infrastructure.Extensions
                 if (partial)
                 {
                     part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as ObservableCollection<DownTime> ?? new ObservableCollection<DownTime>();
-                    part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup) { StartTime = part.StartSetupTime, EndTime = part.EndMachiningTime });
+                    part.DownTimes.Add(new DownTime(DownTime.Types.PartialSetup, DownTime.Relations.Setup) { 
+                        StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
+                        EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
                 }
                 var wb = new XLWorkbook(AppSettings.XlPath);
                 File.Copy(AppSettings.XlPath, AppSettings.XlReservedPath, true);
+                var combinedDownTimes = part.DownTimes.Combine();
                 foreach (var xlRow in wb.Worksheet(1).Rows())
                 {
                     if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
-                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{part.DownTimes.Report()}".Trim();
+                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
                     // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
                     xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
                         ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
@@ -340,11 +346,30 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="downTimes"></param>
         /// <returns></returns>
-        public static string Report(this ObservableCollection<DownTime> downTimes) => 
-            downTimes.Aggregate(string.Empty, (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 2)} мин\n");
+        public static string Report(this IEnumerable<DownTime> downTimes) =>
+            downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n");
+
+        public static string Report(this IEnumerable<CombinedDownTime> downTimes) =>
+            downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n");
 
         public static double TotalMinutes(this IEnumerable<DownTime> downTimes) =>
             downTimes.Aggregate(0.0, (sum, downTime) => sum + downTime.Time.TotalMinutes);
+
+        public static double TotalMinutes(this IEnumerable<CombinedDownTime> downTimes) =>
+            downTimes.Aggregate(0.0, (sum, downTime) => sum + downTime.Time.TotalMinutes);
+
+        public static IEnumerable<CombinedDownTime> Combine(this ICollection<DownTime> downTimes)
+        {
+            return downTimes
+                .GroupBy(s => new { s.Name, s.Type, s.Relation })
+                .Select(g => new CombinedDownTime()
+                {
+                    Name = (g.Key.Relation is DownTime.Relations.Setup ? "(н) " : "(и) ") + g.Key.Name,
+                    Type = g.Key.Type,
+                    Relation = g.Key.Relation,
+                    Time = new TimeSpan(g.Sum(d => d.Time.Ticks))
+                }).OrderBy(x => x.Relation);
+        }
 
         public enum GetNumberOption { Any, OnlyPositive }
 

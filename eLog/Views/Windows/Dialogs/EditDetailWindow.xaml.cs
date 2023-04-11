@@ -324,7 +324,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 _EndMachiningTime = value;
-                Part.EndMachiningTime = DateTime.TryParseExact(_EndMachiningTime, "dd.MM.yyyy HH:mm", null, DateTimeStyles.None, out var endMachiningTime) 
+                Part.EndMachiningTime = DateTime.TryParseExact(_EndMachiningTime, Text.DateTimeFormat, null, DateTimeStyles.None, out var endMachiningTime) 
                     ? endMachiningTime 
                     : DateTime.MinValue;
                 OnPropertyChanged(nameof(FinishedCount));
@@ -768,13 +768,17 @@ namespace eLog.Views.Windows.Dialogs
         private void EditDownTimesButton_Click(object sender, RoutedEventArgs e)
         {
             var tempPart = new PartInfoModel(Part);
+            var height = Height;
+            Height = 477;
             var dlg = new EditDownTimesDialogWindow(tempPart)
             {
                 Owner = this,
                 Width = Width,
                 Height = Height,
             };
-            if (dlg.ShowDialog() != true) return;
+            var result = dlg.ShowDialog();
+            Height = height;
+            if (result != true) return;
             Part = dlg.Part;
         }
 

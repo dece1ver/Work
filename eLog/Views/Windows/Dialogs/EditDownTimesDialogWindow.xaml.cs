@@ -14,7 +14,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml.Wordprocessing;
+using eLog.Infrastructure;
+using eLog.Infrastructure.Extensions;
 using eLog.Models;
+using eLog.Services;
+using static eLog.Views.Windows.Dialogs.EditDetailWindow;
+using Text = eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.Views.Windows.Dialogs
 {
@@ -25,6 +31,7 @@ namespace eLog.Views.Windows.Dialogs
     {
         private PartInfoModel _Part;
         private string _Status;
+        private bool _DownTimesIsClosed;
 
         public PartInfoModel Part
         {
@@ -36,6 +43,31 @@ namespace eLog.Views.Windows.Dialogs
         {
             get => _Status;
             set => Set(ref _Status, value);
+        }
+
+        private void DeleteDownTimeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button { Tag: DownTime downTime })
+            {
+                Part.DownTimes.Remove(downTime);
+            }
+        }
+
+        private void AddDownTimeButton_Click(object sender, RoutedEventArgs e)
+        {
+            var downTimeType = WindowsUserDialogService.SetDownTimeType();
+            if (downTimeType is { } type)
+            {
+                Part.DownTimes.Add(new DownTime(type, DownTime.Relations.Machining));
+            }
+            OnPropertyChanged(nameof(Part.DownTimesIsClosed));
+            OnPropertyChanged(nameof(DownTimesIsClosed));
+        }
+
+        public bool DownTimesIsClosed
+        {
+            get => Part.DownTimesIsClosed;
+            set => Set(ref _DownTimesIsClosed, value);
         }
 
         public EditDownTimesDialogWindow(PartInfoModel part)
@@ -79,5 +111,6 @@ namespace eLog.Views.Windows.Dialogs
         }
 
         #endregion
+
     }
 }

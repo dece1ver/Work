@@ -163,6 +163,7 @@ namespace eLog.Models
                 Set(ref _StartSetupTime, value);
                 OnPropertyChanged(nameof(EndSetupInfo));
                 OnPropertyChanged(nameof(SetupIsNotFinished));
+                OnPropertyChanged(nameof(SetupCanBeClosed));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
                 OnPropertyChanged(nameof(InProduction));
@@ -180,6 +181,7 @@ namespace eLog.Models
                 Set(ref _StartMachiningTime, value);
                 OnPropertyChanged(nameof(EndSetupInfo));
                 OnPropertyChanged(nameof(SetupIsNotFinished));
+                OnPropertyChanged(nameof(SetupCanBeClosed));
                 OnPropertyChanged(nameof(IsFinished));
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(CanBeFinished));
@@ -197,6 +199,7 @@ namespace eLog.Models
             {
                 Set(ref _EndMachiningTime, value);
                 OnPropertyChanged(nameof(SetupIsNotFinished));
+                OnPropertyChanged(nameof(SetupCanBeClosed));
                 OnPropertyChanged(nameof(CanBeFinished));
                 OnPropertyChanged(nameof(IsFinished));
                 OnPropertyChanged(nameof(IsStarted));
@@ -293,7 +296,11 @@ namespace eLog.Models
 
 
         /// <summary> Фактическое время наладки с учетом перерывов </summary>
-        [JsonIgnore] public TimeSpan SetupTimeFact => FullSetupTimeFact - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime);
+        [JsonIgnore] public TimeSpan SetupTimeFact => FullSetupTimeFact 
+                                                      - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime) 
+                                                      - new TimeSpan(DownTimes
+                                                          .Where(x => x.Relation is DownTime.Relations.Setup)
+                                                          .Sum(d => d.Time.Ticks));
 
         /// <summary> Полное название детали (наименование + обозначение) </summary>
         [JsonIgnore] public string FullName => $"{Name} {Number}".Trim();
@@ -321,13 +328,16 @@ namespace eLog.Models
         /// <summary> Время изготовления с учетом перерывов </summary>
         [JsonIgnore]
         public TimeSpan ProductionTimeFact =>
-            FullProductionTimeFact - Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime);
+            FullProductionTimeFact - Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime) 
+                                   - new TimeSpan(DownTimes
+                                       .Where(x => x.Relation is DownTime.Relations.Machining)
+                                       .Sum(d => d.Time.Ticks));
 
         /// <summary>
         /// Может ли быть завершена деталь.
         /// True если время начала изготовления больше или равно времени начала наладки и если время начала изготовления раньше текущего.
         /// </summary>
-        [JsonIgnore] public bool CanBeFinished => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime;
+        [JsonIgnore] public bool CanBeFinished => StartSetupTime <= StartMachiningTime && DateTime.Now > StartMachiningTime && DownTimesIsClosed;
 
         /// <summary>
         /// Статус изготовления детали.
@@ -350,13 +360,17 @@ namespace eLog.Models
         /// Завершена ли наладка.
         /// True если нет незавершенных простоев.
         /// </summary>
-        public bool DownTimesIsClosed => LastDownTime is null || !LastDownTime.InProgress;
+        [JsonIgnore] public bool DownTimesIsClosed => LastDownTime is null || !LastDownTime.InProgress;
 
         /// <summary>
-        /// Завершена ли наладка.
-        /// True если нет незавершенных простоев.
+        /// Последний простой
         /// </summary>
         [JsonIgnore] public DownTime? LastDownTime => DownTimes.LastOrDefault();
+
+        /// <summary>
+        /// Имя последнего простоя в кавычках, потому что XAML почему-то не жрет &quot;
+        /// </summary>
+        [JsonIgnore] public string LastDownTimeName => LastDownTime is null ? string.Empty : $"\"{LastDownTime.Name}\"";
 
         /// <summary>
         /// Завершена ли наладка.
@@ -375,6 +389,11 @@ namespace eLog.Models
         /// Инвертированное значение свойства SetupIsFinished.
         /// </summary>
         [JsonIgnore] public bool SetupIsNotFinished => !SetupIsFinished;
+
+        /// <summary>
+        /// Может ли быть завершена наладка. Нужно для привязок разметки.
+        /// </summary>
+        [JsonIgnore] public bool SetupCanBeClosed => SetupIsNotFinished && DownTimesIsClosed;
 
         /// <summary>
         /// Не завершено ли изготовление. Нужно для привязок разметки.
@@ -435,6 +454,10 @@ namespace eLog.Models
             _Shift = string.Empty;
         }
 
+        /// <summary>
+        /// Конструктор копирования
+        /// </summary>
+        /// <param name="part">Источник</param>
         public PartInfoModel(PartInfoModel part)
         {
             _Name = part.Name;

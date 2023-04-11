@@ -7,7 +7,7 @@ using ClosedXML.Excel;
 
 namespace eLog.Infrastructure.Extensions
 {
-    public class Text
+    public static class Text
     {
         public const string WithoutOrderItem = " ";
         public const string WithoutOrderDescription = "Без М/Л";
@@ -18,18 +18,18 @@ namespace eLog.Infrastructure.Extensions
 
         public static readonly string[] Shifts = { DayShift, NightShift };
 
-        public class DownTimes
+        public static class DownTimes
         {
             public const string Maintenance = "Обслуживание";
             public const string ToolSearching = "Поиск и получение инструмента";
-            public const string Mentoring = "Помощь / наставничество / обучение";
+            public const string Mentoring = "Помощь / обучение";
             public const string ContactingDepartments = "Обращение в другие службы";
             public const string FixtureMaking = "Изготовление оснастки и калибров";
             public const string HardwareFailure = "Отказ оборудования";
             public const string PartialSetup = "Частичная наладка";
         }
 
-        public class ValidationErrors
+        public static class ValidationErrors
         {
             public const string PartName =
                 "Наименование детали.\n\nНе может быть пустым\n\nДолжно совпадать с наименованием в М/Л\n(записи в скобках можно не указывать)\n\n" +
