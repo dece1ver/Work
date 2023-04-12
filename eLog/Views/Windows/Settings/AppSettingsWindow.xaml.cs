@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Threading;
@@ -14,23 +15,24 @@ namespace eLog.Views.Windows.Settings
     /// </summary>
     public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     {
-        public static readonly DependencyProperty AppSettingsProperty =
-            DependencyProperty.Register(
-                nameof(AppSettings),
-                typeof(AppSettingsModel),
-                typeof(AppSettingsWindow),
-                new PropertyMetadata(default(string)));
-
-
-        public AppSettings AppSettings
-        {
-            get => (AppSettings)GetValue(AppSettingsProperty);
-            set => SetValue(AppSettingsProperty, value);
-        }
-
+        private string _XlPath;
+        private string _OrdersSourcePath;
         public List<Machine> Machines { get; set; } = new();
 
-        public Machine? CurrentMachine { get; set; }
+        public string XlPath
+        {
+            get => _XlPath;
+            set => Set(ref _XlPath, value);
+        }
+
+        public string OrdersSourcePath
+        {
+            get => _OrdersSourcePath;
+            set => Set(ref _OrdersSourcePath, value);
+        }
+
+
+        public Machine Machine { get; set; }
 
         public AppSettingsWindow()
         {
@@ -39,29 +41,30 @@ namespace eLog.Views.Windows.Settings
             {
                 Machines.Add(new Machine(i));
             }
+            Machine = new Machine(AppSettings.Instance.Machine.Id);
+            _XlPath = AppSettings.Instance.XlPath;
+            _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
         }
 
         private void SetXlPathButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new()
+            OpenFileDialog dlg = new()
             {
                 Filter = "Excel таблица (*.xlsx)|*.xlsx",
                 DefaultExt = "xlsx"
             };
-            if (openFileDialog.ShowDialog() != true) return;
-            AppSettings.Instance.XlPath = openFileDialog.FileName;
-            XlPathTextBox.Text = AppSettings.Instance.XlPath;
+            if (dlg.ShowDialog() != true) return;
+            XlPath = dlg.FileName;
         }
         private void SetOrdersSourceButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new()
+            OpenFileDialog dlg = new()
             {
                 Filter = "Excel таблица (*.xlsx)|*.xlsx",
                 DefaultExt = "xlsx"
             };
-            if (openFileDialog.ShowDialog() != true) return;
-            AppSettings.OrdersSourcePath = openFileDialog.FileName;
-            OrdersSourcePathTextBox.Text = AppSettings.OrdersSourcePath;
+            if (dlg.ShowDialog() != true) return;
+            OrdersSourcePath = dlg.FileName;
         }
 
         #region PropertyChanged
@@ -99,6 +102,5 @@ namespace eLog.Views.Windows.Settings
 
         #endregion
 
-        
     }
 }

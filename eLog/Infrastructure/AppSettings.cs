@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,8 +12,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
+using eLog.Annotations;
 using eLog.Infrastructure.Extensions;
 using eLog.Models;
+using eLog.ViewModels.Base;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -20,8 +25,10 @@ namespace eLog.Infrastructure
     /// <summary>
     /// Основной класс с настройками, статический для доступа откуда угодно, потом синглтон сделаю наверно.
     /// </summary>
-    public class AppSettings
+    public class AppSettings : ViewModel
     {
+        private AppSettings() { }
+
         private static AppSettings _Instance;
         [JsonIgnore] public static AppSettings Instance => _Instance ??= new AppSettings();
 
@@ -43,67 +50,112 @@ namespace eLog.Infrastructure
         /// <summary> Путь к файлу логов </summary>
         [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
 
+        private Machine _Machine = new (0);
+        private string _XlPath = string.Empty;
+        private string _OrdersSourcePath = string.Empty;
+        private string[] _OrderQualifiers = Array.Empty<string>();
+        private ObservableCollection<Operator> _Operators = new();
+        private string _CurrentShift = string.Empty;
+        private ObservableCollection<PartInfoModel> _Parts = new();
+        private bool _IsShiftStarted;
+        private Operator? _CurrentOperator;
+
         /// <summary> Текущий станок </summary>
-        public static Machine Machine { get; set; } = new (0);
+        public Machine Machine
+        {
+            get => _Machine;
+            set => Set(ref _Machine, value);
+        }
 
         /// <summary> Путь к общей таблице </summary>
-        public static string XlPath { get; set; } = string.Empty;
+        public string XlPath
+        {
+            get => _XlPath;
+            set => Set(ref _XlPath, value);
+        }
 
         /// <summary> Путь к таблице с номенклатурой </summary>
-        public static string OrdersSourcePath { get; set; } = string.Empty;
+        public string OrdersSourcePath
+        {
+            get => _OrdersSourcePath;
+            set => Set(ref _OrdersSourcePath, value);
+        }
 
         /// <summary> Путь к таблице с номенклатурой </summary>
-        public static string[] OrderQualifiers { get; set; } = Array.Empty<string>();
+        public string[] OrderQualifiers
+        {
+            get => _OrderQualifiers;
+            set => Set(ref _OrderQualifiers, value);
+        }
 
         /// <summary> Список операторов </summary>
-        public static ObservableCollection<Operator> Operators { get; set; } = new();
+        public ObservableCollection<Operator> Operators
+        {
+            get => _Operators;
+            set => Set(ref _Operators, value);
+        }
 
         /// <summary> Текущая смена </summary>
-        public static string CurrentShift { get; set; } = string.Empty;
+        public string CurrentShift
+        {
+            get => _CurrentShift;
+            set => Set(ref _CurrentShift, value);
+        }
 
         /// <summary> Список деталей </summary>
-        public static ObservableCollection<PartInfoModel> Parts { get; set; } = new();
+        public ObservableCollection<PartInfoModel> Parts
+        {
+            get => _Parts;
+            set => Set(ref _Parts, value);
+        }
 
         /// <summary> Запущена ли смена </summary>
-        public static bool IsShiftStarted { get; set; }
+        public bool IsShiftStarted
+        {
+            get => _IsShiftStarted;
+            set => Set(ref _IsShiftStarted, value);
+        }
 
         /// <summary> Текущий оператор </summary>
-        public static Operator? CurrentOperator { get; set; }
+        public Operator? CurrentOperator
+        {
+            get => _CurrentOperator;
+            set => Set(ref _CurrentOperator, value);
+        }
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
-        private static void CreateBaseConfig()
+        private void CreateBaseConfig()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
-            var tempAppSettings = new AppSettings()
+            Machine = new Machine(0);
+            Operators = new ObservableCollection<Operator>()
             {
-                Machine = new Machine(0),
-                Operators = new ObservableCollection<Operator>()
+                new()
                 {
-                    new()
-                    {
-                        LastName = "Бабохин",
-                        FirstName = "Кирилл",
-                        Patronymic = "Георгиевич"
-                    },
+                    LastName = "Бабохин",
+                    FirstName = "Кирилл",
+                    Patronymic = "Георгиевич"
                 },
-                CurrentShift = Text.DayShift,
-                Parts = new ObservableCollection<PartInfoModel>(),
-                XlPath = string.Empty,
-                OrdersSourcePath = string.Empty,
-                OrderQualifiers = new[]
-                {
-                    Text.WithoutOrderItem,
-                    "УЧ",
-                    "ФЛ",
-                    "БП",
-                    "СУ",
-                    "УУ",
-                    "ЗУ",
-                    "СЛ",
-                },
-                IsShiftStarted = false,
             };
+            CurrentShift = Text.DayShift;
+            Parts = new ObservableCollection<PartInfoModel>();
+            var tempAppSettings = new AppSettings();
+            XlPath = string.Empty;
+            OrdersSourcePath = string.Empty;
+            OrderQualifiers = new[]
+            {
+                Text.WithoutOrderItem,
+                "УЧ",
+                "ФЛ",
+                "БП",
+                "СУ",
+                "УУ",
+                "ЗУ",
+                "СЛ",
+            };
+            IsShiftStarted = false;
+
             RewriteConfig();
         }
 
@@ -117,21 +169,21 @@ namespace eLog.Infrastructure
         }
 
         /// <summary>
-        /// Читает конфиг, если возникает исключение, то создает конфиг по-умолчанию.
+        /// Читает конфиг, если возникает исключение, то создает конфиг по-умолчанию и читает его.
         /// </summary>
-        public static AppSettings ReadConfig()
+        public void ReadConfig()
         {
             if (!File.Exists(ConfigFilePath)) CreateBaseConfig();
             
             try
             {
-                var json = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(ConfigFilePath));
-                return json ?? throw new NullReferenceException();
+                var json = File.ReadAllText(ConfigFilePath);
+                JsonConvert.PopulateObject(json, this);
             }
             catch
             {
                 CreateBaseConfig();
-                return ReadConfig();
+                ReadConfig();
             }
         }
 
@@ -146,6 +198,32 @@ namespace eLog.Infrastructure
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects
             };
             File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
+        }
+
+        public new event PropertyChangedEventHandler? PropertyChanged;
+
+        protected new virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
+        {
+            var handlers = PropertyChanged;
+            if (handlers is null) return;
+
+            var invokationList = handlers.GetInvocationList();
+            var args = new PropertyChangedEventArgs(PropertyName);
+
+            foreach (var action in invokationList)
+            {
+                if (action.Target is DispatcherObject dispatcherObject)
+                {
+                    dispatcherObject.Dispatcher.Invoke(action, this, args);
+                }
+                else
+                {
+                    action.DynamicInvoke(this, args);
+                }
+            }
+            ReadConfig();
+            Debug.WriteLine("Rewrite config from PropertyChanged");
+            // проверить
         }
     }
 }

@@ -181,31 +181,20 @@ namespace eLog.ViewModels
         private static bool CanEndShiftCommandExecute(object p) => true;
         #endregion
 
-        #region EditSettingsCommand
+        #region EditSettings
         public ICommand EditSettingsCommand { get; }
         private void OnEditSettingsCommandExecuted(object p)
         {
             using (Overlay = new())
             {
-                var settings = new AppSettingsModel(Machine, AppSettings.Instance.XlPath, AppSettings.Instance.OrdersSourcePath, AppSettings.Instance.OrderQualifiers, Operators, AppSettings.Instance.CurrentShift, Parts);
-                WindowsUserDialogService windowsUserDialogService = new();
-
-                if (windowsUserDialogService.Edit(settings))
-                {
-                    AppSettings.Instance.Machine = settings.Machine;
+                if (WindowsUserDialogService.EditSettings())
                     Machine = AppSettings.Instance.Machine;
-                    AppSettings.Instance.XlPath = settings.XlPath;
-                    AppSettings.Instance.OrdersSourcePath = settings.OrdersSourcePath;
-                    AppSettings.Instance.OrderQualifiers = settings.OrderQualifiers;
-                    AppSettings.Instance.Parts = settings.Parts;
-                    AppSettings.RewriteConfig();
-                }
             }
         }
         private static bool CanEditSettingsCommandExecute(object p) => true;
         #endregion
         
-        #region EditOperatorsCommand
+        #region EditOperators
         public ICommand EditOperatorsCommand { get; }
         private void OnEditOperatorsCommandExecuted(object p)
         {
@@ -234,7 +223,7 @@ namespace eLog.ViewModels
         private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
 
-        #region EditSettingsCommand
+        #region ShowAbout
         public ICommand ShowAboutCommand { get; }
         private void OnShowAboutCommandExecuted(object p)
         {

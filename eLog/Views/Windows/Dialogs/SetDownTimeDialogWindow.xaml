@@ -65,8 +65,18 @@
                     <cmd:SetDownTimeDialogCommand DialogResult="ContactingDepartments"/>
                 </Button.Command>
             </Button>
-            <Button Grid.Row="1" Grid.Column="0" Margin="0 2 2 0"
-                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0 2 2 0" 
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
+                <Button.Content>
+                    <TextBlock Text="✗" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Button.Content>
+                <Button.Command>
+                    <cmd:SetDownTimeDialogCommand DialogResult="{x:Null}"/>
+                </Button.Command>
+            </Button>
+            
+            <Button Grid.Row="1" Grid.Column="2" Margin="2 2 2 0"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
                 <Button.Content>
                     <TextBlock Text="{x:Static ext:Text+DownTimes.FixtureMaking}" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
                 </Button.Content>
@@ -74,22 +84,13 @@
                     <cmd:SetDownTimeDialogCommand DialogResult="FixtureMaking"/>
                 </Button.Command>
             </Button>
-            <Button Grid.Row="1" Grid.Column="1" Margin="2 2 2 0"
+            <Button Grid.Row="1" Grid.Column="3" Margin="2 2 0 0"
                 CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
                 <Button.Content>
                     <TextBlock Text="{x:Static ext:Text+DownTimes.HardwareFailure}" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
                 </Button.Content>
                 <Button.Command>
                     <cmd:SetDownTimeDialogCommand DialogResult="HardwareFailure"/>
-                </Button.Command>
-            </Button>
-            <Button Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="2 2 0 0" 
-                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
-                <Button.Content>
-                    <TextBlock Text="✗" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-                </Button.Content>
-                <Button.Command>
-                    <cmd:SetDownTimeDialogCommand DialogResult="{x:Null}"/>
                 </Button.Command>
             </Button>
         </Grid>

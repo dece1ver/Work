@@ -8,15 +8,11 @@
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         xmlns:commands="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:dialogs="clr-namespace:eLog.Views.Windows.Dialogs"
-        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         WindowStartupLocation="CenterOwner" WindowStyle="None"
         ResizeMode="NoResize" FontSize="22"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d"
         Title="Выбор предыдущей детали" Height="385" Width="700">
-    <Window.Resources>
-        <cnv:SetupsVisibilityConverter x:Key="SetupsVisibilityConverter"/>
-    </Window.Resources>
     <Border BorderBrush="Gray" BorderThickness="1">
         <DockPanel>
             <UniformGrid DockPanel.Dock="Bottom" Columns="2">

@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
-        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
         xmlns:inf="clr-namespace:eLog.Infrastructure"
@@ -14,10 +13,6 @@
         Title="Редактирование простоев" d:DesignHeight="477" d:DesignWidth="1100"
         WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize">
     <Window.Resources>
-        <cnv:DownTimeRelationConverter x:Key="DownTimeRelationConverter"/>
-        <cnv:DownTimeLengthConverter x:Key="DownTimeLengthConverter"/>
-        <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
-        <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
         <Style TargetType="TextBox">
             <Setter Property="Padding" Value="3"/>
             <Setter Property="FontSize" Value="18"/>

@@ -34,7 +34,6 @@ namespace eLog.Services
             return item switch
             {
                 ObservableCollection<Operator> operators => EditOperators(ref operators),
-                AppSettings settings => EditSettings(ref settings),
                 PartInfoModel part => EditDetail(ref part),
                 _ => false,
             };
@@ -63,17 +62,17 @@ namespace eLog.Services
             return true;
         }
 
-        public static bool EditSettings(ref AppSettings settings)
+        public static bool EditSettings()
         {
             var dlg = new AppSettingsWindow()
             {
-                AppSettings = settings,
-                CurrentMachine = settings.Machine,
                 Owner = Application.Current.MainWindow,
             };
             if (dlg.ShowDialog() != true) return false;
 
-            settings = dlg.AppSettings;
+            AppSettings.Instance.Machine = dlg.Machine;
+            AppSettings.Instance.XlPath = dlg.XlPath;
+            AppSettings.Instance.OrdersSourcePath = dlg.OrdersSourcePathTextBox.Text;
 
             return true;
         }
