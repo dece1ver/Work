@@ -16,13 +16,23 @@ namespace eLog.Models
     public class DownTime : ViewModel, IDataErrorInfo
     {
         private Types _Type;
-        private Relations _Relation;
         private DateTime _StartTime;
         private DateTime _EndTime;
         private string _StartTimeText;
         private string _EndTimeText;
+        private PartInfoModel _ParentPart;
 
-        public PartInfoModel ParentPart { get; init; }
+        public PartInfoModel ParentPart
+        {
+            get => _ParentPart;
+            set
+            {
+                if (Set(ref _ParentPart, value))
+                {
+                    OnPropertyChanged(nameof(Relation));
+                }
+            }
+        }
 
         public enum Types
         {
@@ -37,7 +47,7 @@ namespace eLog.Models
 
         public enum Relations
         {
-            Setup, Machining
+            Setup, Machining, None
         }
 
         public Types Type
@@ -54,8 +64,13 @@ namespace eLog.Models
 
         public Relations Relation
         {
-            get => _Relation;
-            set => Set(ref _Relation, value);
+            get
+            {
+                if (StartTime == DateTime.MinValue && StartTime < ParentPart.StartSetupTime) return Relations.None;
+                return ParentPart.SetupIsFinished && _StartTime >= ParentPart.StartMachiningTime
+                    ? Relations.Machining
+                    : Relations.Setup;
+            }
         }
 
         public string Name => Type switch
@@ -70,14 +85,15 @@ namespace eLog.Models
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        [Required(ErrorMessage = "Начало простоя обязательно")]
         public DateTime StartTime
         {
             get => _StartTime;
             private set
             {
                 if (!Set(ref _StartTime, value)) return;
-                // if (_StartTime > DateTime.MinValue) _StartTimeText = _StartTime.ToString(Text.DateTimeFormat);
+                if (_StartTime == DateTime.MinValue || _StartTime < ParentPart.StartSetupTime) return;
+                OnPropertyChanged(nameof(EndTimeText));
+                OnPropertyChanged(nameof(Relation));
                 OnPropertyChanged(nameof(Time));
                 OnPropertyChanged(nameof(InProgress));
             }
@@ -103,14 +119,13 @@ namespace eLog.Models
             {
                 if (!Set(ref _EndTime, value)) return;
                 // if (_EndTime > DateTime.MinValue) _EndTimeText = _EndTime.ToString(Text.DateTimeFormat);
+                OnPropertyChanged(nameof(StartTimeText));
                 OnPropertyChanged(nameof(Time));
                 OnPropertyChanged(nameof(InProgress));
             }
         }
 
         [JsonIgnore]
-        [Required(ErrorMessage = "Конец простоя обязателен")]
-        [CustomValidation(typeof(DownTime), nameof(CheckEndTime))]
         public string EndTimeText
         {
             get => _EndTimeText;
@@ -127,85 +142,94 @@ namespace eLog.Models
         [JsonIgnore] public bool InProgress => EndTime < StartTime;
 
         [JsonConstructor]
-        public DownTime(PartInfoModel part, Types type, Relations relation, DateTime startTime, DateTime endTime)
+        public DownTime(PartInfoModel part, Types type, DateTime startTime, DateTime endTime)
         {
-            ParentPart = part;
+            _ParentPart = part;
             _Type = type;
             _StartTime = startTime;
             _StartTimeText = _StartTime.ToString(Text.DateTimeFormat);
             _EndTime = endTime;
             _EndTimeText = _EndTime.ToString(Text.DateTimeFormat);
-            _Relation = relation;
         }
 
-        public DownTime(PartInfoModel part, Types type, Relations relation)
+        public DownTime(PartInfoModel part, Types type)
         {
-            ParentPart = part;
+            _ParentPart = part;
             _Type = type;
             var now = DateTime.Now;
             _StartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
             _StartTimeText = StartTime.ToString(Text.DateTimeFormat);
             _EndTime = DateTime.MinValue;
             _EndTimeText = string.Empty;
-            _Relation = relation;
         }
 
         /// <summary>
         /// Конструктор копирования
         /// </summary>
+        /// <param name="part">Деталь к которой относится простой</param>
         /// <param name="downTime">Источник</param>
 
-        public DownTime(DownTime downTime)
+        public DownTime(PartInfoModel part, DownTime downTime)
         {
-            ParentPart = downTime.ParentPart;
+            _ParentPart = part;
             _Type = downTime.Type;
             _StartTime = downTime.StartTime;
             _StartTimeText = downTime.StartTimeText;
             _EndTime = downTime.EndTime;
             _EndTimeText = downTime.EndTimeText;
-            _Relation = downTime.Relation;
         }
-
-        public static ValidationResult CheckEndTime(object value, ValidationContext context)
-        {
-            var endTime = (DateTime)value;
-            var downTime = (DownTime)context.ObjectInstance;
-
-            if (endTime < downTime.StartTime)
-            {
-                return new ValidationResult("Время окончания простоя должно быть позже времени начала");
-            }
-
-            return ValidationResult.Success;
-        }
-
+        
         public string this[string columnName]
         {
             get
             {
-                string error = null;
-                if (columnName == "StartTimeText")
+                string error = null!;
+                switch (columnName)
                 {
-                    if (StartTime == DateTime.MinValue)
+                    case nameof(StartTimeText):
                     {
-                        
-                        error = "ОШИБКА";
+                        if (StartTime == DateTime.MinValue)
+                        {
+                            error = "Некорректно указано время начала";
+                        }
+                        else if (StartTime < ParentPart.StartSetupTime)
+                        {
+                            error = "Время начала простоя не может быть раньше времени запуска детали.";
+                        }
+                        else if (EndTime != DateTime.MinValue && EndTime <= StartTime)
+                        {
+                            error = "Время начала простоя раньше времени завершения.";
+                        }
+                        break;
                     }
+                    case nameof(EndTimeText):
+                        if (EndTime != DateTime.MinValue && EndTime <= StartTime)
+                        {
+                            error = "Время завершения простоя не может быть раньше времени начала.";
+                        }
+                        else if (Relation is Relations.Setup && ParentPart.SetupIsFinished &&
+                                 EndTime > ParentPart.StartMachiningTime)
+                        {
+                            error =
+                                "Время завершения простоя не может быть позже времени завершения наладки, т.к. он открыт в наладке";
+                        }
+                        else if (Relation is Relations.Machining && ParentPart.IsFinished == PartInfoModel.State.Finished &&
+                                 EndTime > ParentPart.EndMachiningTime)
+                        {
+                            error = "Время завершения простоя не может быть позже времени завершения заготовления детали.";
+                        }
+                        else if (Relation is Relations.Machining && ParentPart.IsFinished == PartInfoModel.State.InProgress &&
+                                 EndTime > DateTime.Now)
+                        {
+                            error = "Время завершения простоя не может быть позже текущего времени, т.к. изготовление детали не завершено.";
+                        }
+                        break;
                 }
-                else if (columnName == "EndTimeText")
-                {
-                    
-                }
+                Debug.WriteLine(error);
                 return error;
             }
         }
 
-        public string Error
-        {
-            get
-            {
-                return null;
-            }
-        }
+        public string Error => null!;
     }
 }

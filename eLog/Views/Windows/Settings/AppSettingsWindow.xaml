@@ -43,15 +43,15 @@
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Станок:" Margin="5 0 0 0" VerticalAlignment="Center"/>
             <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" Margin="0 1"
                       ItemsSource="{Binding Machines}" 
-                      SelectedItem="{Binding AppSettings.Machine}" 
-                      Text="{Binding AppSettings.Machine.Name, Mode=OneWay}" 
+                      SelectedItem="{Binding AppSettings.Instance.Machine}" 
+                      Text="{Binding AppSettings.Instance.Machine.Name, Mode=OneWay}" 
                       DisplayMemberPath="Name"/>
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Занесение:" VerticalAlignment="Center" Margin="5 0 0 0" />
             <DockPanel Grid.Row="1" Grid.Column="1" Margin="0" 
                         VerticalAlignment="Stretch" LastChildFill="True">
                 <Button x:Name="SetOrdersSourcePathButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Padding="15 1" Click="SetXlPathButton_Click"/>
                 <TextBox x:Name="XlPathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
-                         Text="{Binding AppSettings.XlPath}"/>
+                         Text="{Binding AppSettings.Instance.XlPath}"/>
             </DockPanel>
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Номенклатура:" VerticalAlignment="Center" Margin="5 0 0 0" />
             <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" 

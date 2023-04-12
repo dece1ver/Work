@@ -450,7 +450,7 @@ namespace eLog.Models
             _DownTimes = new ObservableCollection<DownTime>();
             Id = -1;
             _OperatorComments = string.Empty;
-            _Operator = AppSettings.CurrentOperator!;
+            _Operator = AppSettings.Instance.CurrentOperator!;
             _Shift = string.Empty;
         }
 
@@ -473,7 +473,7 @@ namespace eLog.Models
             _DownTimes = new ObservableCollection<DownTime>();
             foreach (var downTime in part.DownTimes)
             {
-                _DownTimes.Add(new DownTime(downTime));
+                _DownTimes.Add(new DownTime(this, downTime));
             }
             _Id = part.Id;
             _OperatorComments = part.OperatorComments;

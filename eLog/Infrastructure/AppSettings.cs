@@ -20,27 +20,28 @@ namespace eLog.Infrastructure
     /// <summary>
     /// Основной класс с настройками, статический для доступа откуда угодно, потом синглтон сделаю наверно.
     /// </summary>
-    public static class AppSettings
+    public class AppSettings
     {
-        
+        private static AppSettings _Instance;
+        [JsonIgnore] public static AppSettings Instance => _Instance ??= new AppSettings();
 
         /// <summary> Директория для хранения всякого </summary>
-        public const string BasePath = "C:\\ProgramData\\dece1ver\\eLog";
+        [JsonIgnore] public const string BasePath = "C:\\ProgramData\\dece1ver\\eLog";
 
         /// <summary> Локальный путь для бэкапа таблицы. </summary>
-        public static readonly string XlReservedPath = Path.Combine(BasePath, "backup.xlsx");
+        [JsonIgnore] public static readonly string XlReservedPath = Path.Combine(BasePath, "backup.xlsx");
 
         /// <summary> Путь к файлу конфигурации </summary>
-        public static readonly string ConfigFilePath = Path.Combine(BasePath, "config.json");
+        [JsonIgnore] public static readonly string ConfigFilePath = Path.Combine(BasePath, "config.json");
 
         /// <summary> Путь к локальному списку заказов </summary>
-        public static readonly string LocalOrdersFile = Path.Combine(BasePath, "orders.xlsx");
+        [JsonIgnore] public static readonly string LocalOrdersFile = Path.Combine(BasePath, "orders.xlsx");
 
         /// <summary> Путь к резервному списку заказов </summary>
-        public static readonly string BackupOrdersFile = Path.Combine(BasePath, "orders-backup.xlsx");
+        [JsonIgnore] public static readonly string BackupOrdersFile = Path.Combine(BasePath, "orders-backup.xlsx");
 
         /// <summary> Путь к файлу логов </summary>
-        public static readonly string LogFile = Path.Combine(BasePath, "log");
+        [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
 
         /// <summary> Текущий станок </summary>
         public static Machine Machine { get; set; } = new (0);
@@ -63,41 +64,46 @@ namespace eLog.Infrastructure
         /// <summary> Список деталей </summary>
         public static ObservableCollection<PartInfoModel> Parts { get; set; } = new();
 
+        /// <summary> Запущена ли смена </summary>
+        public static bool IsShiftStarted { get; set; }
+
         /// <summary> Текущий оператор </summary>
         public static Operator? CurrentOperator { get; set; }
-
-        /// <summary> Запущена ли смена </summary>
-        public static bool IsShiftStarted {get; set; }
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private static void CreateBaseConfig()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
-            Machine = new Machine(0);
-            Operators = new ObservableCollection<Operator>() {
-                new() {
-                    LastName = "Бабохин",
-                    FirstName = "Кирилл",
-                    Patronymic = "Георгиевич",
-                    },
-                };
-            CurrentShift = Text.DayShift;
-            Parts = new ObservableCollection<PartInfoModel>();
-            XlPath = string.Empty;
-            OrdersSourcePath = string.Empty;
-            OrderQualifiers = new[]
+            var tempAppSettings = new AppSettings()
             {
-                Text.WithoutOrderItem,
-                "УЧ",
-                "ФЛ",
-                "БП",
-                "СУ",
-                "УУ",
-                "ЗУ",
-                "СЛ",
+                Machine = new Machine(0),
+                Operators = new ObservableCollection<Operator>()
+                {
+                    new()
+                    {
+                        LastName = "Бабохин",
+                        FirstName = "Кирилл",
+                        Patronymic = "Георгиевич"
+                    },
+                },
+                CurrentShift = Text.DayShift,
+                Parts = new ObservableCollection<PartInfoModel>(),
+                XlPath = string.Empty,
+                OrdersSourcePath = string.Empty,
+                OrderQualifiers = new[]
+                {
+                    Text.WithoutOrderItem,
+                    "УЧ",
+                    "ФЛ",
+                    "БП",
+                    "СУ",
+                    "УУ",
+                    "ЗУ",
+                    "СЛ",
+                },
+                IsShiftStarted = false,
             };
-            IsShiftStarted = false;
             RewriteConfig();
         }
 
@@ -113,29 +119,19 @@ namespace eLog.Infrastructure
         /// <summary>
         /// Читает конфиг, если возникает исключение, то создает конфиг по-умолчанию.
         /// </summary>
-        public static void ReadConfig()
+        public static AppSettings ReadConfig()
         {
             if (!File.Exists(ConfigFilePath)) CreateBaseConfig();
             
             try
             {
-                var appSettings = JsonConvert.DeserializeObject<AppSettingsModel>(File.ReadAllText(ConfigFilePath));
-                if (appSettings is null) throw new ArgumentNullException();
-                Machine = appSettings.Machine;
-                XlPath = appSettings.XlPath;
-                OrdersSourcePath = appSettings.OrdersSourcePath;
-                OrderQualifiers = appSettings.OrderQualifiers;
-                Operators = appSettings.Operators;
-                CurrentShift = appSettings.CurrentShift;
-                Parts = appSettings.Parts ?? new ObservableCollection<PartInfoModel>();
-                CurrentOperator = appSettings.CurrentOperator;
-                IsShiftStarted = appSettings.IsShiftStarted;
-                if (appSettings.CurrentOperator is null && Operators.Count > 0) CurrentOperator = Operators[0];
+                var json = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(ConfigFilePath));
+                return json ?? throw new NullReferenceException();
             }
             catch
             {
                 CreateBaseConfig();
-                ReadConfig();
+                return ReadConfig();
             }
         }
 
@@ -144,13 +140,12 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void RewriteConfig()
         {
-            var appSettings = new AppSettingsModel(Machine, XlPath, OrdersSourcePath, OrderQualifiers, Operators, CurrentShift, Parts, IsShiftStarted, CurrentOperator);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             var settings = new JsonSerializerSettings()
             {
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects
             };
-            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(appSettings, Formatting.Indented, settings));
+            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
         }
     }
 }

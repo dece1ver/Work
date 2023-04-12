@@ -36,6 +36,44 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo
     {
+        public EditDetailWindow(PartInfoModel part, bool newDetail = false)
+        {
+            NewDetail = newDetail;
+            _Status = string.Empty;
+            Part = part;
+            WithSetup = newDetail || part.StartSetupTime != part.StartMachiningTime;
+            var order = Part.Order;
+            _OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
+                ? order.Split('/')[1]
+                : Text.WithoutOrderDescription;
+            _OrderQualifier =
+                !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
+                    ? order.Split('-')[0]
+                    : AppSettings.Instance.OrderQualifiers[0];
+            _OrderMonth =
+                !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
+                    ? order.Split('-')[1].Split('/')[0]
+                    : "01";
+            PartName = Part.FullName;
+
+            _FinishedCount = Part.FinishedCount > 0 || Part.StartMachiningTime == Part.EndMachiningTime && Part.EndMachiningTime != DateTime.MinValue ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
+            _TotalCount = Part.TotalCount > 0 ? Part.TotalCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
+
+            _StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
+            _StartMachiningTime = Part.StartMachiningTime != DateTime.MinValue ? Part.StartMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
+            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue && Part.EndMachiningTime >= Part.StartMachiningTime ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
+            _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty;
+
+            _PartSetupTimePlan = Part.SetupTimePlan > 0
+                ? Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture)
+                : newDetail ? string.Empty : "-";
+            _SingleProductionTimePlan = Part.SingleProductionTimePlan > 0
+                ? Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture)
+                : newDetail ? string.Empty : "-";
+
+            InitializeComponent();
+        }
+
         public List<PartInfoModel> Parts { get; set; } = new();
         public int PartIndex { get; set; }
         public PartInfoModel Part { get; set; }
@@ -472,43 +510,7 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        public EditDetailWindow(PartInfoModel part, bool newDetail = false)
-        {
-            NewDetail = newDetail;
-            _Status = string.Empty;
-            Part = part;
-            WithSetup = newDetail || part.StartSetupTime != part.StartMachiningTime;
-            var order = Part.Order;
-            _OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
-                ? order.Split('/')[1]
-                : Text.WithoutOrderDescription;
-            _OrderQualifier =
-                !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
-                    ? order.Split('-')[0]
-                    : AppSettings.OrderQualifiers[0];
-            _OrderMonth =
-                !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
-                    ? order.Split('-')[1].Split('/')[0]
-                    : "01";
-            PartName = Part.FullName;
-
-            _FinishedCount = Part.FinishedCount > 0 || Part.StartMachiningTime == Part.EndMachiningTime && Part.EndMachiningTime != DateTime.MinValue ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
-            _TotalCount = Part.TotalCount > 0 ? Part.TotalCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
-
-            _StartSetupTime = Part.StartSetupTime.ToString(Text.DateTimeFormat);
-            _StartMachiningTime = Part.StartMachiningTime != DateTime.MinValue ? Part.StartMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
-            _EndMachiningTime = Part.EndMachiningTime != DateTime.MinValue && Part.EndMachiningTime >= Part.StartMachiningTime ? Part.EndMachiningTime.ToString(Text.DateTimeFormat) : string.Empty;
-            _MachineTime = Part.MachineTime != TimeSpan.Zero ? Part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty;
-
-            _PartSetupTimePlan = Part.SetupTimePlan > 0 
-                ? Part.SetupTimePlan.ToString(CultureInfo.InvariantCulture) 
-                : newDetail ? string.Empty : "-";
-            _SingleProductionTimePlan = Part.SingleProductionTimePlan > 0 
-                ? Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture) 
-                : newDetail ? string.Empty : "-";
-
-            InitializeComponent();
-        }
+        
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -602,9 +604,9 @@ namespace eLog.Views.Windows.Dialogs
 
         private void LoadPreviousPartButton_Click(object sender, RoutedEventArgs e)
         {
-            if (AppSettings.Parts.Count <= 0) return;
+            if (AppSettings.Instance.Parts.Count <= 0) return;
             PartInfoModel prev;
-            var parts = AppSettings.Parts
+            var parts = AppSettings.Instance.Parts
                 .Where(x => x.IsFinished is not PartInfoModel.State.InProgress)
                 .GroupBy(x => new { x.FullName, x.Order, x.Setup })
                 .Select(x => new PartInfoModel()
@@ -650,7 +652,7 @@ namespace eLog.Views.Windows.Dialogs
             OrderQualifier =
             !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
             ? order.Split('-')[0]
-            : AppSettings.OrderQualifiers[0];
+            : AppSettings.Instance.OrderQualifiers[0];
             OrderMonth =
             !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
             ? order.Split('-')[1].Split('/')[0]
@@ -701,7 +703,6 @@ namespace eLog.Views.Windows.Dialogs
             Keyboard.KeyPress(Keys.Space);
         }
 
-
         private void IncrementSetupButton_Click(object sender, RoutedEventArgs e)
         {
             if (Part.Setup < 24)
@@ -729,13 +730,13 @@ namespace eLog.Views.Windows.Dialogs
             {
                 try
                 {
-                    if (File.Exists(AppSettings.OrdersSourcePath) &&
-                        Path.GetExtension(AppSettings.OrdersSourcePath).ToLower() == ".xlsx")
+                    if (File.Exists(AppSettings.Instance.OrdersSourcePath) &&
+                        Path.GetExtension(AppSettings.Instance.OrdersSourcePath).ToLower() == ".xlsx")
                     {
                         // если локальный список совпадает с сетевым, то ничего не делаем
                         if (File.Exists(AppSettings.LocalOrdersFile) &&
                             File.GetLastWriteTime(AppSettings.LocalOrdersFile) ==
-                            File.GetLastWriteTime(AppSettings.OrdersSourcePath)) break;
+                            File.GetLastWriteTime(AppSettings.Instance.OrdersSourcePath)) break;
                         // если обновляем локальный список, то предыдущий храним как бэкап
                         if (File.Exists(AppSettings.LocalOrdersFile))
                         {
@@ -744,7 +745,7 @@ namespace eLog.Views.Windows.Dialogs
                                 File.GetLastWriteTime(AppSettings.LocalOrdersFile))
                                 File.Copy(AppSettings.LocalOrdersFile, AppSettings.BackupOrdersFile, true);
                         }
-                        File.Copy(AppSettings.OrdersSourcePath, AppSettings.LocalOrdersFile, true);
+                        File.Copy(AppSettings.Instance.OrdersSourcePath, AppSettings.LocalOrdersFile, true);
 
                         Status = $"Список заказов обновлен {File.GetLastWriteTime(AppSettings.LocalOrdersFile).ToString(Text.DateTimeFormat)}";
                         break;
@@ -768,6 +769,11 @@ namespace eLog.Views.Windows.Dialogs
         private void EditDownTimesButton_Click(object sender, RoutedEventArgs e)
         {
             var tempPart = new PartInfoModel(Part);
+            foreach (var downTime in tempPart.DownTimes)
+            {
+                // downTime.ParentPart = tempPart;
+                if (downTime.EndTime == DateTime.MinValue) downTime.EndTimeText = string.Empty;
+            }
             var height = Height;
             Height = 477;
             var dlg = new EditDownTimesDialogWindow(tempPart)
@@ -852,13 +858,11 @@ namespace eLog.Views.Windows.Dialogs
             OrderQualifier =
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
                     ? order.Split('-')[0]
-                    : AppSettings.OrderQualifiers[0];
+                    : AppSettings.Instance.OrderQualifiers[0];
             OrderMonth =
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
                     ? order.Split('-')[1].Split('/')[0]
                     : "01";
         }
-
-        
     }
 }

@@ -15,12 +15,19 @@ using eLog.Models;
 using eLog.Services;
 using eLog.Infrastructure.Extensions;
 using System.Threading;
+using eLog.Infrastructure.Interfaces;
 
 namespace eLog.ViewModels
 {
-    internal class MainWindowViewModel : ViewModel
+    internal class MainWindowViewModel : ViewModel, IOverlay
     {
-        private Machine _Machine = AppSettings.Machine;
+        public Overlay Overlay
+        {
+            get => _Overlay;
+            set => Set(ref _Overlay, value);
+        }
+
+        private Machine _Machine = AppSettings.Instance.Machine;
         /// <summary> Станок </summary>
         public Machine Machine
         {
@@ -28,25 +35,25 @@ namespace eLog.ViewModels
             set => Set(ref _Machine, value);
         }
 
-        private Operator? _CurrentOperator = AppSettings.CurrentOperator;
+        private Operator? _CurrentOperator = AppSettings.Instance.CurrentOperator;
         /// <summary> Текущий оператор </summary>
         public Operator? CurrentOperator
         {
             get => _CurrentOperator;
             set {
-                AppSettings.CurrentOperator = value;
+                AppSettings.Instance.CurrentOperator = value;
                 AppSettings.RewriteConfig();
                 Set(ref _CurrentOperator, value);
             }
         }
 
-        private ObservableCollection<Operator> _Operators = AppSettings.Operators;
+        private ObservableCollection<Operator> _Operators = AppSettings.Instance.Operators;
         /// <summary> Список операторов </summary>
         public ObservableCollection<Operator> Operators
         {
             get => _Operators;
             set {
-                AppSettings.Operators = value;
+                AppSettings.Instance.Operators = value;
                 AppSettings.RewriteConfig();
                 Set(ref _Operators, value); 
             }
@@ -93,16 +100,14 @@ namespace eLog.ViewModels
 
         public bool DownTimeInProgress => Parts.Count == Parts.Count(x => x.DownTimes.Count > 0);
 
-        public bool Overlay { get; set; }
-
-        private bool _ShiftStarted = AppSettings.IsShiftStarted;
+        private bool _ShiftStarted = AppSettings.Instance.IsShiftStarted;
         public bool ShiftStarted
         {
             get => _ShiftStarted;
             set 
             {
                 if (!Set(ref _ShiftStarted, value)) return;
-                AppSettings.IsShiftStarted = value;
+                AppSettings.Instance.IsShiftStarted = value;
                 AppSettings.RewriteConfig();
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
@@ -111,7 +116,7 @@ namespace eLog.ViewModels
         }
 
         public static string[] Shifts => Text.Shifts;
-        private string _CurrentShift = AppSettings.CurrentShift;
+        private string _CurrentShift = AppSettings.Instance.CurrentShift;
 
         public string CurrentShift
         {
@@ -119,13 +124,15 @@ namespace eLog.ViewModels
             set
             {
                 if (!Set(ref _CurrentShift, value)) return;
-                AppSettings.CurrentShift = value;
+                AppSettings.Instance.CurrentShift = value;
                 AppSettings.RewriteConfig();
             }
         }
 
         /// <summary> Детали </summary>
-        private ObservableCollection<PartInfoModel> _Parts = AppSettings.Parts;
+        private ObservableCollection<PartInfoModel> _Parts = AppSettings.Instance.Parts;
+        
+        private Overlay _Overlay = new(false);
 
         public ObservableCollection<PartInfoModel> Parts
         {
@@ -133,7 +140,7 @@ namespace eLog.ViewModels
             set
             {
                 Set(ref _Parts, value);
-                AppSettings.Parts = _Parts;
+                AppSettings.Instance.Parts = _Parts;
                 AppSettings.RewriteConfig();
             }
         }
@@ -178,22 +185,22 @@ namespace eLog.ViewModels
         public ICommand EditSettingsCommand { get; }
         private void OnEditSettingsCommandExecuted(object p)
         {
-            OverlayOn();
-            var settings = new AppSettingsModel(Machine, AppSettings.XlPath, AppSettings.OrdersSourcePath, AppSettings.OrderQualifiers, Operators, AppSettings.CurrentShift, Parts);
-            WindowsUserDialogService windowsUserDialogService = new();
-
-            if (windowsUserDialogService.Edit(settings))
+            using (Overlay = new())
             {
-                AppSettings.Machine = settings.Machine;
-                Machine = AppSettings.Machine;
-                AppSettings.XlPath = settings.XlPath;
-                AppSettings.OrdersSourcePath = settings.OrdersSourcePath;
-                AppSettings.OrderQualifiers = settings.OrderQualifiers;
-                AppSettings.Parts = settings.Parts;
-                AppSettings.RewriteConfig();
-            }
-            OverlayOff();
+                var settings = new AppSettingsModel(Machine, AppSettings.Instance.XlPath, AppSettings.Instance.OrdersSourcePath, AppSettings.Instance.OrderQualifiers, Operators, AppSettings.Instance.CurrentShift, Parts);
+                WindowsUserDialogService windowsUserDialogService = new();
 
+                if (windowsUserDialogService.Edit(settings))
+                {
+                    AppSettings.Instance.Machine = settings.Machine;
+                    Machine = AppSettings.Instance.Machine;
+                    AppSettings.Instance.XlPath = settings.XlPath;
+                    AppSettings.Instance.OrdersSourcePath = settings.OrdersSourcePath;
+                    AppSettings.Instance.OrderQualifiers = settings.OrderQualifiers;
+                    AppSettings.Instance.Parts = settings.Parts;
+                    AppSettings.RewriteConfig();
+                }
+            }
         }
         private static bool CanEditSettingsCommandExecute(object p) => true;
         #endregion
@@ -202,24 +209,25 @@ namespace eLog.ViewModels
         public ICommand EditOperatorsCommand { get; }
         private void OnEditOperatorsCommandExecuted(object p)
         {
-            OverlayOn();
-            var operators = Operators;
-            WindowsUserDialogService windowsUserDialogService = new();
-            
-            if (windowsUserDialogService.Edit(operators))
+            using (Overlay = new())
             {
-                var tempOperators = operators.ToList();
-
-                // костыль надо нормально сделать
-                tempOperators.RemoveAll(x => string.IsNullOrWhiteSpace(x.DisplayName));
-                operators = new ObservableCollection<Operator>();
-                foreach (var op in tempOperators)
+                var operators = Operators;
+                WindowsUserDialogService windowsUserDialogService = new();
+            
+                if (windowsUserDialogService.Edit(operators))
                 {
-                    operators.Add(op);
+                    var tempOperators = operators.ToList();
+
+                    // костыль надо нормально сделать
+                    tempOperators.RemoveAll(x => string.IsNullOrWhiteSpace(x.DisplayName));
+                    operators = new ObservableCollection<Operator>();
+                    foreach (var op in tempOperators)
+                    {
+                        operators.Add(op);
+                    }
+                    Operators = operators;
                 }
-                Operators = operators;
             }
-            OverlayOff();
             OnPropertyChanged(nameof(Operators));
             OnPropertyChanged(nameof(CurrentOperator));
         }
@@ -245,37 +253,37 @@ namespace eLog.ViewModels
         public ICommand StartDetailCommand { get; }
         private void OnStartDetailCommandExecuted(object p)
         {
-            OverlayOn();
-
-            var part = new PartInfoModel
+            using (Overlay = new())
             {
-                Operator = CurrentOperator!,
-                Shift = AppSettings.CurrentShift,
-                Setup = 1,
-            };
-            if (WindowsUserDialogService.EditDetail(ref part, true))
-            {
-                switch (part)
+                var part = new PartInfoModel
                 {
-                    case { IsFinished: not PartInfoModel.State.InProgress }:
-                        part.Id = part.WriteToXl();
-                        if (part.Id > 0)
-                        {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                        }
-                        break;
+                    Operator = CurrentOperator!,
+                    Shift = AppSettings.Instance.CurrentShift,
+                    Setup = 1,
+                };
+                if (WindowsUserDialogService.EditDetail(ref part, true))
+                {
+                    switch (part)
+                    {
+                        case { IsFinished: not PartInfoModel.State.InProgress }:
+                            part.Id = part.WriteToXl();
+                            if (part.Id > 0)
+                            {
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                            }
+                            break;
+                    }
+                    Parts.Insert(0, part);
+                    RemoveExcessParts();
+                    OnPropertyChanged(nameof(WorkIsNotInProgress));
+                    OnPropertyChanged(nameof(CanEditShiftAndParams));
+                    OnPropertyChanged(nameof(CanAddPart));
+                    OnPropertyChanged(nameof(CanEndShift));
+                    AppSettings.Instance.Parts = Parts;
+                    AppSettings.RewriteConfig();
                 }
-                Parts.Insert(0, part);
-                RemoveExcessParts();
-                OnPropertyChanged(nameof(WorkIsNotInProgress));
-                OnPropertyChanged(nameof(CanEditShiftAndParams));
-                OnPropertyChanged(nameof(CanAddPart));
-                OnPropertyChanged(nameof(CanEndShift));
-                AppSettings.Parts = Parts;
-                AppSettings.RewriteConfig();
             }
-            OverlayOff();
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
         #endregion
@@ -284,24 +292,25 @@ namespace eLog.ViewModels
         public ICommand SetDownTimeCommand { get; }
         private void OnSetDownTimeCommandExecuted(object p)
         {
-            OverlayOn();
-            var downTimeType = WindowsUserDialogService.SetDownTimeType();
-            if (downTimeType is { } type)
+            using (Overlay = new())
             {
-                var part = (PartInfoModel)p;
-                var index = Parts.IndexOf(part);
-                Parts.RemoveAt(index);
-                var downTimes = part.DownTimes;
-                downTimes.Add(new DownTime(part, type, part.SetupIsFinished ? DownTime.Relations.Machining : DownTime.Relations.Setup));
-                part.DownTimes = downTimes;
-                OnPropertyChanged(nameof(part.DownTimes));
-                OnPropertyChanged(nameof(part.DownTimesIsClosed));
-                Parts.Insert(index, part);
-                OnPropertyChanged(nameof(Parts));
-                AppSettings.Parts = Parts;
-                AppSettings.RewriteConfig();
+                var downTimeType = WindowsUserDialogService.SetDownTimeType();
+                if (downTimeType is { } type)
+                {
+                    var part = (PartInfoModel)p;
+                    var index = Parts.IndexOf(part);
+                    Parts.RemoveAt(index);
+                    var downTimes = part.DownTimes;
+                    downTimes.Add(new DownTime(part, type));
+                    part.DownTimes = downTimes;
+                    OnPropertyChanged(nameof(part.DownTimes));
+                    OnPropertyChanged(nameof(part.DownTimesIsClosed));
+                    Parts.Insert(index, part);
+                    OnPropertyChanged(nameof(Parts));
+                    AppSettings.Instance.Parts = Parts;
+                    AppSettings.RewriteConfig();
+                }
             }
-            OverlayOff();
         }
         private static bool CanSetDownTimeCommandExecute(object p) => true;
         #endregion
@@ -310,38 +319,39 @@ namespace eLog.ViewModels
         public ICommand EndDownTimeCommand { get; }
         private void OnEndDownTimeCommandExecuted(object p)
         {
-            OverlayOn();
-            var part = (PartInfoModel)p;
-            var index = Parts.IndexOf((PartInfoModel)p);
-            
-            if (part.LastDownTime is {InProgress: true} 
-                && MessageBox.Show($"Завершить простой {part.LastDownTimeName}?",
-                    "Подтверждение",
-                    MessageBoxButton.OKCancel, 
-                    MessageBoxImage.Question) 
-                == MessageBoxResult.OK)
+            using (Overlay = new())
             {
-                var now = DateTime.Now;
-                var endTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
-                Parts.RemoveAt(index);
-                if (part.LastDownTime.StartTime == endTime)
+                var part = (PartInfoModel)p;
+                var index = Parts.IndexOf((PartInfoModel)p);
+            
+                if (part.LastDownTime is {InProgress: true} 
+                    && MessageBox.Show($"Завершить простой {part.LastDownTimeName}?",
+                        "Подтверждение",
+                        MessageBoxButton.OKCancel, 
+                        MessageBoxImage.Question) 
+                    == MessageBoxResult.OK)
                 {
-                    part.DownTimes.Remove(part.LastDownTime);
-                }
-                else
-                {
+                    var now = DateTime.Now;
+                    var endTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
+                    Parts.RemoveAt(index);
+                    if (part.LastDownTime.StartTime == endTime)
+                    {
+                        part.DownTimes.Remove(part.LastDownTime);
+                    }
+                    else
+                    {
                     
-                    part.LastDownTime.EndTimeText = DateTime.Now.ToString(Text.DateTimeFormat);
+                        part.LastDownTime.EndTimeText = DateTime.Now.ToString(Text.DateTimeFormat);
                     
+                    }
+                    OnPropertyChanged(nameof(part.DownTimes));
+                    OnPropertyChanged(nameof(part.DownTimesIsClosed));
+                    Parts.Insert(index, part);
+                    OnPropertyChanged(nameof(Parts));
+                    AppSettings.Instance.Parts = Parts;
+                    AppSettings.RewriteConfig();
                 }
-                OnPropertyChanged(nameof(part.DownTimes));
-                OnPropertyChanged(nameof(part.DownTimesIsClosed));
-                Parts.Insert(index, part);
-                OnPropertyChanged(nameof(Parts));
-                AppSettings.Parts = Parts;
-                AppSettings.RewriteConfig();
             }
-            OverlayOff();
         }
         private static bool CanEndDownTimeCommandExecute(object p) => true;
         #endregion
@@ -350,52 +360,53 @@ namespace eLog.ViewModels
         public ICommand EndSetupCommand { get; }
         private void OnEndSetupCommandExecuted(object p)
         {
-            OverlayOn();
-            switch (WindowsUserDialogService.GetSetupResult())
+            using (Overlay = new())
             {
-                case EndSetupResult.Success:
-                    Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now;
-                    break;
-                case EndSetupResult.Stop:
-                    Parts.Remove((PartInfoModel)p);
-                    break;
-                case EndSetupResult.PartialComplete:
-                    var now = DateTime.Now;
-                    var index = Parts.IndexOf((PartInfoModel)p);
-                    var part = Parts[index];
-                    part.StartMachiningTime = now;
-                    part.EndMachiningTime = now;
-                    part.FinishedCount = 0;
+                switch (WindowsUserDialogService.GetSetupResult())
+                {
+                    case EndSetupResult.Success:
+                        Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now;
+                        break;
+                    case EndSetupResult.Stop:
+                        Parts.Remove((PartInfoModel)p);
+                        break;
+                    case EndSetupResult.PartialComplete:
+                        var now = DateTime.Now;
+                        var index = Parts.IndexOf((PartInfoModel)p);
+                        var part = Parts[index];
+                        part.StartMachiningTime = now;
+                        part.EndMachiningTime = now;
+                        part.FinishedCount = 0;
                     
 
-                    if (part.Id != -1)
-                    {
-                        if (part.RewriteToXl() is Util.WriteResult.Ok)
+                        if (part.Id != -1)
                         {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                            if (part.RewriteToXl() is Util.WriteResult.Ok)
+                            {
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                            }
                         }
-                    }
-                    else
-                    {
-                        part.Id = part.WriteToXl();
-                        if (part.Id > 0)
+                        else
                         {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                            part.Id = part.WriteToXl();
+                            if (part.Id > 0)
+                            {
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                            }
                         }
-                    }
-                    Parts.RemoveAt(index);
-                    Parts.Insert(index, part);
-                    break;
+                        Parts.RemoveAt(index);
+                        Parts.Insert(index, part);
+                        break;
+                }
+                OnPropertyChanged(nameof(WorkIsNotInProgress));
+                OnPropertyChanged(nameof(CanEditShiftAndParams));
+                OnPropertyChanged(nameof(CanAddPart));
+                OnPropertyChanged(nameof(CanEndShift));
+                AppSettings.Instance.Parts = Parts;
+                AppSettings.RewriteConfig();
             }
-            OnPropertyChanged(nameof(WorkIsNotInProgress));
-            OnPropertyChanged(nameof(CanEditShiftAndParams));
-            OnPropertyChanged(nameof(CanAddPart));
-            OnPropertyChanged(nameof(CanEndShift));
-            AppSettings.Parts = Parts;
-            AppSettings.RewriteConfig();
-            OverlayOff();
         }
         private static bool CanEndSetupCommandExecute(object p) => true;
         #endregion
@@ -404,60 +415,61 @@ namespace eLog.ViewModels
         public ICommand EditDetailCommand { get; }
         private void OnEditDetailCommandExecuted(object p)
         {
-            OverlayOn();
-            var part = new PartInfoModel((PartInfoModel)p);
-            var index = Parts.IndexOf((PartInfoModel)p);
-            
-            if (WindowsUserDialogService.EditDetail(ref part))
+            using (Overlay = new())
             {
-                part.IsSynced = false;
-                OnPropertyChanged(nameof(part.Title));
-                switch (part)
+                var part = new PartInfoModel((PartInfoModel)p);
+                var index = Parts.IndexOf((PartInfoModel)p);
+            
+                if (WindowsUserDialogService.EditDetail(ref part))
                 {
-                    case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
-                        part.Id = part.WriteToXl();
-                        if (part.Id > 0)
-                        {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                        }
-                        break;
-                    case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
+                    part.IsSynced = false;
+                    OnPropertyChanged(nameof(part.Title));
+                    switch (part)
                     {
-                        switch (part.RewriteToXl())
-                        {
-                            case Util.WriteResult.Ok:
+                        case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
+                            part.Id = part.WriteToXl();
+                            if (part.Id > 0)
+                            {
                                 part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                                    break;
-                            case Util.WriteResult.IOError:
-                                Status = $"Таблица занята, запись будет произведена позже.";
-                                    break;
-                            case Util.WriteResult.NotFinded:
-                                part.Id = part.WriteToXl();
-                                if (part.Id > 0)
-                                {
+                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                            }
+                            break;
+                        case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
+                        {
+                            switch (part.RewriteToXl())
+                            {
+                                case Util.WriteResult.Ok:
                                     part.IsSynced = true;
-                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                                }
-                                break;
-                            case Util.WriteResult.Error:
-                                break;
+                                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                                    break;
+                                case Util.WriteResult.IOError:
+                                    Status = $"Таблица занята, запись будет произведена позже.";
+                                    break;
+                                case Util.WriteResult.NotFinded:
+                                    part.Id = part.WriteToXl();
+                                    if (part.Id > 0)
+                                    {
+                                        part.IsSynced = true;
+                                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                    }
+                                    break;
+                                case Util.WriteResult.Error:
+                                    break;
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
 
-                Parts[index] = part;
-                AppSettings.Parts = Parts;
-                AppSettings.RewriteConfig();
+                    Parts[index] = part;
+                    AppSettings.Instance.Parts = Parts;
+                    AppSettings.RewriteConfig();
+                }
+                OnPropertyChanged(nameof(WorkIsNotInProgress));
+                OnPropertyChanged(nameof(CanEditShiftAndParams));
+                OnPropertyChanged(nameof(CanAddPart));
+                OnPropertyChanged(nameof(CanEndShift));
+                RemoveExcessParts();
             }
-            OnPropertyChanged(nameof(WorkIsNotInProgress));
-            OnPropertyChanged(nameof(CanEditShiftAndParams));
-            OnPropertyChanged(nameof(CanAddPart));
-            OnPropertyChanged(nameof(CanEndShift));
-            RemoveExcessParts();
-            OverlayOff();
         }
         private static bool CanEditDetailCommandExecute(object p) => true;
         #endregion
@@ -466,74 +478,75 @@ namespace eLog.ViewModels
         public ICommand EndDetailCommand { get; }
         private void OnEndDetailCommandExecuted(object p)
         {
-            OverlayOn();
-            var part = (PartInfoModel)p;
-            if (WindowsUserDialogService.FinishDetail(ref part))
+            using (Overlay = new())
             {
-                switch (part)
+                var part = (PartInfoModel)p;
+                if (WindowsUserDialogService.FinishDetail(ref part))
                 {
-                    case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
-                        part.Id = part.WriteToXl();
-                        if (part.Id > 0)
-                        {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                        }
-                        Parts[Parts.IndexOf((PartInfoModel)p)] = part;
-                        break;
-                    case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
+                    switch (part)
                     {
-                        switch (part.RewriteToXl())
-                        {
-                            case Util.WriteResult.Ok:
+                        case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
+                            part.Id = part.WriteToXl();
+                            if (part.Id > 0)
+                            {
                                 part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
-                                    break;
-                            case Util.WriteResult.IOError:
-                                Status = $"Таблица занята, запись будет произведена позже.";
-                                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
-                                    break;
-                            case Util.WriteResult.NotFinded:
-                                part.Id = part.WriteToXl();
-                                if (part.Id > 0)
-                                {
-                                    part.IsSynced = true;
-                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                                }
-                                Parts[Parts.IndexOf((PartInfoModel)p)] = part;
-                                    break;
-                            case Util.WriteResult.Error:
-                                break;
-                        }
-                        break;
-                        }
-                    case { FinishedCount: 0 }:
-                    {
-                        var now = DateTime.Now;
-                        part.StartMachiningTime = now;
-                        part.EndMachiningTime = now;
-                        part.FinishedCount = 0;
-                        part.Id = part.WriteToXl();
-                        if (part.Id > 0)
-                        {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                        }
-                        Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                            }
+                            Parts[Parts.IndexOf((PartInfoModel)p)] = part;
                             break;
+                        case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
+                        {
+                            switch (part.RewriteToXl())
+                            {
+                                case Util.WriteResult.Ok:
+                                    part.IsSynced = true;
+                                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    break;
+                                case Util.WriteResult.IOError:
+                                    Status = $"Таблица занята, запись будет произведена позже.";
+                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    break;
+                                case Util.WriteResult.NotFinded:
+                                    part.Id = part.WriteToXl();
+                                    if (part.Id > 0)
+                                    {
+                                        part.IsSynced = true;
+                                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                    }
+                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    break;
+                                case Util.WriteResult.Error:
+                                    break;
+                            }
+                            break;
+                        }
+                        case { FinishedCount: 0 }:
+                        {
+                            var now = DateTime.Now;
+                            part.StartMachiningTime = now;
+                            part.EndMachiningTime = now;
+                            part.FinishedCount = 0;
+                            part.Id = part.WriteToXl();
+                            if (part.Id > 0)
+                            {
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                            }
+                            Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                            break;
+                        }
                     }
-                }
-                AppSettings.Parts = Parts;
-                AppSettings.RewriteConfig();
-                RemoveExcessParts();
-            };
+                    AppSettings.Instance.Parts = Parts;
+                    AppSettings.RewriteConfig();
+                    RemoveExcessParts();
+                };
             
-            OnPropertyChanged(nameof(WorkIsNotInProgress));
-            OnPropertyChanged(nameof(CanEditShiftAndParams));
-            OnPropertyChanged(nameof(CanAddPart));
-            OnPropertyChanged(nameof(CanEndShift));
-            OverlayOff();
+                OnPropertyChanged(nameof(WorkIsNotInProgress));
+                OnPropertyChanged(nameof(CanEditShiftAndParams));
+                OnPropertyChanged(nameof(CanAddPart));
+                OnPropertyChanged(nameof(CanEndShift));
+            }
         }
         private static bool CanEndDetailCommandExecute(object p) => true;
         #endregion
@@ -541,19 +554,7 @@ namespace eLog.ViewModels
 
         #endregion
 
-        private void OverlayOn()
-        {
-            Overlay = true;
-            OnPropertyChanged(nameof(Overlay));
-        }
 
-        private void OverlayOff()
-        {
-            Overlay = false;
-            OnPropertyChanged(nameof(Overlay));
-        }
-
-        
 
         public MainWindowViewModel()
         {

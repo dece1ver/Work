@@ -204,7 +204,7 @@
             </DockPanel>
         </DockPanel>
         <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
-              Visibility="{Binding Overlay, Converter={StaticResource OverlayVisibilityConverter}}"
-              Opacity="{Binding Overlay, Converter={StaticResource OverlayOpacityConverter}}"/>
+              Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
+              Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>
     </Grid>
 </Window>

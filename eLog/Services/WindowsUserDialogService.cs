@@ -34,7 +34,7 @@ namespace eLog.Services
             return item switch
             {
                 ObservableCollection<Operator> operators => EditOperators(ref operators),
-                AppSettingsModel settings => EditSettings(ref settings),
+                AppSettings settings => EditSettings(ref settings),
                 PartInfoModel part => EditDetail(ref part),
                 _ => false,
             };
@@ -63,7 +63,7 @@ namespace eLog.Services
             return true;
         }
 
-        public static bool EditSettings(ref AppSettingsModel settings)
+        public static bool EditSettings(ref AppSettings settings)
         {
             var dlg = new AppSettingsWindow()
             {
@@ -130,11 +130,11 @@ namespace eLog.Services
             return true;
         }
 
-        public static DownTime.Types? SetDownTimeType()
+        public static DownTime.Types? SetDownTimeType(Window? owner = null)
         {
             var dlg = new SetDownTimeDialogWindow()
             {
-                Owner = Application.Current.MainWindow
+                Owner = owner ?? Application.Current.MainWindow,
             };
 
             _ = dlg.ShowDialog();

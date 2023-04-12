@@ -18,6 +18,7 @@ using System.Windows.Threading;
 using DocumentFormat.OpenXml.Wordprocessing;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
+using eLog.Infrastructure.Interfaces;
 using eLog.Models;
 using eLog.Services;
 using static eLog.Views.Windows.Dialogs.EditDetailWindow;
@@ -29,11 +30,12 @@ namespace eLog.Views.Windows.Dialogs
     /// <summary>
     /// Логика взаимодействия для EditDownTimesDialogWindow.xaml
     /// </summary>
-    public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged, IDataErrorInfo
+    public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged, IOverlay
     {
         private PartInfoModel _Part;
         private string _Status;
         private bool _DownTimesIsClosed;
+        private Overlay _Overlay = new() {State = false};
 
         public PartInfoModel Part
         {
@@ -57,13 +59,16 @@ namespace eLog.Views.Windows.Dialogs
 
         private void AddDownTimeButton_Click(object sender, RoutedEventArgs e)
         {
-            var downTimeType = WindowsUserDialogService.SetDownTimeType();
-            if (downTimeType is { } type)
+            using (Overlay = new())
             {
-                Part.DownTimes.Add(new DownTime(Part, type, DownTime.Relations.Machining));
+                var downTimeType = WindowsUserDialogService.SetDownTimeType(this);
+                if (downTimeType is { } type)
+                {
+                    Part.DownTimes.Add(new DownTime(Part, type));
+                }
+                OnPropertyChanged(nameof(Part.DownTimesIsClosed));
+                OnPropertyChanged(nameof(DownTimesIsClosed));
             }
-            OnPropertyChanged(nameof(Part.DownTimesIsClosed));
-            OnPropertyChanged(nameof(DownTimesIsClosed));
         }
 
         public bool DownTimesIsClosed
@@ -114,30 +119,15 @@ namespace eLog.Views.Windows.Dialogs
 
         #endregion
 
-        public string Error => null;
-
-        public string this[string columnName]
-        {
-            get
-            {
-                string error = null;
-                if (columnName == "StartTimeText" || columnName == "EndTimeText")
-                {
-                    foreach (var downTime in Part.DownTimes)
-                    {
-                        error = downTime[columnName];
-                        if (!string.IsNullOrEmpty(error))
-                        {
-                            break;
-                        }
-                    }
-                }
-                return error;
-            }
-        }
         private object GetPropertyValue(string propertyName)
         {
-            return GetType().GetProperty(propertyName)?.GetValue(this, null);
+            return GetType().GetProperty(propertyName)?.GetValue(this, null)!;
+        }
+
+        public Overlay Overlay
+        {
+            get => _Overlay;
+            set => Set(ref _Overlay, value);
         }
     }
 }

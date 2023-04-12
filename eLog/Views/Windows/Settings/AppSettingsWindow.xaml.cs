@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Threading;
+using eLog.Infrastructure;
 using eLog.Models;
 using Microsoft.Win32;
 
@@ -21,9 +22,9 @@ namespace eLog.Views.Windows.Settings
                 new PropertyMetadata(default(string)));
 
 
-        public AppSettingsModel AppSettings
+        public AppSettings AppSettings
         {
-            get => (AppSettingsModel)GetValue(AppSettingsProperty);
+            get => (AppSettings)GetValue(AppSettingsProperty);
             set => SetValue(AppSettingsProperty, value);
         }
 
@@ -48,8 +49,8 @@ namespace eLog.Views.Windows.Settings
                 DefaultExt = "xlsx"
             };
             if (openFileDialog.ShowDialog() != true) return;
-            AppSettings.XlPath = openFileDialog.FileName;
-            XlPathTextBox.Text = AppSettings.XlPath;
+            AppSettings.Instance.XlPath = openFileDialog.FileName;
+            XlPathTextBox.Text = AppSettings.Instance.XlPath;
         }
         private void SetOrdersSourceButton_Click(object sender, RoutedEventArgs e)
         {

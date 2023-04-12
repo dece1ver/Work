@@ -64,9 +64,9 @@ namespace eLog.Views.Controls
 
         private void PreviousPartEndTimeButton_Click(object sender, RoutedEventArgs e)
         {
-            if (AppSettings.Parts.Any(x => x.IsFinished is not PartInfoModel.State.InProgress))
+            if (AppSettings.Instance.Parts.Any(x => x.IsFinished is not PartInfoModel.State.InProgress))
             {
-                InputTime(AppSettings.Parts.First(x => x.IsFinished is not PartInfoModel.State.InProgress).EndMachiningTime);
+                InputTime(AppSettings.Instance.Parts.First(x => x.IsFinished is not PartInfoModel.State.InProgress).EndMachiningTime);
             }
             else
             {

@@ -16,6 +16,7 @@ using System.Windows.Controls;
 using eLog.Infrastructure.Extensions.Windows;
 using eLog.Views.Windows.Dialogs;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -96,7 +97,7 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                _ = new XLWorkbook(AppSettings.XlPath);
+                _ = new XLWorkbook(AppSettings.Instance.XlPath);
                 return true;
             }
             catch
@@ -114,20 +115,20 @@ namespace eLog.Infrastructure.Extensions
         public static int WriteToXl(this PartInfoModel part)
         {
             var id = -1;
-            if (!File.Exists(AppSettings.XlPath)) return id;
+            if (!File.Exists(AppSettings.Instance.XlPath)) return id;
             try
             {
-                var wb = new XLWorkbook(AppSettings.XlPath);
-                File.Copy(AppSettings.XlPath, AppSettings.XlReservedPath, true);
+                var wb = new XLWorkbook(AppSettings.Instance.XlPath);
+                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
                 var ws = wb.Worksheet(1);
                 ws.LastRowUsed().InsertRowsBelow(1);
                 IXLRow? prevRow = null;
-                var index = AppSettings.Parts.IndexOf(part);
-                var prevPart = index != -1 && AppSettings.Parts.Count > index + 1 ? AppSettings.Parts[index + 1] : null;
+                var index = AppSettings.Instance.Parts.IndexOf(part);
+                var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
                 var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
                               prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
                 
-                if (partial) part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup, DownTime.Relations.Setup) {
+                if (partial) part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup) {
                     StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
                     EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
                 var combinedDownTimes = part.DownTimes.Combine();
@@ -151,7 +152,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(5)
                         ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy") 
                         : part.EndMachiningTime.ToString("dd.MM.yyyy");
-                    xlRow.Cell(7).Value = AppSettings.Machine.Name;
+                    xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
                     xlRow.Cell(8).Value = part.Operator.FullName.Trim();
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
@@ -203,23 +204,23 @@ namespace eLog.Infrastructure.Extensions
 
         public static WriteResult RewriteToXl(this PartInfoModel part)
         {
-            if (!File.Exists(AppSettings.XlPath)) return WriteResult.IOError;
+            if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.IOError;
             var result = WriteResult.NotFinded;
             try
             {
-                var index = AppSettings.Parts.IndexOf(part);
-                var prevPart = index != -1 && AppSettings.Parts.Count > index + 1 ? AppSettings.Parts[index + 1] : null;
+                var index = AppSettings.Instance.Parts.IndexOf(part);
+                var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
                 var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
                               prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
                 if (partial)
                 {
                     part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as ObservableCollection<DownTime> ?? new ObservableCollection<DownTime>();
-                    part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup, DownTime.Relations.Setup) { 
+                    part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup) { 
                         StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
                         EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
                 }
-                var wb = new XLWorkbook(AppSettings.XlPath);
-                File.Copy(AppSettings.XlPath, AppSettings.XlReservedPath, true);
+                var wb = new XLWorkbook(AppSettings.Instance.XlPath);
+                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
                 var combinedDownTimes = part.DownTimes.Combine();
                 foreach (var xlRow in wb.Worksheet(1).Rows())
                 {
@@ -229,7 +230,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
                         ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
                         : part.EndMachiningTime.ToString("dd.MM.yyyy");
-                    xlRow.Cell(7).Value = AppSettings.Machine.Name;
+                    xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
                     xlRow.Cell(8).Value = part.Operator.FullName.Trim();
                     xlRow.Cell(9).Value = part.FullName;
                     xlRow.Cell(10).Value = part.Order;
@@ -282,7 +283,7 @@ namespace eLog.Infrastructure.Extensions
 
         public static void TryCopyLog()
         {
-            if (Directory.GetParent(AppSettings.XlPath) is not { Exists: true } parent) return;
+            if (Directory.GetParent(AppSettings.Instance.XlPath) is not { Exists: true } parent) return;
             var logsPath = Path.Combine(parent.FullName, "logs");
             if (!Directory.Exists(logsPath)) { Directory.CreateDirectory(logsPath); }
             File.Copy(AppSettings.LogFile, Path.Combine(logsPath, $"{Environment.UserName}.log"), true);
@@ -459,14 +460,19 @@ namespace eLog.Infrastructure.Extensions
 
         public static DateTime GetStartShiftTime()
         {
-            return AppSettings.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(7) :
+            return AppSettings.Instance.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(7) :
                 DateTime.Now.Hour < 7 ? DateTime.Today.AddDays(-1).AddHours(19) : DateTime.Today.AddHours(19);
         }
 
         public static DateTime GetEndShiftTime()
         {
-            return AppSettings.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(19) :
+            return AppSettings.Instance.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(19) :
                 DateTime.Now.Hour < 7 ? DateTime.Today.AddHours(7) : DateTime.Today.AddDays(1).AddHours(7);
+        }
+
+        public static void AddDownTime(this PartInfoModel part, DownTime.Types type)
+        {
+            part.DownTimes.Add(new DownTime(part, type));
         }
 
         /// <summary>

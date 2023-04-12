@@ -17,8 +17,8 @@ namespace eLog.Infrastructure.Converters
         {
             if (value is not PartInfoModel part) return Visibility.Collapsed;
             var date = part.StartSetupTime.Date;
-            var todayParts = AppSettings.Parts.Where(p =>
-                p.Shift == AppSettings.CurrentShift && p.StartSetupTime.Date == DateTime.Today.Date).ToList();
+            var todayParts = AppSettings.Instance.Parts.Where(p =>
+                p.Shift == AppSettings.Instance.CurrentShift && p.StartSetupTime.Date == DateTime.Today.Date).ToList();
             return todayParts.Count > 0 && part == todayParts[^1] ? Visibility.Visible : Visibility.Collapsed;
         }
 
