@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:inf="clr-namespace:eLog.Infrastructure"
+        xmlns:ext="clr-namespace:eLog.Infrastructure.Extensions"
         xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
@@ -25,7 +26,6 @@
         <Style TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
         </Style>
-        
     </Window.Resources>
     <Grid>
         <DockPanel LastChildFill="True" Grid.Column="0">
@@ -50,20 +50,17 @@
                 <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
                 <ComboBox ItemsSource="{Binding Operators}" DockPanel.Dock="Left"
                           SelectedItem="{Binding CurrentOperator}"
-                          Text="{Binding CurrentOperator.DisplayName, FallbackValue={}, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                           IsEnabled="{Binding CanEditShiftAndParams}"
                           DisplayMemberPath="DisplayName"
-                          Width="250" Margin="4 0 0 0">
-                </ComboBox>
+                          Width="250" Margin="4 0 0 0"/>
                 <ComboBox ItemsSource="{Binding Shifts}" 
                           SelectedItem="{Binding CurrentShift}" 
                           IsEnabled="{Binding CanEditShiftAndParams}"
                           Width="200" Margin="4 0 0 0"/>
-
-                <Button Content="Начать смену" DockPanel.Dock="Left" Margin="4 0 0 0"
-                        Visibility="{Binding ShiftStarted, Converter={StaticResource InvertedVisibilityConverter}}"
-                        IsEnabled="{Binding CanStartShift}"
-                        Command="{Binding StartShiftCommand}" Style="{StaticResource GeneralButton}" Width="200"/>
+                    <Button Content="Начать смену" DockPanel.Dock="Left" Margin="4 0 0 0"
+                            Visibility="{Binding ShiftStarted, Converter={StaticResource InvertedVisibilityConverter}}"
+                            IsEnabled="{Binding CanStartShift}"
+                            Command="{Binding StartShiftCommand}" Style="{StaticResource GeneralButton}" Width="200"/>
                 <Button Content="Завершить смену" DockPanel.Dock="Left" Margin="4 0 0 0"
                         Visibility="{Binding ShiftStarted, Converter={StaticResource VisibilityConverter}}"
                         IsEnabled="{Binding CanEndShift, UpdateSourceTrigger=PropertyChanged}"
@@ -186,7 +183,7 @@
                                                 </Button.Content>
                                                 <Button.Resources>
                                                     <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="0 3 3 0"/>
+                                                        <Setter Property="CornerRadius" Value="2"/>
                                                     </Style>
                                                 </Button.Resources>
                                             </Button>

@@ -72,6 +72,18 @@ namespace eLog.Infrastructure.Extensions
             return new List<PartInfoModel>();
         }
 
+        public static bool GetBarCode(ref string barCode)
+        {
+            var dlg = new ReadBarCodeWindow()
+            {
+                BarCode = string.Empty,
+                Owner = Application.Current.MainWindow,
+            };
+            if (dlg.ShowDialog() != true) return false;
+            barCode = dlg.BarCode;
+            return true;
+        }
+
         /// <summary>
         /// Получение информации о детали с БД (пока имитация)
         /// </summary>

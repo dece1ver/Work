@@ -72,6 +72,19 @@ namespace eLog.Models
             }
         }
 
+        public override bool Equals(object? obj)
+        {
+            if (obj is null || GetType() != obj.GetType())
+            {
+                return false;
+            }
 
+            var other = (Operator)obj;
+            return FirstName == other.FirstName
+                   && LastName == other.LastName
+                   && Patronymic == other.Patronymic;
+        }
+
+        public override int GetHashCode() => HashCode.Combine(FirstName, LastName, Patronymic);
     }
 }

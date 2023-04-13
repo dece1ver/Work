@@ -16,6 +16,7 @@ using eLog.Services;
 using eLog.Infrastructure.Extensions;
 using System.Threading;
 using eLog.Infrastructure.Interfaces;
+using eLog.Views.Windows.Settings;
 
 namespace eLog.ViewModels
 {
@@ -45,11 +46,10 @@ namespace eLog.ViewModels
             syncPartsThread.Start();
         }
 
-        public Overlay Overlay
-        {
-            get => _Overlay;
-            set => Set(ref _Overlay, value);
-        }
+        
+
+        #region Свойства-обертки настроек
+        
 
         /// <summary> Станок </summary>
         public Machine Machine
@@ -75,6 +75,30 @@ namespace eLog.ViewModels
         {
             get => AppSettings.Instance.Operators;
             set => AppSettings.Instance.Operators = value;
+        }
+
+        public static string[] Shifts => Text.Shifts;
+
+        public string CurrentShift
+        {
+            get => AppSettings.Instance.CurrentShift;
+            set => AppSettings.Instance.CurrentShift = value;
+        }
+
+        /// <summary> Детали </summary>
+        public static ObservableCollection<PartInfoModel> Parts
+        {
+            get => AppSettings.Instance.Parts;
+            set => AppSettings.Instance.Parts = value;
+        } 
+        #endregion
+
+        private Overlay _Overlay = new(false);
+
+        public Overlay Overlay
+        {
+            get => _Overlay;
+            set => Set(ref _Overlay, value);
         }
 
         private string _Status = string.Empty;
@@ -131,22 +155,7 @@ namespace eLog.ViewModels
             } 
         }
 
-        public static string[] Shifts => Text.Shifts;
-
-        public string CurrentShift
-        {
-            get => AppSettings.Instance.CurrentShift;
-            set => AppSettings.Instance.CurrentShift = value;
-        }
         
-        private Overlay _Overlay = new(false);
-
-        /// <summary> Детали </summary>
-        public static ObservableCollection<PartInfoModel> Parts
-        {
-            get => AppSettings.Instance.Parts;
-            set => AppSettings.Instance.Parts = value;
-        }
 
         #region Команды
 
@@ -190,8 +199,8 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                if (WindowsUserDialogService.EditSettings())
-                    Machine = AppSettings.Instance.Machine;
+                if (!WindowsUserDialogService.EditSettings()) return;
+                OnPropertyChanged(nameof(Machine));
             }
         }
         private static bool CanEditSettingsCommandExecute(object p) => true;
@@ -203,15 +212,12 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                if (WindowsUserDialogService.EditOperators())
-                {
-                    CurrentOperator = null;
-                }
+                if (!WindowsUserDialogService.EditOperators()) return;
+                OnPropertyChanged(nameof(CurrentOperator));
+                OnPropertyChanged(nameof(Operators));
+                OnPropertyChanged(nameof(CanStartShift));
+                OnPropertyChanged(nameof(CanAddPart));
             }
-            OnPropertyChanged(nameof(Operators));
-            OnPropertyChanged(nameof(CurrentOperator));
-            OnPropertyChanged(nameof(CanAddPart));
-            OnPropertyChanged(nameof(CanEndShift));
         }
         private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
@@ -527,9 +533,6 @@ namespace eLog.ViewModels
 
         #endregion
 
-
-
-        
 
         private void SyncParts()
         {

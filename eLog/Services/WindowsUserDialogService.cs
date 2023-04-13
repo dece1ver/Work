@@ -38,13 +38,13 @@ namespace eLog.Services
             };
         }
 
-        public void ShowError(string message, string caption) =>
+        public void ShowError(string message, string caption = "Ошибка") =>
             MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Error);
 
-        public void ShowInfo(string message, string caption) =>
+        public void ShowInfo(string message, string caption = "Информация") =>
             MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Information);
 
-        public void ShowWarning(string message, string caption) =>
+        public void ShowWarning(string message, string caption = "Внимание") =>
             MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
         /// <summary>
@@ -58,7 +58,9 @@ namespace eLog.Services
                 Owner = Application.Current.MainWindow,
             };
             if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators)) return false;
-            AppSettings.Instance.Operators = new ObservableCollection<Operator>(dlg.Operators.ToList().Where(o => !string.IsNullOrWhiteSpace(o.DisplayName)));
+            AppSettings.Instance.Operators = new ObservableCollection<Operator>(dlg.Operators.ToList()
+                .Where(o => !string.IsNullOrWhiteSpace(o.DisplayName)));
+            AppSettings.Instance.CurrentOperator = null;
             return true;
         }
 

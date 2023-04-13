@@ -12,20 +12,19 @@
         FontSize="16" WindowStartupLocation="CenterOwner">
 
     <DockPanel>
-        <UniformGrid DockPanel.Dock="Bottom" Rows="1" HorizontalAlignment="Right" Margin="0 10">
-            <Button Content="Ok" Margin="10 0" Padding="30 5" IsDefault="True"
-                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=settings:OperatorsEditWindow}}">
-                <Button.Command>
-                    <cmd:CloseDialogCommand DialogResult="True"/>
-                </Button.Command>
-            </Button>
-            <Button Content="Отмена" Margin="0 0 10 0" IsCancel="True"
+        <UniformGrid DockPanel.Dock="Bottom" Rows="1" HorizontalAlignment="Right" Margin="0 10" Height="30">
+            <Button Content="Отмена" Margin="0 0 5 0" Width="92" IsCancel="True"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=settings:OperatorsEditWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="False"/>
                 </Button.Command>
             </Button>
-            
+            <Button Content="ОК" Margin="5 0 10 0" Width="92" VerticalContentAlignment="Center" IsDefault="True"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=settings:OperatorsEditWindow}}">
+                <Button.Command>
+                    <cmd:CloseDialogCommand DialogResult="True"/>
+                </Button.Command>
+            </Button>
         </UniformGrid>
         <DataGrid DockPanel.Dock="Top" ItemsSource="{Binding Operators}" AutoGenerateColumns="False"
                   CanUserAddRows="True" CanUserDeleteRows="False" PreviewKeyDown="DataGrid_PreviewKeyDown">

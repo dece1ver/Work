@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,7 +17,9 @@ namespace eLog.Views.Windows.Settings
 
         public OperatorsEditWindow()
         {
-            Operators = new ObservableCollection<Operator>(AppSettings.Instance.Operators);
+            var tempOperators = 
+
+            Operators = new ObservableCollection<Operator>(AppSettings.Instance.Operators.Select(op => new Operator(op)));
             InitializeComponent();
         }
 

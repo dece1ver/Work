@@ -16,12 +16,22 @@
         <Style TargetType="Button" x:Key="OperationButton">
             <Setter Property="Width" Value="87"/>
             <Setter Property="Margin" Value="1"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="2"/>
+                </Style>
+            </Style.Resources>
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="FontSize" Value="20"/> 
             <Setter Property="Margin" Value="1"/> 
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Height" Value="38"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="2"/>
+                </Style>
+            </Style.Resources>
             <Style.Triggers>
                 <Trigger Property="Validation.HasError" Value="True">
                     <Setter Property="Foreground" Value="Red" />
@@ -86,6 +96,9 @@
                                                 <Label Content="уст. " FontSize="22" HorizontalAlignment="Right"/>
                                             </VisualBrush.Visual>
                                         </VisualBrush>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="2 2 0 0"/>
+                                        </Style>
                                     </Style.Resources>
                                     <Setter Property="IsReadOnly" Value="True"/>
                                     <Setter Property="Focusable" Value="False"/>
@@ -98,9 +111,21 @@
                         </TextBox>
                         <UniformGrid Columns="2" Margin="1">
                             <Button Content="▼" IsEnabled="{Binding CanDecreaseSetup}"
-                                    Style="{StaticResource KeyboardButton}" Margin="0 -1 -1 0" Click="DecrementSetupButton_Click"/>
+                                    Style="{StaticResource KeyboardButton}" Margin="0 -1 -1 0" Click="DecrementSetupButton_Click">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="0 0 0 2"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
                             <Button Content="▲" IsEnabled="{Binding CanIncreaseSetup}"
-                                    Style="{StaticResource KeyboardButton}" Margin="0 -1 0 0" Click="IncrementSetupButton_Click"/>
+                                    Style="{StaticResource KeyboardButton}" Margin="0 -1 0 0" Click="IncrementSetupButton_Click">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="0 0 2 0"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
                         </UniformGrid>
                     </UniformGrid>
                     <TextBox 
@@ -136,7 +161,13 @@
                             Content="⌕" FontSize="18" Click="FindOrderDetailsButton_Click" Width="40"/>
                     <TextBox d:Text="00001.1.1" Margin="-2 1 1 1" IsEnabled="{Binding NonEmptyOrder}"
                              Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
-                             Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
+                             Validation.ErrorTemplate="{StaticResource ValidationFailed}">
+                        <TextBox.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="0 2 2 0"/>
+                            </Style>
+                        </TextBox.Resources>
+                    </TextBox>
                 </DockPanel>
 
                 <TextBlock Grid.Row="2" Grid.Column="2"
@@ -161,6 +192,9 @@
                                             <Label Content="факт" Foreground="LightGray" FontSize="18"/>
                                         </VisualBrush.Visual>
                                     </VisualBrush>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="2"/>
+                                    </Style>
                                 </Style.Resources>
                                 <Style.Triggers>
                                     <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
@@ -194,6 +228,9 @@
                                             <Label Content="по М/Л" Foreground="LightGray" FontSize="18"/>
                                         </VisualBrush.Visual>
                                     </VisualBrush>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="2"/>
+                                    </Style>
                                 </Style.Resources>
                                 <Style.Triggers>
                                     <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
@@ -290,7 +327,7 @@
                 <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom" LastChildFill="True">
                     <Button Click="Button_Click" Content="SCAN" DockPanel.Dock="Right" Visibility="Collapsed"/>
-                    <Button Margin="0 0 0 0" Height="60"
+                    <Button Margin="0 0 0 0" Height="60" Style="{StaticResource GeneralButton}"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
                         <Button.Content>
@@ -314,7 +351,7 @@
                 <ctrl:ControlKeyboardControl Grid.Column="5" Grid.Row="7" Margin="0 8 -1 0"
                                              Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
 
-                <Button Grid.Column="5" Grid.Row="8"
+                <Button Grid.Column="5" Grid.Row="8" Style="{StaticResource GeneralButton}"
                         Margin="1 0 0 0" Height="60"
                         VerticalAlignment="Bottom" IsEnabled="{Binding CanBeClosed}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
@@ -331,7 +368,7 @@
                         Margin="3 15"/>
 
                 <DockPanel Grid.Row="0" Grid.Column="5" Margin="1 0 0 1" Height="39">
-                    <Button x:Name="EditCreatorButton" Width="63" Click="EditCreatorButton_Click" 
+                    <Button x:Name="EditCreatorButton" Width="63" Click="EditCreatorButton_Click" Style="{StaticResource KeyboardButton}"
                             Margin="0 1 2 0" Content="{StaticResource OperatorIcon}" Padding="-5"
                             Visibility="{Binding NewDetail, Converter={StaticResource InvertedVisibilityConverter}}"/>
                     <Button Margin="0 1 0 0"
