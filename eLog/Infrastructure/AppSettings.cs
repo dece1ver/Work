@@ -26,14 +26,18 @@ namespace eLog.Infrastructure
     /// <summary>
     /// Настройки приложения
     /// </summary>
-    public class AppSettings : ViewModel
+    public class AppSettings : INotifyPropertyChanged
     {
         private AppSettings()
         {
-            Parts.CollectionChanged += (s, e) => Save();
+            Parts.CollectionChanged += (_, _) => Save();
             foreach (var part in Parts)
             {
-                part.PropertyChanged += (s, e) => Save();
+                part.PropertyChanged += (_, _) => Save();
+                foreach (var downTime in part.DownTimes)
+                {
+                    downTime.PropertyChanged += (_, _) => Save();
+                }
             }
         }
 
@@ -48,6 +52,9 @@ namespace eLog.Infrastructure
 
         /// <summary> Путь к файлу конфигурации </summary>
         [JsonIgnore] public static readonly string ConfigFilePath = Path.Combine(BasePath, "config.json");
+
+        /// <summary> Путь к файлу конфигурации </summary>
+        [JsonIgnore] public static readonly string ConfigBackupPath = Path.Combine(BasePath, "config.backup.json");
 
         /// <summary> Путь к локальному списку заказов </summary>
         [JsonIgnore] public static readonly string LocalOrdersFile = Path.Combine(BasePath, "orders.xlsx");
@@ -166,15 +173,6 @@ namespace eLog.Infrastructure
             Save();
         }
 
-        public static Dictionary<string, string> GetPropertiesValues()
-        {
-            return typeof(AppSettings)
-                .GetProperties(BindingFlags.Public | BindingFlags.Static)
-                .Where(f => f.PropertyType == typeof(string))
-                .ToDictionary(f => f.Name,
-                    f => (string)f.GetValue(null)!);
-        }
-
         /// <summary>
         /// Читает конфиг, если возникает исключение, то создает конфиг по-умолчанию и читает его.
         /// </summary>
@@ -199,17 +197,29 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void Save()
         {
+            if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, ConfigBackupPath, true);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             var settings = new JsonSerializerSettings()
             {
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects
             };
-            File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
+            try
+            {
+                File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
+            }
+            catch (Exception ex)
+            {
+                var msg = "Ошибка при сохранении файла конфигурации.";
+                Debug.WriteLine(msg);
+                Util.WriteLog(ex, msg);
+                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
+            }
         }
 
-        public new event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected new virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
+        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
         {
             var handlers = PropertyChanged;
             if (handlers is null) return;
@@ -227,10 +237,18 @@ namespace eLog.Infrastructure
                 {
                     action.DynamicInvoke(this, args);
                 }
+                
             }
+        }
+
+        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(PropertyName);
             Save();
-            Debug.WriteLine("Rewrite config from PropertyChanged");
-            // проверить
+            Debug.WriteLine("Rewrite config from Set notification");
+            return true;
         }
     }
 }

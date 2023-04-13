@@ -43,26 +43,25 @@
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Станок:" Margin="5 0 0 0" VerticalAlignment="Center"/>
             <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" Margin="0 1"
                       ItemsSource="{Binding Machines}" 
-                      SelectedItem="{Binding AppSettings.Instance.Machine}" 
-                      Text="{Binding AppSettings.Instance.Machine.Name, Mode=OneWay}" 
+                      SelectedItem="{Binding Machine}" 
                       DisplayMemberPath="Name"/>
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Занесение:" VerticalAlignment="Center" Margin="5 0 0 0" />
             <DockPanel Grid.Row="1" Grid.Column="1" Margin="0" 
                         VerticalAlignment="Stretch" LastChildFill="True">
                 <Button x:Name="SetOrdersSourcePathButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Padding="15 1" Click="SetXlPathButton_Click"/>
                 <TextBox x:Name="XlPathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
-                         Text="{Binding AppSettings.Instance.XlPath}"/>
+                         Text="{Binding XlPath}"/>
             </DockPanel>
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Номенклатура:" VerticalAlignment="Center" Margin="5 0 0 0" />
             <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" 
                        VerticalAlignment="Stretch" LastChildFill="True">
                 <Button x:Name="SetOrdersSourceButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Padding="15 1" Click="SetOrdersSourceButton_Click"/>
                 <TextBox x:Name="OrdersSourcePathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
-                         Text="{Binding AppSettings.OrdersSourcePath}"/>
+                         Text="{Binding OrdersSourcePath}"/>
             </DockPanel>
             <TextBlock Grid.Row="3" Grid.Column="0" Text="Типы М/Л:" VerticalAlignment="Center" Margin="5 0 0 0" />
             <TextBox Grid.Row="3" Grid.Column="1" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
-                     Text="{Binding AppSettings.OrderQualifiers, Converter={StaticResource ArrayConverter}}"/>
+                     Text="{Binding OrderQualifiers, Converter={StaticResource ArrayConverter}}"/>
         </Grid>
     </DockPanel>
 </Window>

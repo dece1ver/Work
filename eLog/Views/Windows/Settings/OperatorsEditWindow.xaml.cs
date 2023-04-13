@@ -1,7 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using eLog.Infrastructure;
 using eLog.Models;
 
 namespace eLog.Views.Windows.Settings
@@ -10,33 +12,27 @@ namespace eLog.Views.Windows.Settings
 
     public partial class OperatorsEditWindow
     {
-        public static readonly DependencyProperty OperatorsProperty =
-            DependencyProperty.Register(
-                nameof(Operators),
-                typeof(ObservableCollection<Operator>),
-                typeof(OperatorsEditWindow),
-                new PropertyMetadata(default(string)));
-
-
-        public ObservableCollection<Operator> Operators
-        {
-            get => (ObservableCollection<Operator>)GetValue(OperatorsProperty);
-            set => SetValue(OperatorsProperty, value);
-        }
+        public ObservableCollection<Operator> Operators { get; set; }
 
         public OperatorsEditWindow()
         {
+            Operators = new ObservableCollection<Operator>(AppSettings.Instance.Operators);
             InitializeComponent();
         }
 
         private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             var grid = (DataGrid)sender;
-            if ( Key.Delete == e.Key ) {
-                if (MessageBox.Show($"Удалить оператора?", "Подтверждение!", MessageBoxButton.YesNo,MessageBoxImage.Question) == MessageBoxResult.Yes)
-                {
-                    Operators.Remove(grid.SelectedItem as Operator);       
-                }
+            if (Key.Delete != e.Key) return;
+            if (MessageBox.Show(
+                    $"Удалить оператора?", 
+                    "Подтверждение!",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question)
+                == MessageBoxResult.Yes 
+                && grid.SelectedItem is Operator @operator)
+            {
+                Operators.Remove(@operator);       
             }
         }
     }

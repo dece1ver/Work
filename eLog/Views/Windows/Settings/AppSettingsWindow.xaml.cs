@@ -17,7 +17,9 @@ namespace eLog.Views.Windows.Settings
     {
         private string _XlPath;
         private string _OrdersSourcePath;
-        public List<Machine> Machines { get; set; } = new();
+        private Machine _Machine;
+        private string[] _OrderQualifiers;
+        public IReadOnlyList<Machine> Machines { get; }
 
         public string XlPath
         {
@@ -32,18 +34,27 @@ namespace eLog.Views.Windows.Settings
         }
 
 
-        public Machine Machine { get; set; }
+        public Machine Machine
+        {
+            get => _Machine;
+            set => Set(ref _Machine, value);
+        }
+
+        public string[] OrderQualifiers
+        {
+            get => _OrderQualifiers;
+            set => Set(ref _OrderQualifiers, value);
+        }
 
         public AppSettingsWindow()
         {
-            InitializeComponent();
-            for (var i = 0; i < 11; i++)
-            {
-                Machines.Add(new Machine(i));
-            }
-            Machine = new Machine(AppSettings.Instance.Machine.Id);
+           
+            Machines = Enumerable.Range(0, 11).Select(i => new Machine(i)).ToList();
             _XlPath = AppSettings.Instance.XlPath;
             _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
+            _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
+            _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
+            InitializeComponent();
         }
 
         private void SetXlPathButton_Click(object sender, RoutedEventArgs e)

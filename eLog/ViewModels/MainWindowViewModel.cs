@@ -51,28 +51,30 @@ namespace eLog.ViewModels
             set => Set(ref _Overlay, value);
         }
 
-        private Machine _Machine = AppSettings.Instance.Machine;
         /// <summary> Станок </summary>
         public Machine Machine
         {
-            get => _Machine;
-            set => Set(ref _Machine, value);
+            get => AppSettings.Instance.Machine;
+            set => AppSettings.Instance.Machine = value;
         }
 
-        private Operator? _CurrentOperator = AppSettings.Instance.CurrentOperator;
         /// <summary> Текущий оператор </summary>
         public Operator? CurrentOperator
         {
-            get => _CurrentOperator;
-            set => Set(ref _CurrentOperator, value);
+            get => AppSettings.Instance.CurrentOperator;
+            set
+            {
+                AppSettings.Instance.CurrentOperator = value;
+                OnPropertyChanged(nameof(CanStartShift));
+                OnPropertyChanged(nameof(CanAddPart));
+            }
         }
 
-        private ObservableCollection<Operator> _Operators = AppSettings.Instance.Operators;
         /// <summary> Список операторов </summary>
         public ObservableCollection<Operator> Operators
         {
-            get => _Operators;
-            set => Set(ref _Operators, value);
+            get => AppSettings.Instance.Operators;
+            set => AppSettings.Instance.Operators = value;
         }
 
         private string _Status = string.Empty;
@@ -110,11 +112,10 @@ namespace eLog.ViewModels
         public Visibility ProgressBarVisibility => Progress is 0 || Math.Abs(Progress - ProgressMaxValue) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not PartInfoModel.State.InProgress);
 
-        public bool CanAddPart => ShiftStarted && WorkIsNotInProgress;
+        public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is {};
+        public bool CanStartShift => CurrentOperator is {} && !string.IsNullOrEmpty(CurrentShift);
         public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;
         public bool CanEndShift => ShiftStarted && WorkIsNotInProgress;
-
-        public bool DownTimeInProgress => Parts.Count == Parts.Count(x => x.DownTimes.Count > 0);
 
         private bool _ShiftStarted = AppSettings.Instance.IsShiftStarted;
         public bool ShiftStarted
@@ -131,23 +132,16 @@ namespace eLog.ViewModels
         }
 
         public static string[] Shifts => Text.Shifts;
-        private string _CurrentShift = AppSettings.Instance.CurrentShift;
 
         public string CurrentShift
         {
-            get => _CurrentShift;
-            set
-            {
-                if (!Set(ref _CurrentShift, value)) return;
-                AppSettings.Instance.CurrentShift = value;
-            }
+            get => AppSettings.Instance.CurrentShift;
+            set => AppSettings.Instance.CurrentShift = value;
         }
-
-        /// <summary> Детали </summary>
-        private ObservableCollection<PartInfoModel> _Parts = AppSettings.Instance.Parts;
         
         private Overlay _Overlay = new(false);
 
+        /// <summary> Детали </summary>
         public static ObservableCollection<PartInfoModel> Parts
         {
             get => AppSettings.Instance.Parts;
@@ -209,25 +203,15 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                var operators = Operators;
-                WindowsUserDialogService windowsUserDialogService = new();
-            
-                if (windowsUserDialogService.Edit(operators))
+                if (WindowsUserDialogService.EditOperators())
                 {
-                    var tempOperators = operators.ToList();
-
-                    // костыль надо нормально сделать
-                    tempOperators.RemoveAll(x => string.IsNullOrWhiteSpace(x.DisplayName));
-                    operators = new ObservableCollection<Operator>();
-                    foreach (var op in tempOperators)
-                    {
-                        operators.Add(op);
-                    }
-                    Operators = operators;
+                    CurrentOperator = null;
                 }
             }
             OnPropertyChanged(nameof(Operators));
             OnPropertyChanged(nameof(CurrentOperator));
+            OnPropertyChanged(nameof(CanAddPart));
+            OnPropertyChanged(nameof(CanEndShift));
         }
         private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion

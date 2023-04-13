@@ -277,7 +277,9 @@ namespace eLog.Models
                 var planInfo = SingleProductionTimePlan > 0
                     ? $" (Плановое: {TotalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                     : string.Empty;
-                var productivity = $" ({FinishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)";
+                var productivity = SingleProductionTimePlan > 0 
+                    ? $" ({FinishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)" 
+                    : string.Empty;
                 switch (IsFinished)
                 {
                     case State.Finished:
@@ -506,7 +508,7 @@ namespace eLog.Models
                     action.DynamicInvoke(this, args);
                 }
             }
-            AppSettings.Save();
+            //AppSettings.Save();
         }
 
         protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)

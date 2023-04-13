@@ -62,6 +62,7 @@
 
                 <Button Content="Начать смену" DockPanel.Dock="Left" Margin="4 0 0 0"
                         Visibility="{Binding ShiftStarted, Converter={StaticResource InvertedVisibilityConverter}}"
+                        IsEnabled="{Binding CanStartShift}"
                         Command="{Binding StartShiftCommand}" Style="{StaticResource GeneralButton}" Width="200"/>
                 <Button Content="Завершить смену" DockPanel.Dock="Left" Margin="4 0 0 0"
                         Visibility="{Binding ShiftStarted, Converter={StaticResource VisibilityConverter}}"

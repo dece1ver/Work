@@ -18,6 +18,44 @@ namespace eLog.Models
 {
     public class DownTime : INotifyPropertyChanged, IDataErrorInfo
     {
+        [JsonConstructor]
+        public DownTime(PartInfoModel part, Types type, DateTime startTime, DateTime endTime)
+        {
+            _ParentPart = part;
+            _Type = type;
+            _StartTime = startTime;
+            _StartTimeText = _StartTime.ToString(Text.DateTimeFormat);
+            _EndTime = endTime;
+            _EndTimeText = _EndTime.ToString(Text.DateTimeFormat);
+        }
+
+        public DownTime(PartInfoModel part, Types type)
+        {
+            _ParentPart = part;
+            _Type = type;
+            var now = DateTime.Now;
+            _StartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
+            _StartTimeText = StartTime.ToString(Text.DateTimeFormat);
+            _EndTime = DateTime.MinValue;
+            _EndTimeText = string.Empty;
+        }
+
+        /// <summary>
+        /// Конструктор копирования
+        /// </summary>
+        /// <param name="part">Деталь к которой относится простой</param>
+        /// <param name="downTime">Источник</param>
+
+        public DownTime(PartInfoModel part, DownTime downTime)
+        {
+            _ParentPart = part;
+            _Type = downTime.Type;
+            _StartTime = downTime.StartTime;
+            _StartTimeText = downTime.StartTimeText;
+            _EndTime = downTime.EndTime;
+            _EndTimeText = downTime.EndTimeText;
+        }
+
         private Types _Type;
         private DateTime _StartTime;
         private DateTime _EndTime;
@@ -144,44 +182,6 @@ namespace eLog.Models
         [JsonIgnore] public TimeSpan Time => EndTime - StartTime;
         [JsonIgnore] public bool InProgress => EndTime < StartTime;
 
-        [JsonConstructor]
-        public DownTime(PartInfoModel part, Types type, DateTime startTime, DateTime endTime)
-        {
-            _ParentPart = part;
-            _Type = type;
-            _StartTime = startTime;
-            _StartTimeText = _StartTime.ToString(Text.DateTimeFormat);
-            _EndTime = endTime;
-            _EndTimeText = _EndTime.ToString(Text.DateTimeFormat);
-        }
-
-        public DownTime(PartInfoModel part, Types type)
-        {
-            _ParentPart = part;
-            _Type = type;
-            var now = DateTime.Now;
-            _StartTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
-            _StartTimeText = StartTime.ToString(Text.DateTimeFormat);
-            _EndTime = DateTime.MinValue;
-            _EndTimeText = string.Empty;
-        }
-
-        /// <summary>
-        /// Конструктор копирования
-        /// </summary>
-        /// <param name="part">Деталь к которой относится простой</param>
-        /// <param name="downTime">Источник</param>
-
-        public DownTime(PartInfoModel part, DownTime downTime)
-        {
-            _ParentPart = part;
-            _Type = downTime.Type;
-            _StartTime = downTime.StartTime;
-            _StartTimeText = downTime.StartTimeText;
-            _EndTime = downTime.EndTime;
-            _EndTimeText = downTime.EndTimeText;
-        }
-        
         public string this[string columnName]
         {
             get
@@ -232,7 +232,7 @@ namespace eLog.Models
                 return error;
             }
         }
-        public string Error => null!;
+        [JsonIgnore] public string Error => null!;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -255,7 +255,7 @@ namespace eLog.Models
                     action.DynamicInvoke(this, args);
                 }
             }
-            AppSettings.Save();
+            //AppSettings.Save();
         }
 
         protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)

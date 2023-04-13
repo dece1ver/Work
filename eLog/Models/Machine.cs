@@ -14,11 +14,7 @@ namespace eLog.Models
         public Machine(int id)
         {
             Id = id;
-        }
-
-        public int Id { get; }
-        public string Name =>
-            Id switch
+            Name = id switch
             {
                 0 => "Goodway GS-1500",
                 1 => "Hyundai L230A",
@@ -34,7 +30,13 @@ namespace eLog.Models
 
                 _ => "-//-",
             };
+        }
 
+        public int Id { get; }
+
+        public string Name { get;}
+
+        // надо выпилить наверное
         [JsonIgnore]
         public string XlReservedPath => Path.Combine(AppSettings.XlReservedPath, Name);
     }

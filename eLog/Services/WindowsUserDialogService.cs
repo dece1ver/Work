@@ -33,7 +33,6 @@ namespace eLog.Services
         {
             return item switch
             {
-                ObservableCollection<Operator> operators => EditOperators(ref operators),
                 PartInfoModel part => EditDetail(ref part),
                 _ => false,
             };
@@ -48,17 +47,18 @@ namespace eLog.Services
         public void ShowWarning(string message, string caption) =>
             MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
 
-        public static bool EditOperators(ref ObservableCollection<Operator> operators)
+        /// <summary>
+        /// Возвращает вызывает диалог для изменения операторов.
+        /// </summary>
+        /// <returns>true если операторы были изменены, false при отмене, либо если все операторы остались неизменны</returns>
+        public static bool EditOperators()
         {
             var dlg = new OperatorsEditWindow()
             {
-                Operators = operators,
                 Owner = Application.Current.MainWindow,
             };
-            if (dlg.ShowDialog() != true) return false;
-
-            operators = dlg.Operators;
-
+            if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators)) return false;
+            AppSettings.Instance.Operators = new ObservableCollection<Operator>(dlg.Operators.ToList().Where(o => !string.IsNullOrWhiteSpace(o.DisplayName)));
             return true;
         }
 
@@ -69,11 +69,10 @@ namespace eLog.Services
                 Owner = Application.Current.MainWindow,
             };
             if (dlg.ShowDialog() != true) return false;
-
             AppSettings.Instance.Machine = dlg.Machine;
             AppSettings.Instance.XlPath = dlg.XlPath;
             AppSettings.Instance.OrdersSourcePath = dlg.OrdersSourcePathTextBox.Text;
-
+            AppSettings.Instance.OrderQualifiers = dlg.OrderQualifiers;
             return true;
         }
 
