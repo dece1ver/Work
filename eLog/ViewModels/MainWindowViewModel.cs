@@ -64,10 +64,7 @@ namespace eLog.ViewModels
         public Operator? CurrentOperator
         {
             get => _CurrentOperator;
-            set {
-                AppSettings.Instance.CurrentOperator = value;
-                Set(ref _CurrentOperator, value);
-            }
+            set => Set(ref _CurrentOperator, value);
         }
 
         private ObservableCollection<Operator> _Operators = AppSettings.Instance.Operators;
@@ -75,10 +72,7 @@ namespace eLog.ViewModels
         public ObservableCollection<Operator> Operators
         {
             get => _Operators;
-            set {
-                AppSettings.Instance.Operators = value;
-                Set(ref _Operators, value); 
-            }
+            set => Set(ref _Operators, value);
         }
 
         private string _Status = string.Empty;

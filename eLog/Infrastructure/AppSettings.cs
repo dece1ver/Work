@@ -31,6 +31,10 @@ namespace eLog.Infrastructure
         private AppSettings()
         {
             Parts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(Parts));
+            foreach (var part in Parts)
+            {
+                part.PropertyChanged += OnPartPropertyChanged;
+            }
         }
 
         private static AppSettings _Instance;
@@ -226,6 +230,12 @@ namespace eLog.Infrastructure
             Save();
             Debug.WriteLine("Rewrite config from PropertyChanged");
             // проверить
+        }
+
+        private void OnPartPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // Обработка изменений в свойствах элементов в коллекции Parts
+            Save(); // Автоматическое сохранение данных в файл
         }
     }
 }
