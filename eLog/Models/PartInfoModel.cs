@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,8 @@ using System.Windows;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using Newtonsoft.Json;
+using System.Runtime.CompilerServices;
+using System.Windows.Threading;
 
 namespace eLog.Models
 {
@@ -16,7 +19,7 @@ namespace eLog.Models
     /// Информация о детали.
     /// Статусные свойства выводятся из временных свойств. По-умолчанию завершающие временные свойства присваиваются в DateTime.MinValue. После присваивания времен деталь считается завершенной.
     /// </summary>
-    public class PartInfoModel : ViewModel
+    public class PartInfoModel : INotifyPropertyChanged
     {
         private string _Name;
         private string _Number;
@@ -480,6 +483,38 @@ namespace eLog.Models
             _Operator = part.Operator;
             _Shift = part.Shift;
             _IsSynced = part.IsSynced;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
+        {
+            var handlers = PropertyChanged;
+            if (handlers is null) return;
+
+            var invokationList = handlers.GetInvocationList();
+            var args = new PropertyChangedEventArgs(PropertyName);
+
+            foreach (var action in invokationList)
+            {
+                if (action.Target is DispatcherObject dispatcherObject)
+                {
+                    dispatcherObject.Dispatcher.Invoke(action, this, args);
+                }
+                else
+                {
+                    action.DynamicInvoke(this, args);
+                }
+            }
+            AppSettings.Save();
+        }
+
+        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(PropertyName);
+            return true;
         }
     }
 }

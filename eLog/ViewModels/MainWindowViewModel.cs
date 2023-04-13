@@ -148,10 +148,10 @@ namespace eLog.ViewModels
         
         private Overlay _Overlay = new(false);
 
-        public ObservableCollection<PartInfoModel> Parts
+        public static ObservableCollection<PartInfoModel> Parts
         {
             get => AppSettings.Instance.Parts;
-            set => AppSettings.Instance.Parts = new ObservableCollection<PartInfoModel>(value);
+            set => AppSettings.Instance.Parts = value;
         }
 
         #region Команды
@@ -277,7 +277,6 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
-                AppSettings.Instance.Parts = Parts;
             }
         }
         private static bool CanStartDetailCommandExecute(object p) => true;

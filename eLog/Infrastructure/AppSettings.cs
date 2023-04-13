@@ -30,10 +30,10 @@ namespace eLog.Infrastructure
     {
         private AppSettings()
         {
-            Parts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(Parts));
+            Parts.CollectionChanged += (s, e) => Save();
             foreach (var part in Parts)
             {
-                part.PropertyChanged += OnPartPropertyChanged;
+                part.PropertyChanged += (s, e) => Save();
             }
         }
 
@@ -128,7 +128,8 @@ namespace eLog.Infrastructure
         public Operator? CurrentOperator
         {
             get => _CurrentOperator;
-            set => Set(ref _CurrentOperator, value);
+            set
+            => Set(ref _CurrentOperator, value);
         }
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
@@ -230,12 +231,6 @@ namespace eLog.Infrastructure
             Save();
             Debug.WriteLine("Rewrite config from PropertyChanged");
             // проверить
-        }
-
-        private void OnPartPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            // Обработка изменений в свойствах элементов в коллекции Parts
-            Save(); // Автоматическое сохранение данных в файл
         }
     }
 }
