@@ -21,6 +21,30 @@ namespace eLog.ViewModels
 {
     internal class MainWindowViewModel : ViewModel, IOverlay
     {
+        public MainWindowViewModel()
+        {
+            CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
+
+            StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
+            EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
+
+            StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
+            EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
+            SetDownTimeCommand = new LambdaCommand(OnSetDownTimeCommandExecuted, CanSetDownTimeCommandExecute);
+            EndDownTimeCommand = new LambdaCommand(OnEndDownTimeCommandExecuted, CanEndDownTimeCommandExecute);
+            EditDetailCommand = new LambdaCommand(OnEditDetailCommandExecuted, CanEditDetailCommandExecute);
+            EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
+
+            EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
+            EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
+            ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
+
+            Parts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(Parts));
+
+            var syncPartsThread = new Thread(SyncParts) { IsBackground = true };
+            syncPartsThread.Start();
+        }
+
         public Overlay Overlay
         {
             get => _Overlay;
@@ -42,7 +66,6 @@ namespace eLog.ViewModels
             get => _CurrentOperator;
             set {
                 AppSettings.Instance.CurrentOperator = value;
-                AppSettings.RewriteConfig();
                 Set(ref _CurrentOperator, value);
             }
         }
@@ -54,7 +77,6 @@ namespace eLog.ViewModels
             get => _Operators;
             set {
                 AppSettings.Instance.Operators = value;
-                AppSettings.RewriteConfig();
                 Set(ref _Operators, value); 
             }
         }
@@ -108,7 +130,6 @@ namespace eLog.ViewModels
             {
                 if (!Set(ref _ShiftStarted, value)) return;
                 AppSettings.Instance.IsShiftStarted = value;
-                AppSettings.RewriteConfig();
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
@@ -125,7 +146,6 @@ namespace eLog.ViewModels
             {
                 if (!Set(ref _CurrentShift, value)) return;
                 AppSettings.Instance.CurrentShift = value;
-                AppSettings.RewriteConfig();
             }
         }
 
@@ -136,13 +156,8 @@ namespace eLog.ViewModels
 
         public ObservableCollection<PartInfoModel> Parts
         {
-            get => _Parts;
-            set
-            {
-                Set(ref _Parts, value);
-                AppSettings.Instance.Parts = _Parts;
-                AppSettings.RewriteConfig();
-            }
+            get => AppSettings.Instance.Parts;
+            set => AppSettings.Instance.Parts = new ObservableCollection<PartInfoModel>(value);
         }
 
         #region Команды
@@ -250,28 +265,25 @@ namespace eLog.ViewModels
                     Shift = AppSettings.Instance.CurrentShift,
                     Setup = 1,
                 };
-                if (WindowsUserDialogService.EditDetail(ref part, true))
+                if (!WindowsUserDialogService.EditDetail(ref part, true)) return;
+                switch (part)
                 {
-                    switch (part)
-                    {
-                        case { IsFinished: not PartInfoModel.State.InProgress }:
-                            part.Id = part.WriteToXl();
-                            if (part.Id > 0)
-                            {
-                                part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                            }
-                            break;
-                    }
-                    Parts.Insert(0, part);
-                    RemoveExcessParts();
-                    OnPropertyChanged(nameof(WorkIsNotInProgress));
-                    OnPropertyChanged(nameof(CanEditShiftAndParams));
-                    OnPropertyChanged(nameof(CanAddPart));
-                    OnPropertyChanged(nameof(CanEndShift));
-                    AppSettings.Instance.Parts = Parts;
-                    AppSettings.RewriteConfig();
+                    case { IsFinished: not PartInfoModel.State.InProgress }:
+                        part.Id = part.WriteToXl();
+                        if (part.Id > 0)
+                        {
+                            part.IsSynced = true;
+                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        }
+                        break;
                 }
+                Parts.Insert(0, part);
+                RemoveExcessParts();
+                OnPropertyChanged(nameof(WorkIsNotInProgress));
+                OnPropertyChanged(nameof(CanEditShiftAndParams));
+                OnPropertyChanged(nameof(CanAddPart));
+                OnPropertyChanged(nameof(CanEndShift));
+                AppSettings.Instance.Parts = Parts;
             }
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
@@ -297,7 +309,6 @@ namespace eLog.ViewModels
                     Parts.Insert(index, part);
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
-                    AppSettings.RewriteConfig();
                 }
             }
         }
@@ -338,7 +349,6 @@ namespace eLog.ViewModels
                     Parts.Insert(index, part);
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
-                    AppSettings.RewriteConfig();
                 }
             }
         }
@@ -394,7 +404,6 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
                 AppSettings.Instance.Parts = Parts;
-                AppSettings.RewriteConfig();
             }
         }
         private static bool CanEndSetupCommandExecute(object p) => true;
@@ -451,7 +460,6 @@ namespace eLog.ViewModels
 
                     Parts[index] = part;
                     AppSettings.Instance.Parts = Parts;
-                    AppSettings.RewriteConfig();
                 }
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
@@ -527,7 +535,6 @@ namespace eLog.ViewModels
                         }
                     }
                     AppSettings.Instance.Parts = Parts;
-                    AppSettings.RewriteConfig();
                     RemoveExcessParts();
                 };
             
@@ -545,27 +552,7 @@ namespace eLog.ViewModels
 
 
 
-        public MainWindowViewModel()
-        {
-            CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
-
-            StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
-            EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
-
-            StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
-            EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
-            SetDownTimeCommand = new LambdaCommand(OnSetDownTimeCommandExecuted, CanSetDownTimeCommandExecute);
-            EndDownTimeCommand = new LambdaCommand(OnEndDownTimeCommandExecuted, CanEndDownTimeCommandExecute);
-            EditDetailCommand = new LambdaCommand(OnEditDetailCommandExecuted, CanEditDetailCommandExecute);
-            EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
-
-            EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
-            EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
-            ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
-
-            var syncPartsThread = new Thread(SyncParts) { IsBackground = true };
-            syncPartsThread.Start();
-        }
+        
 
         private void SyncParts()
         {

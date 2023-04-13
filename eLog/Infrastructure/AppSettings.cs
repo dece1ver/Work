@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -23,11 +24,14 @@ using Newtonsoft.Json.Linq;
 namespace eLog.Infrastructure
 {
     /// <summary>
-    /// Основной класс с настройками, статический для доступа откуда угодно, потом синглтон сделаю наверно.
+    /// Настройки приложения
     /// </summary>
     public class AppSettings : ViewModel
     {
-        private AppSettings() { }
+        private AppSettings()
+        {
+            Parts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(Parts));
+        }
 
         private static AppSettings _Instance;
         [JsonIgnore] public static AppSettings Instance => _Instance ??= new AppSettings();
@@ -140,7 +144,6 @@ namespace eLog.Infrastructure
             };
             CurrentShift = Text.DayShift;
             Parts = new ObservableCollection<PartInfoModel>();
-            var tempAppSettings = new AppSettings();
             XlPath = string.Empty;
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
@@ -155,8 +158,7 @@ namespace eLog.Infrastructure
                 "СЛ",
             };
             IsShiftStarted = false;
-
-            RewriteConfig();
+            Save();
         }
 
         public static Dictionary<string, string> GetPropertiesValues()
@@ -190,7 +192,7 @@ namespace eLog.Infrastructure
         /// <summary>
         /// Обновляет конфиг
         /// </summary>
-        public static void RewriteConfig()
+        public static void Save()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             var settings = new JsonSerializerSettings()
@@ -221,7 +223,7 @@ namespace eLog.Infrastructure
                     action.DynamicInvoke(this, args);
                 }
             }
-            ReadConfig();
+            Save();
             Debug.WriteLine("Rewrite config from PropertyChanged");
             // проверить
         }
