@@ -26,7 +26,7 @@ namespace eLog.Infrastructure.Extensions
 
         public void Dispose()
         {
-            _State = false;
+            State = false;
         }
     }
 }

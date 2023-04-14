@@ -28,7 +28,7 @@ namespace eLog.Views.Windows.Dialogs
         public Operator Operator { get; set; }
         public string Shift { get; set; }
         public static string[] Shifts => Text.Shifts;
-        public EditMakerDialogWindow(PartInfoModel part)
+        public EditMakerDialogWindow(Part part)
         {
             Operator = part.Operator;
             Shift = part.Shift;

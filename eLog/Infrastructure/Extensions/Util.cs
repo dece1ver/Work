@@ -44,14 +44,14 @@ namespace eLog.Infrastructure.Extensions
         /// Получение информации о заказе по номеру М/Л (имитация)
         /// </summary>
         /// <param name="orderNumber">Номер М/Л</param>
-        public static List<PartInfoModel> GetPartsFromOrder(this string orderNumber)
+        public static List<Part> GetPartsFromOrder(this string orderNumber)
         {
             try
             {
                 var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
                 return (from xlRow in wb.Worksheet(1).Rows() 
                     where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper()) 
-                    select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
+                    select new Part() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
             }
             catch (Exception ex1)
             {
@@ -60,7 +60,7 @@ namespace eLog.Infrastructure.Extensions
                     var wb = new XLWorkbook(AppSettings.BackupOrdersFile);
                     return (from xlRow in wb.Worksheet(1).Rows()
                         where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
-                        select new PartInfoModel() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
+                        select new Part() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
                 }
                 catch (Exception ex2)
                 {
@@ -69,7 +69,7 @@ namespace eLog.Infrastructure.Extensions
                 MessageBox.Show(ex1.Message);
                 
             }
-            return new List<PartInfoModel>();
+            return new List<Part>();
         }
 
         public static bool GetBarCode(ref string barCode)
@@ -89,13 +89,13 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="barCode">Шрихкод</param>
         /// <returns></returns>
-        public static PartInfoModel GetPartFromBarCode(this string barCode)
+        public static Part GetPartFromBarCode(this string barCode)
         {
             var names = new[] {"Ниппель", "Корпус", "Гайка", "Фланец", "Штуцер", "Седло", "Крышка", "Корпус приводной камеры", "Корпус проточной части" };
             var numbers = new[] { "АР110-01-001", "АР110-01-002", "АР110-01-003", "АР110-01-004", "АР110-01-005", "АРМ2-31.4-02-340-Х6-081-01", "АРМ2-31.4-02-340-Х6-071" };
             var orders = new[] { "УЧ-1/00001.1.1", "УЧ-1/00001.1.2", "УЧ-1/00001.1.3", "УЧ-1/00001.1.4", "УЧ-1/00001.1.5", "УЧ-1/00001.1.6", "УЧ-1/00001.1.7", "УЧ-1/00001.1.8" };
 
-            return new PartInfoModel(
+            return new Part(
                 names[new Random().Next(0, names.Length)],
                 numbers[new Random().Next(0, numbers.Length)],
                 (byte)new Random().Next(1, 4),
@@ -124,7 +124,7 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="part">Информация об изготовлении</param>
         /// <returns>Int32 - Id записи в таблице</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static int WriteToXl(this PartInfoModel part)
+        public static int WriteToXl(this Part part)
         {
             var id = -1;
             if (!File.Exists(AppSettings.Instance.XlPath)) return id;
@@ -137,8 +137,8 @@ namespace eLog.Infrastructure.Extensions
                 IXLRow? prevRow = null;
                 var index = AppSettings.Instance.Parts.IndexOf(part);
                 var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
-                var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
-                              prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
+                var partial = part.IsFinished == Part.State.PartialSetup ||
+                              prevPart is { IsFinished: Part.State.PartialSetup };
                 
                 if (partial) part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup) {
                     StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
@@ -214,7 +214,7 @@ namespace eLog.Infrastructure.Extensions
             return id;
         }
 
-        public static WriteResult RewriteToXl(this PartInfoModel part)
+        public static WriteResult RewriteToXl(this Part part)
         {
             if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.IOError;
             var result = WriteResult.NotFinded;
@@ -222,8 +222,8 @@ namespace eLog.Infrastructure.Extensions
             {
                 var index = AppSettings.Instance.Parts.IndexOf(part);
                 var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
-                var partial = part.IsFinished == PartInfoModel.State.PartialSetup ||
-                              prevPart is { IsFinished: PartInfoModel.State.PartialSetup };
+                var partial = part.IsFinished == Part.State.PartialSetup ||
+                              prevPart is { IsFinished: Part.State.PartialSetup };
                 if (partial)
                 {
                     part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as ObservableCollection<DownTime> ?? new ObservableCollection<DownTime>();
@@ -302,6 +302,12 @@ namespace eLog.Infrastructure.Extensions
 
         }
 
+
+        /// <summary>
+        /// Округляет DateTime с точностью до минут
+        /// </summary>
+        /// <param name="value">Исходное время</param>
+        /// <returns></returns>
         public static DateTime Rounded(this DateTime value)
         {
             return new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, 0);
@@ -487,7 +493,7 @@ namespace eLog.Infrastructure.Extensions
                 DateTime.Now.Hour < 7 ? DateTime.Today.AddHours(7) : DateTime.Today.AddDays(1).AddHours(7);
         }
 
-        public static void AddDownTime(this PartInfoModel part, DownTime.Types type)
+        public static void AddDownTime(this Part part, DownTime.Types type)
         {
             part.DownTimes.Add(new DownTime(part, type));
         }

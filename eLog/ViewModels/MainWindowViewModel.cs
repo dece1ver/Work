@@ -84,7 +84,7 @@ namespace eLog.ViewModels
         }
 
         /// <summary> Детали </summary>
-        public static ObservableCollection<PartInfoModel> Parts
+        public static ObservableCollection<Part> Parts
         {
             get => AppSettings.Instance.Parts;
             set => AppSettings.Instance.Parts = value;
@@ -132,7 +132,7 @@ namespace eLog.ViewModels
         }
 
         public Visibility ProgressBarVisibility => Progress is 0 || Math.Abs(Progress - ProgressMaxValue) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
-        public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not PartInfoModel.State.InProgress);
+        public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
 
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is {};
         public bool CanStartShift => CurrentOperator is {} && !string.IsNullOrEmpty(CurrentShift);
@@ -239,7 +239,7 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                var part = new PartInfoModel
+                var part = new Part
                 {
                     Operator = CurrentOperator!,
                     Shift = AppSettings.Instance.CurrentShift,
@@ -248,7 +248,7 @@ namespace eLog.ViewModels
                 if (!WindowsUserDialogService.EditDetail(ref part, true)) return;
                 switch (part)
                 {
-                    case { IsFinished: not PartInfoModel.State.InProgress }:
+                    case { IsFinished: not Part.State.InProgress }:
                         part.Id = part.WriteToXl();
                         if (part.Id > 0)
                         {
@@ -277,7 +277,7 @@ namespace eLog.ViewModels
                 var downTimeType = WindowsUserDialogService.SetDownTimeType();
                 if (downTimeType is { } type)
                 {
-                    var part = (PartInfoModel)p;
+                    var part = (Part)p;
                     var index = Parts.IndexOf(part);
                     Parts.RemoveAt(index);
                     var downTimes = part.DownTimes;
@@ -300,8 +300,8 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                var part = (PartInfoModel)p;
-                var index = Parts.IndexOf((PartInfoModel)p);
+                var part = (Part)p;
+                var index = Parts.IndexOf((Part)p);
             
                 if (part.LastDownTime is {InProgress: true} 
                     && MessageBox.Show($"Завершить простой {part.LastDownTimeName}?",
@@ -343,14 +343,14 @@ namespace eLog.ViewModels
                 switch (WindowsUserDialogService.GetSetupResult())
                 {
                     case EndSetupResult.Success:
-                        Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now.Rounded();
+                        Parts[Parts.IndexOf((Part)p)].StartMachiningTime = DateTime.Now.Rounded();
                         break;
                     case EndSetupResult.Stop:
-                        Parts.Remove((PartInfoModel)p);
+                        Parts.Remove((Part)p);
                         break;
                     case EndSetupResult.PartialComplete:
                         var now = DateTime.Now;
-                        var index = Parts.IndexOf((PartInfoModel)p);
+                        var index = Parts.IndexOf((Part)p);
                         var part = Parts[index];
                         part.StartMachiningTime = now;
                         part.EndMachiningTime = now;
@@ -394,8 +394,8 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                var part = new PartInfoModel((PartInfoModel)p);
-                var index = Parts.IndexOf((PartInfoModel)p);
+                var part = new Part((Part)p);
+                var index = Parts.IndexOf((Part)p);
             
                 if (WindowsUserDialogService.EditDetail(ref part))
                 {
@@ -403,7 +403,7 @@ namespace eLog.ViewModels
                     OnPropertyChanged(nameof(part.Title));
                     switch (part)
                     {
-                        case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
+                        case { Id: -1, IsFinished: not Part.State.InProgress }:
                             part.Id = part.WriteToXl();
                             if (part.Id > 0)
                             {
@@ -411,7 +411,7 @@ namespace eLog.ViewModels
                                 Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                             }
                             break;
-                        case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
+                        case { Id: > 0, IsFinished: not Part.State.InProgress }:
                         {
                             switch (part.RewriteToXl())
                             {
@@ -456,32 +456,32 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                var part = (PartInfoModel)p;
+                var part = (Part)p;
                 if (WindowsUserDialogService.FinishDetail(ref part))
                 {
                     switch (part)
                     {
-                        case { Id: -1, IsFinished: not PartInfoModel.State.InProgress }:
+                        case { Id: -1, IsFinished: not Part.State.InProgress }:
                             part.Id = part.WriteToXl();
                             if (part.Id > 0)
                             {
                                 part.IsSynced = true;
                                 Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                             }
-                            Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                            Parts[Parts.IndexOf((Part)p)] = part;
                             break;
-                        case { Id: > 0, IsFinished: not PartInfoModel.State.InProgress }:
+                        case { Id: > 0, IsFinished: not Part.State.InProgress }:
                         {
                             switch (part.RewriteToXl())
                             {
                                 case Util.WriteResult.Ok:
                                     part.IsSynced = true;
                                     Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    Parts[Parts.IndexOf((Part)p)] = part;
                                     break;
                                 case Util.WriteResult.IOError:
                                     Status = $"Таблица занята, запись будет произведена позже.";
-                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    Parts[Parts.IndexOf((Part)p)] = part;
                                     break;
                                 case Util.WriteResult.NotFinded:
                                     part.Id = part.WriteToXl();
@@ -490,7 +490,7 @@ namespace eLog.ViewModels
                                         part.IsSynced = true;
                                         Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                                     }
-                                    Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                                    Parts[Parts.IndexOf((Part)p)] = part;
                                     break;
                                 case Util.WriteResult.Error:
                                     break;
@@ -509,7 +509,7 @@ namespace eLog.ViewModels
                                 part.IsSynced = true;
                                 Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                             }
-                            Parts[Parts.IndexOf((PartInfoModel)p)] = part;
+                            Parts[Parts.IndexOf((Part)p)] = part;
                             break;
                         }
                     }
@@ -538,7 +538,7 @@ namespace eLog.ViewModels
                 {
                     for (var i = Parts.Count - 1; i >= 0; i--)
                     {
-                        if (Parts[i] is not { IsSynced: false, IsFinished: not PartInfoModel.State.InProgress } part) continue;
+                        if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
                         var index = i;
                         if (part.Id != -1)
                         {

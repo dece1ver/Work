@@ -33,7 +33,7 @@ namespace eLog.Services
         {
             return item switch
             {
-                PartInfoModel part => EditDetail(ref part),
+                Part part => EditDetail(ref part),
                 _ => false,
             };
         }
@@ -107,9 +107,9 @@ namespace eLog.Services
             return dlg.EndSetupResult;
         }
 
-        public static bool EditDetail(ref PartInfoModel part, bool newDetail = false)
+        public static bool EditDetail(ref Part part, bool newDetail = false)
         {
-            var tempPart = new PartInfoModel(part);
+            var tempPart = new Part(part);
             var dlg = new EditDetailWindow(tempPart, newDetail)
             {
                 Owner = Application.Current.MainWindow,
@@ -121,9 +121,9 @@ namespace eLog.Services
             return true;
         }
 
-        public static bool FinishDetail(ref PartInfoModel part)
+        public static bool FinishDetail(ref Part part)
         {
-            var tempPart = new PartInfoModel(part);
+            var tempPart = new Part(part);
             var dlg = new EndDetailDialogWindow(tempPart)
             {
                 Owner = Application.Current.MainWindow,

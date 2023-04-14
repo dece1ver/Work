@@ -37,7 +37,7 @@ namespace eLog.Views.Windows
             {
                 case false:
                     return;
-                case true when AppSettings.Instance.Parts.Count == AppSettings.Instance.Parts.Count(x => x.IsFinished is not PartInfoModel.State.InProgress):
+                case true when AppSettings.Instance.Parts.Count == AppSettings.Instance.Parts.Count(x => x.IsFinished is not Part.State.InProgress):
                 {
                     var res = MessageBox.Show("Смена не завершена.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                     switch (res)
@@ -50,7 +50,7 @@ namespace eLog.Views.Windows
                     }
                     break;
                 }
-                case true when AppSettings.Instance.Parts.Count != AppSettings.Instance.Parts.Count(x => x.IsFinished is not PartInfoModel.State.InProgress):
+                case true when AppSettings.Instance.Parts.Count != AppSettings.Instance.Parts.Count(x => x.IsFinished is not Part.State.InProgress):
                 {
                     var res = MessageBox.Show("Есть незавершенные детали.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
                     switch (res)

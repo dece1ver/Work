@@ -47,7 +47,7 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        public PartInfoModel Part { get; set; }
+        public Part Part { get; set; }
 
         public string Status { get; set; }
 
@@ -106,7 +106,7 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        public EndDetailDialogWindow(PartInfoModel part)
+        public EndDetailDialogWindow(Part part)
         {
             Part = part;
             Status = string.Empty;

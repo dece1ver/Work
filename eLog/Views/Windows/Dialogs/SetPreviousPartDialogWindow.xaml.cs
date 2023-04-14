@@ -20,9 +20,9 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class SetPreviousPartDialogWindow : Window
     {
-        private PartInfoModel? _Part;
+        private Part? _Part;
 
-        public PartInfoModel? Part
+        public Part? Part
         {
             get => _Part;
             set
@@ -32,8 +32,8 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        public List<PartInfoModel> Parts { get; set; }
-        public SetPreviousPartDialogWindow(List<PartInfoModel> parts)
+        public List<Part> Parts { get; set; }
+        public SetPreviousPartDialogWindow(List<Part> parts)
         {
             Parts = parts;
             InitializeComponent();

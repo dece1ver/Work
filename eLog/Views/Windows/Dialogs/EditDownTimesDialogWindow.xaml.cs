@@ -20,13 +20,13 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged, IOverlay
     {
-        private PartInfoModel _Part;
+        private Part _Part;
         private string _Status;
         private Overlay _Overlay = new() {State = false};
         private bool _CanBeClosed;
         private bool _CanAddDownTime;
 
-        public PartInfoModel Part
+        public Part Part
         {
             get => _Part;
             set => Set(ref _Part, value);
@@ -59,7 +59,7 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
-        public EditDownTimesDialogWindow(PartInfoModel part)
+        public EditDownTimesDialogWindow(Part part)
         {
             _Part = part;
             _Status = string.Empty;

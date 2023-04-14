@@ -38,7 +38,7 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, IOverlay
     {
-        public EditDetailWindow(PartInfoModel part, bool newDetail = false)
+        public EditDetailWindow(Part part, bool newDetail = false)
         {
             NewDetail = newDetail;
             _Status = string.Empty;
@@ -76,9 +76,9 @@ namespace eLog.Views.Windows.Dialogs
             InitializeComponent();
         }
 
-        public List<PartInfoModel> Parts { get; set; } = new();
+        public List<Part> Parts { get; set; } = new();
         public int PartIndex { get; set; }
-        public PartInfoModel Part { get; set; }
+        public Part Part { get; set; }
 
         public Overlay Overlay
         {
@@ -220,7 +220,7 @@ namespace eLog.Views.Windows.Dialogs
             get
             {
                 if (OrderValidation is OrderValidationTypes.Error || string.IsNullOrWhiteSpace(PartName)) return false;
-                if (Part.IsFinished is PartInfoModel.State.Finished) return true;
+                if (Part.IsFinished is Part.State.Finished) return true;
                 var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                      (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
 
@@ -614,11 +614,11 @@ namespace eLog.Views.Windows.Dialogs
         private void LoadPreviousPartButton_Click(object sender, RoutedEventArgs e)
         {
             if (AppSettings.Instance.Parts.Count <= 0) return;
-            PartInfoModel prev;
+            Part prev;
             var parts = AppSettings.Instance.Parts
-                .Where(x => x.IsFinished is not PartInfoModel.State.InProgress)
+                .Where(x => x.IsFinished is not Part.State.InProgress)
                 .GroupBy(x => new { x.FullName, x.Order, x.Setup })
-                .Select(x => new PartInfoModel()
+                .Select(x => new Part()
                 {
                     Name = x.Key.FullName, 
                     Order = x.Key.Order,
@@ -782,7 +782,7 @@ namespace eLog.Views.Windows.Dialogs
         {
             using (Overlay = new())
             {
-                var tempPart = new PartInfoModel(Part);
+                var tempPart = new Part(Part);
                 foreach (var downTime in tempPart.DownTimes)
                 {
                     // downTime.ParentPart = tempPart;

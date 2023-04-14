@@ -21,7 +21,7 @@ namespace eLog.Models
     /// Информация о детали.
     /// Статусные свойства выводятся из временных свойств. По-умолчанию завершающие временные свойства присваиваются в DateTime.MinValue. После присваивания времен деталь считается завершенной.
     /// </summary>
-    public class PartInfoModel : INotifyPropertyChanged
+    public class Part : INotifyPropertyChanged
     {
         private string _Name;
         private string _Number;
@@ -434,7 +434,7 @@ namespace eLog.Models
         /// <param name="totalCount">Количество</param>
         /// <param name="setupTimePlan">Плановое время наладки</param>
         /// <param name="singleProductionTimePlan">Плановое штучное время</param>
-        public PartInfoModel(string name, string number, byte setup, string order, int totalCount, double setupTimePlan, double singleProductionTimePlan)
+        public Part(string name, string number, byte setup, string order, int totalCount, double setupTimePlan, double singleProductionTimePlan)
         {
             _Name = name;
             _Number = number;
@@ -451,7 +451,7 @@ namespace eLog.Models
             DownTimes.CollectionChanged += DownTimes_CollectionChanged!;
         }
 
-        public PartInfoModel()
+        public Part()
         {
             _Name = string.Empty;
             _Number = string.Empty;
@@ -469,7 +469,7 @@ namespace eLog.Models
         /// Конструктор копирования
         /// </summary>
         /// <param name="part">Источник</param>
-        public PartInfoModel(PartInfoModel part)
+        public Part(Part part)
         {
             _Name = part.Name;
             _Number = part.Number;
@@ -500,13 +500,14 @@ namespace eLog.Models
             OnPropertyChanged(nameof(LastDownTime));
             OnPropertyChanged(nameof(LastDownTimeName));
             OnPropertyChanged(nameof(DownTimesIsClosed));
-            Debug.WriteLine($"Сработал {MethodBase.GetCurrentMethod()}");
+            Debug.WriteLine($"Сработал {MethodBase.GetCurrentMethod()?.Name}");
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
         {
+            Debug.WriteLine($"{MethodBase.GetCurrentMethod()?.Name} для {PropertyName}");
             var handlers = PropertyChanged;
             if (handlers is null) return;
 
@@ -524,6 +525,12 @@ namespace eLog.Models
                     action.DynamicInvoke(this, args);
                 }
             }
+
+            if (PropertyName != nameof(DownTimes)) return;
+            Debug.WriteLine("Дополнительные вызовы OnPropertyChanged при срабатывании на Part.DownTimes");
+            OnPropertyChanged(nameof(LastDownTime));
+            OnPropertyChanged(nameof(LastDownTimeName));
+            OnPropertyChanged(nameof(DownTimesIsClosed));
             //AppSettings.Save();
         }
 

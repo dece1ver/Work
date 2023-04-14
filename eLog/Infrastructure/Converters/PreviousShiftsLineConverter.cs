@@ -15,7 +15,7 @@ namespace eLog.Infrastructure.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is not PartInfoModel part) return Visibility.Collapsed;
+            if (value is not Part part) return Visibility.Collapsed;
             var date = part.StartSetupTime.Date;
             var todayParts = AppSettings.Instance.Parts.Where(p =>
                 p.Shift == AppSettings.Instance.CurrentShift && p.StartSetupTime.Date == DateTime.Today.Date).ToList();

@@ -19,7 +19,7 @@ namespace eLog.Models
     public class DownTime : INotifyPropertyChanged, IDataErrorInfo
     {
         [JsonConstructor]
-        public DownTime(PartInfoModel part, Types type, DateTime startTime, DateTime endTime)
+        public DownTime(Part part, Types type, DateTime startTime, DateTime endTime)
         {
             _ParentPart = part;
             _Type = type;
@@ -29,7 +29,7 @@ namespace eLog.Models
             _EndTimeText = _EndTime.ToString(Text.DateTimeFormat);
         }
 
-        public DownTime(PartInfoModel part, Types type)
+        public DownTime(Part part, Types type)
         {
             _ParentPart = part;
             _Type = type;
@@ -46,7 +46,7 @@ namespace eLog.Models
         /// <param name="part">Деталь к которой относится простой</param>
         /// <param name="downTime">Источник</param>
 
-        public DownTime(PartInfoModel part, DownTime downTime)
+        public DownTime(Part part, DownTime downTime)
         {
             _ParentPart = part;
             _Type = downTime.Type;
@@ -61,9 +61,9 @@ namespace eLog.Models
         private DateTime _EndTime;
         private string _StartTimeText;
         private string _EndTimeText;
-        private PartInfoModel _ParentPart;
+        private Part _ParentPart;
 
-        public PartInfoModel ParentPart
+        public Part ParentPart
         {
             get => _ParentPart;
             set
@@ -217,12 +217,12 @@ namespace eLog.Models
                             error =
                                 "Время завершения простоя не может быть позже времени завершения наладки, т.к. он открыт в наладке";
                         }
-                        else if (Relation is Relations.Machining && ParentPart.IsFinished == PartInfoModel.State.Finished &&
+                        else if (Relation is Relations.Machining && ParentPart.IsFinished == Part.State.Finished &&
                                  EndTime > ParentPart.EndMachiningTime)
                         {
                             error = "Время завершения простоя не может быть позже времени завершения заготовления детали.";
                         }
-                        else if (Relation is Relations.Machining && ParentPart.IsFinished == PartInfoModel.State.InProgress &&
+                        else if (Relation is Relations.Machining && ParentPart.IsFinished == Part.State.InProgress &&
                                  EndTime > DateTime.Now)
                         {
                             error = "Время завершения простоя не может быть позже текущего времени, т.к. изготовление детали не завершено.";
@@ -230,7 +230,7 @@ namespace eLog.Models
                         break;
                 }
                 Debug.WriteLine(error);
-                HasError = error is not null;
+                HasError = error != null;
                 return error;
             }
         }

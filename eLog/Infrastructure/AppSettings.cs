@@ -71,7 +71,7 @@ namespace eLog.Infrastructure
         private string[] _OrderQualifiers = Array.Empty<string>();
         private ObservableCollection<Operator> _Operators = new();
         private string _CurrentShift = string.Empty;
-        private ObservableCollection<PartInfoModel> _Parts = new();
+        private ObservableCollection<Part> _Parts = new();
         private bool _IsShiftStarted;
         private Operator? _CurrentOperator;
 
@@ -118,7 +118,7 @@ namespace eLog.Infrastructure
         }
 
         /// <summary> Список деталей </summary>
-        public ObservableCollection<PartInfoModel> Parts
+        public ObservableCollection<Part> Parts
         {
             get => _Parts;
             set => Set(ref _Parts, value);
@@ -155,7 +155,7 @@ namespace eLog.Infrastructure
                 },
             };
             CurrentShift = Text.DayShift;
-            Parts = new ObservableCollection<PartInfoModel>();
+            Parts = new ObservableCollection<Part>();
             XlPath = string.Empty;
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
