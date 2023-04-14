@@ -4,25 +4,40 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
-        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
+        xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
-        xmlns:inf="clr-namespace:eLog.Infrastructure"
-        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
         Title="Редактирование простоев" d:DesignHeight="477" d:DesignWidth="1100"
-        WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize">
+        WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
+        <cnv:DownTimesValidationConverter x:Key="DownTimesValidationConverter"/>
+        <MultiBinding x:Key="IsOkButtonEnabled" Converter="{StaticResource DownTimesValidationConverter}">
+            <Binding ElementName="StartTimeTextBox" Path="(Validation.HasError)"/>
+            <Binding ElementName="EndTimeTextBox" Path="(Validation.HasError)"/>
+        </MultiBinding>
         <Style TargetType="TextBox">
             <Setter Property="Padding" Value="3"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="Width" Value="145"/>
         </Style>
+        <ControlTemplate x:Key="ValidationFailed">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <AdornedElementPlaceholder />
+                    <Border Padding="10 0" Background="Transparent" BorderBrush="Red" BorderThickness="1" Width="24" Margin="5 0" CornerRadius="12" MouseLeftButtonUp="Border_MouseLeftButtonUp">
+                        <TextBlock Text="!" Foreground="Red" VerticalAlignment="Center" Margin="-4 -6 -5 -4" HorizontalAlignment="Center" FontSize="20"/>
+                    </Border>
+                </StackPanel>
+                
+            </Grid>
+        </ControlTemplate>
     </Window.Resources>
     <Grid>
         <Border BorderThickness="1" BorderBrush="Gray">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Top" Text="{Binding Part.FullName, StringFormat={}Простои: {0}}" FontSize="18" TextAlignment="Center" Margin="10" FontWeight="DemiBold"
+                <TextBlock DockPanel.Dock="Top" Text="{Binding Part.FullName, StringFormat={}Простои: {0}}" FontSize="18" TextAlignment="Center" Margin="10 0 0 10" FontWeight="DemiBold"
 />
                 <StatusBar DockPanel.Dock="Bottom">
                     <StatusBarItem>
@@ -31,7 +46,7 @@
                 </StatusBar>
                 <DockPanel DockPanel.Dock="Bottom" >
                     <Button DockPanel.Dock="Left" Width="200"
-                        Margin="10" Height="60"
+                        Margin="10" Height="60" Style="{StaticResource GeneralButton}"
                         HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDownTimesDialogWindow}}">
                         <Button.Content>
@@ -41,10 +56,11 @@
                             <cmd:CloseDialogCommand DialogResult="False"/>
                         </Button.Command>
                     </Button>
-                    <Button DockPanel.Dock="Right" Width="260" HorizontalAlignment="Right"
-                        Margin="10" Height="60"
-                        VerticalAlignment="Bottom"
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDownTimesDialogWindow}}">
+                    <Button x:Name="OkButton" DockPanel.Dock="Right" Width="260" HorizontalAlignment="Right"
+                            Margin="10" Height="60" Style="{StaticResource GeneralButton}"
+                            VerticalAlignment="Bottom"
+                            IsEnabled="{Binding CanBeClosed}"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDownTimesDialogWindow}}">
                         <Button.Content>
                             <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
                         </Button.Content>
@@ -60,11 +76,11 @@
                         <ColumnDefinition Width="270"/>
                     </Grid.ColumnDefinitions>
                     <ListView Grid.Column="0" ItemsSource="{Binding Part.DownTimes}" 
-                          BorderBrush="Transparent" BorderThickness="0" 
-                          ItemContainerStyle="{StaticResource ListViewItemsStyle}" Margin="3 -14 -12 -2">
+                              BorderBrush="Transparent" BorderThickness="0"
+                              ItemContainerStyle="{StaticResource ListViewItemsStyle}" Margin="3 -14 -12 -2">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <GroupBox DockPanel.Dock="Top" BorderBrush="DarkGray" Margin="0 -1 0 0">
+                                <GroupBox DockPanel.Dock="Top" BorderBrush="DarkGray" Margin="0 -1 0 0" Tag="{Binding}">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock>
@@ -89,15 +105,17 @@
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Начало:" 
                                                VerticalAlignment="Center" HorizontalAlignment="Right" 
                                                Margin="5 0"/>
-                                            <TextBox Grid.Row="0" Grid.Column="1" Height="25" Padding="0 -1 0 0" VerticalContentAlignment="Center"
-                                             Text="{Binding StartTimeText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
-                                             Margin="0 4 0 0"/>
+                                            <TextBox x:Name="StartTimeTextBox" Grid.Row="0" Grid.Column="1" Height="25" Padding="0 -1 0 0" VerticalContentAlignment="Center"
+                                                     Text="{Binding StartTimeText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                                     Validation.ErrorTemplate="{StaticResource ValidationFailed}"
+                                                     Margin="0 4 0 0" KeyUp="TimeTextBox_KeyUp"/>
                                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Завершение:" 
                                                VerticalAlignment="Center" HorizontalAlignment="Right" 
                                                Margin="5 0"/>
-                                            <TextBox Grid.Row="1" Grid.Column="1" Height="25" Padding="0 -1 0 0"
-                                             Text="{Binding EndTimeText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
-                                             Margin="0 -1 0 0"/>
+                                            <TextBox x:Name="EndTimeTextBox" Grid.Row="1" Grid.Column="1" Height="25" Padding="0 -1 0 0"
+                                                     Text="{Binding EndTimeText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                                     Validation.ErrorTemplate="{StaticResource ValidationFailed}"
+                                                     Margin="0 -1 0 0" KeyUp="TimeTextBox_KeyUp"/>
                                         </Grid>
                                         <DockPanel Width="150" DockPanel.Dock="Right" HorizontalAlignment="Right">
                                             <Button x:Name="DeleteDownTimeButton" Style="{StaticResource LvButton}" DockPanel.Dock="Right" 
@@ -115,12 +133,25 @@
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
+                    <Border Grid.Column="0" Margin="10 0 -5 2" BorderBrush="LightGray" BorderThickness="1" CornerRadius="2">
+                        <Border.Style>
+                            <Style TargetType="{x:Type Border}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Part.DownTimes.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="Здесь могли быть ваши простои." HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Gray" FontSize="20"/>
+                    </Border>
                     <Border Grid.Column="1"
                         BorderBrush="LightGray" BorderThickness="1" 
                         Margin="10 15 5 15"/>
                     <DockPanel Grid.Column="2" LastChildFill="True" Margin="0 0 10 0">
                         <Button x:Name="AddDownTimeButton" Style="{StaticResource KeyboardButton}" 
-                            IsEnabled="{Binding Part.DownTimesIsClosed}" Margin="0 0 0 1"
+                            IsEnabled="{Binding CanAddDownTime}" Margin="0 0 0 1"
                             DockPanel.Dock="Top" Height="44" Content="Добавить" Click="AddDownTimeButton_Click"/>
                         <ctrl:TimeInsertKeyboard DockPanel.Dock="Bottom" Height="47" Margin="-1 1 0 2"/>
                         <ctrl:NumericKeyboard Margin="0 1 0 0"/>
@@ -128,8 +159,8 @@
                 </Grid>
             </DockPanel>
         </Border>
-        <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
-          Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
-          Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>
+        <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed" 
+              Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
+              Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>
     </Grid>
 </Window>

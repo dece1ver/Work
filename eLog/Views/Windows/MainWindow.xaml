@@ -49,11 +49,13 @@
                 <TextBlock Text="{Binding Machine.Name}" d:Text="Станок" Padding="0 3" Margin="9 0" DockPanel.Dock="Left"/>
                 <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
                 <ComboBox ItemsSource="{Binding Operators}" DockPanel.Dock="Left"
+                          Style="{StaticResource ComboBoxStyle}"
                           SelectedItem="{Binding CurrentOperator}"
                           IsEnabled="{Binding CanEditShiftAndParams}"
                           DisplayMemberPath="DisplayName"
                           Width="250" Margin="4 0 0 0"/>
                 <ComboBox ItemsSource="{Binding Shifts}" 
+                          Style="{StaticResource ComboBoxStyle}"
                           SelectedItem="{Binding CurrentShift}" 
                           IsEnabled="{Binding CanEditShiftAndParams}"
                           Width="200" Margin="4 0 0 0"/>

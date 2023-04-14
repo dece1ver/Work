@@ -1,29 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Windows.Threading;
-using DocumentFormat.OpenXml.Wordprocessing;
-using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Infrastructure.Interfaces;
 using eLog.Models;
 using eLog.Services;
-using static eLog.Views.Windows.Dialogs.EditDetailWindow;
-using Text = eLog.Infrastructure.Extensions.Text;
-using ValidationResult = System.Windows.Controls.ValidationResult;
+
 
 namespace eLog.Views.Windows.Dialogs
 {
@@ -34,8 +22,9 @@ namespace eLog.Views.Windows.Dialogs
     {
         private PartInfoModel _Part;
         private string _Status;
-        private bool _DownTimesIsClosed;
         private Overlay _Overlay = new() {State = false};
+        private bool _CanBeClosed;
+        private bool _CanAddDownTime;
 
         public PartInfoModel Part
         {
@@ -48,12 +37,12 @@ namespace eLog.Views.Windows.Dialogs
             get => _Status;
             set => Set(ref _Status, value);
         }
-
         private void DeleteDownTimeButton_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button { Tag: DownTime downTime })
             {
                 Part.DownTimes.Remove(downTime);
+                OnPropertyChanged(nameof(Part.DownTimesIsClosed));
             }
         }
 
@@ -66,15 +55,8 @@ namespace eLog.Views.Windows.Dialogs
                 {
                     Part.DownTimes.Add(new DownTime(Part, type));
                 }
-                OnPropertyChanged(nameof(Part.DownTimesIsClosed));
-                OnPropertyChanged(nameof(DownTimesIsClosed));
+                CanAddDownTime = Part.DownTimesIsClosed && CanBeClosed;
             }
-        }
-
-        public bool DownTimesIsClosed
-        {
-            get => Part.DownTimesIsClosed;
-            set => Set(ref _DownTimesIsClosed, value);
         }
 
         public EditDownTimesDialogWindow(PartInfoModel part)
@@ -82,6 +64,18 @@ namespace eLog.Views.Windows.Dialogs
             _Part = part;
             _Status = string.Empty;
             InitializeComponent();
+        }
+
+        public bool CanBeClosed
+        {
+            get => _CanBeClosed;
+            set => Set(ref _CanBeClosed, value);
+        }
+
+        public bool CanAddDownTime
+        {
+            get => _CanAddDownTime;
+            set => Set(ref _CanAddDownTime, value);
         }
 
         #region PropertyChanged
@@ -119,15 +113,42 @@ namespace eLog.Views.Windows.Dialogs
 
         #endregion
 
-        private object GetPropertyValue(string propertyName)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            return GetType().GetProperty(propertyName)?.GetValue(this, null)!;
+            Validate();
+            CanAddDownTime = Part.DownTimesIsClosed && CanBeClosed;
         }
 
         public Overlay Overlay
         {
             get => _Overlay;
             set => Set(ref _Overlay, value);
+        }
+
+        private void TimeTextBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e) => Validate();
+
+        private void Validate()
+        {
+            var result = true;
+            foreach (var downTime in Part.DownTimes)
+            {
+                if(downTime.HasError) result = false;
+            }
+            CanBeClosed = result;
+            CanAddDownTime = Part.DownTimesIsClosed && CanBeClosed;
+            OnPropertyChanged(nameof(Part.DownTimes));
+        }
+
+        private void Border_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is not Border { Parent: StackPanel {Parent: Grid } grid }) return;
+            foreach (UIElement gridChild in grid.Children)
+            {
+                if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBox textBox } && Validation.GetErrors(textBox) is ICollection<ValidationError> { Count: > 0 } errors)
+                {
+                    MessageBox.Show(errors.First().ErrorContent.ToString(), "Некорректный ввод", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
         }
     }
 }

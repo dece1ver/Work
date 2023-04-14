@@ -39,10 +39,7 @@
     <SolidColorBrush x:Key="ComboBox.Static.Editable.Border" Color="Transparent"/>
     <SolidColorBrush x:Key="ComboBox.Static.Editable.Button.Background" Color="Transparent"/>
     <SolidColorBrush x:Key="ComboBox.Static.Editable.Button.Border" Color="Transparent"/>
-    <LinearGradientBrush x:Key="ComboBox.MouseOver.Background" EndPoint="0,1" StartPoint="0,0">
-        <GradientStop Color="#FFECF4FC" Offset="0.0"/>
-        <GradientStop Color="#FFDCECFC" Offset="1.0"/>
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="ComboBox.MouseOver.Background" Color="Transparent"/>
     <SolidColorBrush x:Key="ComboBox.MouseOver.Border" Color="#FF7EB4EA"/>
     <SolidColorBrush x:Key="ComboBox.MouseOver.Glyph" Color="#FF000000"/>
     <SolidColorBrush x:Key="ComboBox.MouseOver.Editable.Background" Color="#FFFFFFFF"/>
@@ -78,11 +75,11 @@
         <Setter Property="IsTabStop" Value="false"/>
         <Setter Property="Focusable" Value="false"/>
         <Setter Property="ClickMode" Value="Press"/>
-        <Setter Property="Margin" Value="-1"/>
+        <Setter Property="Margin" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
-                    <Border x:Name="templateRoot" Background="{StaticResource ComboBox.Static.Background}" BorderBrush="{StaticResource ComboBox.Static.Border}" BorderThickness="1" SnapsToDevicePixels="true">
+                    <Border x:Name="templateRoot" Background="{StaticResource ComboBox.Static.Background}" BorderBrush="{StaticResource ComboBox.Static.Border}" BorderThickness="1" CornerRadius="2" SnapsToDevicePixels="true">
                         <Border x:Name="splitBorder" BorderBrush="Transparent" BorderThickness="1" HorizontalAlignment="Right" Margin="0" SnapsToDevicePixels="true" Width="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}">
                             <Path x:Name="arrow" Data="F1 M 0,0 L 2.667,2.66665 L 5.3334,0 L 5.3334,-1.78168 L 2.6667,0.88501 L0,-1.78168 L0,0 Z" Fill="{StaticResource ComboBox.Static.Glyph}" HorizontalAlignment="Center" Margin="0" VerticalAlignment="Center"/>
                         </Border>
@@ -170,12 +167,13 @@
     </Style>
 
     <Style x:Key="DashToggleButton" TargetType="ToggleButton" BasedOn="{StaticResource ComboBoxToggleButton}">
+        <Setter Property="Margin" Value="-1"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
-                    <Border x:Name="templateRoot" Background="{StaticResource ComboBox.Static.Background}" CornerRadius="2 0 0 2" BorderBrush="{StaticResource ComboBox.Static.Border}" BorderThickness="1" SnapsToDevicePixels="true">
+                    <Border x:Name="templateRoot" Background="Transparent" CornerRadius="2 0 0 2" BorderBrush="{StaticResource ComboBox.Static.Border}" BorderThickness="1 1 0 1" SnapsToDevicePixels="true">
                         <Border x:Name="splitBorder" BorderBrush="Transparent" BorderThickness="1" HorizontalAlignment="Right" Margin="0" SnapsToDevicePixels="true" Width="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}">
-                            <TextBlock Text="-" FontSize="22" Margin="1"/>
+                            <TextBlock Text="-" FontSize="22" Margin="2 2 6 2" Padding="0"/>
                         </Border>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -252,10 +250,11 @@
     </Style>
 
     <Style x:Key="SlashToggleButton" TargetType="ToggleButton" BasedOn="{StaticResource ComboBoxToggleButton}">
+        <Setter Property="Margin" Value="-1"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
-                    <Border x:Name="templateRoot" Background="{StaticResource ComboBox.Static.Background}" BorderBrush="{StaticResource ComboBox.Static.Border}" BorderThickness="0 1 0 1" SnapsToDevicePixels="true">
+                    <Border x:Name="templateRoot" Background="Transparent" BorderBrush="{StaticResource ComboBox.Static.Border}" BorderThickness="0 1 0 1" SnapsToDevicePixels="true">
                         <Border x:Name="splitBorder" BorderBrush="Transparent" BorderThickness="1" HorizontalAlignment="Right" Margin="0" SnapsToDevicePixels="true" Width="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}">
                             <TextBlock Text="/" FontSize="20" Margin="2" Padding="0"/>
                         </Border>

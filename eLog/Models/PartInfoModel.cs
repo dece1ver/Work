@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -141,6 +143,8 @@ namespace eLog.Models
             {
                 if (Set(ref _DownTimes, value))
                 {
+                    OnPropertyChanged(nameof(LastDownTime));
+                    OnPropertyChanged(nameof(LastDownTimeName));
                     OnPropertyChanged(nameof(DownTimesIsClosed));
                 }
             }
@@ -444,6 +448,7 @@ namespace eLog.Models
             _DownTimes = new ObservableCollection<DownTime>();
             _OperatorComments = string.Empty;
             _Shift = string.Empty;
+            DownTimes.CollectionChanged += DownTimes_CollectionChanged!;
         }
 
         public PartInfoModel()
@@ -451,12 +456,13 @@ namespace eLog.Models
             _Name = string.Empty;
             _Number = string.Empty;
             _Order = string.Empty;
-            StartSetupTime = DateTime.Now;
+            StartSetupTime = DateTime.Now.Rounded();
             _DownTimes = new ObservableCollection<DownTime>();
             Id = -1;
             _OperatorComments = string.Empty;
             _Operator = AppSettings.Instance.CurrentOperator!;
             _Shift = string.Empty;
+            DownTimes.CollectionChanged += DownTimes_CollectionChanged!;
         }
 
         /// <summary>
@@ -485,6 +491,16 @@ namespace eLog.Models
             _Operator = part.Operator;
             _Shift = part.Shift;
             _IsSynced = part.IsSynced;
+            DownTimes.CollectionChanged += DownTimes_CollectionChanged!;
+        }
+
+        private void DownTimes_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(DownTimes));
+            OnPropertyChanged(nameof(LastDownTime));
+            OnPropertyChanged(nameof(LastDownTimeName));
+            OnPropertyChanged(nameof(DownTimesIsClosed));
+            Debug.WriteLine($"Сработал {MethodBase.GetCurrentMethod()}");
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

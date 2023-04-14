@@ -15,7 +15,7 @@ namespace eLog.Infrastructure.Extensions
 
         public Overlay(bool state = true)
         {
-            State = state;
+            _State = state;
         }
 
         public bool State
@@ -26,9 +26,7 @@ namespace eLog.Infrastructure.Extensions
 
         public void Dispose()
         {
-            State = false;
+            _State = false;
         }
-
-        
     }
 }

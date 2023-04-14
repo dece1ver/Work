@@ -159,7 +159,6 @@ namespace eLog.Models
             private set
             {
                 if (!Set(ref _EndTime, value)) return;
-                // if (_EndTime > DateTime.MinValue) _EndTimeText = _EndTime.ToString(Text.DateTimeFormat);
                 OnPropertyChanged(nameof(StartTimeText));
                 OnPropertyChanged(nameof(Time));
                 OnPropertyChanged(nameof(InProgress));
@@ -181,6 +180,8 @@ namespace eLog.Models
 
         [JsonIgnore] public TimeSpan Time => EndTime - StartTime;
         [JsonIgnore] public bool InProgress => EndTime < StartTime;
+
+        public bool HasError { get; private set; }
 
         public string this[string columnName]
         {
@@ -229,6 +230,7 @@ namespace eLog.Models
                         break;
                 }
                 Debug.WriteLine(error);
+                HasError = error is not null;
                 return error;
             }
         }

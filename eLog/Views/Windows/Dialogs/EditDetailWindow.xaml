@@ -54,345 +54,366 @@
             </Grid>
         </ControlTemplate>
     </Window.Resources>
-    <Border BorderThickness="1" BorderBrush="Gray">
-        <DockPanel>
-            <StatusBar DockPanel.Dock="Bottom">
-                <StatusBarItem>
-                    <TextBlock Text="{Binding Status}" d:Text="Статус"/>
-                </StatusBarItem>
-            </StatusBar>
-            <Grid Margin="10 9 10 10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="147"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="155"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="260"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition />
-                </Grid.RowDefinitions>
+    <Grid>
+        <Border BorderThickness="1" BorderBrush="Gray">
+            <DockPanel>
+                <StatusBar DockPanel.Dock="Bottom">
+                    <StatusBarItem>
+                        <TextBlock Text="{Binding Status}" d:Text="Статус"/>
+                    </StatusBarItem>
+                </StatusBar>
+                <Grid Margin="10 9 10 10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="155"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="260"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
                            Text="Наименование:"/>
-                <DockPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2">
-                    <UniformGrid Rows="2" DockPanel.Dock="Right" Width="89" Margin="0">
-                        <TextBox Padding="5 0 45 0" Text="{Binding Part.Setup}" 
+                    <DockPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2">
+                        <UniformGrid Rows="2" DockPanel.Dock="Right" Width="89" Margin="0">
+                            <TextBox Padding="5 0 45 0" Text="{Binding Part.Setup}" 
                                  Margin="1 1 1 -1" FontSize="22">
-                            <TextBox.Style>
-                                <Style TargetType="TextBox">
-                                    <Style.Resources>
-                                        <VisualBrush x:Key="CueBannerBrush" AlignmentX="Right" AlignmentY="Center" Stretch="None">
-                                            <VisualBrush.Visual>
-                                                <Label Content="уст. " FontSize="22" HorizontalAlignment="Right"/>
-                                            </VisualBrush.Visual>
-                                        </VisualBrush>
-                                        <Style TargetType="Border">
-                                            <Setter Property="CornerRadius" Value="2 2 0 0"/>
-                                        </Style>
-                                    </Style.Resources>
-                                    <Setter Property="IsReadOnly" Value="True"/>
-                                    <Setter Property="Focusable" Value="False"/>
-                                    <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                                    <Setter Property="TextAlignment" Value="Center" />
-                                    <Setter Property="VerticalAlignment" Value="Stretch" />
-                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                </Style>
-                            </TextBox.Style>
-                        </TextBox>
-                        <UniformGrid Columns="2" Margin="1">
-                            <Button Content="▼" IsEnabled="{Binding CanDecreaseSetup}"
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Style.Resources>
+                                            <VisualBrush x:Key="CueBannerBrush" AlignmentX="Right" AlignmentY="Center" Stretch="None">
+                                                <VisualBrush.Visual>
+                                                    <Label Content="уст. " FontSize="22" HorizontalAlignment="Right"/>
+                                                </VisualBrush.Visual>
+                                            </VisualBrush>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="2 2 0 0"/>
+                                            </Style>
+                                        </Style.Resources>
+                                        <Setter Property="IsReadOnly" Value="True"/>
+                                        <Setter Property="Focusable" Value="False"/>
+                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                        <Setter Property="TextAlignment" Value="Center" />
+                                        <Setter Property="VerticalAlignment" Value="Stretch" />
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                            <UniformGrid Columns="2" Margin="1">
+                                <Button Content="▼" IsEnabled="{Binding CanDecreaseSetup}"
                                     Style="{StaticResource KeyboardButton}" Margin="0 -1 -1 0" Click="DecrementSetupButton_Click">
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="0 0 0 2"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
-                            <Button Content="▲" IsEnabled="{Binding CanIncreaseSetup}"
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="0 0 0 2"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button Content="▲" IsEnabled="{Binding CanIncreaseSetup}"
                                     Style="{StaticResource KeyboardButton}" Margin="0 -1 0 0" Click="IncrementSetupButton_Click">
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="0 0 2 0"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="0 0 2 0"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </UniformGrid>
                         </UniformGrid>
-                    </UniformGrid>
-                    <TextBox 
+                        <TextBox 
                              d:Text="Корпус клапана АР110-01-001" Height="78" TextWrapping="Wrap" FontSize="18" Padding="0 -4" 
                              Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
-                </DockPanel>
+                    </DockPanel>
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Collapsed"
+                    <TextBlock Grid.Row="1" Grid.Column="0" Visibility="Collapsed"
                            Text="Обозначение:"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Visibility="Collapsed"
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Visibility="Collapsed"
                          d:Text="АР110-01-001"
                          Text="{Binding Part.Number}"/>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" 
+                    <TextBlock Grid.Row="2" Grid.Column="0" 
                            Text="М/Л:"/>
-                <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" >
-                    <Border BorderThickness="1" BorderBrush="{StaticResource ComboBox.Static.Editable.Border}" Margin="1">
-                        <StackPanel Orientation="Horizontal">
-                            <ComboBox Style="{DynamicResource DashComboBoxStyle}" Margin="0 0 0 0" Width="44" DockPanel.Dock="Left" 
+                    <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" >
+                        <Border BorderThickness="1" BorderBrush="{StaticResource ComboBox.Static.Editable.Border}" Margin="1">
+                            <StackPanel Orientation="Horizontal">
+                                <ComboBox Style="{DynamicResource DashComboBoxStyle}" Margin="0 0 0 0" Width="49" DockPanel.Dock="Left" 
                                       SelectedItem="{Binding OrderQualifier}"
-                                      ItemsSource="{Binding OrderQualifiers, Source={x:Static inf:AppSettings.Instance}}" FontSize="16" BorderThickness="0"
+                                      ItemsSource="{Binding OrderQualifiers, Source={x:Static inf:AppSettings.Instance}}" FontSize="20" BorderThickness="0"
                                       VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="Auto"/>
-                            <ComboBox Style="{DynamicResource SlashComboBoxStyle}" Margin="-2 0 0 0" Width="44" DockPanel.Dock="Left"
-                                      SelectedItem="{Binding OrderMonth}" IsEnabled="{Binding NonEmptyOrder}" 
+                                <ComboBox Style="{DynamicResource SlashComboBoxStyle}" Margin="-3 0 0 0" Width="44" DockPanel.Dock="Left"
+                                      SelectedItem="{Binding OrderMonth}" IsEnabled="{Binding NonEmptyOrder}"  FontSize="20"
                                       Visibility="{Binding NonEmptyOrder, Converter={StaticResource VisibilityConverter}}"
                                       ItemsSource="{Binding OrderMonths, Mode=OneWay}" BorderThickness="0"
                                       VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="400"/>
-                        </StackPanel>
-                    </Border>
-                    <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
+                            </StackPanel>
+                        </Border>
+                        <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
                             DockPanel.Dock="Right" IsEnabled="{Binding NonEmptyOrder}" 
                             Content="⌕" FontSize="18" Click="FindOrderDetailsButton_Click" Width="40"/>
-                    <TextBox d:Text="00001.1.1" Margin="-2 1 1 1" IsEnabled="{Binding NonEmptyOrder}"
+                        <TextBox d:Text="00001.1.1" Margin="-2 1 1 1" 
+                                 IsEnabled="{Binding NonEmptyOrder}"
+                                 FontSize="20" VerticalContentAlignment="Center"
                              Text="{Binding OrderText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}">
-                        <TextBox.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="0 2 2 0"/>
-                            </Style>
-                        </TextBox.Resources>
-                    </TextBox>
-                </DockPanel>
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsFocused" Value="True">
+                                            <Setter Property="BorderThickness" Value="1 1 1 1"/>
+                                        </Trigger>
+                                        <Trigger Property="IsFocused" Value="False">
+                                            <Setter Property="BorderThickness" Value="0 1 1 1"/>
+                                        </Trigger>
+                                    </Style.Triggers>
 
-                <TextBlock Grid.Row="2" Grid.Column="2"
+                                </Style>
+                            </TextBox.Style>
+                            <TextBox.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="0 2 2 0"/>
+                                </Style>
+                            </TextBox.Resources>
+                        </TextBox>
+                    </DockPanel>
+
+                    <TextBlock Grid.Row="2" Grid.Column="2"
                            Text="Количество:"/>
-                <Grid Grid.Row="2" Grid.Column="3">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="89"/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition Width="89"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" d:Text="0"
+                    <Grid Grid.Row="2" Grid.Column="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="89"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="89"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" d:Text="0"
                              Text="{Binding FinishedCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox">
-                                <Setter Property="FontSize" Value="20"/>
-                                <Setter Property="Margin" Value="1"/>
-                                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                <Style.Resources>
-                                    <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
-                                        <VisualBrush.Visual>
-                                            <Label Content="факт" Foreground="LightGray" FontSize="18"/>
-                                        </VisualBrush.Visual>
-                                    </VisualBrush>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="2"/>
-                                    </Style>
-                                </Style.Resources>
-                                <Style.Triggers>
-                                    <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
-                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                                    </Trigger>
-                                    <Trigger Property="Text" Value="{x:Null}">
-                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                                    </Trigger>
-                                    <Trigger Property="IsKeyboardFocused" Value="True">
-                                        <Setter Property="Background" Value="{x:Null}" />
-                                    </Trigger>
-                                    <Trigger Property="Validation.HasError" Value="True">
-                                        <Setter Property="Foreground" Value="Red" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
-                    <TextBlock Grid.Column="1" Text="/" HorizontalAlignment="Center" FontSize="18" Margin="0"/>
-                    <TextBox Grid.Column="2" d:Text="1000"
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="FontSize" Value="20"/>
+                                    <Setter Property="Margin" Value="1"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    <Style.Resources>
+                                        <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
+                                            <VisualBrush.Visual>
+                                                <Label Content="факт" Foreground="LightGray" FontSize="18"/>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="2"/>
+                                        </Style>
+                                    </Style.Resources>
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                            <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="{x:Null}">
+                                            <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter Property="Background" Value="{x:Null}" />
+                                        </Trigger>
+                                        <Trigger Property="Validation.HasError" Value="True">
+                                            <Setter Property="Foreground" Value="Red" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        <TextBlock Grid.Column="1" Text="/" HorizontalAlignment="Center" FontSize="18" Margin="0"/>
+                        <TextBox Grid.Column="2" d:Text="1000"
                              Text="{Binding TotalCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox">
-                                <Setter Property="FontSize" Value="20"/>
-                                <Setter Property="Margin" Value="1"/>
-                                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                <Style.Resources>
-                                    <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
-                                        <VisualBrush.Visual>
-                                            <Label Content="по М/Л" Foreground="LightGray" FontSize="18"/>
-                                        </VisualBrush.Visual>
-                                    </VisualBrush>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="2"/>
-                                    </Style>
-                                </Style.Resources>
-                                <Style.Triggers>
-                                    <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
-                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                                    </Trigger>
-                                    <Trigger Property="Text" Value="{x:Null}">
-                                        <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
-                                    </Trigger>
-                                    <Trigger Property="IsKeyboardFocused" Value="True">
-                                        <Setter Property="Background" Value="{x:Null}" />
-                                    </Trigger>
-                                    <Trigger Property="Validation.HasError" Value="True">
-                                        <Setter Property="Foreground" Value="Red" />
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
-                </Grid>
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Setter Property="FontSize" Value="20"/>
+                                    <Setter Property="Margin" Value="1"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    <Style.Resources>
+                                        <VisualBrush x:Key="CueBannerBrush" AlignmentX="Center" AlignmentY="Center" Stretch="None">
+                                            <VisualBrush.Visual>
+                                                <Label Content="по М/Л" Foreground="LightGray" FontSize="18"/>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="2"/>
+                                        </Style>
+                                    </Style.Resources>
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="{x:Static sys:String.Empty}">
+                                            <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="Text" Value="{x:Null}">
+                                            <Setter Property="Background" Value="{StaticResource CueBannerBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter Property="Background" Value="{x:Null}" />
+                                        </Trigger>
+                                        <Trigger Property="Validation.HasError" Value="True">
+                                            <Setter Property="Foreground" Value="Red" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
+                    <TextBlock Grid.Row="3" Grid.Column="0" Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
                            Text="Начало наладки:"/>
-                <TextBlock Grid.Row="3" Grid.Column="0" Visibility="{Binding WithSetup, Converter={StaticResource InvertedVisibilityConverter}}"
+                    <TextBlock Grid.Row="3" Grid.Column="0" Visibility="{Binding WithSetup, Converter={StaticResource InvertedVisibilityConverter}}"
                            Text="Время начала:" d:Visibility="Collapsed"/>
-                <DockPanel Margin="0" Grid.Row="3" Grid.Column="1">
-                    <TextBox d:Text="01.01.2023 00:00"
+                    <DockPanel Margin="0" Grid.Row="3" Grid.Column="1">
+                        <TextBox d:Text="01.01.2023 00:00"
                              Text="{Binding StartSetupTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
-                </DockPanel>
+                    </DockPanel>
 
-                <TextBlock Grid.Row="3" Grid.Column="2" Text="Конец наладки:"/>
-                <DockPanel Grid.Row="3" Grid.Column="3" LastChildFill="True">
-                    <Button x:Name="WithoutSetupButton" Style="{StaticResource OperationButton}"
+                    <TextBlock Grid.Row="3" Grid.Column="2" Text="Конец наладки:"/>
+                    <DockPanel Grid.Row="3" Grid.Column="3" LastChildFill="True">
+                        <Button x:Name="WithoutSetupButton" Style="{StaticResource OperationButton}"
                             Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch"
                             FontSize="22" Padding="0 0 0 5" Click="WithoutSetupButton_Click">
-                        <Button.Content>
-                            <TextBlock Text="Убрать наладку" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="2 2 2 -3"/>
-                        </Button.Content>
-                    </Button>
-                    <TextBox DockPanel.Dock="Right" Width="163"
+                            <Button.Content>
+                                <TextBlock Text="Убрать наладку" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="2 2 2 -3"/>
+                            </Button.Content>
+                        </Button>
+                        <TextBox DockPanel.Dock="Right" Width="163"
                              d:Text="01.01.2023 01:00" IsEnabled="{Binding WithSetup}" Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
                              Text="{Binding StartMachiningTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
-                    <Button x:Name="WithSetupButton" Style="{StaticResource OperationButton}" Width="Auto"
+                        <Button x:Name="WithSetupButton" Style="{StaticResource OperationButton}" Width="Auto"
                             d:Visibility="Collapsed"
                             Visibility="{Binding WithSetup, Converter={StaticResource InvertedVisibilityConverter}}"
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch"
                             FontSize="22" Padding="0 0 0 5" Click="WithSetupButton_Click">
-                        <Button.Content>
-                            <TextBlock Text="Включить наладку" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0 2 0 -3" />
-                        </Button.Content>
-                    </Button>
-                    
-                </DockPanel>
+                            <Button.Content>
+                                <TextBlock Text="Включить наладку" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="0 2 0 -3" />
+                            </Button.Content>
+                        </Button>
 
-                <TextBlock Grid.Row="4" Grid.Column="0"
+                    </DockPanel>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0"
                            Text="Время завершения:" Margin="0 0 3  0"/>
-                <DockPanel Grid.Row="4" Grid.Column="1">
-                    <Button x:Name="EndProductionTimeButton" Style="{StaticResource OperationButton}"
+                    <DockPanel Grid.Row="4" Grid.Column="1">
+                        <Button x:Name="EndProductionTimeButton" Style="{StaticResource OperationButton}"
                             DockPanel.Dock="Left" HorizontalAlignment="Stretch" Visibility="Collapsed"
                             Content="⏱" FontSize="20" Click="EndProductionTimeButton_Click"/>
-                    <TextBox d:Text="01.01.2023 07:00"
+                        <TextBox d:Text="01.01.2023 07:00"
                              Text="{Binding EndMachiningTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
-                </DockPanel>
+                    </DockPanel>
 
-                <TextBlock Grid.Row="4" Grid.Column="2"
+                    <TextBlock Grid.Row="4" Grid.Column="2"
                            Text="Машинное время:"/>
-                <TextBox Grid.Row="4" Grid.Column="3" d:Text="00:04:45"
+                    <TextBox Grid.Row="4" Grid.Column="3" d:Text="00:04:45"
                          Text="{Binding MachineTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                          Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
 
-                <TextBlock Grid.Row="5" Grid.Column="0"
+                    <TextBlock Grid.Row="5" Grid.Column="0"
                            Text="Наладка норматив:"/>
-                <TextBox Grid.Row="5" Grid.Column="1" d:Text="90"
+                    <TextBox Grid.Row="5" Grid.Column="1" d:Text="90"
                          Text="{Binding PartSetupTimePlan, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                          Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
 
-                <TextBlock Grid.Row="5" Grid.Column="2"
+                    <TextBlock Grid.Row="5" Grid.Column="2"
                            Text="Штучное норматив:"/>
-                <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
+                    <TextBox Grid.Row="5" Grid.Column="3" d:Text="5"
                          Text="{Binding SingleProductionTimePlan, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                          Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
 
 
-                <TextBlock Grid.Row="6" Grid.Column="0"
+                    <TextBlock Grid.Row="6" Grid.Column="0"
                            Text="Комментарий:"/>
-                <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" d:Text="Комментарий" Height="118" 
+                    <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" d:Text="Комментарий" Height="118" 
                          TextWrapping="WrapWithOverflow" AcceptsReturn="True" FontSize="16" TextAlignment="Left" VerticalContentAlignment="Top"
                          Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}"/>
 
 
-                <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0"
+                    <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom" LastChildFill="True">
-                    <Button Click="Button_Click" Content="SCAN" DockPanel.Dock="Right" Visibility="Collapsed"/>
-                    <Button Margin="0 0 0 0" Height="60" Style="{StaticResource GeneralButton}"
+                        <Button Click="Button_Click" Content="SCAN" DockPanel.Dock="Right" Visibility="Collapsed"/>
+                        <Button Margin="0 0 0 0" Height="60" Style="{StaticResource GeneralButton}"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
-                        <Button.Content>
-                            <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                        </Button.Content>
-                        <Button.Command>
-                            <cmd:CloseDialogCommand DialogResult="False"/>
-                        </Button.Command>
-                    </Button>
-                    
-                </DockPanel>
+                            <Button.Content>
+                                <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                            </Button.Content>
+                            <Button.Command>
+                                <cmd:CloseDialogCommand DialogResult="False"/>
+                            </Button.Command>
+                        </Button>
 
-                <ctrl:KeyboardControl Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="4" Height="115" Margin="-1 8 0 0"
+                    </DockPanel>
+
+                    <ctrl:KeyboardControl Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="4" Height="115" Margin="-1 8 0 0"
                                       Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
 
-                <Button Grid.Column="1" Grid.Row="8" Grid.ColumnSpan="3" Height="36" 
+                    <Button Grid.Column="1" Grid.Row="8" Grid.ColumnSpan="3" Height="36" 
                         Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"
                         Style="{StaticResource KeyboardButton}" 
                         VerticalAlignment="Top" HorizontalAlignment="Stretch"
                         Margin="74 1 75 1" Click="SpaceButton_Click"/>
-                <ctrl:ControlKeyboardControl Grid.Column="5" Grid.Row="7" Margin="0 8 -1 0"
+                    <ctrl:ControlKeyboardControl Grid.Column="5" Grid.Row="7" Margin="0 8 -1 0"
                                              Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
 
-                <Button Grid.Column="5" Grid.Row="8" Style="{StaticResource GeneralButton}"
+                    <Button Grid.Column="5" Grid.Row="8" Style="{StaticResource GeneralButton}"
                         Margin="1 0 0 0" Height="60"
                         VerticalAlignment="Bottom" IsEnabled="{Binding CanBeClosed}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
-                    <Button.Command>
-                        <cmd:CloseDialogCommand DialogResult="True"/>
-                    </Button.Command>
-                </Button>
+                        <Button.Content>
+                            <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </Button.Content>
+                        <Button.Command>
+                            <cmd:CloseDialogCommand DialogResult="True"/>
+                        </Button.Command>
+                    </Button>
 
-                <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="8" 
+                    <Border Grid.Column="4" Grid.Row="0" Grid.RowSpan="8" 
                         BorderBrush="LightGray" BorderThickness="1" 
                         Margin="3 15"/>
 
-                <DockPanel Grid.Row="0" Grid.Column="5" Margin="1 0 0 1" Height="39">
-                    <Button x:Name="EditCreatorButton" Width="63" Click="EditCreatorButton_Click" Style="{StaticResource KeyboardButton}"
+                    <DockPanel Grid.Row="0" Grid.Column="5" Margin="1 0 0 1" Height="39">
+                        <Button x:Name="EditCreatorButton" Width="63" Click="EditCreatorButton_Click" Style="{StaticResource KeyboardButton}"
                             Margin="0 1 2 0" Content="{StaticResource OperatorIcon}" Padding="-5"
                             Visibility="{Binding NewDetail, Converter={StaticResource InvertedVisibilityConverter}}"/>
-                    <Button Margin="0 1 0 0"
+                        <Button Margin="0 1 0 0"
                             x:Name="LoadPreviousPartButton" Style="{StaticResource KeyboardButton}"
                             Click="LoadPreviousPartButton_Click">
-                        <Button.Content>
-                            <TextBlock Text="Заполнить из списка" Margin="-2"/>
-                        </Button.Content>
-                    </Button>
-                </DockPanel>
-                <Button Grid.Row="1" Grid.Column="5" Margin="1 0 0 1"
+                            <Button.Content>
+                                <TextBlock Text="Заполнить из списка" Margin="-2"/>
+                            </Button.Content>
+                        </Button>
+                    </DockPanel>
+                    <Button Grid.Row="1" Grid.Column="5" Margin="1 0 0 1"
                     x:Name="EditDownTimesButton" DockPanel.Dock="Top" Content="Простои" Style="{StaticResource KeyboardButton}" Height="38" Click="EditDownTimesButton_Click"/>
-                <DockPanel Grid.Row="2" Grid.Column="5" Grid.RowSpan="5" LastChildFill="True">
-                    
-                    <Button DockPanel.Dock="Bottom" Margin="1 1 0 1" Height="38"
+                    <DockPanel Grid.Row="2" Grid.Column="5" Grid.RowSpan="5" LastChildFill="True">
+
+                        <Button DockPanel.Dock="Bottom" Margin="1 1 0 1" Height="38"
                             Style="{StaticResource KeyboardButton}" Click="KeyboardButton_Click">
-                        <Button.Content>
-                            <TextBlock Text="🖮" FontSize="34" Margin="0 -5 0 5" Padding="0"/>
-                        </Button.Content>
-                    </Button>
-                    <ctrl:TimeInsertKeyboard DockPanel.Dock="Bottom" Margin="0 0 -1 0" Height="40"/>
-                    <ctrl:NumericKeyboard Margin="1 1 0 1"/>
-                </DockPanel>
-            </Grid>
-        </DockPanel>
-    </Border>
+                            <Button.Content>
+                                <TextBlock Text="🖮" FontSize="34" Margin="0 -5 0 5" Padding="0"/>
+                            </Button.Content>
+                        </Button>
+                        <ctrl:TimeInsertKeyboard DockPanel.Dock="Bottom" Margin="0 0 -1 0" Height="40"/>
+                        <ctrl:NumericKeyboard Margin="1 1 0 1"/>
+                    </DockPanel>
+                </Grid>
+            </DockPanel>
+        </Border>
+        <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
+          Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
+          Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>
+    </Grid>
 </Window>

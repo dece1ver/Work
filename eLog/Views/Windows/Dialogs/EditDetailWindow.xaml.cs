@@ -24,9 +24,11 @@ using DocumentFormat.OpenXml.Packaging;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Infrastructure.Extensions.Windows;
+using eLog.Infrastructure.Interfaces;
 using eLog.Models;
 using eLog.Services;
 using eLog.Views.Windows.Settings;
+using Overlay = eLog.Infrastructure.Extensions.Overlay;
 using Path = System.IO.Path;
 
 namespace eLog.Views.Windows.Dialogs
@@ -34,7 +36,7 @@ namespace eLog.Views.Windows.Dialogs
     /// <summary>
     /// Логика взаимодействия для EditDetailWindow.xaml
     /// </summary>
-    public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo
+    public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, IOverlay
     {
         public EditDetailWindow(PartInfoModel part, bool newDetail = false)
         {
@@ -77,6 +79,12 @@ namespace eLog.Views.Windows.Dialogs
         public List<PartInfoModel> Parts { get; set; } = new();
         public int PartIndex { get; set; }
         public PartInfoModel Part { get; set; }
+
+        public Overlay Overlay
+        {
+            get => _Overlay;
+            set => Set(ref _Overlay, value);
+        }
 
         public Visibility KeyboardVisibility
         {
@@ -230,7 +238,7 @@ namespace eLog.Views.Windows.Dialogs
                         return true;
                     // частичная наладка
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && FinishedCount == "0" && EndMachiningTime == StartMachiningTime:
-                        Status = "При подтверждении будет отмечена частичная наладка.";
+                        Status = "При подтверждении деталь будет завершена с частичной наладкой.";
                         return true;
                     // полная отметка
                     case true when Part is { FinishedCount: > 0, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
@@ -428,6 +436,7 @@ namespace eLog.Views.Windows.Dialogs
         private string _SingleProductionTimePlan;
         private Visibility _KeyboardVisibility;
         private bool _WithSetup;
+        private Overlay _Overlay = new(false);
 
         public string SingleProductionTimePlan
         {
@@ -627,16 +636,16 @@ namespace eLog.Views.Windows.Dialogs
                     prev = parts.First();
                     break;
                 case > 1:
-                    var dlg = new SetPreviousPartDialogWindow(parts) {Owner = this};
-                    this.IsEnabled = false;
-                    if (dlg.ShowDialog() != true)
+                    using (Overlay = new())
                     {
-                        Status = "Отмена заполнения.";
-                        this.IsEnabled = true;
-                        return;
+                        var dlg = new SetPreviousPartDialogWindow(parts) { Owner = this };
+                        if (dlg.ShowDialog() != true)
+                        {
+                            Status = "Отмена заполнения.";
+                            return;
+                        }
+                        prev = dlg.Part!;
                     }
-                    this.IsEnabled = true;
-                    prev = dlg.Part!;
                     break;
                 default:
                     Status = "Не найдено подходящих деталей.";
@@ -760,32 +769,38 @@ namespace eLog.Views.Windows.Dialogs
         }
         private void EditCreatorButton_Click(object sender, RoutedEventArgs e)
         {
-            var makerDialog = new EditMakerDialogWindow(Part) {Owner = this};
-            if (makerDialog.ShowDialog() != true) return;
-            Part.Operator = makerDialog.Operator;
-            Part.Shift = makerDialog.Shift;
+            using (Overlay = new())
+            {
+                var makerDialog = new EditMakerDialogWindow(Part) { Owner = this };
+                if (makerDialog.ShowDialog() != true) return;
+                Part.Operator = makerDialog.Operator;
+                Part.Shift = makerDialog.Shift;
+            }
         }
 
         private void EditDownTimesButton_Click(object sender, RoutedEventArgs e)
         {
-            var tempPart = new PartInfoModel(Part);
-            foreach (var downTime in tempPart.DownTimes)
+            using (Overlay = new())
             {
-                // downTime.ParentPart = tempPart;
-                if (downTime.EndTime == DateTime.MinValue) downTime.EndTimeText = string.Empty;
+                var tempPart = new PartInfoModel(Part);
+                foreach (var downTime in tempPart.DownTimes)
+                {
+                    // downTime.ParentPart = tempPart;
+                    if (downTime.EndTime == DateTime.MinValue) downTime.EndTimeText = string.Empty;
+                }
+                var height = Height;
+                Height = 477;
+                var dlg = new EditDownTimesDialogWindow(tempPart)
+                {
+                    Owner = this,
+                    Width = Width,
+                    Height = Height,
+                };
+                var result = dlg.ShowDialog();
+                Height = height;
+                if (result != true) return;
+                Part = dlg.Part;
             }
-            var height = Height;
-            Height = 477;
-            var dlg = new EditDownTimesDialogWindow(tempPart)
-            {
-                Owner = this,
-                Width = Width,
-                Height = Height,
-            };
-            var result = dlg.ShowDialog();
-            Height = height;
-            if (result != true) return;
-            Part = dlg.Part;
         }
 
 
@@ -827,7 +842,6 @@ namespace eLog.Views.Windows.Dialogs
         private void TextBlock_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (sender is not TextBlock { Parent: Grid grid }) return;
-
             foreach (UIElement gridChild in grid.Children)
             {
                 if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBox textBox } && Validation.GetErrors(textBox) is ICollection<ValidationError> {Count: > 0} errors)

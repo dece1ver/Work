@@ -302,6 +302,11 @@ namespace eLog.Infrastructure.Extensions
 
         }
 
+        public static DateTime Rounded(this DateTime value)
+        {
+            return new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, 0);
+        }
+
         /// <summary>
         /// Парсит строку в TimeSpan
         /// </summary>

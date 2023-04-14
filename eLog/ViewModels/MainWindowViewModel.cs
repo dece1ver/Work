@@ -46,8 +46,6 @@ namespace eLog.ViewModels
             syncPartsThread.Start();
         }
 
-        
-
         #region Свойства-обертки настроек
         
 
@@ -154,8 +152,6 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(CanAddPart));
             } 
         }
-
-        
 
         #region Команды
 
@@ -347,7 +343,7 @@ namespace eLog.ViewModels
                 switch (WindowsUserDialogService.GetSetupResult())
                 {
                     case EndSetupResult.Success:
-                        Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now;
+                        Parts[Parts.IndexOf((PartInfoModel)p)].StartMachiningTime = DateTime.Now.Rounded();
                         break;
                     case EndSetupResult.Stop:
                         Parts.Remove((PartInfoModel)p);
