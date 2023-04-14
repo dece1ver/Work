@@ -53,14 +53,21 @@ namespace eLog.Services
         /// <returns>true если операторы были изменены, false при отмене, либо если все операторы остались неизменны</returns>
         public static bool EditOperators()
         {
+            var currentOperator = AppSettings.Instance.CurrentOperator is null ? null : new Operator(AppSettings.Instance.CurrentOperator);
             var dlg = new OperatorsEditWindow()
             {
                 Owner = Application.Current.MainWindow,
             };
+            
             if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators)) return false;
             AppSettings.Instance.Operators = new ObservableCollection<Operator>(dlg.Operators.ToList()
                 .Where(o => !string.IsNullOrWhiteSpace(o.DisplayName)));
             AppSettings.Instance.CurrentOperator = null;
+            foreach (var @operator in AppSettings.Instance.Operators)
+            {
+                if (@operator.Equals(currentOperator)) AppSettings.Instance.CurrentOperator = @operator;
+            }
+            
             return true;
         }
 

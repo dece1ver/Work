@@ -18,6 +18,7 @@ namespace eLog.Models
             _LastName = @operator.LastName;
             _Patronymic = @operator.Patronymic;
         }
+
         private string _FirstName = string.Empty;
         private string _LastName = string.Empty;
         private string _Patronymic = string.Empty;
