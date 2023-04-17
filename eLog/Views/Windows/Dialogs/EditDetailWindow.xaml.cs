@@ -215,12 +215,33 @@ namespace eLog.Views.Windows.Dialogs
             set => Set(ref _Status, value);
         }
 
+        public bool DownTimesHasErrors
+        {
+            get => _DownTimesHasErrors;
+            set => Set(ref _DownTimesHasErrors, value);
+        }
+
         public bool CanBeClosed
         {
             get
             {
+                DownTimesHasErrors = false;
                 if (OrderValidation is OrderValidationTypes.Error || string.IsNullOrWhiteSpace(PartName)) return false;
-                if (Part.IsFinished is Part.State.Finished) return true;
+                if (Part.IsFinished is Part.State.Finished && Part.DownTimesIsClosed) return true;
+                if (Part is { DownTimesIsClosed: false, FinishedCount: > 0 } && Part.ProductionTimeFact > TimeSpan.Zero)
+                {
+                    Status = "Есть незавершенные простои";
+                    DownTimesHasErrors = true;
+                    return false;
+                }
+                foreach (var downTime in Part.DownTimes)
+                {
+                    downTime.UpdateError();
+                    if (!downTime.HasError) continue;
+                    Status = "Некорректно указаны простои";
+                    DownTimesHasErrors = true;
+                    return false;
+                }
                 var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                      (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
 
@@ -437,6 +458,7 @@ namespace eLog.Views.Windows.Dialogs
         private Visibility _KeyboardVisibility;
         private bool _WithSetup;
         private Overlay _Overlay = new(false);
+        private bool _DownTimesHasErrors;
 
         public string SingleProductionTimePlan
         {
@@ -705,6 +727,7 @@ namespace eLog.Views.Windows.Dialogs
             Part.TotalCount = prev.TotalCount;
             TotalCount = Part.TotalCount.ToString();
             OnPropertyChanged(nameof(TotalCount));
+            OnPropertyChanged(nameof(CanBeClosed));
         }
 
         private void SpaceButton_Click(object sender, RoutedEventArgs e)
@@ -776,6 +799,7 @@ namespace eLog.Views.Windows.Dialogs
                 Part.Operator = makerDialog.Operator;
                 Part.Shift = makerDialog.Shift;
             }
+            OnPropertyChanged(nameof(CanBeClosed));
         }
 
         private void EditDownTimesButton_Click(object sender, RoutedEventArgs e)
@@ -801,6 +825,7 @@ namespace eLog.Views.Windows.Dialogs
                 if (result != true) return;
                 Part = dlg.Part;
             }
+            OnPropertyChanged(nameof(CanBeClosed));
         }
 
 
@@ -851,6 +876,11 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
+        /// <summary>
+        /// Событие нажатия на кнопку сканирования, пока для демонстрации, т.к. штрихкоды работают с помощью никому неизвестной магии
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var s = "666";

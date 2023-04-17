@@ -397,7 +397,16 @@
                         </Button>
                     </DockPanel>
                     <Button Grid.Row="1" Grid.Column="5" Margin="1 0 0 1"
-                    x:Name="EditDownTimesButton" DockPanel.Dock="Top" Content="Простои" Style="{StaticResource KeyboardButton}" Height="38" Click="EditDownTimesButton_Click"/>
+                    x:Name="EditDownTimesButton" DockPanel.Dock="Top" Style="{StaticResource KeyboardButton}" Height="38" Click="EditDownTimesButton_Click">
+                        <Button.Content>
+                            <StackPanel>
+                                <TextBlock Visibility="{Binding DownTimesHasErrors, Converter={StaticResource InvertedVisibilityConverter}}" 
+                                           TextAlignment="Center" Text="Простои"/>
+                                <TextBlock Visibility="{Binding DownTimesHasErrors, Converter={StaticResource VisibilityConverter}}" 
+                                           TextAlignment="Center" Foreground="Red" Text="Простои (внимание)"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
                     <DockPanel Grid.Row="2" Grid.Column="5" Grid.RowSpan="5" LastChildFill="True">
 
                         <Button DockPanel.Dock="Bottom" Margin="1 1 0 1" Height="38"

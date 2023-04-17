@@ -14,6 +14,7 @@ using eLog.Infrastructure.Extensions;
 using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 using System.Windows.Threading;
+using static eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.Models
 {
@@ -224,20 +225,33 @@ namespace eLog.Models
         {
             get
             {
+                var downTimes = DownTimes.Where(d => d.Relation == DownTime.Relations.Setup);
+                double downTimesMinutes = 0;
+                foreach (var downTime in downTimes)
+                {
+                    var partialBreaks = Util.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
+                    downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                }
                 var endSetupTime = SetupIsFinished ? StartMachiningTime : StartSetupTime
                     .AddMinutes(SetupTimePlan)
+                    .AddMinutes(downTimesMinutes)
                     .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), false));
                 if (StartSetupTime == StartMachiningTime) return "Без наладки";
                 var result = endSetupTime > StartSetupTime ? endSetupTime.ToString(Text.DateTimeFormat) : "-";
                 if (result == "-") return result;
                 var breaks = Util.GetBreaksBetween(StartSetupTime, endSetupTime);
                 var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
+                
+                var downTimesInfo = downTimesMinutes > 0 
+                    ? $" + простои: {downTimesMinutes} мин" 
+                    : string.Empty;
                 var planInfo = SetupTimePlan > 0
-                    ? $" (Плановое: норматив {SetupTimePlan} мин{breaksInfo})"
+                    ? $" (Плановое: норматив {SetupTimePlan} мин{breaksInfo}{downTimesInfo})"
                     : string.Empty;
                 var productivity = SetupTimePlan > 0
                     ? $" ({SetupTimePlan / SetupTimeFact.TotalMinutes * 100:N0}%)"
                     : string.Empty;
+                
                 switch (IsFinished)
                 {
                     case State.Finished:
@@ -247,7 +261,7 @@ namespace eLog.Models
                         result += " (Неполная наладка)";
                         break;
                     case State.InProgress when FullSetupTimeFact.Ticks > 0:
-                        result += productivity;
+                        result += productivity + downTimesInfo;
                         break;
                     case State.InProgress when FullSetupTimeFact.Ticks < 0:
                         result += planInfo;
@@ -305,11 +319,20 @@ namespace eLog.Models
 
 
         /// <summary> Фактическое время наладки с учетом перерывов </summary>
-        [JsonIgnore] public TimeSpan SetupTimeFact => FullSetupTimeFact 
-                                                      - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime) 
-                                                      - new TimeSpan(DownTimes
-                                                          .Where(x => x.Relation is DownTime.Relations.Setup)
-                                                          .Sum(d => d.Time.Ticks));
+        [JsonIgnore] public TimeSpan SetupTimeFact {
+            get
+            {
+                double downTimesMinutes = 0;
+                foreach (var downTime in DownTimes.Where(x => x.Relation is DownTime.Relations.Setup))
+                {
+                    var partialBreaks = Util.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
+                    downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                }
+                return FullSetupTimeFact 
+                       - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime) 
+                       - TimeSpan.FromMinutes(downTimesMinutes);
+            }
+        }
 
         /// <summary> Полное название детали (наименование + обозначение) </summary>
         [JsonIgnore] public string FullName => $"{Name} {Number}".Trim();
@@ -336,11 +359,20 @@ namespace eLog.Models
 
         /// <summary> Время изготовления с учетом перерывов </summary>
         [JsonIgnore]
-        public TimeSpan ProductionTimeFact =>
-            FullProductionTimeFact - Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime) 
-                                   - new TimeSpan(DownTimes
-                                       .Where(x => x.Relation is DownTime.Relations.Machining)
-                                       .Sum(d => d.Time.Ticks));
+        public TimeSpan ProductionTimeFact {
+            get
+            {
+                double downTimesMinutes = 0;
+                foreach (var downTime in DownTimes.Where(x => x.Relation is DownTime.Relations.Machining))
+                {
+                    var partialBreaks = Util.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
+                    downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                }
+                return FullProductionTimeFact - Util.GetBreaksBetween(StartMachiningTime, EndMachiningTime)
+                                              - TimeSpan.FromMinutes(downTimesMinutes);
+            }
+        }
+            
 
         /// <summary>
         /// Может ли быть завершена деталь.
@@ -444,6 +476,7 @@ namespace eLog.Models
             TotalCount = totalCount;
             SetupTimePlan = setupTimePlan;
             SingleProductionTimePlan = singleProductionTimePlan;
+            _Operator = AppSettings.Instance.CurrentOperator ?? throw new NullReferenceException("Была запущена деталь без оператора");
             Id = -1;
             _DownTimes = new ObservableCollection<DownTime>();
             _OperatorComments = string.Empty;
@@ -482,6 +515,8 @@ namespace eLog.Models
             _EndMachiningTime = part.EndMachiningTime;
             _MachineTime = part.MachineTime;
             _DownTimes = new ObservableCollection<DownTime>();
+            _SetupTimePlan = part.SetupTimePlan;
+            _SingleProductionTimePlan = part.SingleProductionTimePlan;
             foreach (var downTime in part.DownTimes)
             {
                 _DownTimes.Add(new DownTime(this, downTime));

@@ -267,5 +267,41 @@ namespace eLog.Models
             OnPropertyChanged(PropertyName);
             return true;
         }
+
+        public void UpdateError()
+        {
+            HasError = false;
+            if (StartTime == DateTime.MinValue)
+            {
+                HasError = true;
+            }
+            else if (StartTime < ParentPart.StartSetupTime)
+            {
+                HasError = true;
+            }
+            else if (EndTime != DateTime.MinValue && EndTime <= StartTime)
+            {
+                HasError = true;
+            }
+            else if (EndTime != DateTime.MinValue && EndTime <= StartTime)
+            {
+                HasError = true;
+            }
+            else if (Relation is Relations.Setup && ParentPart.SetupIsFinished &&
+                     EndTime > ParentPart.StartMachiningTime)
+            {
+                HasError = true;
+            }
+            else if (Relation is Relations.Machining && ParentPart.IsFinished == Part.State.Finished &&
+                     EndTime > ParentPart.EndMachiningTime)
+            {
+                HasError = true;
+            }
+            else if (Relation is Relations.Machining && ParentPart.IsFinished == Part.State.InProgress &&
+                     EndTime > DateTime.Now)
+            {
+                HasError = true;
+            }
+        }
     }
 }

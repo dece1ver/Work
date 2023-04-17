@@ -481,6 +481,64 @@ namespace eLog.Infrastructure.Extensions
             return breaks;
         }
 
+        public static double GetPartialBreakBetween(DateTime startDateTime, DateTime endDateTime)
+        {
+            var dayShiftFirstBreakDuration = 15;
+            var dayShiftFirstBreak = WorkTime.DayShiftFirstBreak.AddMinutes(-dayShiftFirstBreakDuration);
+
+            var dayShiftSecondBreakDuration = 30;
+            var dayShiftSecondBreak = WorkTime.DayShiftSecondBreak.AddMinutes(-dayShiftSecondBreakDuration);
+
+            var dayShiftThirdBreakDuration = 15;
+            var dayShiftThirdBreak = WorkTime.DayShiftThirdBreak.AddMinutes(-dayShiftThirdBreakDuration);
+
+            var nightShiftFirstBreakDuration = 30;
+            var nightShiftFirstBreak = WorkTime.NightShiftFirstBreak.AddMinutes(-nightShiftFirstBreakDuration);
+
+            var nightShiftSecondBreakDuration = 30;
+            var nightShiftSecondBreak = WorkTime.NightShiftSecondBreak.AddMinutes(-nightShiftSecondBreakDuration);
+
+            var nightShiftThirdDuration = 30;
+            var nightShiftThirdBreak = WorkTime.NightShiftThirdBreak.AddMinutes(-nightShiftThirdDuration);
+
+            var startTime = new DateTime(1, 1, 1, startDateTime.Hour, startDateTime.Minute, startDateTime.Second);
+            var endTime = new DateTime(1, 1, 1, endDateTime.Hour, endDateTime.Minute, endDateTime.Second);
+            if (startTime > endTime)
+            {
+                nightShiftSecondBreak = nightShiftSecondBreak.AddDays(1);
+                nightShiftThirdBreak = nightShiftThirdBreak.AddDays(1);
+                endTime = endTime.AddDays(1);
+            }
+
+            var breaks = 0.0;
+
+            breaks += GetPartial(startTime, endTime, dayShiftFirstBreak, dayShiftFirstBreakDuration);
+            breaks += GetPartial(startTime, endTime, dayShiftSecondBreak, dayShiftSecondBreakDuration);
+            breaks += GetPartial(startTime, endTime, dayShiftThirdBreak, dayShiftThirdBreakDuration);
+            breaks += GetPartial(startTime, endTime, nightShiftFirstBreak, nightShiftFirstBreakDuration);
+            breaks += GetPartial(startTime, endTime, nightShiftSecondBreak, nightShiftSecondBreakDuration);
+            breaks += GetPartial(startTime, endTime, nightShiftThirdBreak, nightShiftThirdDuration);
+
+            return breaks;
+        }
+
+        private static double GetPartial(DateTime startDateTime, DateTime endDateTime, DateTime breakTime, double duration)
+        {
+            var result = 0.0;
+            var endBreakTime = breakTime.AddMinutes(duration);
+            if (startDateTime < breakTime && endDateTime > breakTime && endDateTime <= endBreakTime) {
+                result = (endDateTime - breakTime).TotalMinutes;
+            } else if (startDateTime > breakTime && startDateTime < endBreakTime && endDateTime >= endBreakTime) {
+                result = (endBreakTime - startDateTime).TotalMinutes;
+            } else if (startDateTime > breakTime && endDateTime < endBreakTime) {
+                result = (endDateTime - startDateTime).TotalMinutes;
+            } else if (startDateTime <= breakTime && endDateTime >= endBreakTime) {
+                result = (endBreakTime - breakTime).TotalMinutes;
+            }
+
+            return result;
+        }
+
         public static DateTime GetStartShiftTime()
         {
             return AppSettings.Instance.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(7) :

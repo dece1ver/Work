@@ -43,6 +43,7 @@ namespace eLog.Views.Windows.Dialogs
             {
                 Part.DownTimes.Remove(downTime);
                 OnPropertyChanged(nameof(Part.DownTimesIsClosed));
+                Validate();
             }
         }
 
@@ -57,6 +58,7 @@ namespace eLog.Views.Windows.Dialogs
                 }
                 CanAddDownTime = Part.DownTimesIsClosed && CanBeClosed;
             }
+            Validate();
         }
 
         public EditDownTimesDialogWindow(Part part)
