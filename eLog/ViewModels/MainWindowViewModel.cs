@@ -17,6 +17,7 @@ using eLog.Infrastructure.Extensions;
 using System.Threading;
 using eLog.Infrastructure.Interfaces;
 using eLog.Views.Windows.Settings;
+using Microsoft.Win32;
 
 namespace eLog.ViewModels
 {
@@ -69,7 +70,7 @@ namespace eLog.ViewModels
         }
 
         /// <summary> Список операторов </summary>
-        public ObservableCollection<Operator> Operators
+        public DeepObservableCollection<Operator> Operators
         {
             get => AppSettings.Instance.Operators;
             set => AppSettings.Instance.Operators = value;
@@ -84,11 +85,16 @@ namespace eLog.ViewModels
         }
 
         /// <summary> Детали </summary>
-        public static ObservableCollection<Part> Parts
+        public static DeepObservableCollection<Part> Parts
         {
             get => AppSettings.Instance.Parts;
-            set => AppSettings.Instance.Parts = value;
-        } 
+            set
+            {
+                AppSettings.Instance.Parts = value;
+                AppSettings.Save();
+            }
+        }
+
         #endregion
 
         private Overlay _Overlay = new(false);
@@ -539,6 +545,7 @@ namespace eLog.ViewModels
                     for (var i = Parts.Count - 1; i >= 0; i--)
                     {
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
+                        Thread.Sleep(1000);
                         var index = i;
                         if (part.Id != -1)
                         {
@@ -582,6 +589,7 @@ namespace eLog.ViewModels
                         
                         OnPropertyChanged(nameof(Parts));
                         RemoveExcessParts();
+                       
                     });
                 }
                 catch (Exception e)

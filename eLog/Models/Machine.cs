@@ -11,6 +11,7 @@ namespace eLog.Models
 {
     public class Machine
     {
+        [JsonConstructor]
         public Machine(int id)
         {
             Id = id;
@@ -35,9 +36,5 @@ namespace eLog.Models
         public int Id { get; }
 
         public string Name { get;}
-
-        // надо выпилить наверное
-        [JsonIgnore]
-        public string XlReservedPath => Path.Combine(AppSettings.XlReservedPath, Name);
     }
 }

@@ -226,7 +226,7 @@ namespace eLog.Infrastructure.Extensions
                               prevPart is { IsFinished: Part.State.PartialSetup };
                 if (partial)
                 {
-                    part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as ObservableCollection<DownTime> ?? new ObservableCollection<DownTime>();
+                    part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as DeepObservableCollection<DownTime> ?? new DeepObservableCollection<DownTime>();
                     part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup) { 
                         StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
                         EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
@@ -286,6 +286,7 @@ namespace eLog.Infrastructure.Extensions
                                                        $"{exception.GetType()}\n" +
                                                        $"{exception.StackTrace}\n" +
                                                        $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"Дополнительная информация:\n{additionMessage}")}\n\n");
+                TryCopyLog();
             }
             catch (Exception e)
             {
@@ -471,12 +472,12 @@ namespace eLog.Infrastructure.Extensions
                 endTime = endTime.AddDays(1);
             }
             
-            if (dayShiftFirstBreak > startTime && dayShiftFirstBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
-            if (dayShiftSecondBreak > startTime && dayShiftSecondBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
-            if (dayShiftThirdBreak > startTime && dayShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
-            if (nightShiftFirstBreak > startTime && nightShiftFirstBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
-            if (nightShiftSecondBreak > startTime && nightShiftSecondBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
-            if (nightShiftThirdBreak > startTime && nightShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+            if (dayShiftFirstBreak >= startTime && dayShiftFirstBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
+            if (dayShiftSecondBreak >= startTime && dayShiftSecondBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+            if (dayShiftThirdBreak >= startTime && dayShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
+            if (nightShiftFirstBreak >= startTime && nightShiftFirstBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+            if (nightShiftSecondBreak >= startTime && nightShiftSecondBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
+            if (nightShiftThirdBreak >= startTime && nightShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
 
             return breaks;
         }

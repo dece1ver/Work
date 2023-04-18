@@ -31,18 +31,10 @@ namespace eLog.Infrastructure
     {
         private AppSettings()
         {
-            Parts.CollectionChanged += (_, _) => Save();
-            foreach (var part in Parts)
-            {
-                part.PropertyChanged += (_, _) => Save();
-                foreach (var downTime in part.DownTimes)
-                {
-                    downTime.PropertyChanged += (_, _) => Save();
-                }
-            }
+            
         }
 
-        private static AppSettings _Instance;
+        [JsonIgnore] private static AppSettings? _Instance;
         [JsonIgnore] public static AppSettings Instance => _Instance ??= new AppSettings();
 
         /// <summary> Директория для хранения всякого </summary>
@@ -66,13 +58,13 @@ namespace eLog.Infrastructure
         /// <summary> Путь к файлу логов </summary>
         [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
 
-        private Machine _Machine = new (0);
-        private string _XlPath = string.Empty;
-        private string _OrdersSourcePath = string.Empty;
-        private string[] _OrderQualifiers = Array.Empty<string>();
-        private ObservableCollection<Operator> _Operators = new();
-        private string _CurrentShift = string.Empty;
-        private ObservableCollection<Part> _Parts = new();
+        private Machine _Machine;
+        private string _XlPath;
+        private string _OrdersSourcePath;
+        private string[] _OrderQualifiers;
+        private DeepObservableCollection<Operator> _Operators;
+        private string _CurrentShift;
+        private DeepObservableCollection<Part> _Parts;
         private bool _IsShiftStarted;
         private Operator? _CurrentOperator;
 
@@ -105,31 +97,10 @@ namespace eLog.Infrastructure
         }
 
         /// <summary> Список операторов </summary>
-        public ObservableCollection<Operator> Operators
+        public DeepObservableCollection<Operator> Operators
         {
             get => _Operators;
             set => Set(ref _Operators, value);
-        }
-
-        /// <summary> Текущая смена </summary>
-        public string CurrentShift
-        {
-            get => _CurrentShift;
-            set => Set(ref _CurrentShift, value);
-        }
-
-        /// <summary> Список деталей </summary>
-        public ObservableCollection<Part> Parts
-        {
-            get => _Parts;
-            set => Set(ref _Parts, value);
-        }
-
-        /// <summary> Запущена ли смена </summary>
-        public bool IsShiftStarted
-        {
-            get => _IsShiftStarted;
-            set => Set(ref _IsShiftStarted, value);
         }
 
         /// <summary> Текущий оператор </summary>
@@ -137,8 +108,29 @@ namespace eLog.Infrastructure
         {
             get => _CurrentOperator;
             set
-            => Set(ref _CurrentOperator, value);
+                => Set(ref _CurrentOperator, value);
         }
+        /// <summary> Запущена ли смена </summary>
+        public bool IsShiftStarted
+        {
+            get => _IsShiftStarted;
+            set => Set(ref _IsShiftStarted, value);
+        }
+        /// <summary> Текущая смена </summary>
+        public string CurrentShift
+        {
+            get => _CurrentShift;
+            set => Set(ref _CurrentShift, value);
+        }
+        /// <summary> Список деталей </summary>
+        public DeepObservableCollection<Part> Parts
+        {
+            get => _Parts;
+            set => Set(ref _Parts, value);
+        }
+
+        
+        
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private void CreateBaseConfig()
@@ -146,7 +138,7 @@ namespace eLog.Infrastructure
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
             Machine = new Machine(0);
-            Operators = new ObservableCollection<Operator>()
+            Operators = new DeepObservableCollection<Operator>()
             {
                 new()
                 {
@@ -156,7 +148,7 @@ namespace eLog.Infrastructure
                 },
             };
             CurrentShift = Text.DayShift;
-            Parts = new ObservableCollection<Part>();
+            Parts = new DeepObservableCollection<Part>();
             XlPath = string.Empty;
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
@@ -183,11 +175,27 @@ namespace eLog.Infrastructure
             
             try
             {
+                var settings = new JsonSerializerSettings()
+                {
+                    PreserveReferencesHandling = PreserveReferencesHandling.Objects, 
+                    ObjectCreationHandling = ObjectCreationHandling.Replace
+                };
                 var json = File.ReadAllText(ConfigFilePath);
-                JsonConvert.PopulateObject(json, this);
+                JsonConvert.PopulateObject(json, Instance, settings);
+                //Parts.CollectionChanged += (_, _) => Save();
+                //foreach (var part in Parts)
+                //{
+                //    part.PropertyChanged += SaveEvent;
+                //    foreach (var downTime in part.DownTimes)
+                //    {
+                //        downTime.PropertyChanged += (_, _) => Save();
+                //    }
+                //}
             }
-            catch
+            catch (Exception exception)
             {
+                Util.WriteLog(exception, "Ошибка при чтении конфигурации.");
+                if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, Path.Combine(BasePath, DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss"), "_r"), true);
                 CreateBaseConfig();
                 ReadConfig();
             }
@@ -202,7 +210,8 @@ namespace eLog.Infrastructure
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             var settings = new JsonSerializerSettings()
             {
-                PreserveReferencesHandling = PreserveReferencesHandling.Objects
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                ObjectCreationHandling = ObjectCreationHandling.Replace
             };
             try
             {
@@ -226,7 +235,7 @@ namespace eLog.Infrastructure
                 var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
                 Debug.WriteLine(msg);
                 Util.WriteLog(ex, msg);
-                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, Path.Combine(ConfigBackupPath, DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss")), true);
+                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, Path.Combine(BasePath, DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss"), "_w"), true);
                 if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, ConfigFilePath, true);
                 if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
             }
@@ -252,7 +261,6 @@ namespace eLog.Infrastructure
                 {
                     action.DynamicInvoke(this, args);
                 }
-                
             }
         }
 

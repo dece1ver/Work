@@ -60,7 +60,7 @@ namespace eLog.Services
             };
             
             if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators)) return false;
-            AppSettings.Instance.Operators = new ObservableCollection<Operator>(dlg.Operators.ToList()
+            AppSettings.Instance.Operators = new DeepObservableCollection<Operator>(dlg.Operators.ToList()
                 .Where(o => !string.IsNullOrWhiteSpace(o.DisplayName)));
             AppSettings.Instance.CurrentOperator = null;
             foreach (var @operator in AppSettings.Instance.Operators)

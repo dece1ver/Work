@@ -38,7 +38,7 @@ namespace eLog.Models
         private DateTime _StartSetupTime;
         private DateTime _StartMachiningTime;
         private DateTime _EndMachiningTime;
-        private ObservableCollection<DownTime> _DownTimes;
+        private DeepObservableCollection<DownTime> _DownTimes;
         private int _Id;
         private bool _IsSynced;
         private string _OperatorComments;
@@ -137,7 +137,7 @@ namespace eLog.Models
         }
 
         /// <summary> Список простоев </summary>
-        public ObservableCollection<DownTime> DownTimes
+        public DeepObservableCollection<DownTime> DownTimes
         {
             get => _DownTimes;
             set
@@ -235,7 +235,7 @@ namespace eLog.Models
                 var endSetupTime = SetupIsFinished ? StartMachiningTime : StartSetupTime
                     .AddMinutes(SetupTimePlan)
                     .AddMinutes(downTimesMinutes)
-                    .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), false));
+                    .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), true));
                 if (StartSetupTime == StartMachiningTime) return "Без наладки";
                 var result = endSetupTime > StartSetupTime ? endSetupTime.ToString(Text.DateTimeFormat) : "-";
                 if (result == "-") return result;
@@ -281,7 +281,7 @@ namespace eLog.Models
                     ? StartMachiningTime 
                     : StartSetupTime
                         .AddMinutes(SetupTimePlan)
-                        .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), false));
+                        .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), true));
 
                 var endMachiningTime = EndMachiningTime > StartMachiningTime
                     ? EndMachiningTime
@@ -478,7 +478,7 @@ namespace eLog.Models
             SingleProductionTimePlan = singleProductionTimePlan;
             _Operator = AppSettings.Instance.CurrentOperator ?? throw new NullReferenceException("Была запущена деталь без оператора");
             Id = -1;
-            _DownTimes = new ObservableCollection<DownTime>();
+            _DownTimes = new DeepObservableCollection<DownTime>();
             _OperatorComments = string.Empty;
             _Shift = string.Empty;
             DownTimes.CollectionChanged += DownTimes_CollectionChanged!;
@@ -490,7 +490,7 @@ namespace eLog.Models
             _Number = string.Empty;
             _Order = string.Empty;
             StartSetupTime = DateTime.Now.Rounded();
-            _DownTimes = new ObservableCollection<DownTime>();
+            _DownTimes = new DeepObservableCollection<DownTime>();
             Id = -1;
             _OperatorComments = string.Empty;
             _Operator = AppSettings.Instance.CurrentOperator!;
@@ -514,7 +514,7 @@ namespace eLog.Models
             _StartMachiningTime = part.StartMachiningTime;
             _EndMachiningTime = part.EndMachiningTime;
             _MachineTime = part.MachineTime;
-            _DownTimes = new ObservableCollection<DownTime>();
+            _DownTimes = new DeepObservableCollection<DownTime>();
             _SetupTimePlan = part.SetupTimePlan;
             _SingleProductionTimePlan = part.SingleProductionTimePlan;
             foreach (var downTime in part.DownTimes)

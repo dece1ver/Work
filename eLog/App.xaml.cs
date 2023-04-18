@@ -17,8 +17,7 @@ namespace eLog
     {
         public App()
         {
-            var appSettings = AppSettings.Instance;
-            appSettings.ReadConfig();
+            AppSettings.Instance.ReadConfig();
             try
             {
                 // try to open it - if another instance is running, it will exist , if not it will throw

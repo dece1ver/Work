@@ -2,13 +2,17 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using eLog.ViewModels.Base;
+using System.Runtime.CompilerServices;
+using System.Windows.Threading;
 
 namespace eLog.Models
 {
-    public class Operator
+    public class Operator : INotifyPropertyChanged
     {
         [JsonConstructor]
         public Operator() { }
@@ -87,5 +91,36 @@ namespace eLog.Models
         }
 
         public override int GetHashCode() => HashCode.Combine(FirstName, LastName, Patronymic);
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
+        {
+            var handlers = PropertyChanged;
+            if (handlers is null) return;
+
+            var invokationList = handlers.GetInvocationList();
+            var args = new PropertyChangedEventArgs(PropertyName);
+
+            foreach (var action in invokationList)
+            {
+                if (action.Target is DispatcherObject dispatcherObject)
+                {
+                    dispatcherObject.Dispatcher.Invoke(action, this, args);
+                }
+                else
+                {
+                    action.DynamicInvoke(this, args);
+                }
+            }
+        }
+
+        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(PropertyName);
+            return true;
+        }
     }
 }
