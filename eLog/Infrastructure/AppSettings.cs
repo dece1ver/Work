@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using eLog.Annotations;
@@ -206,12 +207,26 @@ namespace eLog.Infrastructure
             try
             {
                 File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
+                Debug.WriteLine("Записаны настройки");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                var msg = "Ошибка при сохранении файла конфигурации (Доступ запрещен).";
+                Debug.WriteLine(msg);
+                Util.WriteLog(ex, msg);
+            }
+            catch (IOException ex)
+            {
+                var msg = "Ошибка при сохранении файла конфигурации (Ошибка ввода/вывода).";
+                Debug.WriteLine(msg);
+                Util.WriteLog(ex, msg);
             }
             catch (Exception ex)
             {
-                var msg = "Ошибка при сохранении файла конфигурации.";
+                var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
                 Debug.WriteLine(msg);
                 Util.WriteLog(ex, msg);
+                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, Path.Combine(ConfigBackupPath, DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss")), true);
                 if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, ConfigFilePath, true);
                 if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
             }

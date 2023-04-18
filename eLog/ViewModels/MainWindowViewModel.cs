@@ -436,8 +436,8 @@ namespace eLog.ViewModels
                             break;
                         }
                     }
-
                     Parts[index] = part;
+                    OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                 }
                 OnPropertyChanged(nameof(WorkIsNotInProgress));

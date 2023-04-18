@@ -33,6 +33,7 @@ namespace eLog.Views.Windows
 
         public void OnWindowClosing(object sender, CancelEventArgs e)
         {
+            AppSettings.Save();
             switch (AppSettings.Instance.IsShiftStarted)
             {
                 case false:
