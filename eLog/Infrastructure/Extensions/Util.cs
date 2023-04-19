@@ -371,11 +371,13 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="downTimes"></param>
         /// <returns></returns>
-        public static string Report(this IEnumerable<DownTime> downTimes) =>
-            downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n");
+        public static string Report(this IEnumerable<DownTime> downTimes) => downTimes.Any()
+            ? downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n")
+            : string.Empty;
 
-        public static string Report(this IEnumerable<CombinedDownTime> downTimes) =>
-            downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n");
+        public static string Report(this IEnumerable<CombinedDownTime> downTimes) => downTimes.Any() 
+            ? downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n") 
+            : string.Empty;
 
         public static double TotalMinutes(this IEnumerable<DownTime> downTimes) =>
             downTimes.Aggregate(0.0, (sum, downTime) => sum + downTime.Time.TotalMinutes);
