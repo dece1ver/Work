@@ -195,7 +195,7 @@ namespace eLog.Infrastructure
             catch (Exception exception)
             {
                 Util.WriteLog(exception, "Ошибка при чтении конфигурации.");
-                if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, Path.Combine(BasePath, DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss"), "_r"), true);
+                if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_r"), true);
                 CreateBaseConfig();
                 ReadConfig();
             }
@@ -235,7 +235,7 @@ namespace eLog.Infrastructure
                 var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
                 Debug.WriteLine(msg);
                 Util.WriteLog(ex, msg);
-                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, Path.Combine(BasePath, DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss"), "_w"), true);
+                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_w"), true);
                 if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, ConfigFilePath, true);
                 if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
             }
