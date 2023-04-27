@@ -396,7 +396,7 @@
                             </Button.Content>
                         </Button>
                     </DockPanel>
-                    <Button Grid.Row="1" Grid.Column="5" Margin="1 0 0 1"
+                    <Button Grid.Row="1" Grid.Column="5" Margin="1 1 0 1"
                     x:Name="EditDownTimesButton" DockPanel.Dock="Top" Style="{StaticResource KeyboardButton}" Height="38" Click="EditDownTimesButton_Click">
                         <Button.Content>
                             <StackPanel>

@@ -173,7 +173,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
-                    xlRow.Cell(16).Value = part.SetupTimeFact.Ticks > 0 && !partial ? part.SetupTimePlan : 0;
+                    xlRow.Cell(16).Value = part.SetupTimePlan;
                     xlRow.Cell(17).FormulaR1C1 = prevRow.Cell(17).FormulaR1C1;
                     xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
@@ -251,7 +251,7 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
                     xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
-                    xlRow.Cell(16).Value = part.SetupTimeFact.Ticks > 0 && !partial ? part.SetupTimePlan : 0;
+                    xlRow.Cell(16).Value = part.SetupTimePlan;
                     xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
                     xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
                     xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
