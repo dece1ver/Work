@@ -216,7 +216,9 @@ namespace eLog.Infrastructure
             try
             {
                 File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
-                Debug.WriteLine("Записаны настройки");
+                Debug.WriteLine("Настройки успешно записаны");
+                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                Debug.WriteLine("Настройки забэкаплены");
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -236,7 +238,6 @@ namespace eLog.Infrastructure
                 Debug.WriteLine(msg);
                 Util.WriteLog(ex, msg);
                 if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_w"), true);
-                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, ConfigFilePath, true);
                 if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
             }
         }
