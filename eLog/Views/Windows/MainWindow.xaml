@@ -73,7 +73,7 @@
             </DockPanel>
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>
-                    <TextBlock Text="{Binding Status}" FontSize="16"/>
+                    <TextBlock Text="{Binding Status}" FontSize="16" Margin="0 -1"/>
                 </StatusBarItem>
                 <StatusBarItem HorizontalAlignment="Right" VerticalContentAlignment="Stretch">
                     <ProgressBar Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}" IsIndeterminate="True"
