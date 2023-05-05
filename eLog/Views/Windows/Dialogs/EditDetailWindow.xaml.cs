@@ -221,13 +221,19 @@ namespace eLog.Views.Windows.Dialogs
             set => Set(ref _DownTimesHasErrors, value);
         }
 
+        public Visibility ProgressBarVisibility
+        {
+            get => _ProgressBarVisibility;
+            set => Set(ref _ProgressBarVisibility, value);
+        }
+
         public bool CanBeClosed
         {
             get
             {
                 DownTimesHasErrors = false;
                 if (OrderValidation is OrderValidationTypes.Error || string.IsNullOrWhiteSpace(PartName)) return false;
-                if (Part.IsFinished is Part.State.Finished && Part.DownTimesIsClosed) return true;
+                
                 if (Part is { DownTimesIsClosed: false, FinishedCount: > 0 } && Part.ProductionTimeFact > TimeSpan.Zero)
                 {
                     Status = "Есть незавершенные простои";
@@ -242,6 +248,7 @@ namespace eLog.Views.Windows.Dialogs
                     DownTimesHasErrors = true;
                     return false;
                 }
+                if (Part.IsFinished is Part.State.Finished && Part.DownTimesIsClosed) return true;
                 var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                      (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
 
@@ -251,22 +258,22 @@ namespace eLog.Views.Windows.Dialogs
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, StartSetupTime.Ticks: > 0 } && 
                                    string.IsNullOrWhiteSpace(StartMachiningTime) && 
                                    string.IsNullOrWhiteSpace(EndMachiningTime):
-                        Status = "При подтверждении будет запущена наладка.";
+                        Status = _ReadySetupStatus;
                         return true;
                     // старт изготовления
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && string.IsNullOrWhiteSpace(EndMachiningTime):
-                        Status = "При подтверждении будет запущено изготовление.";
+                        Status = _ReadyMachiningStatus;
                         return true;
                     // частичная наладка
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && FinishedCount == "0" && EndMachiningTime == StartMachiningTime:
-                        Status = "При подтверждении деталь будет завершена с частичной наладкой.";
+                        Status = _ReadyPartialSetupStatus;
                         return true;
                     // полная отметка
                     case true when Part is { FinishedCount: > 0, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
-                        Status = "При подтверждении будет отмечено полное изготовление.";
+                        Status = _ReadyCompleteStatus;
                         return true;
                     default:
-                        Status = string.Empty;
+                        if (Status is _ReadyPartialSetupStatus or _ReadyCompleteStatus or _ReadyMachiningStatus or _ReadySetupStatus) Status = string.Empty;
                         return false;
                 }
             }
@@ -454,11 +461,16 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
+        private const string _ReadySetupStatus = "При подтверждении будет запущена наладка.";
+        private const string _ReadyPartialSetupStatus = "При подтверждении деталь будет завершена с частичной наладкой.";
+        private const string _ReadyMachiningStatus = "При подтверждении будет запущено изготовление.";
+        private const string _ReadyCompleteStatus = "При подтверждении будет отмечено полное изготовление.";
         private string _SingleProductionTimePlan;
         private Visibility _KeyboardVisibility;
         private bool _WithSetup;
         private Overlay _Overlay = new(false);
         private bool _DownTimesHasErrors;
+        private Visibility _ProgressBarVisibility = Visibility.Collapsed;
 
         public string SingleProductionTimePlan
         {
@@ -556,46 +568,57 @@ namespace eLog.Views.Windows.Dialogs
             updaterThread.Start();
         }
 
-        /// <summary> Реализация поиска номенклатуры по номеру М/Л (имитация) </summary>
-        private void FindOrderDetailsButton_Click(object sender, RoutedEventArgs e)
-        {
-            switch (OrderValidation)
-            {
-                case OrderValidationTypes.Valid:
-                    Status = "Поиск заказов...";
-                    if (Parts.Count == 0) Parts = Part.Order.GetPartsFromOrder();
-                    if (PartIndex > Parts.Count - 1) PartIndex = 0;
+        /// <summary> Поиска номенклатуры по номеру М/Л </summary>
+        private void FindOrderDetailsButton_Click(object sender, RoutedEventArgs e) => FindOrders();
 
-                    switch (Parts.Count)
-                    {
-                        case 0:
-                            Status = $"По номеру {Part.Order} заказы не найдены.";
-                            return;
-                        case 1:
-                            Status = $"По номеру {Part.Order} найден заказ.";
-                            PartName = Parts[0].Name;
-                            //Part.Number = Parts[0].Number;
-                            TotalCount = Parts[0].TotalCount.ToString(CultureInfo.InvariantCulture);
-                            break;
-                        case > 1:
-                            Status = $"По номеру {Part.Order} найдено несколько заказов: {Parts.Count}. Переключение на кнопку поиска.";
-                            PartName = Parts[PartIndex].Name;
-                            //Part.Number = Parts[PartIndex].Number;
-                            TotalCount = Parts[PartIndex].TotalCount.ToString(CultureInfo.InvariantCulture);
-                            PartIndex++;
-                            break;
-                    }
-                    OnPropertyChanged(nameof(PartName));
-                    OnPropertyChanged(nameof(TotalCount));
-                    break;
-                case OrderValidationTypes.Empty:
-                    Part.Order = Text.WithoutOrderDescription;
-                    Status = "Изготовление без м/л.";
-                    break;
-                case OrderValidationTypes.Error:
-                    Status = "Номер заказа введен некорректно.";
-                    break;
-            }
+        private async void FindOrders()
+        {
+            ProgressBarVisibility = Visibility.Visible;
+            this.IsEnabled = false;
+            await Task.Run(() =>
+            {
+                switch (OrderValidation)
+                {
+                    case OrderValidationTypes.Valid:
+                        Status = "Поиск заказов...";
+                        if (Parts.Count == 0) Parts = Part.Order.GetPartsFromOrder();
+                        if (PartIndex > Parts.Count - 1) PartIndex = 0;
+
+                        switch (Parts.Count)
+                        {
+                            case 0:
+                                Status = $"По номеру {Part.Order} заказы не найдены.";
+                                return;
+                            case 1:
+                                Status = $"По номеру {Part.Order} найден заказ.";
+                                PartName = Parts[0].Name;
+                                //Part.Number = Parts[0].Number;
+                                TotalCount = Parts[0].TotalCount.ToString(CultureInfo.InvariantCulture);
+                                break;
+                            case > 1:
+                                Status =
+                                    $"По номеру {Part.Order} найдено несколько заказов: {Parts.Count}. Переключение на кнопку поиска.";
+                                PartName = Parts[PartIndex].Name;
+                                //Part.Number = Parts[PartIndex].Number;
+                                TotalCount = Parts[PartIndex].TotalCount.ToString(CultureInfo.InvariantCulture);
+                                PartIndex++;
+                                break;
+                        }
+
+                        OnPropertyChanged(nameof(PartName));
+                        OnPropertyChanged(nameof(TotalCount));
+                        break;
+                    case OrderValidationTypes.Empty:
+                        Part.Order = Text.WithoutOrderDescription;
+                        Status = "Изготовление без м/л.";
+                        break;
+                    case OrderValidationTypes.Error:
+                        Status = "Номер заказа введен некорректно.";
+                        break;
+                }
+            });
+            this.IsEnabled = true;
+            ProgressBarVisibility = Visibility.Collapsed;
         }
 
         /// <summary> Убирает наладку </summary>

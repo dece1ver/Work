@@ -230,7 +230,7 @@ namespace eLog.Models
                 foreach (var downTime in downTimes)
                 {
                     var partialBreaks = Util.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
-                    downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                    if (downTime.Time.TotalMinutes > 0) downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
                 }
                 var endSetupTime = SetupIsFinished ? StartMachiningTime : StartSetupTime
                     .AddMinutes(SetupTimePlan)

@@ -15,6 +15,8 @@ using eLog.Models;
 using eLog.Services;
 using eLog.Infrastructure.Extensions;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Threading;
 using eLog.Infrastructure.Interfaces;
 using eLog.Views.Windows.Settings;
 using Microsoft.Win32;
@@ -113,7 +115,7 @@ namespace eLog.ViewModels
             set => Set(ref _Status, value);
         }
 
-        private double _Progress;
+        private double _Progress = 1;
         /// <summary> Значение прогрессбара </summary>
         public double Progress
         {
@@ -125,7 +127,7 @@ namespace eLog.ViewModels
             }
         }
 
-        private double _ProgressMaxValue;
+        private double _ProgressMaxValue = 1;
         /// <summary> Максимальное значение прогрессбара </summary>
         public double ProgressMaxValue
         {
@@ -137,7 +139,12 @@ namespace eLog.ViewModels
             }
         }
 
-        public Visibility ProgressBarVisibility => Progress is 0 || Math.Abs(Progress - ProgressMaxValue) < 0.001 ? Visibility.Collapsed : Visibility.Visible;
+        public Visibility ProgressBarVisibility
+        {
+            get => _ProgressBarVisibility;
+            set => Set(ref _ProgressBarVisibility, value);
+        }
+
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
 
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is {};
@@ -146,6 +153,8 @@ namespace eLog.ViewModels
         public bool CanEndShift => ShiftStarted && WorkIsNotInProgress;
 
         private bool _ShiftStarted = AppSettings.Instance.IsShiftStarted;
+        private Visibility _ProgressBarVisibility = Visibility.Collapsed;
+
         public bool ShiftStarted
         {
             get => _ShiftStarted;
@@ -241,7 +250,7 @@ namespace eLog.ViewModels
 
         #region StartDetail
         public ICommand StartDetailCommand { get; }
-        private void OnStartDetailCommandExecuted(object p)
+        private async void OnStartDetailCommandExecuted(object p)
         {
             using (Overlay = new())
             {
@@ -252,17 +261,26 @@ namespace eLog.ViewModels
                     Setup = 1,
                 };
                 if (!WindowsUserDialogService.EditDetail(ref part, true)) return;
-                switch (part)
+                ProgressBarVisibility = Visibility.Visible;
+                Status = "Запись в процессе";
+                await Task.Run(() =>
                 {
-                    case { IsFinished: not Part.State.InProgress }:
-                        part.Id = part.WriteToXl();
-                        if (part.Id > 0)
-                        {
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                        }
-                        break;
-                }
+                    switch (part)
+                    {
+                        case { IsFinished: not Part.State.InProgress }:
+                            Progress = 0;
+                            part.Id = part.WriteToXl();
+                            if (part.Id > 0)
+                            {
+                                part.IsSynced = true;
+                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                            }
+
+                            break;
+                    }
+                });
+                ProgressBarVisibility = Visibility.Collapsed;
+                Status = string.Empty;
                 Parts.Insert(0, part);
                 RemoveExcessParts();
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
@@ -396,7 +414,7 @@ namespace eLog.ViewModels
 
         #region EditDetail
         public ICommand EditDetailCommand { get; }
-        private void OnEditDetailCommandExecuted(object p)
+        private async void OnEditDetailCommandExecuted(object p)
         {
             using (Overlay = new())
             {
@@ -407,41 +425,48 @@ namespace eLog.ViewModels
                 {
                     part.IsSynced = false;
                     OnPropertyChanged(nameof(part.Title));
-                    switch (part)
+                    ProgressBarVisibility = Visibility.Visible;
+                    Status = "Запись в процессе";
+                    await Task.Run(() =>
                     {
-                        case { Id: -1, IsFinished: not Part.State.InProgress }:
-                            part.Id = part.WriteToXl();
-                            if (part.Id > 0)
-                            {
-                                part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                            }
-                            break;
-                        case { Id: > 0, IsFinished: not Part.State.InProgress }:
+                        switch (part)
                         {
-                            switch (part.RewriteToXl())
-                            {
-                                case Util.WriteResult.Ok:
+                            case { Id: -1, IsFinished: not Part.State.InProgress }:
+                                part.Id = part.WriteToXl();
+                                if (part.Id > 0)
+                                {
                                     part.IsSynced = true;
-                                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                                    break;
-                                case Util.WriteResult.IOError:
-                                    Status = $"Таблица занята, запись будет произведена позже.";
-                                    break;
-                                case Util.WriteResult.NotFinded:
-                                    part.Id = part.WriteToXl();
-                                    if (part.Id > 0)
-                                    {
+                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                }
+                                break;
+                            case { Id: > 0, IsFinished: not Part.State.InProgress }:
+                            {
+                                switch (part.RewriteToXl())
+                                {
+                                    case Util.WriteResult.Ok:
                                         part.IsSynced = true;
-                                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                                    }
-                                    break;
-                                case Util.WriteResult.Error:
-                                    break;
+                                        Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                                        break;
+                                    case Util.WriteResult.IOError:
+                                        Status = $"Таблица занята, запись будет произведена позже.";
+                                        break;
+                                    case Util.WriteResult.NotFinded:
+                                        part.Id = part.WriteToXl();
+                                        if (part.Id > 0)
+                                        {
+                                            part.IsSynced = true;
+                                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                        }
+                                        break;
+                                    case Util.WriteResult.Error:
+                                        break;
+                                }
+                                break;
                             }
-                            break;
                         }
-                    }
+                    });
+                    ProgressBarVisibility = Visibility.Collapsed;
+                    Status = string.Empty;
                     Parts[index] = part;
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
@@ -458,67 +483,74 @@ namespace eLog.ViewModels
 
         #region EndDetail
         public ICommand EndDetailCommand { get; }
-        private void OnEndDetailCommandExecuted(object p)
+        private async void OnEndDetailCommandExecuted(object p)
         {
             using (Overlay = new())
             {
                 var part = (Part)p;
                 if (WindowsUserDialogService.FinishDetail(ref part))
                 {
-                    switch (part)
+                    ProgressBarVisibility = Visibility.Visible;
+                    Status = "Запись в процессе";
+                    await Task.Run(() =>
                     {
-                        case { Id: -1, IsFinished: not Part.State.InProgress }:
-                            part.Id = part.WriteToXl();
-                            if (part.Id > 0)
-                            {
-                                part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                            }
-                            Parts[Parts.IndexOf((Part)p)] = part;
-                            break;
-                        case { Id: > 0, IsFinished: not Part.State.InProgress }:
+                        switch (part)
                         {
-                            switch (part.RewriteToXl())
-                            {
-                                case Util.WriteResult.Ok:
+                            case { Id: -1, IsFinished: not Part.State.InProgress }:
+                                part.Id = part.WriteToXl();
+                                if (part.Id > 0)
+                                {
                                     part.IsSynced = true;
-                                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                                    Parts[Parts.IndexOf((Part)p)] = part;
+                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                }
+                                Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                break;
+                            case { Id: > 0, IsFinished: not Part.State.InProgress }:
+                                {
+                                    switch (part.RewriteToXl())
+                                    {
+                                        case Util.WriteResult.Ok:
+                                            part.IsSynced = true;
+                                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                                            Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                            break;
+                                        case Util.WriteResult.IOError:
+                                            Status = $"Таблица занята, запись будет произведена позже.";
+                                            Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                            break;
+                                        case Util.WriteResult.NotFinded:
+                                            part.Id = part.WriteToXl();
+                                            if (part.Id > 0)
+                                            {
+                                                part.IsSynced = true;
+                                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                            }
+                                            Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                            break;
+                                        case Util.WriteResult.Error:
+                                            break;
+                                    }
                                     break;
-                                case Util.WriteResult.IOError:
-                                    Status = $"Таблица занята, запись будет произведена позже.";
-                                    Parts[Parts.IndexOf((Part)p)] = part;
-                                    break;
-                                case Util.WriteResult.NotFinded:
+                                }
+                            case { FinishedCount: 0 }:
+                                {
+                                    var now = DateTime.Now;
+                                    part.StartMachiningTime = now;
+                                    part.EndMachiningTime = now;
+                                    part.FinishedCount = 0;
                                     part.Id = part.WriteToXl();
                                     if (part.Id > 0)
                                     {
                                         part.IsSynced = true;
                                         Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                                     }
-                                    Parts[Parts.IndexOf((Part)p)] = part;
+                                    Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
                                     break;
-                                case Util.WriteResult.Error:
-                                    break;
-                            }
-                            break;
+                                }
                         }
-                        case { FinishedCount: 0 }:
-                        {
-                            var now = DateTime.Now;
-                            part.StartMachiningTime = now;
-                            part.EndMachiningTime = now;
-                            part.FinishedCount = 0;
-                            part.Id = part.WriteToXl();
-                            if (part.Id > 0)
-                            {
-                                part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                            }
-                            Parts[Parts.IndexOf((Part)p)] = part;
-                            break;
-                        }
-                    }
+                    });
+                    ProgressBarVisibility = Visibility.Collapsed;
+                    Status = string.Empty;
                     AppSettings.Instance.Parts = Parts;
                     RemoveExcessParts();
                 };
@@ -544,6 +576,7 @@ namespace eLog.ViewModels
                 {
                     for (var i = Parts.Count - 1; i >= 0; i--)
                     {
+                        if (ProgressBarVisibility == Visibility.Visible) break;
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
                         Thread.Sleep(1000);
                         var index = i;
@@ -566,8 +599,9 @@ namespace eLog.ViewModels
                                 default:
                                     throw new ArgumentOutOfRangeException();
                             }
+
                             if (part.RewriteToXl() is not Util.WriteResult.Ok) continue;
-                           
+
                         }
                         else
                         {
@@ -576,6 +610,7 @@ namespace eLog.ViewModels
                             part.IsSynced = true;
                             Status = $"Информация об изготовлении id{part.Id} зафиксирована. (фон)";
                         }
+
                         OnPropertyChanged(nameof(part.Title));
                         Application.Current.Dispatcher.Invoke(delegate
                         {
@@ -586,11 +621,15 @@ namespace eLog.ViewModels
 
                     Application.Current.Dispatcher.Invoke(delegate
                     {
-                        
+
                         OnPropertyChanged(nameof(Parts));
                         RemoveExcessParts();
-                       
+
                     });
+                }
+                catch (InvalidOperationException)
+                {
+
                 }
                 catch (Exception e)
                 {

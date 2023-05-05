@@ -49,6 +49,9 @@ namespace eLog.Infrastructure
         /// <summary> Путь к файлу конфигурации </summary>
         [JsonIgnore] public static readonly string ConfigBackupPath = Path.Combine(BasePath, "config.backup.json");
 
+        /// <summary> Путь к файлу конфигурации </summary>
+        [JsonIgnore] public static readonly string ConfigTempPath = Path.Combine(BasePath, "config.temp.json");
+
         /// <summary> Путь к локальному списку заказов </summary>
         [JsonIgnore] public static readonly string LocalOrdersFile = Path.Combine(BasePath, "orders.xlsx");
 
@@ -171,7 +174,14 @@ namespace eLog.Infrastructure
         /// </summary>
         public void ReadConfig()
         {
-            if (!File.Exists(ConfigFilePath)) CreateBaseConfig();
+            if (!File.Exists(ConfigFilePath) && File.Exists(ConfigBackupPath))
+            {
+                File.Copy(ConfigBackupPath, ConfigFilePath, true);
+            } 
+            else if (!File.Exists(ConfigFilePath) && !File.Exists(ConfigBackupPath))
+            {
+                CreateBaseConfig();
+            }
             
             try
             {
@@ -196,7 +206,14 @@ namespace eLog.Infrastructure
             {
                 Util.WriteLog(exception, "Ошибка при чтении конфигурации.");
                 if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_r"), true);
-                CreateBaseConfig();
+                if (File.Exists(ConfigBackupPath))
+                {
+                    File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                }
+                else
+                {
+                    CreateBaseConfig();
+                }
                 ReadConfig();
             }
         }
@@ -206,7 +223,7 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void Save()
         {
-            if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, ConfigBackupPath, true);
+            if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, ConfigTempPath, true);
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             var settings = new JsonSerializerSettings()
             {
@@ -216,9 +233,10 @@ namespace eLog.Infrastructure
             try
             {
                 File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
-                Debug.WriteLine("Настройки успешно записаны");
-                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, ConfigFilePath, true);
-                Debug.WriteLine("Настройки забэкаплены");
+                if (File.Exists(ConfigTempPath)) File.Delete(ConfigTempPath);
+                Debug.WriteLine("Записаны настройки");
+                File.Copy(ConfigFilePath, ConfigBackupPath, true);
+                
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -237,7 +255,8 @@ namespace eLog.Infrastructure
                 var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
                 Debug.WriteLine(msg);
                 Util.WriteLog(ex, msg);
-                if (File.Exists(ConfigBackupPath)) File.Copy(ConfigBackupPath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_w"), true);
+                if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
+                if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_w"), true);
                 if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
             }
         }

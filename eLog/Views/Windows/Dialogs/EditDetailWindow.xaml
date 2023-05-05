@@ -56,10 +56,14 @@
     </Window.Resources>
     <Grid>
         <Border BorderThickness="1" BorderBrush="Gray">
-            <DockPanel>
-                <StatusBar DockPanel.Dock="Bottom">
+            <DockPanel >
+                <StatusBar DockPanel.Dock="Bottom" >
                     <StatusBarItem>
-                        <TextBlock Text="{Binding Status}" d:Text="Статус"/>
+                        <StackPanel Orientation="Horizontal" Width="1088">
+                            <TextBlock Text="{Binding Status}" d:Text="Статус" Width="810"/>
+                            <ProgressBar Width="259" Margin="10 0" IsIndeterminate="True"
+                                         Visibility="{Binding ProgressBarVisibility}" />
+                        </StackPanel>
                     </StatusBarItem>
                 </StatusBar>
                 <Grid Margin="10 9 10 10">

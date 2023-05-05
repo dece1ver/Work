@@ -229,7 +229,7 @@ namespace eLog.Infrastructure.Extensions
                     part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as DeepObservableCollection<DownTime> ?? new DeepObservableCollection<DownTime>();
                     part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup) { 
                         StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
-                        EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
+                        EndTimeText = part.StartMachiningTime.ToString(Text.DateTimeFormat) });
                 }
                 var wb = new XLWorkbook(AppSettings.Instance.XlPath);
                 File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
@@ -286,7 +286,7 @@ namespace eLog.Infrastructure.Extensions
                                                        $"{exception.GetType()}\n" +
                                                        $"{exception.StackTrace}\n" +
                                                        $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"Дополнительная информация:\n{additionMessage}")}\n\n");
-                TryCopyLog();
+                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
             }
             catch (Exception e)
             {
@@ -486,6 +486,7 @@ namespace eLog.Infrastructure.Extensions
 
         public static double GetPartialBreakBetween(DateTime startDateTime, DateTime endDateTime)
         {
+            if (endDateTime == DateTime.MinValue) return 0;
             var dayShiftFirstBreakDuration = 15;
             var dayShiftFirstBreak = WorkTime.DayShiftFirstBreak.AddMinutes(-dayShiftFirstBreakDuration);
 
