@@ -185,9 +185,9 @@ namespace eLog.Infrastructure.Extensions
                     {
                         xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                     }
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0) + GetBreaksBetween(part.StartSetupTime, part.StartMachiningTime).TotalMinutes;
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                     xlRow.Cell(34).Value = part.Shift;
-                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0) + GetBreaksBetween(part.StartMachiningTime, part.EndMachiningTime).TotalMinutes;
+                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                     for (var i = 1; i <= 35; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
@@ -257,9 +257,9 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Setup).TotalMinutes(), 0) + GetBreaksBetween(part.StartSetupTime, part.StartMachiningTime).TotalMinutes;
+                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                     xlRow.Cell(34).Value = part.Shift;
-                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining).TotalMinutes(), 0) + GetBreaksBetween(part.StartMachiningTime, part.EndMachiningTime).TotalMinutes;
+                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                     result = WriteResult.Ok;
                     break;
                 }
