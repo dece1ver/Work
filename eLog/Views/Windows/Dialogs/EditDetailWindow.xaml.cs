@@ -20,6 +20,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Office2010.PowerPoint;
 using DocumentFormat.OpenXml.Packaging;
 using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
@@ -248,7 +249,7 @@ namespace eLog.Views.Windows.Dialogs
                     DownTimesHasErrors = true;
                     return false;
                 }
-                if (Part.IsFinished is Part.State.Finished && Part.DownTimesIsClosed) return true;
+                if (Part is { IsFinished: Part.State.Finished, DownTimesIsClosed: true, FinishedCount: > 1 }) return true;
                 var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                      (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
 
@@ -268,12 +269,16 @@ namespace eLog.Views.Windows.Dialogs
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && FinishedCount == "0" && EndMachiningTime == StartMachiningTime:
                         Status = _ReadyPartialSetupStatus;
                         return true;
+                    // изготовление одной детали
+                    case true when Part is { FinishedCount: 1, TotalCount: > 0, SetupIsFinished: true } && EndMachiningTime == StartMachiningTime:
+                        Status = _ReadyCompleteOnePartStatus;
+                        return true;
                     // полная отметка
-                    case true when Part is { FinishedCount: > 0, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
+                    case true when Part is { FinishedCount: > 1, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
                         Status = _ReadyCompleteStatus;
                         return true;
                     default:
-                        if (Status is _ReadyPartialSetupStatus or _ReadyCompleteStatus or _ReadyMachiningStatus or _ReadySetupStatus) Status = string.Empty;
+                        if (Status is _ReadyPartialSetupStatus or _ReadyCompleteStatus or _ReadyMachiningStatus or _ReadySetupStatus or _ReadyCompleteOnePartStatus) Status = string.Empty;
                         return false;
                 }
             }
@@ -465,6 +470,7 @@ namespace eLog.Views.Windows.Dialogs
         private const string _ReadyPartialSetupStatus = "При подтверждении деталь будет завершена с частичной наладкой.";
         private const string _ReadyMachiningStatus = "При подтверждении будет запущено изготовление.";
         private const string _ReadyCompleteStatus = "При подтверждении будет отмечено полное изготовление.";
+        private const string _ReadyCompleteOnePartStatus = "При подтверждении будет отмечено полное изготовление одной детали.";
         private string _SingleProductionTimePlan;
         private Visibility _KeyboardVisibility;
         private bool _WithSetup;
@@ -504,8 +510,13 @@ namespace eLog.Views.Windows.Dialogs
                         if (string.IsNullOrWhiteSpace(StartMachiningTime) && Part.EndMachiningTime > Part.StartSetupTime) error = Text.ValidationErrors.StartMachiningTime;
                         break;
                     case nameof(EndMachiningTime):
-                        if ((!string.IsNullOrWhiteSpace(EndMachiningTime) && Part.EndMachiningTime <= Part.StartMachiningTime && FinishedCount != "0") || (string.IsNullOrWhiteSpace(EndMachiningTime) && Part.FinishedCount > 0)) 
-                            error = Text.ValidationErrors.EndMachiningTime;
+                        error = string.IsNullOrWhiteSpace(EndMachiningTime) switch
+                        {
+                            true when Part.FinishedCount > 0 => Text.ValidationErrors.EndMachiningTime,
+                            false when Part.EndMachiningTime <= Part.StartMachiningTime && Part.FinishedCount > 1 => Text.ValidationErrors.EndMachiningTime,
+                            false when Part.StartMachiningTime != Part.EndMachiningTime && Part.FinishedCount == 1 => Text.ValidationErrors.EndMachiningTimeOnePart,
+                            _ => error
+                        };
                         break;
                     case nameof(MachineTime):
                         if ((Part.MachineTime == TimeSpan.Zero && !string.IsNullOrWhiteSpace(MachineTime)) ||

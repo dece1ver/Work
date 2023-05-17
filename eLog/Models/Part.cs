@@ -295,13 +295,15 @@ namespace eLog.Models
                 var planInfo = SingleProductionTimePlan > 0
                     ? $" (Плановое: {TotalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                     : string.Empty;
+                var finishedCount = SetupTimeFact > TimeSpan.Zero ? FinishedCount - 1 : FinishedCount;
                 var productivity = SingleProductionTimePlan > 0 
-                    ? $" ({FinishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100:N0}%)" 
-                    : string.Empty;
+                    ? finishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100
+                    : 0;
+                var productivityInfo = productivity > 0 ? $" ({productivity:N0}%)" : string.Empty;
                 switch (IsFinished)
                 {
                     case State.Finished:
-                        result += productivity;
+                        result += productivityInfo;
                         break;
                     case State.InProgress:
                         result += planInfo;
