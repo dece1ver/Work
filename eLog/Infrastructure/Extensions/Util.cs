@@ -13,10 +13,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Controls;
+using ClosedXML;
 using eLog.Infrastructure.Extensions.Windows;
 using eLog.Views.Windows.Dialogs;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Wordprocessing;
+using static eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -185,9 +188,15 @@ namespace eLog.Infrastructure.Extensions
                     {
                         xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                     }
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+
+                    var setupDownTimes = part.DownTimes.Any(x => x is
+                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup }) 
+                        ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
+                        : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                    var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
+                    xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
                     xlRow.Cell(34).Value = part.Shift;
-                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
                     for (var i = 1; i <= 35; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
@@ -257,9 +266,16 @@ namespace eLog.Infrastructure.Extensions
                     xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
                     xlRow.Cell(22).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                    xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                    var setupDownTimes = part.DownTimes.Any(x => x is
+                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup })
+                        ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
+                        : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+
+                    var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
+                    xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
+                    //xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                     xlRow.Cell(34).Value = part.Shift;
-                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
                     result = WriteResult.Ok;
                     break;
                 }
