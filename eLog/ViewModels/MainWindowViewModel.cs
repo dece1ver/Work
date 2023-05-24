@@ -287,6 +287,7 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
+                AppSettings.Save();
             }
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
@@ -312,6 +313,7 @@ namespace eLog.ViewModels
                     Parts.Insert(index, part);
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
+                    AppSettings.Save();
                 }
             }
         }
@@ -352,6 +354,7 @@ namespace eLog.ViewModels
                     Parts.Insert(index, part);
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
+                    AppSettings.Save();
                 }
             }
         }
@@ -407,6 +410,8 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
                 AppSettings.Instance.Parts = Parts;
+                OnPropertyChanged(nameof(Parts));
+                AppSettings.Save();
             }
         }
         private static bool CanEndSetupCommandExecute(object p) => true;
@@ -470,11 +475,13 @@ namespace eLog.ViewModels
                     Parts[index] = part;
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
+                    AppSettings.Save();
                 }
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
+                OnPropertyChanged(nameof(Parts));
                 RemoveExcessParts();
             }
         }
@@ -497,6 +504,7 @@ namespace eLog.ViewModels
                         switch (part)
                         {
                             case { Id: -1, IsFinished: not Part.State.InProgress }:
+                                if (part.FinishedCount == 1) part.StartMachiningTime = part.EndMachiningTime;
                                 part.Id = part.WriteToXl();
                                 if (part.Id > 0)
                                 {
@@ -507,6 +515,7 @@ namespace eLog.ViewModels
                                 break;
                             case { Id: > 0, IsFinished: not Part.State.InProgress }:
                                 {
+                                    if (part.FinishedCount == 1) part.StartMachiningTime = part.EndMachiningTime;
                                     switch (part.RewriteToXl())
                                     {
                                         case Util.WriteResult.Ok:
@@ -553,12 +562,14 @@ namespace eLog.ViewModels
                     Status = string.Empty;
                     AppSettings.Instance.Parts = Parts;
                     RemoveExcessParts();
+                    AppSettings.Save();
                 };
             
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
+                OnPropertyChanged(nameof(Parts));
             }
         }
         private static bool CanEndDetailCommandExecute(object p) => true;

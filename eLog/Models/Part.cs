@@ -283,12 +283,12 @@ namespace eLog.Models
                         .AddMinutes(SetupTimePlan)
                         .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), true));
 
-                var endMachiningTime = EndMachiningTime > StartMachiningTime
+                var endMachiningTime = EndMachiningTime >= StartMachiningTime
                     ? EndMachiningTime
                     : startMachiningTime
                         .AddMinutes(TotalCount * SingleProductionTimePlan)
                         .Add(Util.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(TotalCount * SingleProductionTimePlan)));
-                var result = endMachiningTime > startMachiningTime && EndSetupInfo != "-" ? endMachiningTime.ToString(Text.DateTimeFormat) : "-";
+                var result = endMachiningTime >= startMachiningTime && EndSetupInfo != "-" ? endMachiningTime.ToString(Text.DateTimeFormat) : "-";
                 if (result == "-") return result;
                 var breaks = Util.GetBreaksBetween(startMachiningTime, endMachiningTime);
                 var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
@@ -392,7 +392,7 @@ namespace eLog.Models
         {
             get
             {
-                if (EndMachiningTime > StartMachiningTime && SetupIsFinished && FinishedCount > 0 &&
+                if (EndMachiningTime >= StartMachiningTime && SetupIsFinished && FinishedCount > 0 &&
                     MachineTime > TimeSpan.Zero) return State.Finished;
                 if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount == 0) return State.PartialSetup;
                 return State.InProgress;
