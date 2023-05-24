@@ -61,7 +61,7 @@ namespace eLog.Views.Windows.Settings
         {
             OpenFileDialog dlg = new()
             {
-                Filter = "Excel таблица (*.xlsx)|*.xlsx",
+                Filter = "Excel таблица (*.xlsx)|*.xlsx|Excel таблица с макросами(*.xlsm)|*.xlsm",
                 DefaultExt = "xlsx"
             };
             if (dlg.ShowDialog() != true) return;
