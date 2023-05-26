@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <None Remove="Resources\eLog.png" />
+    <None Remove="SplashScreen.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,14 +34,18 @@
   </ItemGroup>
     
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.100.3" />
+    <PackageReference Include="ClosedXML" Version="0.101.0" />
     <PackageReference Include="DotNetProjects.WpfToolkit.Input" Version="6.1.94" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
     
   <ItemGroup>
     <Resource Include="Resources\eLog.png" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <SplashScreen Include="SplashScreen.png" />
   </ItemGroup>
 
   <ItemGroup>

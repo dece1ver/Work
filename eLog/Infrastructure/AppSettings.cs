@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -21,6 +22,8 @@ using eLog.Models;
 using eLog.ViewModels.Base;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
+using JsonException = System.Text.Json.JsonException;
 
 namespace eLog.Infrastructure
 {
@@ -139,6 +142,7 @@ namespace eLog.Infrastructure
         private void CreateBaseConfig()
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
+            if (File.Exists(ConfigBackupPath)) File.Delete(ConfigBackupPath);
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
             Machine = new Machine(0);
             Operators = new DeepObservableCollection<Operator>()
@@ -182,15 +186,15 @@ namespace eLog.Infrastructure
             {
                 CreateBaseConfig();
             }
-            
+            var json = File.ReadAllText(ConfigFilePath);
             try
             {
                 var settings = new JsonSerializerSettings()
                 {
-                    PreserveReferencesHandling = PreserveReferencesHandling.Objects, 
+                    PreserveReferencesHandling = PreserveReferencesHandling.Objects,
                     ObjectCreationHandling = ObjectCreationHandling.Replace
                 };
-                var json = File.ReadAllText(ConfigFilePath);
+
                 JsonConvert.PopulateObject(json, Instance, settings);
                 //Parts.CollectionChanged += (_, _) => Save();
                 //foreach (var part in Parts)
@@ -204,11 +208,39 @@ namespace eLog.Infrastructure
             }
             catch (Exception exception)
             {
-                Util.WriteLog(exception, "Ошибка при чтении конфигурации.");
+                switch (exception)
+                {
+                    case Newtonsoft.Json.JsonException:
+                        Util.WriteLog("Некорректный файл конфигурации.");
+                        break;
+                    default:
+                        Util.WriteLog(exception, "Ошибка при чтении конфигурации.");
+                        break;
+                }
+
                 if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_r"), true);
                 if (File.Exists(ConfigBackupPath))
                 {
-                    File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                    try
+                    {
+                        JsonDocument.Parse(File.ReadAllText(ConfigBackupPath));
+                        File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                    }
+                    catch (JsonException)
+                    {
+                        var msg = "Резервный файл конфигурации некорректен, установка конфигурации по умолчанию.";
+                        Debug.WriteLine(msg);
+                        Util.WriteLog(msg);
+                        CreateBaseConfig();
+                    }
+                    catch (Exception ex)
+                    {
+                        var msg = "Неизвестная ошибка при чтении резервного файла конфигурации, установка конфигурации по умолчанию.";
+                        Debug.WriteLine(msg);
+                        Util.WriteLog(ex, msg);
+                        CreateBaseConfig();
+                    }
+                    
                 }
                 else
                 {
@@ -232,23 +264,41 @@ namespace eLog.Infrastructure
             };
             try
             {
-                File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(Instance, Formatting.Indented, settings));
+                var json = JsonConvert.SerializeObject(Instance, Formatting.Indented, settings);
+                File.WriteAllText(ConfigFilePath, json);
                 if (File.Exists(ConfigTempPath)) File.Delete(ConfigTempPath);
                 Debug.WriteLine("Записаны настройки");
-                File.Copy(ConfigFilePath, ConfigBackupPath, true);
+                try
+                {
+                    JsonDocument.Parse(json);
+                    File.Copy(ConfigFilePath, ConfigBackupPath, true);
+                }
+                catch (JsonException ex)
+                {
+                    var msg = "Записан некорректный файл конфигурации, восстановление";
+                    Debug.WriteLine(msg);
+                    Util.WriteLog(ex, msg);
+                    File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                }
+                catch (Exception ex)
+                {
+                    var msg = "Неизвестная ошибка при создании бэкапа конфигурации";
+                    Debug.WriteLine(msg);
+                    Util.WriteLog(ex, msg);
+                }
                 
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Доступ запрещен).";
                 Debug.WriteLine(msg);
-                Util.WriteLog(ex, msg);
+                Util.WriteLog(msg);
             }
-            catch (IOException ex)
+            catch (IOException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Ошибка ввода/вывода).";
                 Debug.WriteLine(msg);
-                Util.WriteLog(ex, msg);
+                Util.WriteLog(msg);
             }
             catch (Exception ex)
             {

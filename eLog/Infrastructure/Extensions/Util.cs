@@ -298,10 +298,23 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(Text.DateTimeFormat)}]: {exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n   Caller: {exception.TargetSite}")}\n" +
-                                                       $"{exception.GetType()}\n" +
-                                                       $"{exception.StackTrace}\n" +
-                                                       $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"Дополнительная информация:\n{additionMessage}")}\n\n");
+                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(Text.DateTimeFormat)}]: " +
+                                                        $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
+                                                        $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n   Caller: {exception.TargetSite}")}\n" +
+                                                        $"{exception.GetType()}\n" +
+                                                        $"{exception.StackTrace}\n\n");
+                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        public static void WriteLog(string message)
+        {
+            try
+            {
+                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeFormat)}]: {message}\n\n");
                 if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
             }
             catch (Exception e)

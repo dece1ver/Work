@@ -17,7 +17,7 @@ namespace eLog
     {
         public App()
         {
-            AppSettings.Instance.ReadConfig();
+            
             try
             {
                 // try to open it - if another instance is running, it will exist , if not it will throw
@@ -32,6 +32,7 @@ namespace eLog
             catch (WaitHandleCannotBeOpenedException)
             {
                 // listen to a new event (this app instance will be the new "master")
+                AppSettings.Instance.ReadConfig();
                 _EventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
             }
             SingleInstanceWatcher();
