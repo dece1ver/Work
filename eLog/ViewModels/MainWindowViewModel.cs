@@ -471,7 +471,6 @@ namespace eLog.ViewModels
                         }
                     });
                     ProgressBarVisibility = Visibility.Collapsed;
-                    Status = string.Empty;
                     Parts[index] = part;
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
@@ -504,7 +503,7 @@ namespace eLog.ViewModels
                         switch (part)
                         {
                             case { Id: -1, IsFinished: not Part.State.InProgress }:
-                                if (part.FinishedCount == 1) part.StartMachiningTime = part.EndMachiningTime;
+                                if (part is { FinishedCount: 1, SetupTimeFact.Ticks: > 0 }) part.StartMachiningTime = part.EndMachiningTime;
                                 part.Id = part.WriteToXl();
                                 if (part.Id > 0)
                                 {
@@ -514,48 +513,44 @@ namespace eLog.ViewModels
                                 Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
                                 break;
                             case { Id: > 0, IsFinished: not Part.State.InProgress }:
+                                if (part is { FinishedCount: 1, SetupTimeFact.Ticks: > 0 }) part.StartMachiningTime = part.EndMachiningTime;
+                                switch (part.RewriteToXl())
                                 {
-                                    if (part.FinishedCount == 1) part.StartMachiningTime = part.EndMachiningTime;
-                                    switch (part.RewriteToXl())
-                                    {
-                                        case Util.WriteResult.Ok:
-                                            part.IsSynced = true;
-                                            Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                                            Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
-                                            break;
-                                        case Util.WriteResult.IOError:
-                                            Status = $"Таблица занята, запись будет произведена позже.";
-                                            Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
-                                            break;
-                                        case Util.WriteResult.NotFinded:
-                                            part.Id = part.WriteToXl();
-                                            if (part.Id > 0)
-                                            {
-                                                part.IsSynced = true;
-                                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                                            }
-                                            Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
-                                            break;
-                                        case Util.WriteResult.Error:
-                                            break;
-                                    }
-                                    break;
-                                }
-                            case { FinishedCount: 0 }:
-                                {
-                                    var now = DateTime.Now;
-                                    part.StartMachiningTime = now;
-                                    part.EndMachiningTime = now;
-                                    part.FinishedCount = 0;
-                                    part.Id = part.WriteToXl();
-                                    if (part.Id > 0)
-                                    {
+                                    case Util.WriteResult.Ok:
                                         part.IsSynced = true;
-                                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                                    }
-                                    Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
-                                    break;
+                                        Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                                        Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                        break;
+                                    case Util.WriteResult.IOError:
+                                        Status = $"Таблица занята, запись будет произведена позже.";
+                                        Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                        break;
+                                    case Util.WriteResult.NotFinded:
+                                        part.Id = part.WriteToXl();
+                                        if (part.Id > 0)
+                                        {
+                                            part.IsSynced = true;
+                                            Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                        }
+                                        Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                        break;
+                                    case Util.WriteResult.Error:
+                                        break;
                                 }
+                                break;
+                            case { FinishedCount: 0 }:
+                                var now = DateTime.Now;
+                                part.StartMachiningTime = now;
+                                part.EndMachiningTime = now;
+                                part.FinishedCount = 0;
+                                part.Id = part.WriteToXl();
+                                if (part.Id > 0)
+                                {
+                                    part.IsSynced = true;
+                                    Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                                }
+                                Application.Current.Dispatcher.Invoke(delegate { Parts[Parts.IndexOf((Part)p)] = part; });
+                                break;
                         }
                     });
                     ProgressBarVisibility = Visibility.Collapsed;

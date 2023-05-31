@@ -116,8 +116,8 @@ namespace eLog.Services
             };
             if (dlg.ShowDialog() != true) return false;
             part = dlg.Part;
-            if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
-            if (part.EndMachiningTime != DateTime.MinValue && part.FullProductionTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
+            //if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
+            //if (part.EndMachiningTime != DateTime.MinValue && part.FullProductionTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
             return true;
         }
 

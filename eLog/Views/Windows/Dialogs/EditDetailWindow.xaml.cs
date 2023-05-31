@@ -160,8 +160,9 @@ namespace eLog.Views.Windows.Dialogs
                     StartMachiningTime = StartSetupTime;
                     Part.StartMachiningTime = Part.StartSetupTime;
                 }
-                
+                OnPropertyChanged(nameof(EndMachiningTime));
                 OnPropertyChanged(nameof(StartMachiningTime));
+                OnPropertyChanged(nameof(CanBeClosed));
             }
         }
 
@@ -270,11 +271,15 @@ namespace eLog.Views.Windows.Dialogs
                         Status = _ReadyPartialSetupStatus;
                         return true;
                     // изготовление одной детали
-                    case true when Part is { FinishedCount: 1, TotalCount: > 0, SetupIsFinished: true } && EndMachiningTime == StartMachiningTime:
+                    case true when Part is { FinishedCount: 1, TotalCount: > 0, SetupIsFinished: true, SetupTimeFact.Ticks: > 0 } && EndMachiningTime == StartMachiningTime:
                         Status = _ReadyCompleteOnePartStatus;
                         return true;
                     // полная отметка
-                    case true when Part is { FinishedCount: > 1, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0 }:
+                    case true when Part is { FinishedCount: > 1, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0, SetupTimeFact.Ticks: > 0 }:
+                        Status = _ReadyCompleteStatus;
+                        return true;
+                    // полная отметка
+                    case true when Part is { FinishedCount: > 0, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0, SetupTimeFact.Ticks: <= 0 }:
                         Status = _ReadyCompleteStatus;
                         return true;
                     default:
@@ -514,7 +519,7 @@ namespace eLog.Views.Windows.Dialogs
                         {
                             true when Part.FinishedCount > 0 => Text.ValidationErrors.EndMachiningTime,
                             false when Part.EndMachiningTime <= Part.StartMachiningTime && Part.FinishedCount > 1 => Text.ValidationErrors.EndMachiningTime,
-                            false when Part.StartMachiningTime != Part.EndMachiningTime && Part.FinishedCount == 1 => Text.ValidationErrors.EndMachiningTimeOnePart,
+                            false when Part.SetupTimeFact.Ticks > 0 && Part.StartMachiningTime != Part.EndMachiningTime && Part.FinishedCount == 1 => Text.ValidationErrors.EndMachiningTimeOnePart,
                             _ => error
                         };
                         break;
