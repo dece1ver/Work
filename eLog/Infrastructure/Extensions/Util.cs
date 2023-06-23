@@ -39,6 +39,17 @@ namespace eLog.Infrastructure.Extensions
             if (string.IsNullOrEmpty(source))
                 return string.Empty;
             var letters = source.ToCharArray();
+            for (int i = 0; i < letters.Length; i++)
+            {
+                if(i == 0)
+                {
+                    letters[i] = char.ToUpper(letters[i]);
+                }
+                else
+                {
+                    letters[i] = char.ToLower(letters[i]);
+                }
+            }
             letters[0] = char.ToUpper(letters[0]);
             return new string(letters);
         }
@@ -204,7 +215,7 @@ namespace eLog.Infrastructure.Extensions
 
                     break;
                 }
-                wb.Save();
+                wb.Save(true);
 
             }
             catch (IOException)
@@ -279,7 +290,9 @@ namespace eLog.Infrastructure.Extensions
                     result = WriteResult.Ok;
                     break;
                 }
-                wb.Save();
+               
+                wb.Save(true);
+                
             }
             catch (IOException)
             {

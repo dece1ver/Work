@@ -44,7 +44,7 @@ namespace eLog.Infrastructure
         [JsonIgnore] public const string BasePath = "C:\\ProgramData\\dece1ver\\eLog";
 
         /// <summary> Локальный путь для бэкапа таблицы. </summary>
-        [JsonIgnore] public static readonly string XlReservedPath = Path.Combine(BasePath, "backup.xlsx");
+        [JsonIgnore] public static readonly string XlReservedPath = Path.Combine(BasePath, "backup.xlsm");
 
         /// <summary> Путь к файлу конфигурации </summary>
         [JsonIgnore] public static readonly string ConfigFilePath = Path.Combine(BasePath, "config.json");
