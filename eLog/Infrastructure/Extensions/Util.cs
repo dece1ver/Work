@@ -144,78 +144,85 @@ namespace eLog.Infrastructure.Extensions
             if (!File.Exists(AppSettings.Instance.XlPath)) return id;
             try
             {
-                var wb = new XLWorkbook(AppSettings.Instance.XlPath);
-                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
-                var ws = wb.Worksheet(1);
-                ws.LastRowUsed().InsertRowsBelow(1);
-                IXLRow? prevRow = null;
-                var index = AppSettings.Instance.Parts.IndexOf(part);
-                var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
-                var partial = part.IsFinished == Part.State.PartialSetup ||
-                              prevPart is { IsFinished: Part.State.PartialSetup };
-                
-                if (partial) part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup) {
-                    StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
-                    EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat) });
-                var combinedDownTimes = part.DownTimes.Combine();
-                foreach (var xlRow in ws.Rows())
+                using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false }))
                 {
-                    if (xlRow is null) continue;
-                    var num = xlRow.Cell(1).Value.IsNumber ? (int)xlRow.Cell(1).Value.GetNumber() : 0;
-                    if (id <= num) id = num + 1;
-                    if (!xlRow.Cell(6).Value.IsBlank)
-                    {
-                        prevRow = xlRow;
-                        continue;
-                    }
-                    xlRow.Style = prevRow!.Style;
-                    xlRow.Cell(1).Value = id;
-                    xlRow.Cell(2).FormulaR1C1 = prevRow.Cell(2).FormulaR1C1;
-                    xlRow.Cell(3).FormulaR1C1 = prevRow.Cell(3).FormulaR1C1;
-                    xlRow.Cell(4).FormulaR1C1 = prevRow.Cell(4).FormulaR1C1;
-                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
-                    // если время завершения раньше 07:05, то отнимаем сутки для корректности отчетов
-                    xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(5)
-                        ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy") 
-                        : part.EndMachiningTime.ToString("dd.MM.yyyy");
-                    xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
-                    xlRow.Cell(8).Value = part.Operator.FullName.Trim();
-                    xlRow.Cell(9).Value = part.FullName;
-                    xlRow.Cell(10).Value = part.Order;
-                    xlRow.Cell(11).Value = part.FinishedCount;
-                    xlRow.Cell(12).Value = part.Setup;
-                    xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
-                    xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
-                    xlRow.Cell(16).Value = part.SetupTimePlan;
-                    xlRow.Cell(17).FormulaR1C1 = prevRow.Cell(17).FormulaR1C1;
-                    xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
-                    xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
-                    xlRow.Cell(22).Value = part.SingleProductionTimePlan;
-                    xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                    for (var i = 24; i <= 32; i++)
-                    {
-                        xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
-                    }
+                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                    var ws = wb.Worksheet(1);
+                    ws.LastRowUsed().InsertRowsBelow(1);
+                    IXLRow? prevRow = null;
+                    var index = AppSettings.Instance.Parts.IndexOf(part);
+                    var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
+                    var partial = part.IsFinished == Part.State.PartialSetup ||
+                                  prevPart is { IsFinished: Part.State.PartialSetup };
 
-                    var setupDownTimes = part.DownTimes.Any(x => x is
-                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup }) 
-                        ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
-                        : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
-                    var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
-                    xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
-                    xlRow.Cell(34).Value = part.Shift;
-                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
-                    for (var i = 1; i <= 35; i++)
+                    if (partial) part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup)
                     {
-                        xlRow.Cell(i).Style = prevRow.Cell(i).Style;
-                    }
+                        StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat),
+                        EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat)
+                    });
+                    var combinedDownTimes = part.DownTimes.Combine();
+                    foreach (var xlRow in ws.Rows())
+                    {
+                        if (xlRow is null) continue;
+                        var num = xlRow.Cell(1).Value.IsNumber ? (int)xlRow.Cell(1).Value.GetNumber() : 0;
+                        if (id <= num) id = num + 1;
+                        if (!xlRow.Cell(6).Value.IsBlank)
+                        {
+                            prevRow = xlRow;
+                            continue;
+                        }
+                        xlRow.Style = prevRow!.Style;
+                        xlRow.Cell(1).Value = id;
+                        xlRow.Cell(2).FormulaR1C1 = prevRow.Cell(2).FormulaR1C1;
+                        xlRow.Cell(3).FormulaR1C1 = prevRow.Cell(3).FormulaR1C1;
+                        xlRow.Cell(4).FormulaR1C1 = prevRow.Cell(4).FormulaR1C1;
+                        xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
+                        // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
+                        //xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
+                        //    ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
+                        //    : part.EndMachiningTime.ToString("dd.MM.yyyy");
+                        xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
+                            ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
+                            : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
+                        xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
+                        xlRow.Cell(8).Value = part.Operator.FullName.Trim();
+                        xlRow.Cell(9).Value = part.FullName;
+                        xlRow.Cell(10).Value = part.Order;
+                        xlRow.Cell(11).Value = part.FinishedCount;
+                        xlRow.Cell(12).Value = part.Setup;
+                        xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
+                        xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(16).Value = part.SetupTimePlan;
+                        xlRow.Cell(17).FormulaR1C1 = prevRow.Cell(17).FormulaR1C1;
+                        xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
+                        xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(22).Value = part.SingleProductionTimePlan;
+                        xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
+                        for (var i = 24; i <= 32; i++)
+                        {
+                            xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
+                        }
 
-                    break;
+                        var setupDownTimes = part.DownTimes.Any(x => x is
+                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup })
+                            ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
+                            : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                        var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
+                        xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
+                        xlRow.Cell(34).Value = part.Shift;
+                        xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
+                        for (var i = 1; i <= 35; i++)
+                        {
+                            xlRow.Cell(i).Style = prevRow.Cell(i).Style;
+                        }
+
+                        break;
+                    }
+                    wb.Save(true);
                 }
-                wb.Save(true);
 
             }
             catch (IOException)
@@ -251,48 +258,52 @@ namespace eLog.Infrastructure.Extensions
                         StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
                         EndTimeText = part.StartMachiningTime.ToString(Text.DateTimeFormat) });
                 }
-                var wb = new XLWorkbook(AppSettings.Instance.XlPath);
-                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
-                var combinedDownTimes = part.DownTimes.Combine();
-                foreach (var xlRow in wb.Worksheet(1).Rows())
+                using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false } ))
                 {
-                    if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
-                    xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
-                    // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
-                    xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
-                        ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
-                        : part.EndMachiningTime.ToString("dd.MM.yyyy");
-                    xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
-                    xlRow.Cell(8).Value = part.Operator.FullName.Trim();
-                    xlRow.Cell(9).Value = part.FullName;
-                    xlRow.Cell(10).Value = part.Order;
-                    xlRow.Cell(11).Value = part.FinishedCount;
-                    xlRow.Cell(12).Value = part.Setup;
-                    xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
-                    xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
-                    xlRow.Cell(16).Value = part.SetupTimePlan;
-                    xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
-                    xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
-                    xlRow.Cell(22).Value = part.SingleProductionTimePlan;
-                    xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                    var setupDownTimes = part.DownTimes.Any(x => x is
-                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup })
-                        ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
-                        : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                    var combinedDownTimes = part.DownTimes.Combine();
 
-                    var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
-                    xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
-                    //xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
-                    xlRow.Cell(34).Value = part.Shift;
-                    xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
-                    result = WriteResult.Ok;
-                    break;
+                    foreach (var xlRow in wb.Worksheet(1).Rows())
+                    {
+                        if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
+                        xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
+                        // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
+                        //xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
+                        //    ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
+                        //    : part.EndMachiningTime.ToString("dd.MM.yyyy");
+                        xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
+                            ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
+                            : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
+                        xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
+                        xlRow.Cell(8).Value = part.Operator.FullName.Trim();
+                        xlRow.Cell(9).Value = part.FullName;
+                        xlRow.Cell(10).Value = part.Order;
+                        xlRow.Cell(11).Value = part.FinishedCount;
+                        xlRow.Cell(12).Value = part.Setup;
+                        xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
+                        xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(16).Value = part.SetupTimePlan;
+                        xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(22).Value = part.SingleProductionTimePlan;
+                        xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
+                        var setupDownTimes = part.DownTimes.Any(x => x is
+                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup })
+                            ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
+                            : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+
+                        var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
+                        xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
+                        //xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                        xlRow.Cell(34).Value = part.Shift;
+                        xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
+                        result = WriteResult.Ok;
+                        break;
+                    }
+                    wb.Save(true);
                 }
-               
-                wb.Save(true);
-                
             }
             catch (IOException)
             {
