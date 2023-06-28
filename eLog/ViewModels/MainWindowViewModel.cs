@@ -642,7 +642,7 @@ namespace eLog.ViewModels
                     Status = e.Message;
                     Util.WriteLog(e, "Ошибка синхронизации.");
                 }
-                Thread.Sleep(10000);
+                Thread.Sleep(15000);
             }
         }
 

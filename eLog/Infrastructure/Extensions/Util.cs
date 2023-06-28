@@ -229,6 +229,10 @@ namespace eLog.Infrastructure.Extensions
             {
                 
             }
+            catch (KeyNotFoundException)
+            {
+                WriteLog($"Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+            }
             catch (ArgumentException)
             {
                 MessageBox.Show("Неверно указан путь к таблице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -308,6 +312,11 @@ namespace eLog.Infrastructure.Extensions
             catch (IOException)
             {
                 return WriteResult.IOError;
+            }
+            catch (KeyNotFoundException)
+            {
+                WriteLog($"Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                return WriteResult.Error;
             }
             catch (Exception e)
             {
