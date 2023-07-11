@@ -20,6 +20,7 @@ using System.Windows.Threading;
 using eLog.Infrastructure.Interfaces;
 using eLog.Views.Windows.Settings;
 using Microsoft.Win32;
+using eLog.Views.Windows.Dialogs;
 
 namespace eLog.ViewModels
 {
@@ -237,13 +238,11 @@ namespace eLog.ViewModels
         public ICommand ShowAboutCommand { get; }
         private void OnShowAboutCommandExecuted(object p)
         {
-            var exe = Environment.ProcessPath;
-            var date = exe is null ? string.Empty : $" от {File.GetLastWriteTime(exe).ToString(Text.DateTimeFormat)}";
-            MessageBox.Show(
-                $"Версия программы: {Assembly.GetExecutingAssembly().GetName().Version}{date}", 
-                "О программе", 
-                MessageBoxButton.OK, 
-                MessageBoxImage.Information);
+            using (Overlay = new())
+            {
+                var aboutWindow = new AboutWindow() { Owner = Application.Current.MainWindow };
+                aboutWindow.ShowDialog();
+            }
         }
         private static bool CanShowAboutCommandExecute(object p) => true;
         #endregion

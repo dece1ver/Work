@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <None Remove="Resources\eLog.png" />
+    <None Remove="Resources\qrcode.png" />
     <None Remove="SplashScreen.png" />
   </ItemGroup>
 
@@ -42,6 +43,7 @@
     
   <ItemGroup>
     <Resource Include="Resources\eLog.png" />
+    <Resource Include="Resources\qrcode.png" />
   </ItemGroup>
     
   <ItemGroup>
