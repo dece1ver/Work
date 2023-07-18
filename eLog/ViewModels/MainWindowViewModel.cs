@@ -493,7 +493,8 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                var part = (Part)p;
+                var part = new Part((Part)p);
+                var index = Parts.IndexOf((Part)p);
                 if (WindowsUserDialogService.FinishDetail(ref part))
                 {
                     //ProgressBarVisibility = Visibility.Visible;
@@ -555,8 +556,10 @@ namespace eLog.ViewModels
                     //});
                     //ProgressBarVisibility = Visibility.Collapsed;
                     Status = string.Empty;
-                    AppSettings.Instance.Parts = Parts;
+                    Parts[index] = part;
+                    OnPropertyChanged(nameof(Parts));
                     RemoveExcessParts();
+                    AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
                 };
             
