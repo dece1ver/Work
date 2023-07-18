@@ -1,7 +1,9 @@
 ﻿using eLog.Infrastructure.Extensions.Windows;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -13,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Keyboard = eLog.Infrastructure.Extensions.Windows.Keyboard;
 
 namespace eLog.Views.Controls
@@ -22,9 +25,37 @@ namespace eLog.Views.Controls
     /// </summary>
     public partial class NumericKeyboard : UserControl
     {
+        private const int firstPressDelay = 500;
+        private const int everyPressDelay = 50;
+        private bool isBackspacePressed = false;
+        private bool isDelPressed = false;
+        private DispatcherTimer backspaceRepeatTimer;
+        private DispatcherTimer delRepeatTimer;
+
+
         public NumericKeyboard()
         {
             InitializeComponent();
+            backspaceRepeatTimer = new DispatcherTimer() { Interval = TimeSpan.FromMilliseconds(everyPressDelay) };
+            delRepeatTimer = new DispatcherTimer() { Interval = TimeSpan.FromMilliseconds(everyPressDelay) };
+            backspaceRepeatTimer.Tick += BackspaceRepeatTimer_Tick;
+            delRepeatTimer.Tick += DelRepeatTimer_Tick; ;
+        }
+
+        private void DelRepeatTimer_Tick(object? sender, EventArgs e)
+        {
+            if (isDelPressed)
+            {
+                Keyboard.KeyPress(Keys.Delete);
+            }
+        }
+
+        private void BackspaceRepeatTimer_Tick(object? sender, EventArgs e)
+        {
+            if (isBackspacePressed)
+            {
+                Keyboard.KeyPress(Keys.Back);
+            }
         }
 
         private void Button7_Click(object sender, RoutedEventArgs e)
@@ -42,9 +73,23 @@ namespace eLog.Views.Controls
             Keyboard.KeyPress(Keys.D9);
         }
 
-        private void ButtonBackspace_Click(object sender, RoutedEventArgs e)
+
+        private async Task BackspaceClick()
         {
+
             Keyboard.KeyPress(Keys.Back);
+            isBackspacePressed = true;
+            await Task.Delay(firstPressDelay);
+            if (isBackspacePressed) backspaceRepeatTimer.Start();
+        }
+
+        private async Task DelClick()
+        {
+
+            Keyboard.KeyPress(Keys.Delete);
+            isDelPressed = true;
+            await Task.Delay(firstPressDelay);
+            if (isDelPressed) delRepeatTimer.Start();
         }
 
         private void Button4_Click(object sender, RoutedEventArgs e)
@@ -124,6 +169,38 @@ namespace eLog.Views.Controls
         private void ButtonDash_Click(object sender, RoutedEventArgs e)
         {
             Keyboard.KeyPress(Keys.OemMinus);
+        }
+
+
+        private void ButtonBackspace_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!isBackspacePressed) _ = BackspaceClick();
+        }
+
+        private void ButtonBackspace_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            isBackspacePressed = false;
+            backspaceRepeatTimer.Stop();
+        }
+        private void ButtonBackspace_MouseLeave(object sender, MouseEventArgs e)
+        {
+            isBackspacePressed = false;
+            backspaceRepeatTimer.Stop();
+        }
+
+        private void ButtonDel_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!isDelPressed) _ = DelClick();
+        }
+        private void ButtonDel_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            isDelPressed = false;
+            delRepeatTimer.Stop();
+        }
+        private void ButtonDel_MouseLeave(object sender, MouseEventArgs e)
+        {
+            isDelPressed = false;
+            delRepeatTimer.Stop();
         }
     }
 }
