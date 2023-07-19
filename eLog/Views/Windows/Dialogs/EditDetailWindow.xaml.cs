@@ -397,6 +397,7 @@ namespace eLog.Views.Windows.Dialogs
                 Part.StartMachiningTime = DateTime.TryParseExact(_StartMachiningTime, Text.DateTimeFormat, null, DateTimeStyles.None, out var startMachiningTime) 
                     ? startMachiningTime 
                     : DateTime.MinValue;
+                OnPropertyChanged(nameof(EndMachiningTime));
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
@@ -712,7 +713,7 @@ namespace eLog.Views.Windows.Dialogs
                     Status = "Не найдено подходящих деталей.";
                     return;
             }
-
+            Part.Setup = prev.Setup;
             WithSetup = false;
             PartName = prev.FullName;
             var order = prev.Order;
