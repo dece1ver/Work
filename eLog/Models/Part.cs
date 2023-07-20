@@ -230,6 +230,7 @@ namespace eLog.Models
                 foreach (var downTime in downTimes)
                 {
                     var partialBreaks = Util.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
+
                     if (downTime.Time.TotalMinutes > 0) downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
                 }
                 var endSetupTime = SetupIsFinished ? StartMachiningTime : StartSetupTime
@@ -254,9 +255,6 @@ namespace eLog.Models
                 
                 switch (IsFinished)
                 {
-                    case State.Finished:
-                        result += productivity;
-                        break;
                     case State.PartialSetup:
                         result += " (Неполная наладка)";
                         break;
@@ -265,6 +263,9 @@ namespace eLog.Models
                         break;
                     case State.InProgress when FullSetupTimeFact.Ticks < 0:
                         result += planInfo;
+                        break;
+                    case State.Finished:
+                        result += productivity;
                         break;
                 }
                 return $"{result}{(breaks.Ticks > 0 && SetupTimeFact.Ticks > 0 && IsFinished is State.InProgress ? breaksInfo : string.Empty)}";
@@ -277,6 +278,7 @@ namespace eLog.Models
         {
             get
             {
+                if (EndMachiningTime == DateTime.MinValue && SingleProductionTimePlan == 0) return "-";
                 var startMachiningTime = SetupIsFinished
                     ? StartMachiningTime 
                     : StartSetupTime
@@ -393,8 +395,9 @@ namespace eLog.Models
             get
             {
                 if (EndMachiningTime >= StartMachiningTime && SetupIsFinished && FinishedCount > 0 &&
-                    MachineTime > TimeSpan.Zero) return State.Finished;
+                    MachineTime > TimeSpan.Zero && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.Finished;
                 if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount == 0) return State.PartialSetup;
+                if (DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.PartialSetup;
                 return State.InProgress;
             }
         }

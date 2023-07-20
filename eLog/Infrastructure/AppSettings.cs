@@ -255,8 +255,7 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void Save()
         {
-            if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, ConfigTempPath, true);
-            if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
+            
             var settings = new JsonSerializerSettings()
             {
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
@@ -264,6 +263,8 @@ namespace eLog.Infrastructure
             };
             try
             {
+                if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, ConfigTempPath, true);
+                if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
                 var json = JsonConvert.SerializeObject(Instance, Formatting.Indented, settings);
                 File.WriteAllText(ConfigFilePath, json);
                 if (File.Exists(ConfigTempPath)) File.Delete(ConfigTempPath);
@@ -293,19 +294,26 @@ namespace eLog.Infrastructure
                 var msg = "Ошибка при сохранении файла конфигурации (Доступ запрещен).";
                 Debug.WriteLine(msg);
                 Util.WriteLog(msg);
+                if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (IOException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Ошибка ввода/вывода).";
                 Debug.WriteLine(msg);
                 Util.WriteLog(msg);
+                if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (Exception ex)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
                 Debug.WriteLine(msg);
                 Util.WriteLog(ex, msg);
-                if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
+                try
+                {
+                    if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
+                }
+                catch { }
+                
                 if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_w"), true);
                 if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
             }

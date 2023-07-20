@@ -115,6 +115,10 @@ namespace eLog.Services
                 Owner = Application.Current.MainWindow,
             };
             if (dlg.ShowDialog() != true) return false;
+            if (dlg.Part.FinishedCount > 0)
+            {
+                dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
+            }
             part = dlg.Part;
             //if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
             //if (part.EndMachiningTime != DateTime.MinValue && part.FullProductionTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
@@ -134,6 +138,10 @@ namespace eLog.Services
             if (dlg.ShowDialog() != true) return false;
             dlg.Part.EndMachiningTime = DateTime.Today.AddHours(DateTime.Now.Hour).AddMinutes(DateTime.Now.Minute);
             if (dlg.Part.FinishedCount == 1) dlg.Part.StartMachiningTime = dlg.Part.EndMachiningTime;
+            if (dlg.Part.FinishedCount > 0)
+            {
+                dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
+            }
             part = dlg.Part;
             return true;
         }

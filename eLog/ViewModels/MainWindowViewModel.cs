@@ -583,10 +583,12 @@ namespace eLog.ViewModels
             {
                 try
                 {
+                    bool needSave = false;
                     for (var i = Parts.Count - 1; i >= 0; i--)
                     {
                         if (ProgressBarVisibility == Visibility.Visible) break;
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
+                        needSave = true;
                         Thread.Sleep(1000);
                         var index = i;
                         if (part.Id != -1)
@@ -635,8 +637,12 @@ namespace eLog.ViewModels
                         RemoveExcessParts();
 
                     });
-                    AppSettings.Instance.Parts = Parts;
-                    AppSettings.Save();
+                    
+                    if (needSave)
+                    {
+                        AppSettings.Instance.Parts = Parts;
+                        AppSettings.Save();
+                    }
                 }
                 catch (InvalidOperationException)
                 {
