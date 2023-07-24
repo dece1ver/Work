@@ -8,25 +8,29 @@
         xmlns:settings="clr-namespace:eLog.Views.Windows.Settings"
         xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        
         Title="Параметры" Height="480" Width="640" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <cnv:ArrayConverter x:Key="ArrayConverter"/>
     </Window.Resources>
     <DockPanel>
-        <UniformGrid DockPanel.Dock="Bottom" Rows="1" HorizontalAlignment="Right" Margin="10">
-            <Button Content="Отмена" Margin="0 0 5 0" IsCancel="True" Padding="20 5" 
+        <DockPanel DockPanel.Dock="Bottom">
+            <Button DockPanel.Dock="Left" Margin="10" Content="{StaticResource ExportSettingsIcon}" Height="38" Width="38" Click="ExportSettingsButton_Click"/>
+            <UniformGrid DockPanel.Dock="Right" Rows="1" HorizontalAlignment="Right" Margin="10">
+                <Button Content="Отмена" Margin="0 0 5 0" IsCancel="True" Padding="20 5" FontSize="14"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=settings:AppSettingsWindow}}">
-                <Button.Command>
-                    <cmd:CloseDialogCommand DialogResult="False"/>
-                </Button.Command>
-            </Button>
-            <Button Content="Ok" Margin="5 0  0 0" Padding="0 5" IsDefault="True"
+                    <Button.Command>
+                        <cmd:CloseDialogCommand DialogResult="False"/>
+                    </Button.Command>
+                </Button>
+                <Button Content="OК" Margin="5 0  0 0" Padding="0 5" IsDefault="True" FontSize="14"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=settings:AppSettingsWindow}}">
-                <Button.Command>
-                    <cmd:CloseDialogCommand DialogResult="True"/>
-                </Button.Command>
-            </Button>
-        </UniformGrid>
+                    <Button.Command>
+                        <cmd:CloseDialogCommand DialogResult="True"/>
+                    </Button.Command>
+                </Button>
+            </UniformGrid>
+        </DockPanel>
 
         <Grid Margin="4" Visibility="Visible">
             <Grid.ColumnDefinitions>

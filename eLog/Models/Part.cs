@@ -310,7 +310,7 @@ namespace eLog.Models
                     case State.InProgress:
                         result += planInfo;
                         break;
-                    case State.PartialSetup:
+                    case State.PartialSetup when FinishedCount == 0:
                         result = "Без изготовления";
                         break;
                 }

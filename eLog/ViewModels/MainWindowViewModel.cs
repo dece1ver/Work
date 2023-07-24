@@ -599,7 +599,7 @@ namespace eLog.ViewModels
                                     part.IsSynced = true;
                                     Status = $"Информация об изготовлении обновлена.";
                                     break;
-                                case Util.WriteResult.IOError or Util.WriteResult.Error:
+                                case Util.WriteResult.IOError or Util.WriteResult.Error or Util.WriteResult.FileNotExist:
                                     continue;
                                 case Util.WriteResult.NotFinded:
                                     part.Id = part.WriteToXl();

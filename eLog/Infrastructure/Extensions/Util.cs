@@ -27,7 +27,7 @@ namespace eLog.Infrastructure.Extensions
     {
         public enum WriteResult
         {
-            Ok, IOError, NotFinded, Error
+            Ok, IOError, NotFinded, Error, FileNotExist
         }
         /// <summary>
         /// Капитализация строки (для имен, фамилий и тд)
@@ -153,13 +153,18 @@ namespace eLog.Infrastructure.Extensions
                     var index = AppSettings.Instance.Parts.IndexOf(part);
                     var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
                     var partial = part.IsFinished == Part.State.PartialSetup ||
-                                  prevPart is { IsFinished: Part.State.PartialSetup };
+                                  prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 };
 
-                    if (partial) part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup)
+                    if (partial && part.SetupTimeFact.Ticks > 0)
                     {
-                        StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat),
-                        EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat)
-                    });
+                        part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as DeepObservableCollection<DownTime> ?? new DeepObservableCollection<DownTime>();
+                        part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup)
+                        {
+
+                            StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat),
+                            EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat)
+                        });
+                    }
                     var combinedDownTimes = part.DownTimes.Combine();
                     foreach (var xlRow in ws.Rows())
                     {
@@ -247,20 +252,23 @@ namespace eLog.Infrastructure.Extensions
 
         public static WriteResult RewriteToXl(this Part part)
         {
-            if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.IOError;
+            if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.FileNotExist;
             var result = WriteResult.NotFinded;
             try
             {
                 var index = AppSettings.Instance.Parts.IndexOf(part);
                 var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
                 var partial = part.IsFinished == Part.State.PartialSetup ||
-                              prevPart is { IsFinished: Part.State.PartialSetup };
-                if (partial)
+                              prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 };
+                if (partial && part.SetupTimeFact.Ticks > 0)
                 {
                     part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as DeepObservableCollection<DownTime> ?? new DeepObservableCollection<DownTime>();
-                    part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup) { 
-                        StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat), 
-                        EndTimeText = part.StartMachiningTime.ToString(Text.DateTimeFormat) });
+                    part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup)
+                    {
+
+                        StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat),
+                        EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat)
+                    });
                 }
                 using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false } ))
                 {

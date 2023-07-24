@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -7,6 +9,7 @@ using System.Windows.Threading;
 using eLog.Infrastructure;
 using eLog.Models;
 using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace eLog.Views.Windows.Settings
 {
@@ -78,6 +81,55 @@ namespace eLog.Views.Windows.Settings
             OrdersSourcePath = dlg.FileName;
         }
 
+        private void ExportSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string saveDir = "";
+                if (File.Exists(OrdersSourcePath) && Directory.GetParent(OrdersSourcePath) is { } parent)
+                {
+                    saveDir = parent.FullName;
+                }
+                if (string.IsNullOrEmpty(saveDir))
+                {
+                    var dlg = new CommonOpenFileDialog();
+                    dlg.Title = "Расположение экспорта конфигурации.";
+                    dlg.IsFolderPicker = true;
+
+                    dlg.AddToMostRecentlyUsedList = false;
+                    dlg.AllowNonFileSystemItems = false;
+                    dlg.EnsureFileExists = true;
+                    dlg.EnsurePathExists = true;
+                    dlg.EnsureReadOnly = false;
+                    dlg.EnsureValidNames = true;
+                    dlg.Multiselect = false;
+                    dlg.ShowPlacesList = true;
+
+                    if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+                    {
+                        saveDir = dlg.FileName;
+                        // Do something with selected folder string
+                    }
+                    //SaveFileDialog saveFileDialog = new SaveFileDialog()
+                    //{
+                    //    Filter = "Данные JSON (*.json)|*.json",
+                    //};
+                    if (string.IsNullOrEmpty(saveDir)) return;
+
+                }
+                var tempPath = Path.Combine(saveDir, "configs", AppSettings.Instance.Machine.SafeName, DateTime.Now.ToString("dd-MM-yy HH-mm"));
+                if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+                var exportPath = Path.Combine(tempPath, "config.json");
+                File.Copy(AppSettings.ConfigFilePath, exportPath);
+                MessageBox.Show($"Параменры экспортированы:\n{exportPath}", "Экспорт");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Не удалось выполнить экспорт из-за непредвиденной ошибки.{ex.Message}", "Экспорт", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            
+        }
+
         #region PropertyChanged
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -112,6 +164,7 @@ namespace eLog.Views.Windows.Settings
         }
 
         #endregion
+
 
     }
 }
