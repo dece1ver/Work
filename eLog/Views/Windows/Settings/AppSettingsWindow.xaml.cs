@@ -86,24 +86,25 @@ namespace eLog.Views.Windows.Settings
             try
             {
                 string saveDir = "";
-                if (File.Exists(OrdersSourcePath) && Directory.GetParent(OrdersSourcePath) is { } parent)
+                if (File.Exists(XlPath) && Directory.GetParent(XlPath) is { FullName: { } parent } )
                 {
-                    saveDir = parent.FullName;
+                    saveDir = parent;
                 }
                 if (string.IsNullOrEmpty(saveDir))
                 {
-                    var dlg = new CommonOpenFileDialog();
-                    dlg.Title = "Расположение экспорта конфигурации.";
-                    dlg.IsFolderPicker = true;
-
-                    dlg.AddToMostRecentlyUsedList = false;
-                    dlg.AllowNonFileSystemItems = false;
-                    dlg.EnsureFileExists = true;
-                    dlg.EnsurePathExists = true;
-                    dlg.EnsureReadOnly = false;
-                    dlg.EnsureValidNames = true;
-                    dlg.Multiselect = false;
-                    dlg.ShowPlacesList = true;
+                    var dlg = new CommonOpenFileDialog
+                    {
+                        Title = "Расположение экспорта конфигурации.",
+                        IsFolderPicker = true,
+                        AddToMostRecentlyUsedList = false,
+                        AllowNonFileSystemItems = false,
+                        EnsureFileExists = true,
+                        EnsurePathExists = true,
+                        EnsureReadOnly = false,
+                        EnsureValidNames = true,
+                        Multiselect = false,
+                        ShowPlacesList = true
+                    };
 
                     if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
                     {
@@ -125,7 +126,7 @@ namespace eLog.Views.Windows.Settings
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Не удалось выполнить экспорт из-за непредвиденной ошибки.{ex.Message}", "Экспорт", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Не удалось выполнить экспорт из-за непредвиденной ошибки.\n{ex.Message}", "Экспорт", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             
         }
