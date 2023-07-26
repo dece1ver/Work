@@ -27,7 +27,7 @@ namespace eLog.Infrastructure.Extensions
     {
         public enum WriteResult
         {
-            Ok, IOError, NotFinded, Error, FileNotExist
+            Ok, IOError, NotFinded, Error, FileNotExist, DontNeed
         }
         /// <summary>
         /// Капитализация строки (для имен, фамилий и тд)
@@ -133,6 +133,33 @@ namespace eLog.Infrastructure.Extensions
         }
 
         /// <summary>
+        /// Устанавливает простой "Частичная наладка" на наладку данной детали, если предыдущая деталь была завершена с таким же простоем без выполненных деталей. 
+        /// </summary>
+        /// <param name="part">Текущая деталь</param>
+        /// <returns>Является ли наладка данной детали "доналадкой" после частичной наладки.</returns>
+        public static bool SetPartialState(ref Part part)
+        {
+            var index = AppSettings.Instance.Parts.IndexOf(part);
+            var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
+            var partial = part.IsFinished == Part.State.PartialSetup ||
+                          prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 };
+            if (partial && part.SetupTimeFact.Ticks > 0)
+            {
+                part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining))
+                {
+                    new DownTime(part, DownTime.Types.PartialSetup)
+                    {
+
+                        StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat),
+                        EndTimeText = part.StartMachiningTime.ToString(Text.DateTimeFormat)
+                    }
+                };
+            }
+            return partial;
+        }
+
+
+        /// <summary>
         /// Запись изготовления в Excel таблицу
         /// </summary>
         /// <param name="part">Информация об изготовлении</param>
@@ -150,21 +177,7 @@ namespace eLog.Infrastructure.Extensions
                     var ws = wb.Worksheet(1);
                     ws.LastRowUsed().InsertRowsBelow(1);
                     IXLRow? prevRow = null;
-                    var index = AppSettings.Instance.Parts.IndexOf(part);
-                    var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
-                    var partial = part.IsFinished == Part.State.PartialSetup ||
-                                  prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 };
-
-                    if (partial && part.SetupTimeFact.Ticks > 0)
-                    {
-                        part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as DeepObservableCollection<DownTime> ?? new DeepObservableCollection<DownTime>();
-                        part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup)
-                        {
-
-                            StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat),
-                            EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat)
-                        });
-                    }
+                    var partial = SetPartialState(ref part);
                     var combinedDownTimes = part.DownTimes.Combine();
                     foreach (var xlRow in ws.Rows())
                     {
@@ -253,23 +266,11 @@ namespace eLog.Infrastructure.Extensions
         public static WriteResult RewriteToXl(this Part part)
         {
             if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.FileNotExist;
+            if (part.IsFinished == Part.State.InProgress) return WriteResult.DontNeed;
             var result = WriteResult.NotFinded;
             try
             {
-                var index = AppSettings.Instance.Parts.IndexOf(part);
-                var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
-                var partial = part.IsFinished == Part.State.PartialSetup ||
-                              prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 };
-                if (partial && part.SetupTimeFact.Ticks > 0)
-                {
-                    part.DownTimes = part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining) as DeepObservableCollection<DownTime> ?? new DeepObservableCollection<DownTime>();
-                    part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup)
-                    {
-
-                        StartTimeText = part.StartSetupTime.ToString(Text.DateTimeFormat),
-                        EndTimeText = part.EndMachiningTime.ToString(Text.DateTimeFormat)
-                    });
-                }
+                var partial = SetPartialState(ref part);
                 using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false } ))
                 {
                     File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);

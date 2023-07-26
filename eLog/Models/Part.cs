@@ -147,6 +147,8 @@ namespace eLog.Models
                     OnPropertyChanged(nameof(LastDownTime));
                     OnPropertyChanged(nameof(LastDownTimeName));
                     OnPropertyChanged(nameof(DownTimesIsClosed));
+                    OnPropertyChanged(nameof(EndSetupInfo));
+                    OnPropertyChanged(nameof(EndDetailInfo));
                 }
             }
         }
@@ -237,19 +239,21 @@ namespace eLog.Models
                     .AddMinutes(SetupTimePlan)
                     .AddMinutes(downTimesMinutes)
                     .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), true));
+                
                 if (StartSetupTime == StartMachiningTime) return "Без наладки";
                 var result = endSetupTime > StartSetupTime ? endSetupTime.ToString(Text.DateTimeFormat) : "-";
                 if (result == "-") return result;
+                
                 var breaks = Util.GetBreaksBetween(StartSetupTime, endSetupTime);
                 var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
                 
                 var downTimesInfo = downTimesMinutes > 0 
                     ? $" + простои: {downTimesMinutes} мин" 
                     : string.Empty;
-                var planInfo = SetupTimePlan > 0
+                var planInfo = SetupTimePlan > 0 && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)
                     ? $" (Плановое: норматив {SetupTimePlan} мин{breaksInfo}{downTimesInfo})"
                     : string.Empty;
-                var productivity = SetupTimePlan > 0
+                var productivity = SetupTimePlan > 0 && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)
                     ? $" ({SetupTimePlan / SetupTimeFact.TotalMinutes * 100:N0}%)"
                     : string.Empty;
                 
@@ -258,11 +262,17 @@ namespace eLog.Models
                     case State.PartialSetup:
                         result += " (Неполная наладка)";
                         break;
-                    case State.InProgress when FullSetupTimeFact.Ticks > 0:
+                    case State.InProgress when FullSetupTimeFact.Ticks > 0 && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup):
                         result += productivity + downTimesInfo;
                         break;
-                    case State.InProgress when FullSetupTimeFact.Ticks < 0:
+                    case State.InProgress when FullSetupTimeFact.Ticks > 0 && DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup):
+                        result += " (Неполная наладка)";
+                        break;
+                    case State.InProgress when FullSetupTimeFact.Ticks < 0 && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup):
                         result += planInfo;
+                        break;
+                    case State.InProgress when FullSetupTimeFact.Ticks < 0 && DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup):
+                        result += " (Неполная наладка)";
                         break;
                     case State.Finished:
                         result += productivity;
@@ -396,6 +406,7 @@ namespace eLog.Models
             {
                 if (EndMachiningTime >= StartMachiningTime && SetupIsFinished && FinishedCount > 0 &&
                     MachineTime > TimeSpan.Zero && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.Finished;
+                if (EndMachiningTime == DateTime.MinValue && FinishedCount == 0) return State.InProgress;
                 if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount == 0) return State.PartialSetup;
                 if (DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.PartialSetup;
                 return State.InProgress;

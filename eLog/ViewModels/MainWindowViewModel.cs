@@ -366,18 +366,21 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
+                var index = Parts.IndexOf((Part)p);
+                var part = Parts[index];
                 switch (WindowsUserDialogService.GetSetupResult())
                 {
                     case EndSetupResult.Success:
-                        Parts[Parts.IndexOf((Part)p)].StartMachiningTime = DateTime.Now.Rounded();
+                        part.StartMachiningTime = DateTime.Now.Rounded();
+                        _ = Util.SetPartialState(ref part);
+                        Parts.RemoveAt(index);
+                        Parts.Insert(index, part);
                         break;
                     case EndSetupResult.Stop:
                         Parts.Remove((Part)p);
                         break;
                     case EndSetupResult.PartialComplete:
-                        var now = DateTime.Now;
-                        var index = Parts.IndexOf((Part)p);
-                        var part = Parts[index];
+                        var now = DateTime.Now.Rounded();
                         part.StartMachiningTime = now;
                         part.EndMachiningTime = now;
                         part.FinishedCount = 0;
@@ -400,8 +403,10 @@ namespace eLog.ViewModels
                                 Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                             }
                         }
+                        
                         Parts.RemoveAt(index);
                         Parts.Insert(index, part);
+                        
                         break;
                 }
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
@@ -429,49 +434,56 @@ namespace eLog.ViewModels
                 {
                     part.IsSynced = false;
                     OnPropertyChanged(nameof(part.Title));
-                    //ProgressBarVisibility = Visibility.Visible;
-                    //Status = "Запись в процессе";
-                    //await Task.Run(() =>
-                    //{
-                    //    switch (part)
-                    //    {
-                    //        case { Id: -1, IsFinished: not Part.State.InProgress }:
-                    //            part.Id = part.WriteToXl();
-                    //            if (part.Id > 0)
-                    //            {
-                    //                part.IsSynced = true;
-                    //                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                    //            }
-                    //            break;
-                    //        case { Id: > 0, IsFinished: not Part.State.InProgress }:
-                    //        {
-                    //            switch (part.RewriteToXl())
-                    //            {
-                    //                case Util.WriteResult.Ok:
-                    //                    part.IsSynced = true;
-                    //                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                    //                    break;
-                    //                case Util.WriteResult.IOError:
-                    //                    Status = $"Таблица занята, запись будет произведена позже.";
-                    //                    break;
-                    //                case Util.WriteResult.NotFinded:
-                    //                    part.Id = part.WriteToXl();
-                    //                    if (part.Id > 0)
-                    //                    {
-                    //                        part.IsSynced = true;
-                    //                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                    //                    }
-                    //                    break;
-                    //                case Util.WriteResult.Error:
-                    //                    break;
-                    //            }
-                    //            break;
-                    //        }
-                    //    }
-                    //});
-                    //ProgressBarVisibility = Visibility.Collapsed;
+
+                    {
+                        //ProgressBarVisibility = Visibility.Visible;
+                        //Status = "Запись в процессе";
+                        //await Task.Run(() =>
+                        //{
+                        //    switch (part)
+                        //    {
+                        //        case { Id: -1, IsFinished: not Part.State.InProgress }:
+                        //            part.Id = part.WriteToXl();
+                        //            if (part.Id > 0)
+                        //            {
+                        //                part.IsSynced = true;
+                        //                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        //            }
+                        //            break;
+                        //        case { Id: > 0, IsFinished: not Part.State.InProgress }:
+                        //        {
+                        //            switch (part.RewriteToXl())
+                        //            {
+                        //                case Util.WriteResult.Ok:
+                        //                    part.IsSynced = true;
+                        //                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                        //                    break;
+                        //                case Util.WriteResult.IOError:
+                        //                    Status = $"Таблица занята, запись будет произведена позже.";
+                        //                    break;
+                        //                case Util.WriteResult.NotFinded:
+                        //                    part.Id = part.WriteToXl();
+                        //                    if (part.Id > 0)
+                        //                    {
+                        //                        part.IsSynced = true;
+                        //                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        //                    }
+                        //                    break;
+                        //                case Util.WriteResult.Error:
+                        //                    break;
+                        //            }
+                        //            break;
+                        //        }
+                        //    }
+                        //});
+                        //ProgressBarVisibility = Visibility.Collapsed;
+                    } // попытка записи сразу
+
                     Status = string.Empty;
-                    Parts[index] = part;
+                    Parts.RemoveAt(index);
+                    Parts.Insert(index, part);
+                    _ = Util.SetPartialState(ref part);
+                    if (part.StartMachiningTime == DateTime.MinValue) part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
@@ -599,7 +611,7 @@ namespace eLog.ViewModels
                                     part.IsSynced = true;
                                     Status = $"Информация об изготовлении обновлена.";
                                     break;
-                                case Util.WriteResult.IOError or Util.WriteResult.Error or Util.WriteResult.FileNotExist:
+                                case Util.WriteResult.IOError or Util.WriteResult.Error or Util.WriteResult.FileNotExist or Util.WriteResult.DontNeed:
                                     continue;
                                 case Util.WriteResult.NotFinded:
                                     part.Id = part.WriteToXl();
