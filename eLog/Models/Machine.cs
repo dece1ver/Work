@@ -26,11 +26,11 @@ namespace eLog.Models
                     SafeName = "Hyundai L230A";
                     break;
                 case 2:
-                    Name = "Hyundai WIA SKT21 (105)";
+                    Name = "Hyundai WIA SKT21 №105";
                     SafeName = "Hyundai WIA SKT21 (105)";
                     break;
                 case 3:
-                    Name = "Hyundai WIA SKT21 (104)";
+                    Name = "Hyundai WIA SKT21 №104";
                     SafeName = "Hyundai WIA SKT21 (104)";
                     break;
                 case 4:
