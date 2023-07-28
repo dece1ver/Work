@@ -220,7 +220,7 @@ namespace eLog.Models
                         else if (Relation is Relations.Machining && ParentPart.IsFinished == Part.State.Finished &&
                                  EndTime > ParentPart.EndMachiningTime)
                         {
-                            error = "Время завершения простоя не может быть позже времени завершения заготовления детали.";
+                            error = "Время завершения простоя не может быть позже времени завершения изготовления детали.";
                         }
                         else if (Relation is Relations.Machining && ParentPart.IsFinished == Part.State.InProgress &&
                                  EndTime > DateTime.Now)

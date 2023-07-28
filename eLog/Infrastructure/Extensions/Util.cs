@@ -20,6 +20,7 @@ using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Wordprocessing;
 using static eLog.Infrastructure.Extensions.Text;
+using DocumentFormat.OpenXml.Office2013.PowerPoint.Roaming;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -171,9 +172,10 @@ namespace eLog.Infrastructure.Extensions
             if (!File.Exists(AppSettings.Instance.XlPath)) return id;
             try
             {
-                using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false }))
+                if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
+                using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
-                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                    var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
                     var ws = wb.Worksheet(1);
                     ws.LastRowUsed().InsertRowsBelow(1);
                     IXLRow? prevRow = null;
@@ -263,6 +265,22 @@ namespace eLog.Infrastructure.Extensions
             return id;
         }
 
+        private static bool BackupXl()
+        {
+            try
+            {
+                using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false }))
+                {
+                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static WriteResult RewriteToXl(this Part part)
         {
             if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.FileNotExist;
@@ -271,14 +289,22 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var partial = SetPartialState(ref part);
-                using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false } ))
+
+                if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
+
+                using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
-                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                    var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
+                    
+                    
                     var combinedDownTimes = part.DownTimes.Combine();
 
                     foreach (var xlRow in wb.Worksheet(1).Rows())
                     {
-                        if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id) continue;
+                        if (xlRow.Cell(1).Value.IsNumber && xlRow.Cell(1).Value.GetNumber() is { } numb && numb >= 1620) {
+                            Debug.Print(numb.ToString());
+                        }
+                        if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id || xlRow.Cell(10).Value.GetText() != part.Order) continue;
                         xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
                         // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
                         //xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
