@@ -595,21 +595,26 @@ namespace eLog.ViewModels
             {
                 try
                 {
+                    Status = "";
                     bool needSave = false;
                     for (var i = Parts.Count - 1; i >= 0; i--)
                     {
                         if (ProgressBarVisibility == Visibility.Visible) break;
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
+                        var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
+                        Status = $"Синхронизация: [{partName}]";
+                        ProgressBarVisibility = Visibility.Visible;
                         needSave = true;
-                        Thread.Sleep(1000);
+                        //Thread.Sleep(1000);
                         var index = i;
                         if (part.Id != -1)
                         {
-                            switch (part.RewriteToXl())
+                            var rewriteResult = part.RewriteToXl();
+                            switch (rewriteResult)
                             {
                                 case Util.WriteResult.Ok:
                                     part.IsSynced = true;
-                                    Status = $"Информация об изготовлении обновлена.";
+                                    Status = $"Информация обновлена: [{partName}]";
                                     break;
                                 case Util.WriteResult.IOError or Util.WriteResult.Error or Util.WriteResult.FileNotExist or Util.WriteResult.DontNeed:
                                     continue;
@@ -617,7 +622,7 @@ namespace eLog.ViewModels
                                     part.Id = part.WriteToXl();
                                     if (part.Id == -1) continue;
                                     part.IsSynced = true;
-                                    Status = $"Информация об изготовлении зафиксирована.";
+                                    Status = $"Информация записана: [{partName}]";
                                     break;
                                 default:
                                     throw new ArgumentOutOfRangeException();
@@ -628,12 +633,23 @@ namespace eLog.ViewModels
                         }
                         else
                         {
-                            part.Id = part.WriteToXl();
+                            var res = part.WriteToXl();
+                            switch (res)
+                            {
+                                case -2:
+                                    break;
+                                case -1:
+                                    continue; ;
+                                default:
+                                    part.IsSynced = true;
+                                    Status = $"Информация записана: [{partName}]";
+                                    break;
+                            }
                             if (part.Id == -1) continue;
-                            part.IsSynced = true;
-                            Status = $"Информация об изготовлении зафиксирована.";
-                        }
 
+                            
+                        }
+                        ProgressBarVisibility = Visibility.Hidden;
                         OnPropertyChanged(nameof(part.Title));
                         Application.Current.Dispatcher.Invoke(delegate
                         {
@@ -665,7 +681,11 @@ namespace eLog.ViewModels
                     Status = e.Message;
                     Util.WriteLog(e, "Ошибка синхронизации.");
                 }
-                Thread.Sleep(15000);
+                finally
+                {
+                    ProgressBarVisibility = Visibility.Hidden;
+                }
+                Thread.Sleep(10000);
             }
         }
 

@@ -43,6 +43,8 @@ namespace eLog.Models
         private bool _IsSynced;
         private string _OperatorComments;
 
+        public Guid Guid { get; init; }
+
         public enum State { Finished, PartialSetup, InProgress }
 
         /// <summary> Наименование </summary>
@@ -289,6 +291,7 @@ namespace eLog.Models
             get
             {
                 if (EndMachiningTime == DateTime.MinValue && SingleProductionTimePlan == 0) return "-";
+                var totalCount = (TotalCount > 1 ? TotalCount - 1 : TotalCount);
                 var startMachiningTime = SetupIsFinished
                     ? StartMachiningTime 
                     : StartSetupTime
@@ -298,14 +301,14 @@ namespace eLog.Models
                 var endMachiningTime = EndMachiningTime >= StartMachiningTime
                     ? EndMachiningTime
                     : startMachiningTime
-                        .AddMinutes(TotalCount * SingleProductionTimePlan)
-                        .Add(Util.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(TotalCount * SingleProductionTimePlan)));
+                        .AddMinutes(totalCount * SingleProductionTimePlan)
+                        .Add(Util.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(totalCount * SingleProductionTimePlan)));
                 var result = endMachiningTime >= startMachiningTime && EndSetupInfo != "-" ? endMachiningTime.ToString(Text.DateTimeFormat) : "-";
                 if (result == "-") return result;
                 var breaks = Util.GetBreaksBetween(startMachiningTime, endMachiningTime);
                 var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
                 var planInfo = SingleProductionTimePlan > 0
-                    ? $" (Плановое: {TotalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
+                    ? $" (Плановое: {totalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                     : string.Empty;
                 var finishedCount = SetupTimeFact > TimeSpan.Zero ? FinishedCount - 1 : FinishedCount;
                 var productivity = SingleProductionTimePlan > 0 
@@ -484,6 +487,7 @@ namespace eLog.Models
         /// <param name="singleProductionTimePlan">Плановое штучное время</param>
         public Part(string name, string number, byte setup, string order, int totalCount, double setupTimePlan, double singleProductionTimePlan)
         {
+            Guid = Guid.NewGuid();
             _Name = name;
             _Number = number;
             _Setup = setup;
@@ -502,6 +506,7 @@ namespace eLog.Models
 
         public Part()
         {
+            Guid = Guid.NewGuid();
             _Name = string.Empty;
             _Number = string.Empty;
             _Order = string.Empty;
@@ -520,6 +525,7 @@ namespace eLog.Models
         /// <param name="part">Источник</param>
         public Part(Part part)
         {
+            Guid = part.Guid;
             _Name = part.Name;
             _Number = part.Number;
             _Setup = part.Setup;

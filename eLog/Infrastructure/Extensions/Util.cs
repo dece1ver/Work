@@ -21,6 +21,7 @@ using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Wordprocessing;
 using static eLog.Infrastructure.Extensions.Text;
 using DocumentFormat.OpenXml.Office2013.PowerPoint.Roaming;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -185,6 +186,17 @@ namespace eLog.Infrastructure.Extensions
                     {
                         if (xlRow is null) continue;
                         var num = xlRow.Cell(1).Value.IsNumber ? (int)xlRow.Cell(1).Value.GetNumber() : 0;
+                        var hasGuidValue = xlRow.Cell(36).Value.IsText;
+                        var stringGuid = hasGuidValue ? xlRow.Cell(36).Value.GetText() : "";
+                        if (!Guid.TryParse(stringGuid, out Guid guid))
+                        {
+                            guid = Guid.Empty;
+                        }
+                        if (guid == part.Guid && part.Guid != Guid.Empty)
+                        {
+                            part.Id = num;
+                            return -2;
+                        }
                         if (id <= num) id = num + 1;
                         if (!xlRow.Cell(6).Value.IsBlank)
                         {
@@ -234,11 +246,11 @@ namespace eLog.Infrastructure.Extensions
                         xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
                         xlRow.Cell(34).Value = part.Shift;
                         xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
-                        for (var i = 1; i <= 35; i++)
+                        xlRow.Cell(36).Value = part.Guid.ToString();
+                        for (var i = 1; i <= 36; i++)
                         {
                             xlRow.Cell(i).Style = prevRow.Cell(i).Style;
                         }
-
                         break;
                     }
                     wb.Save(true);
@@ -281,7 +293,7 @@ namespace eLog.Infrastructure.Extensions
             }
         }
 
-        public static WriteResult RewriteToXl(this Part part)
+        public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
         {
             if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.FileNotExist;
             if (part.IsFinished == Part.State.InProgress) return WriteResult.DontNeed;
@@ -290,7 +302,10 @@ namespace eLog.Infrastructure.Extensions
             {
                 var partial = SetPartialState(ref part);
 
-                if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
+                if (doBackup)
+                {
+                    if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
+                }
 
                 using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
@@ -301,10 +316,16 @@ namespace eLog.Infrastructure.Extensions
 
                     foreach (var xlRow in wb.Worksheet(1).Rows())
                     {
-                        if (xlRow.Cell(1).Value.IsNumber && xlRow.Cell(1).Value.GetNumber() is { } numb && numb >= 1620) {
-                            Debug.Print(numb.ToString());
+                        var rowWithPart = xlRow.Cell(1).Value.IsNumber;
+                        var rowNum = rowWithPart ? (int)xlRow.Cell(1).Value.GetNumber() : 0;
+                        var hasGuidValue = xlRow.Cell(36).Value.IsText;
+                        var stringGuid = hasGuidValue ? xlRow.Cell(36).Value.GetText() : "";
+                        if (!Guid.TryParse(stringGuid, out Guid guid))
+                        {
+                            guid = Guid.Empty;
                         }
-                        if (!xlRow.Cell(1).Value.IsNumber || (int)xlRow.Cell(1).Value.GetNumber() != part.Id || xlRow.Cell(10).Value.GetText() != part.Order) continue;
+
+                        if (!rowWithPart || rowNum != part.Id || guid != part.Guid) continue;
                         xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
                         // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
                         //xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
@@ -338,6 +359,7 @@ namespace eLog.Infrastructure.Extensions
                         //xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                         xlRow.Cell(34).Value = part.Shift;
                         xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
+                        xlRow.Cell(36).Value = part.Guid.ToString();
                         result = WriteResult.Ok;
                         break;
                     }
