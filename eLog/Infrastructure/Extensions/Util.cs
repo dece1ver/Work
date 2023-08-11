@@ -43,7 +43,7 @@ namespace eLog.Infrastructure.Extensions
             var letters = source.ToCharArray();
             for (int i = 0; i < letters.Length; i++)
             {
-                if(i == 0)
+                if (i == 0)
                 {
                     letters[i] = char.ToUpper(letters[i]);
                 }
@@ -65,9 +65,13 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
-                return (from xlRow in wb.Worksheet(1).Rows() 
-                    where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper()) 
-                    select new Part() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
+                return (from xlRow in wb.Worksheet(1).Rows()
+                        where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
+                        select new Part()
+                        {
+                            Name = xlRow.Cell(2).Value.GetText() + (xlRow.Cell(3).Value.IsText ? " " + xlRow.Cell(3).Value.GetText() : ""),
+                            TotalCount = (int)xlRow.Cell(4).Value.GetNumber(),
+                        }).ToList();
             }
             catch (Exception ex1)
             {
@@ -75,15 +79,19 @@ namespace eLog.Infrastructure.Extensions
                 {
                     var wb = new XLWorkbook(AppSettings.BackupOrdersFile);
                     return (from xlRow in wb.Worksheet(1).Rows()
-                        where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
-                        select new Part() { Name = xlRow.Cell(4).Value.GetText(), TotalCount = (int)xlRow.Cell(5).Value.GetNumber(), }).ToList();
+                            where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
+                            select new Part()
+                            {
+                                Name = xlRow.Cell(2).Value.GetText() + (xlRow.Cell(3).Value.IsText ? " " + xlRow.Cell(3).Value.GetText() : ""),
+                                TotalCount = (int)xlRow.Cell(4).Value.GetNumber(),
+                            }).ToList();
                 }
                 catch (Exception ex2)
                 {
-                    MessageBox.Show(ex2.Message);
+                    WriteLog(ex2);
                 }
-                MessageBox.Show(ex1.Message);
-                
+                WriteLog(ex1);
+
             }
             return new List<Part>();
         }
@@ -107,7 +115,7 @@ namespace eLog.Infrastructure.Extensions
         /// <returns></returns>
         public static Part GetPartFromBarCode(this string barCode)
         {
-            var names = new[] {"Ниппель", "Корпус", "Гайка", "Фланец", "Штуцер", "Седло", "Крышка", "Корпус приводной камеры", "Корпус проточной части" };
+            var names = new[] { "Ниппель", "Корпус", "Гайка", "Фланец", "Штуцер", "Седло", "Крышка", "Корпус приводной камеры", "Корпус проточной части" };
             var numbers = new[] { "АР110-01-001", "АР110-01-002", "АР110-01-003", "АР110-01-004", "АР110-01-005", "АРМ2-31.4-02-340-Х6-081-01", "АРМ2-31.4-02-340-Х6-071" };
             var orders = new[] { "УЧ-1/00001.1.1", "УЧ-1/00001.1.2", "УЧ-1/00001.1.3", "УЧ-1/00001.1.4", "УЧ-1/00001.1.5", "УЧ-1/00001.1.6", "УЧ-1/00001.1.7", "УЧ-1/00001.1.8" };
 
@@ -259,7 +267,7 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (IOException)
             {
-                
+
             }
             catch (KeyNotFoundException)
             {
@@ -310,8 +318,8 @@ namespace eLog.Infrastructure.Extensions
                 using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
-                    
-                    
+
+
                     var combinedDownTimes = part.DownTimes.Combine();
 
                     foreach (var xlRow in wb.Worksheet(1).Rows())
@@ -452,7 +460,7 @@ namespace eLog.Infrastructure.Extensions
                 if (input.Count(x => x == ':') == 1)
                 {
                     var sTime = input.Split(':');
-                    if (double.TryParse(sTime[0], out var minutes) && 
+                    if (double.TryParse(sTime[0], out var minutes) &&
                         double.TryParse(sTime[1], out var seconds))
                     {
                         time = TimeSpan.FromSeconds(minutes * 60 + seconds);
@@ -462,7 +470,7 @@ namespace eLog.Infrastructure.Extensions
                 else if (input.Count(x => x == ':') == 2)
                 {
                     var sTime = input.Split(':');
-                    if (double.TryParse(sTime[0], out var hours) && 
+                    if (double.TryParse(sTime[0], out var hours) &&
                         double.TryParse(sTime[1], out var minutes) &&
                         double.TryParse(sTime[2], out var seconds))
                     {
@@ -494,8 +502,8 @@ namespace eLog.Infrastructure.Extensions
             ? downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n")
             : string.Empty;
 
-        public static string Report(this IEnumerable<CombinedDownTime> downTimes) => downTimes.Any() 
-            ? downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n") 
+        public static string Report(this IEnumerable<CombinedDownTime> downTimes) => downTimes.Any()
+            ? downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n")
             : string.Empty;
 
         public static double TotalMinutes(this IEnumerable<DownTime> downTimes) =>
@@ -584,7 +592,7 @@ namespace eLog.Infrastructure.Extensions
             }
 
             var breaks = TimeSpan.Zero;
-            var startTime = new DateTime(1,1,1, startDateTime.Hour, startDateTime.Minute, startDateTime.Second);
+            var startTime = new DateTime(1, 1, 1, startDateTime.Hour, startDateTime.Minute, startDateTime.Second);
             var endTime = new DateTime(1, 1, 1, endDateTime.Hour, endDateTime.Minute, endDateTime.Second);
             if (startTime > endTime)
             {
@@ -592,7 +600,7 @@ namespace eLog.Infrastructure.Extensions
                 nightShiftThirdBreak = nightShiftThirdBreak.AddDays(1);
                 endTime = endTime.AddDays(1);
             }
-            
+
             if (dayShiftFirstBreak >= startTime && dayShiftFirstBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
             if (dayShiftSecondBreak >= startTime && dayShiftSecondBreak <= endTime) breaks += TimeSpan.FromMinutes(30);
             if (dayShiftThirdBreak >= startTime && dayShiftThirdBreak <= endTime) breaks += TimeSpan.FromMinutes(15);
@@ -649,13 +657,20 @@ namespace eLog.Infrastructure.Extensions
         {
             var result = 0.0;
             var endBreakTime = breakTime.AddMinutes(duration);
-            if (startDateTime < breakTime && endDateTime > breakTime && endDateTime <= endBreakTime) {
+            if (startDateTime < breakTime && endDateTime > breakTime && endDateTime <= endBreakTime)
+            {
                 result = (endDateTime - breakTime).TotalMinutes;
-            } else if (startDateTime > breakTime && startDateTime < endBreakTime && endDateTime >= endBreakTime) {
+            }
+            else if (startDateTime > breakTime && startDateTime < endBreakTime && endDateTime >= endBreakTime)
+            {
                 result = (endBreakTime - startDateTime).TotalMinutes;
-            } else if (startDateTime > breakTime && endDateTime < endBreakTime) {
+            }
+            else if (startDateTime > breakTime && endDateTime < endBreakTime)
+            {
                 result = (endDateTime - startDateTime).TotalMinutes;
-            } else if (startDateTime <= breakTime && endDateTime >= endBreakTime) {
+            }
+            else if (startDateTime <= breakTime && endDateTime >= endBreakTime)
+            {
                 result = (endBreakTime - breakTime).TotalMinutes;
             }
 

@@ -825,9 +825,9 @@ namespace eLog.Views.Windows.Dialogs
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show(e.Message);
+                    Util.WriteLog(e);
                 }
-                Thread.Sleep(3000);
+                Thread.Sleep(5000);
             }
         }
         private void EditCreatorButton_Click(object sender, RoutedEventArgs e)
