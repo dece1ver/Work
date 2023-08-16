@@ -250,10 +250,10 @@ namespace eLog.Views.Windows.Dialogs
                     DownTimesHasErrors = true;
                     return false;
                 }
-                if (Part is { IsFinished: Part.State.Finished, DownTimesIsClosed: true, FinishedCount: > 1 }) return true;
+                
                 var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                      (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
-
+                if (Part is { IsFinished: Part.State.Finished, DownTimesIsClosed: true, FinishedCount: > 1 } && validPlanTimes) return true;
                 switch (validPlanTimes)
                 {
                     // старт наладки
