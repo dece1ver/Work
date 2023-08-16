@@ -386,23 +386,23 @@ namespace eLog.ViewModels
                         part.FinishedCount = 0;
                     
 
-                        if (part.Id != -1)
-                        {
-                            if (part.RewriteToXl() is Util.WriteResult.Ok)
-                            {
-                                part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                            }
-                        }
-                        else
-                        {
-                            part.Id = part.WriteToXl();
-                            if (part.Id > 0)
-                            {
-                                part.IsSynced = true;
-                                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                            }
-                        }
+                        //if (part.Id != -1)
+                        //{
+                        //    if (part.RewriteToXl() is Util.WriteResult.Ok)
+                        //    {
+                        //        part.IsSynced = true;
+                        //        Status = $"Информация об изготовлении id{part.Id} обновлена.";
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    part.Id = part.WriteToXl();
+                        //    if (part.Id > 0)
+                        //    {
+                        //        part.IsSynced = true;
+                        //        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
+                        //    }
+                        //}
                         
                         Parts.RemoveAt(index);
                         Parts.Insert(index, part);
