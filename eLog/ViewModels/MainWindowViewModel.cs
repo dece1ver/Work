@@ -281,11 +281,11 @@ namespace eLog.ViewModels
                 //ProgressBarVisibility = Visibility.Collapsed;
                 Status = string.Empty;
                 Parts.Insert(0, part);
-                RemoveExcessParts();
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
+                OnPropertyChanged(nameof(Parts));
                 AppSettings.Save();
             }
         }
@@ -384,7 +384,7 @@ namespace eLog.ViewModels
                         part.StartMachiningTime = now;
                         part.EndMachiningTime = now;
                         part.FinishedCount = 0;
-                    
+
 
                         //if (part.Id != -1)
                         //{
@@ -403,10 +403,10 @@ namespace eLog.ViewModels
                         //        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
                         //    }
                         //}
-                        
-                        Parts.RemoveAt(index);
-                        Parts.Insert(index, part);
-                        
+
+                        Parts[index] = part;
+                        //Parts.RemoveAt(index);
+                        //Parts.Insert(index, part);
                         break;
                 }
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
@@ -480,8 +480,9 @@ namespace eLog.ViewModels
                     } // попытка записи сразу
 
                     Status = string.Empty;
-                    Parts.RemoveAt(index);
-                    Parts.Insert(index, part);
+                    Parts[index] = part;
+                    //Parts.RemoveAt(index);
+                    //Parts.Insert(index, part);
                     _ = Util.SetPartialState(ref part);
                     if (part.StartMachiningTime == DateTime.MinValue) part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
                     OnPropertyChanged(nameof(Parts));
@@ -568,7 +569,9 @@ namespace eLog.ViewModels
                     //});
                     //ProgressBarVisibility = Visibility.Collapsed;
                     Status = string.Empty;
-                    Parts[index] = part;
+                    //Parts[index] = part;
+                    Parts.RemoveAt(index);
+                    Parts.Insert(index, part);
                     OnPropertyChanged(nameof(Parts));
                     RemoveExcessParts();
                     AppSettings.Instance.Parts = Parts;
@@ -653,28 +656,28 @@ namespace eLog.ViewModels
                         OnPropertyChanged(nameof(part.Title));
                         Application.Current.Dispatcher.Invoke(delegate
                         {
-                            Parts.RemoveAt(index);
-                            Parts.Insert(index, part);
+                            Parts[index] = part;
+                            //Parts.RemoveAt(index);
+                            //Parts.Insert(index, part);
                         });
-                    }
 
+                    }
+                    Thread.Sleep(1000);
                     Application.Current.Dispatcher.Invoke(delegate
                     {
-
-                        OnPropertyChanged(nameof(Parts));
                         RemoveExcessParts();
-
                     });
-                    
+                    Thread.Sleep(1000);
                     if (needSave)
                     {
                         AppSettings.Instance.Parts = Parts;
                         AppSettings.Save();
                     }
+                    Thread.Sleep(2000);
                 }
                 catch (InvalidOperationException)
                 {
-
+                    Thread.Sleep(5000);
                 }
                 catch (Exception e)
                 {
@@ -685,23 +688,28 @@ namespace eLog.ViewModels
                 {
                     ProgressBarVisibility = Visibility.Hidden;
                 }
-                Thread.Sleep(10000);
+                Thread.Sleep(20000);
             }
         }
 
         private void RemoveExcessParts(int remains = 20)
         {
-            if (Parts.Count(p => p.IsSynced) > remains)
+            var syncedPartsCount = Parts.Count(p => p.IsSynced);
+
+            if (syncedPartsCount > remains)
             {
-                
-                foreach (var part in Parts.Skip(remains))
+                var partsToRemove = Parts
+                    .Where(p => p.IsSynced)
+                    .Reverse()
+                    .Take(syncedPartsCount - remains);
+
+                foreach (var part in partsToRemove.ToList())
                 {
-                    var i = Parts.IndexOf(part);
-                    if (part.IsSynced) Parts.RemoveAt(i);
-                    break;
+                    Parts.Remove(part);
                 }
+                Parts = new DeepObservableCollection<Part>(Parts.Distinct());
+                OnPropertyChanged(nameof(Parts));
             }
-            OnPropertyChanged(nameof(Parts));
         }
     }
 }
