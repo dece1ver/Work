@@ -40,6 +40,8 @@ namespace eLog.Infrastructure
         [JsonIgnore] private static AppSettings? _Instance;
         [JsonIgnore] public static AppSettings Instance => _Instance ??= new AppSettings();
 
+        [JsonIgnore] public static bool DebugMode;
+
         /// <summary> Директория для хранения всякого </summary>
         [JsonIgnore] public const string BasePath = "C:\\ProgramData\\dece1ver\\eLog";
 

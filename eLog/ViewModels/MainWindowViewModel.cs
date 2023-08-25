@@ -26,8 +26,10 @@ namespace eLog.ViewModels
 {
     internal class MainWindowViewModel : ViewModel, IOverlay
     {
+        bool _startNewPart = false;
         public MainWindowViewModel()
         {
+            AppSettings.DebugMode = true;
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
 
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
@@ -251,6 +253,8 @@ namespace eLog.ViewModels
         public ICommand StartDetailCommand { get; }
         private async void OnStartDetailCommandExecuted(object p)
         {
+            _startNewPart = true;
+            if (AppSettings.DebugMode) Util.WriteLog($"Старт новой детали.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tВсего деталей: {Parts.Count}");
             using (Overlay = new())
             {
                 var part = new Part
@@ -259,7 +263,13 @@ namespace eLog.ViewModels
                     Shift = AppSettings.Instance.CurrentShift,
                     Setup = 1,
                 };
-                if (!WindowsUserDialogService.EditDetail(ref part, true)) return;
+                if (!WindowsUserDialogService.EditDetail(ref part, true)) 
+                {
+                    if (AppSettings.DebugMode) Util.WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
+                    _startNewPart = false;
+                    return; 
+                }
+                if (AppSettings.DebugMode) Util.WriteLog($"Подтверждение старта.\n\tВсего деталей: {Parts.Count}");
                 //ProgressBarVisibility = Visibility.Visible;
                 //Status = "Запись в процессе";
                 //await Task.Run(() =>
@@ -280,7 +290,9 @@ namespace eLog.ViewModels
                 //});
                 //ProgressBarVisibility = Visibility.Collapsed;
                 Status = string.Empty;
+                if (AppSettings.DebugMode) Util.WriteLog($"Добавление в список.\n\tДеталь: {part.Name}");
                 Parts.Insert(0, part);
+                if (AppSettings.DebugMode) Util.WriteLog($"Добавлено.\n\tВсего деталей: {Parts.Count}");
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
@@ -288,6 +300,7 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(Parts));
                 AppSettings.Save();
             }
+            _startNewPart = false;
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
         #endregion
@@ -598,6 +611,7 @@ namespace eLog.ViewModels
             {
                 try
                 {
+                    if (_startNewPart) throw new InvalidOperationException();
                     Status = "";
                     bool needSave = false;
                     for (var i = Parts.Count - 1; i >= 0; i--)
@@ -632,7 +646,6 @@ namespace eLog.ViewModels
                             }
 
                             if (part.RewriteToXl() is not Util.WriteResult.Ok) continue;
-
                         }
                         else
                         {
@@ -642,7 +655,7 @@ namespace eLog.ViewModels
                                 case -2:
                                     break;
                                 case -1:
-                                    continue; ;
+                                    continue;
                                 default:
                                     part.IsSynced = true;
                                     Status = $"Информация записана: [{partName}]";
@@ -654,12 +667,12 @@ namespace eLog.ViewModels
                         }
                         ProgressBarVisibility = Visibility.Hidden;
                         OnPropertyChanged(nameof(part.Title));
-                        Application.Current.Dispatcher.Invoke(delegate
-                        {
-                            Parts[index] = part;
-                            //Parts.RemoveAt(index);
-                            //Parts.Insert(index, part);
-                        });
+                        //Application.Current.Dispatcher.Invoke(delegate
+                        //{
+                        //    Parts[index] = part;
+                        //    Parts.RemoveAt(index);
+                        //    Parts.Insert(index, part);
+                        //});
 
                     }
                     Thread.Sleep(1000);
