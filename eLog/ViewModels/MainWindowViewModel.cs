@@ -26,10 +26,10 @@ namespace eLog.ViewModels
 {
     internal class MainWindowViewModel : ViewModel, IOverlay
     {
-        bool _startNewPart = false;
+        bool _editPart = false;
         public MainWindowViewModel()
         {
-            AppSettings.DebugMode = true;
+            AppSettings.DebugMode = false;
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
 
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
@@ -253,7 +253,7 @@ namespace eLog.ViewModels
         public ICommand StartDetailCommand { get; }
         private async void OnStartDetailCommandExecuted(object p)
         {
-            _startNewPart = true;
+            _editPart = true;
             if (AppSettings.DebugMode) Util.WriteLog($"Старт новой детали.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tВсего деталей: {Parts.Count}");
             using (Overlay = new())
             {
@@ -266,7 +266,7 @@ namespace eLog.ViewModels
                 if (!WindowsUserDialogService.EditDetail(ref part, true)) 
                 {
                     if (AppSettings.DebugMode) Util.WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
-                    _startNewPart = false;
+                    _editPart = false;
                     return; 
                 }
                 if (AppSettings.DebugMode) Util.WriteLog($"Подтверждение старта.\n\tВсего деталей: {Parts.Count}");
@@ -300,7 +300,7 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(Parts));
                 AppSettings.Save();
             }
-            _startNewPart = false;
+            _editPart = false;
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
         #endregion
@@ -438,6 +438,7 @@ namespace eLog.ViewModels
         public ICommand EditDetailCommand { get; }
         private async void OnEditDetailCommandExecuted(object p)
         {
+            _editPart = true;
             using (Overlay = new())
             {
                 var part = new Part((Part)p);
@@ -507,8 +508,8 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
                 OnPropertyChanged(nameof(Parts));
-                RemoveExcessParts();
             }
+            _editPart = false;
         }
         private static bool CanEditDetailCommandExecute(object p) => true;
         #endregion
@@ -586,11 +587,9 @@ namespace eLog.ViewModels
                     Parts.RemoveAt(index);
                     Parts.Insert(index, part);
                     OnPropertyChanged(nameof(Parts));
-                    RemoveExcessParts();
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
                 };
-            
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
@@ -611,7 +610,7 @@ namespace eLog.ViewModels
             {
                 try
                 {
-                    if (_startNewPart) throw new InvalidOperationException();
+                    if (_editPart) throw new InvalidOperationException();
                     Status = "";
                     bool needSave = false;
                     for (var i = Parts.Count - 1; i >= 0; i--)
@@ -701,26 +700,21 @@ namespace eLog.ViewModels
                 {
                     ProgressBarVisibility = Visibility.Hidden;
                 }
-                Thread.Sleep(20000);
+                Thread.Sleep(10000);
             }
         }
 
         private void RemoveExcessParts(int remains = 20)
         {
-            var syncedPartsCount = Parts.Count(p => p.IsSynced);
-
-            if (syncedPartsCount > remains)
+            if (Parts.Count(p => p.IsSynced) > remains)
             {
-                var partsToRemove = Parts
-                    .Where(p => p.IsSynced)
-                    .Reverse()
-                    .Take(syncedPartsCount - remains);
 
-                foreach (var part in partsToRemove.ToList())
+                foreach (var part in Parts.Skip(remains))
                 {
-                    Parts.Remove(part);
+                    var i = Parts.IndexOf(part);
+                    if (part.IsSynced) Parts.RemoveAt(i);
+                    break;
                 }
-                Parts = new DeepObservableCollection<Part>(Parts.Distinct());
                 OnPropertyChanged(nameof(Parts));
             }
         }
