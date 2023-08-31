@@ -317,7 +317,7 @@ namespace eLog.Models
                 var productivityInfo = productivity > 0 ? $" ({productivity:N0}%)" : string.Empty;
                 switch (IsFinished)
                 {
-                    case State.Finished:
+                    case not State.InProgress when FinishedCount > 0:
                         result += productivityInfo;
                         break;
                     case State.InProgress:
