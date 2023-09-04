@@ -302,7 +302,7 @@ namespace eLog.Models
                     ? EndMachiningTime
                     : startMachiningTime
                         .AddMinutes(totalCount * SingleProductionTimePlan)
-                        .Add(Util.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(totalCount * SingleProductionTimePlan)));
+                        .Add(Util.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(totalCount * SingleProductionTimePlan), false));
                 var result = endMachiningTime >= startMachiningTime && EndSetupInfo != "-" ? endMachiningTime.ToString(Text.DateTimeFormat) : "-";
                 if (result == "-") return result;
                 var breaks = Util.GetBreaksBetween(startMachiningTime, endMachiningTime);
