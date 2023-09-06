@@ -310,7 +310,7 @@ namespace eLog.Models
                 var planInfo = SingleProductionTimePlan > 0
                     ? $" (Плановое: {totalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                     : string.Empty;
-                var finishedCount = SetupTimeFact > TimeSpan.Zero ? FinishedCount - 1 : FinishedCount;
+                var finishedCount = StartMachiningTime > StartSetupTime ? FinishedCount - 1 : FinishedCount;
                 var productivity = SingleProductionTimePlan > 0 
                     ? finishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100
                     : 0;
