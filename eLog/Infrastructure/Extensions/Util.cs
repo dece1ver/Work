@@ -590,7 +590,7 @@ namespace eLog.Infrastructure.Extensions
                 dayShiftThirdBreak = dayShiftThirdBreak.AddMinutes(-14);
                 nightShiftFirstBreak = nightShiftFirstBreak.AddMinutes(-29);
                 nightShiftSecondBreak = nightShiftSecondBreak.AddMinutes(-29);
-                nightShiftThirdBreak = dayShiftThirdBreak.AddMinutes(-29);
+                nightShiftThirdBreak = nightShiftSecondBreak.AddMinutes(-29);
             }
 
             var breaks = TimeSpan.Zero;
@@ -616,7 +616,7 @@ namespace eLog.Infrastructure.Extensions
             if (dayShiftThirdBreak >= startTime && dayShiftThirdBreak <= endTime)
             {
                 breaks += TimeSpan.FromMinutes(15);
-                if (!calcOnEnd) endTime += TimeSpan.FromMinutes(30);
+                if (!calcOnEnd) endTime += TimeSpan.FromMinutes(15);
             }
             if (nightShiftFirstBreak >= startTime && nightShiftFirstBreak <= endTime) {
                 breaks += TimeSpan.FromMinutes(30);
