@@ -274,8 +274,15 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (KeyNotFoundException)
             {
-                Debug.Print("Битая таблица");
-                WriteLog($"Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog($"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                Debug.Print("KeyNotFoundException");
+                TryRestoreXl();
+            }
+            catch (OutOfMemoryException)
+            {
+                WriteLog($"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                Debug.Print("OutOfMemoryException");
+                TryRestoreXl();
             }
             catch (ArgumentException)
             {
@@ -304,6 +311,23 @@ namespace eLog.Infrastructure.Extensions
             catch
             {
                 return false;
+            }
+        }
+
+        private static void TryRestoreXl()
+        {
+            try
+            {
+                Debug.Print("Restore");
+                WriteLog("Попытка восстановления XL файла после ошибки...");
+                File.Copy(AppSettings.XlReservedPath, AppSettings.Instance.XlPath, true);
+                WriteLog("Успешно.");
+                Debug.Print("Ok");
+            }
+            catch
+            {
+                Debug.Print("Failed");
+                WriteLog("Неудачно.");
             }
         }
 
@@ -390,8 +414,16 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (KeyNotFoundException)
             {
-                WriteLog($"Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
-                Debug.Print("Битая таблица");
+                WriteLog($"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                Debug.Print("KeyNotFoundException");
+                TryRestoreXl();
+                return WriteResult.Error;
+            }
+            catch (OutOfMemoryException)
+            {
+                WriteLog($"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                Debug.Print("OutOfMemoryException");
+                TryRestoreXl();
                 return WriteResult.Error;
             }
             catch (Exception e)
@@ -399,6 +431,7 @@ namespace eLog.Infrastructure.Extensions
                 Debug.Print("Необработанное исключение");
                 WriteLog(e, $"   Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 TryCopyLog();
+                TryRestoreXl();
                 return WriteResult.Error;
             }
             return result;
