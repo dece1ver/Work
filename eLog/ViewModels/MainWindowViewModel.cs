@@ -26,10 +26,10 @@ namespace eLog.ViewModels
 {
     internal class MainWindowViewModel : ViewModel, IOverlay
     {
-        bool _editPart = false;
+        bool _editPart = true;
         public MainWindowViewModel()
         {
-            AppSettings.DebugMode = false;
+            AppSettings.DebugMode = true;
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
 
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
@@ -644,7 +644,7 @@ namespace eLog.ViewModels
                                     throw new ArgumentOutOfRangeException();
                             }
 
-                            if (part.RewriteToXl() is not Util.WriteResult.Ok) continue;
+                            if (rewriteResult is not Util.WriteResult.Ok) continue;
                         }
                         else
                         {

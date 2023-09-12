@@ -262,24 +262,29 @@ namespace eLog.Infrastructure.Extensions
                         }
                         break;
                     }
+                    Debug.Print("Write");
                     wb.Save(true);
+                    Debug.Print("Ok");
                 }
 
             }
             catch (IOException)
             {
-
+                Debug.Print("IOError");
             }
             catch (KeyNotFoundException)
             {
+                Debug.Print("Битая таблица");
                 WriteLog($"Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
             }
             catch (ArgumentException)
             {
+                Debug.Print("Нет таблицы");
                 MessageBox.Show("Неверно указан путь к таблице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception e)
             {
+                Debug.Print("Битая таблица");
                 WriteLog(e, $"   Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 TryCopyLog();
             }
@@ -373,20 +378,25 @@ namespace eLog.Infrastructure.Extensions
                         result = WriteResult.Ok;
                         break;
                     }
+                    Debug.Print("Rewrite");
                     wb.Save(true);
+                    Debug.Print("Ok");
                 }
             }
             catch (IOException)
             {
+                Debug.Print("IOError");
                 return WriteResult.IOError;
             }
             catch (KeyNotFoundException)
             {
                 WriteLog($"Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                Debug.Print("Битая таблица");
                 return WriteResult.Error;
             }
             catch (Exception e)
             {
+                Debug.Print("Необработанное исключение");
                 WriteLog(e, $"   Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 TryCopyLog();
                 return WriteResult.Error;
