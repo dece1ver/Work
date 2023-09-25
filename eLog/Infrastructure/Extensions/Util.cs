@@ -1,27 +1,15 @@
 ﻿using eLog.Models;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Globalization;
 using System.Linq;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using ClosedXML.Excel;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Controls;
-using ClosedXML;
 using eLog.Infrastructure.Extensions.Windows;
 using eLog.Views.Windows.Dialogs;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Wordprocessing;
 using static eLog.Infrastructure.Extensions.Text;
-using DocumentFormat.OpenXml.Office2013.PowerPoint.Roaming;
-using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -226,37 +214,42 @@ namespace eLog.Infrastructure.Extensions
                             ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
                             : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
                         xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
-                        xlRow.Cell(8).Value = part.Operator.FullName.Trim();
-                        xlRow.Cell(9).Value = part.FullName;
-                        xlRow.Cell(10).Value = part.Order;
-                        xlRow.Cell(11).Value = part.FinishedCount;
-                        xlRow.Cell(12).Value = part.Setup;
-                        xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
-                        xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
-                        xlRow.Cell(16).Value = part.SetupTimePlan;
-                        xlRow.Cell(17).FormulaR1C1 = prevRow.Cell(17).FormulaR1C1;
+                        xlRow.Cell(8).Value = part.Shift;
+                        xlRow.Cell(9).Value = part.Operator.FullName.Trim();
+                        xlRow.Cell(10).Value = part.FullName;
+                        xlRow.Cell(11).Value = part.Order;
+                        xlRow.Cell(12).Value = part.FinishedCount;
+                        xlRow.Cell(13).Value = part.Setup;
+                        xlRow.Cell(14).Value = part.StartSetupTime.ToString("HH:mm");
+                        xlRow.Cell(15).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(16).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(17).Value = part.SetupTimePlan;
                         xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
-                        xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
-                        xlRow.Cell(22).Value = part.SingleProductionTimePlan;
-                        xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                        for (var i = 24; i <= 32; i++)
+                        xlRow.Cell(19).FormulaR1C1 = prevRow.Cell(19).FormulaR1C1;
+                        xlRow.Cell(20).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(21).Value = part.EndMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(22).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(23).Value = part.SingleProductionTimePlan;
+                        xlRow.Cell(24).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
+                        for (var i = 25; i <= 33; i++)
                         {
                             xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                         }
 
-                        var setupDownTimes = part.DownTimes.Any(x => x is
-                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup })
-                            ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
-                            : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                         var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
-                        xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
-                        xlRow.Cell(34).Value = part.Shift;
+                        xlRow.Cell(34).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                         xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
                         xlRow.Cell(36).Value = part.Guid.ToString();
-                        for (var i = 1; i <= 36; i++)
+                        var partialSetupTime = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                        xlRow.Cell(37).Value = partialSetupTime > shiftTime ? shiftTime : partialSetupTime;
+                        xlRow.Cell(38).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Maintenance }).TotalMinutes(), 0);
+                        xlRow.Cell(39).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolSearching }).TotalMinutes(), 0);
+                        xlRow.Cell(40).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Mentoring }).TotalMinutes(), 0);
+                        xlRow.Cell(41).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0);
+                        xlRow.Cell(42).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0);
+                        xlRow.Cell(43).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0);
+
+                        for (var i = 1; i <= 43; i++)
                         {
                             xlRow.Cell(i).Style = prevRow.Cell(i).Style;
                         }
@@ -374,31 +367,35 @@ namespace eLog.Infrastructure.Extensions
                             ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
                             : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
                         xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
-                        xlRow.Cell(8).Value = part.Operator.FullName.Trim();
-                        xlRow.Cell(9).Value = part.FullName;
-                        xlRow.Cell(10).Value = part.Order;
-                        xlRow.Cell(11).Value = part.FinishedCount;
-                        xlRow.Cell(12).Value = part.Setup;
-                        xlRow.Cell(13).Value = part.StartSetupTime.ToString("HH:mm");
-                        xlRow.Cell(14).Value = part.StartMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(15).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
-                        xlRow.Cell(16).Value = part.SetupTimePlan;
-                        xlRow.Cell(19).Value = part.StartMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(20).Value = part.EndMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(21).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
-                        xlRow.Cell(22).Value = part.SingleProductionTimePlan;
-                        xlRow.Cell(23).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-                        var setupDownTimes = part.DownTimes.Any(x => x is
-                        { Relation: DownTime.Relations.Setup, Type: DownTime.Types.PartialSetup })
-                            ? part.DownTimes.First(x => x.Type is DownTime.Types.PartialSetup).Time.TotalMinutes
-                            : Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                        xlRow.Cell(8).Value = part.Shift;
+                        xlRow.Cell(9).Value = part.Operator.FullName.Trim();
+                        xlRow.Cell(10).Value = part.FullName;
+                        xlRow.Cell(11).Value = part.Order;
+                        xlRow.Cell(12).Value = part.FinishedCount;
+                        xlRow.Cell(13).Value = part.Setup;
+                        xlRow.Cell(14).Value = part.StartSetupTime.ToString("HH:mm");
+                        xlRow.Cell(15).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(16).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(17).Value = part.SetupTimePlan;
+                        xlRow.Cell(18).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(19).Value = part.EndMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(20).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(21).Value = part.SingleProductionTimePlan;
+                        xlRow.Cell(22).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
 
                         var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
-                        xlRow.Cell(33).Value = setupDownTimes > shiftTime ? shiftTime : setupDownTimes;
-                        //xlRow.Cell(33).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
-                        xlRow.Cell(34).Value = part.Shift;
+                        xlRow.Cell(34).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                         xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
                         xlRow.Cell(36).Value = part.Guid.ToString();
+                        var partialSetupTime = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                        xlRow.Cell(37).Value = partialSetupTime > shiftTime ? shiftTime : partialSetupTime;
+                        xlRow.Cell(38).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Maintenance }).TotalMinutes(), 0);
+                        xlRow.Cell(39).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolSearching }).TotalMinutes(), 0);
+                        xlRow.Cell(40).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Mentoring }).TotalMinutes(), 0);
+                        xlRow.Cell(41).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0);
+                        xlRow.Cell(42).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0);
+                        xlRow.Cell(43).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0);
+
                         result = WriteResult.Ok;
                         break;
                     }
