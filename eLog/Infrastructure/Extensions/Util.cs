@@ -139,9 +139,13 @@ namespace eLog.Infrastructure.Extensions
         {
             var index = AppSettings.Instance.Parts.IndexOf(part);
             var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
+            if (prevPart is null) return false;
             var partial = part.IsFinished == Part.State.PartialSetup ||
-                          prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 };
-            if (partial && part.SetupTimeFact.Ticks > 0)
+                          prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 } 
+                          && part.SetupTimeFact.Ticks > 0 
+                          && part.FullName == prevPart.FullName
+                          && part.Order == prevPart.Order;
+            if (partial)
             {
                 part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining))
                 {

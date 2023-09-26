@@ -21,6 +21,7 @@ using eLog.Infrastructure.Interfaces;
 using eLog.Views.Windows.Settings;
 using Microsoft.Win32;
 using eLog.Views.Windows.Dialogs;
+using System.Diagnostics;
 
 namespace eLog.ViewModels
 {
@@ -289,9 +290,11 @@ namespace eLog.ViewModels
                 //    }
                 //});
                 //ProgressBarVisibility = Visibility.Collapsed;
+                
                 Status = string.Empty;
                 if (AppSettings.DebugMode) Util.WriteLog($"Добавление в список.\n\tДеталь: {part.Name}");
                 Parts.Insert(0, part);
+                Debug.Print($"Set partial for [{part.Name}]: {Util.SetPartialState(ref part)}");
                 if (AppSettings.DebugMode) Util.WriteLog($"Добавлено.\n\tВсего деталей: {Parts.Count}");
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
@@ -385,7 +388,7 @@ namespace eLog.ViewModels
                 {
                     case EndSetupResult.Success:
                         part.StartMachiningTime = DateTime.Now.Rounded();
-                        _ = Util.SetPartialState(ref part);
+                        Debug.Print($"Set partial for [{part.Name}]: {Util.SetPartialState(ref part)}");
                         Parts.RemoveAt(index);
                         Parts.Insert(index, part);
                         break;
@@ -497,7 +500,7 @@ namespace eLog.ViewModels
                     Parts[index] = part;
                     //Parts.RemoveAt(index);
                     //Parts.Insert(index, part);
-                    _ = Util.SetPartialState(ref part);
+                    Debug.Print($"Set partial for [{part.Name}]: {Util.SetPartialState(ref part)}");
                     if (part.StartMachiningTime == DateTime.MinValue) part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
