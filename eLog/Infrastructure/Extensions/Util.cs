@@ -377,11 +377,11 @@ namespace eLog.Infrastructure.Extensions
                         xlRow.Cell(15).Value = part.StartMachiningTime.ToString("HH:mm");
                         xlRow.Cell(16).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
                         xlRow.Cell(17).Value = part.SetupTimePlan;
-                        xlRow.Cell(18).Value = part.StartMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(19).Value = part.EndMachiningTime.ToString("HH:mm");
-                        xlRow.Cell(20).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
-                        xlRow.Cell(21).Value = part.SingleProductionTimePlan;
-                        xlRow.Cell(22).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
+                        xlRow.Cell(20).Value = part.StartMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(21).Value = part.EndMachiningTime.ToString("HH:mm");
+                        xlRow.Cell(22).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
+                        xlRow.Cell(23).Value = part.SingleProductionTimePlan;
+                        xlRow.Cell(24).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
 
                         var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
                         xlRow.Cell(34).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
