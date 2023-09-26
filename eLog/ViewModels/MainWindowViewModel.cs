@@ -29,7 +29,7 @@ namespace eLog.ViewModels
         bool _editPart = true;
         public MainWindowViewModel()
         {
-            AppSettings.DebugMode = true;
+            AppSettings.DebugMode = false;
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
 
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
@@ -633,6 +633,7 @@ namespace eLog.ViewModels
                                     Status = $"Информация обновлена: [{partName}]";
                                     break;
                                 case Util.WriteResult.IOError or Util.WriteResult.Error or Util.WriteResult.FileNotExist or Util.WriteResult.DontNeed:
+                                    Thread.Sleep(30000);
                                     continue;
                                 case Util.WriteResult.NotFinded:
                                     part.Id = part.WriteToXl();
@@ -689,7 +690,9 @@ namespace eLog.ViewModels
                 }
                 catch (InvalidOperationException)
                 {
-                    Thread.Sleep(5000);
+                    Status = "";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Thread.Sleep(30000);
                 }
                 catch (Exception e)
                 {
