@@ -13,6 +13,7 @@ using System.ComponentModel.DataAnnotations;
 using eLog.Infrastructure;
 using System.Runtime.CompilerServices;
 using System.Windows.Threading;
+using Irony.Parsing;
 
 namespace eLog.Models
 {
@@ -137,6 +138,8 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(Relation));
                 OnPropertyChanged(nameof(Time));
                 OnPropertyChanged(nameof(InProgress));
+                UpdateError();
+                OnPropertyChanged(nameof(HasError));
             }
         }
 
@@ -150,6 +153,8 @@ namespace eLog.Models
                 StartTime = DateTime.TryParseExact(_StartTimeText, Text.DateTimeFormat, null, DateTimeStyles.None, out var startTime)
                     ? startTime
                     : DateTime.MinValue;
+                UpdateError();
+                OnPropertyChanged(nameof(HasError));
             }
         }
 
@@ -162,6 +167,8 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(StartTimeText));
                 OnPropertyChanged(nameof(Time));
                 OnPropertyChanged(nameof(InProgress));
+                UpdateError();
+                OnPropertyChanged(nameof(HasError));
             }
         }
 
@@ -175,10 +182,12 @@ namespace eLog.Models
                 EndTime = DateTime.TryParseExact(_EndTimeText, Text.DateTimeFormat, null, DateTimeStyles.None, out var endTime)
                     ? endTime
                     : DateTime.MinValue;
+                UpdateError();
+                OnPropertyChanged(nameof(HasError));
             }
         }
 
-        [JsonIgnore] public TimeSpan Time => EndTime - StartTime;
+        [JsonIgnore] public TimeSpan Time => (EndTime - StartTime) - Util.GetBreaksBetween(StartTime, EndTime);
         [JsonIgnore] public bool InProgress => EndTime < StartTime;
 
         public bool HasError { get; private set; }
@@ -226,6 +235,10 @@ namespace eLog.Models
                                  EndTime > DateTime.Now)
                         {
                             error = "Время завершения простоя не может быть позже текущего времени, т.к. изготовление детали не завершено.";
+                        }
+                        else if (Time <= TimeSpan.Zero && EndTime != DateTime.MinValue)
+                        {
+                            error = "Данный простой не имеет длительности, введены либо одинаквые значения, либо простой полностью перекрывается перерывом.";
                         }
                         break;
                 }
@@ -299,6 +312,10 @@ namespace eLog.Models
             }
             else if (Relation is Relations.Machining && ParentPart.IsFinished == Part.State.InProgress &&
                      EndTime > DateTime.Now)
+            {
+                HasError = true;
+            }
+            else if (Time <= TimeSpan.Zero && EndTime != DateTime.MinValue)
             {
                 HasError = true;
             }

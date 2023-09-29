@@ -134,6 +134,7 @@ namespace eLog.Views.Windows.Dialogs
             var result = true;
             foreach (var downTime in Part.DownTimes)
             {
+                downTime.UpdateError();
                 if(downTime.HasError) result = false;
             }
             CanBeClosed = result;
