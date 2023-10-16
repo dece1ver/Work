@@ -240,7 +240,7 @@ namespace eLog.Models
                 var endSetupTime = SetupIsFinished ? StartMachiningTime : StartSetupTime
                     .AddMinutes(SetupTimePlan)
                     .AddMinutes(downTimesMinutes)
-                    .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), true));
+                    .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), false));
                 
                 if (StartSetupTime == StartMachiningTime) return "Без наладки";
                 var result = endSetupTime > StartSetupTime ? endSetupTime.ToString(Text.DateTimeFormat) : "-";
