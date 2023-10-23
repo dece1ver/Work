@@ -22,6 +22,7 @@ namespace eLog.Views.Windows.Settings
         private string _OrdersSourcePath;
         private Machine _Machine;
         private string[] _OrderQualifiers;
+        private bool _DebugMode;
         public IReadOnlyList<Machine> Machines { get; }
 
         public string XlPath
@@ -47,6 +48,12 @@ namespace eLog.Views.Windows.Settings
         {
             get => _OrderQualifiers;
             set => Set(ref _OrderQualifiers, value);
+
+        }
+            public bool DebugMode
+        {
+            get => _DebugMode;
+            set => Set(ref _DebugMode, value);
         }
 
         public AppSettingsWindow()
@@ -57,6 +64,7 @@ namespace eLog.Views.Windows.Settings
             _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
             _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
             _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
+            _DebugMode = AppSettings.Instance.DebugMode;
             InitializeComponent();
         }
 

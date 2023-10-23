@@ -40,8 +40,6 @@ namespace eLog.Infrastructure
         [JsonIgnore] private static AppSettings? _Instance;
         [JsonIgnore] public static AppSettings Instance => _Instance ??= new AppSettings();
 
-        [JsonIgnore] public static bool DebugMode;
-
         /// <summary> Директория для хранения всякого </summary>
         [JsonIgnore] public const string BasePath = "C:\\ProgramData\\dece1ver\\eLog";
 
@@ -66,6 +64,8 @@ namespace eLog.Infrastructure
         /// <summary> Путь к файлу логов </summary>
         [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
 
+        
+
         private Machine _Machine;
         private string _XlPath;
         private string _OrdersSourcePath;
@@ -75,6 +75,7 @@ namespace eLog.Infrastructure
         private DeepObservableCollection<Part> _Parts;
         private bool _IsShiftStarted;
         private Operator? _CurrentOperator;
+        private bool _DebugMode;
 
         /// <summary> Текущий станок </summary>
         public Machine Machine
@@ -136,9 +137,15 @@ namespace eLog.Infrastructure
             get => _Parts;
             set => Set(ref _Parts, value);
         }
+        /// <summary> Режим отладки </summary>
+        public bool DebugMode
+        {
+            get => _DebugMode;
+            set => Set(ref _DebugMode, value);
+        }
 
-        
-        
+
+
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private void CreateBaseConfig()

@@ -22,15 +22,16 @@ using eLog.Views.Windows.Settings;
 using Microsoft.Win32;
 using eLog.Views.Windows.Dialogs;
 using System.Diagnostics;
+using static eLog.Infrastructure.Extensions.Util;
+using static eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.ViewModels
 {
     internal class MainWindowViewModel : ViewModel, IOverlay
     {
-        bool _editPart = true;
+        bool _editPart = false;
         public MainWindowViewModel()
         {
-            AppSettings.DebugMode = false;
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
 
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
@@ -188,6 +189,7 @@ namespace eLog.ViewModels
         public ICommand StartShiftCommand { get; }
         private void OnStartShiftCommandExecuted(object p)
         {
+            if (AppSettings.Instance.DebugMode) WriteLog($"Старт смены.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tСмена: {AppSettings.Instance.CurrentShift}.");
             ShiftStarted = true;
             OnPropertyChanged(nameof(CanEndShift));
             OnPropertyChanged(nameof(Parts));
@@ -201,6 +203,7 @@ namespace eLog.ViewModels
 
         private void OnEndShiftCommandExecuted(object p)
         {
+            if (AppSettings.Instance.DebugMode) WriteLog($"Завершение смены.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tСмена: {AppSettings.Instance.CurrentShift}.");
             ShiftStarted = false;
             OnPropertyChanged(nameof(CanEndShift));
             OnPropertyChanged(nameof(Parts));
@@ -255,7 +258,7 @@ namespace eLog.ViewModels
         private async void OnStartDetailCommandExecuted(object p)
         {
             _editPart = true;
-            if (AppSettings.DebugMode) Util.WriteLog($"Старт новой детали.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tВсего деталей: {Parts.Count}");
+            if (AppSettings.Instance.DebugMode) WriteLog($"Старт новой детали.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tВсего деталей: {Parts.Count}");
             using (Overlay = new())
             {
                 var part = new Part
@@ -266,36 +269,16 @@ namespace eLog.ViewModels
                 };
                 if (!WindowsUserDialogService.EditDetail(ref part, true)) 
                 {
-                    if (AppSettings.DebugMode) Util.WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
+                    if (AppSettings.Instance.DebugMode) WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
                     _editPart = false;
                     return; 
                 }
-                if (AppSettings.DebugMode) Util.WriteLog($"Подтверждение старта.\n\tВсего деталей: {Parts.Count}");
-                //ProgressBarVisibility = Visibility.Visible;
-                //Status = "Запись в процессе";
-                //await Task.Run(() =>
-                //{
-                //    switch (part)
-                //    {
-                //        case { IsFinished: not Part.State.InProgress }:
-                //            Progress = 0;
-                //            part.Id = part.WriteToXl();
-                //            if (part.Id > 0)
-                //            {
-                //                part.IsSynced = true;
-                //                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                //            }
-
-                //            break;
-                //    }
-                //});
-                //ProgressBarVisibility = Visibility.Collapsed;
-                
+                if (AppSettings.Instance.DebugMode) WriteLog($"Подтверждение старта.\n\tВсего деталей: {Parts.Count}");
                 Status = string.Empty;
-                if (AppSettings.DebugMode) Util.WriteLog($"Добавление в список.\n\tДеталь: {part.Name}");
+                if (AppSettings.Instance.DebugMode) WriteLog($"Добавление в список.\n\tДеталь: {part.Name}");
                 Parts.Insert(0, part);
                 Debug.Print($"Set partial for [{part.Name}]: {Util.SetPartialState(ref part)}");
-                if (AppSettings.DebugMode) Util.WriteLog($"Добавлено.\n\tВсего деталей: {Parts.Count}");
+                if (AppSettings.Instance.DebugMode) WriteLog($"Добавлено.\n\tВсего деталей: {Parts.Count}");
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
@@ -321,7 +304,8 @@ namespace eLog.ViewModels
                     var index = Parts.IndexOf(part);
                     Parts.RemoveAt(index);
                     var downTimes = part.DownTimes;
-                    downTimes.Add(new DownTime(part, type));
+                    var downTime = new DownTime(part, type);
+                    downTimes.Add(downTime);
                     part.DownTimes = downTimes;
                     OnPropertyChanged(nameof(part.DownTimes));
                     OnPropertyChanged(nameof(part.DownTimesIsClosed));
@@ -329,6 +313,7 @@ namespace eLog.ViewModels
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Запущен простой [{downTime.Name}] на детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
                 }
             }
         }
@@ -370,6 +355,7 @@ namespace eLog.ViewModels
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Завершен простой [{part.LastDownTime.Name}] на детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
                 }
             }
         }
@@ -620,6 +606,7 @@ namespace eLog.ViewModels
                     {
                         if (ProgressBarVisibility == Visibility.Visible) break;
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
+                        if (AppSettings.Instance.DebugMode) { WriteLog($"Нужна синхронизация - {part.Name}\n\t№{part.Id} - {part.Guid}"); }
                         var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
                         Status = $"Синхронизация: [{partName}]";
                         ProgressBarVisibility = Visibility.Visible;
@@ -637,7 +624,7 @@ namespace eLog.ViewModels
                                     break;
                                 case Util.WriteResult.IOError or Util.WriteResult.Error or Util.WriteResult.FileNotExist or Util.WriteResult.DontNeed:
                                     Thread.Sleep(30000);
-                                    continue;
+                                    break;
                                 case Util.WriteResult.NotFinded:
                                     part.Id = part.WriteToXl();
                                     if (part.Id == -1) continue;

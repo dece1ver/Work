@@ -12,6 +12,7 @@ using System.Windows;
 using eLog.Infrastructure.Extensions;
 using eLog.Views.Windows.Settings;
 using OperatorsEditWindow = eLog.Views.Windows.Settings.OperatorsEditWindow;
+using static eLog.Infrastructure.Extensions.Util;
 
 namespace eLog.Services
 {
@@ -73,15 +74,22 @@ namespace eLog.Services
 
         public static bool EditSettings()
         {
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Редактирование настроек.\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
             var dlg = new AppSettingsWindow()
             {
                 Owner = Application.Current.MainWindow,
             };
-            if (dlg.ShowDialog() != true) return false;
+            if (dlg.ShowDialog() != true) 
+            {
+                if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
+                return false;
+            }
             AppSettings.Instance.Machine = dlg.Machine;
             AppSettings.Instance.XlPath = dlg.XlPath;
             AppSettings.Instance.OrdersSourcePath = dlg.OrdersSourcePathTextBox.Text;
             AppSettings.Instance.OrderQualifiers = dlg.OrderQualifiers;
+            AppSettings.Instance.DebugMode = dlg.DebugMode;
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
             return true;
         }
 
@@ -109,12 +117,18 @@ namespace eLog.Services
 
         public static bool EditDetail(ref Part part, bool newDetail = false)
         {
+            if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog($"Редактирование детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
             var tempPart = new Part(part);
             var dlg = new EditDetailWindow(tempPart, newDetail)
             {
                 Owner = Application.Current.MainWindow,
             };
-            if (dlg.ShowDialog() != true) return false;
+            if (dlg.ShowDialog() != true) 
+            {
+                if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog($"Отмена."); }
+                return false;
+            }
+            
             if (dlg.Part.FinishedCount > 0)
             {
                 dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
@@ -122,11 +136,13 @@ namespace eLog.Services
             part = dlg.Part;
             //if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
             //if (part.EndMachiningTime != DateTime.MinValue && part.FullProductionTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
+            if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog($"Подтверждено."); }
             return true;
         }
 
         public static bool FinishDetail(ref Part part)
         {
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Завершение детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
             var tempPart = new Part(part);
             var dlg = new EndDetailDialogWindow(tempPart)
             {
@@ -135,7 +151,11 @@ namespace eLog.Services
                 MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(Text.TimeSpanFormat) : string.Empty,
             };
 
-            if (dlg.ShowDialog() != true) return false;
+            if (dlg.ShowDialog() != true) 
+            {
+                if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
+                return false;
+            }
             dlg.Part.EndMachiningTime = DateTime.Today.AddHours(DateTime.Now.Hour).AddMinutes(DateTime.Now.Minute);
             if (dlg.Part.FinishedCount == 1) dlg.Part.StartMachiningTime = dlg.Part.EndMachiningTime;
             if (dlg.Part.FinishedCount > 0)
@@ -143,6 +163,7 @@ namespace eLog.Services
                 dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
             }
             part = dlg.Part;
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
             return true;
         }
 

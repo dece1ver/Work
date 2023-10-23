@@ -166,9 +166,9 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="part">Информация об изготовлении</param>
         /// <returns>Int32 - Id записи в таблице</returns>
-        /// <exception cref="NotImplementedException"></exception>
         public static int WriteToXl(this Part part)
         {
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Обновление информации о детали - {part.Name}\n\t{part.Guid}"); }
             var id = -1;
             if (!File.Exists(AppSettings.Instance.XlPath)) return id;
             try
@@ -194,6 +194,7 @@ namespace eLog.Infrastructure.Extensions
                         }
                         if (guid == part.Guid && part.Guid != Guid.Empty)
                         {
+                            if (AppSettings.Instance.DebugMode) { WriteLog($"Найден совпадающий GUID - {part.Guid}\n\tОтмена записи."); }
                             part.Id = num;
                             return -2;
                         }
@@ -204,53 +205,85 @@ namespace eLog.Infrastructure.Extensions
                             continue;
                         }
                         xlRow.Style = prevRow!.Style;
+                        // номер 
                         xlRow.Cell(1).Value = id;
+                        // выработка по наладке
                         xlRow.Cell(2).FormulaR1C1 = prevRow.Cell(2).FormulaR1C1;
+                        // выработка штучная 1С
                         xlRow.Cell(3).FormulaR1C1 = prevRow.Cell(3).FormulaR1C1;
+                        // выработка штучная м/в + 2м
                         xlRow.Cell(4).FormulaR1C1 = prevRow.Cell(4).FormulaR1C1;
+                        // комментарий оператора + отчет по простоям
                         xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
                         // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
-                        //xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
-                        //    ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
-                        //    : part.EndMachiningTime.ToString("dd.MM.yyyy");
                         var needDiscrease = part.Shift == NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
+                        // дата смены
                         xlRow.Cell(6).Value = needDiscrease
                             ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
                             : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
+                        // станок
                         xlRow.Cell(7).Value = AppSettings.Instance.Machine.Name;
+                        // смена день/ночь
                         xlRow.Cell(8).Value = part.Shift;
+                        // оператор
                         xlRow.Cell(9).Value = part.Operator.FullName.Trim();
+                        // деталь
                         xlRow.Cell(10).Value = part.FullName;
+                        // номер м/л
                         xlRow.Cell(11).Value = part.Order;
+                        // количетсво изготовлено
                         xlRow.Cell(12).Value = part.FinishedCount;
+                        // номер установки
                         xlRow.Cell(13).Value = part.Setup;
+                        // начало наладки
                         xlRow.Cell(14).Value = part.StartSetupTime.ToString("HH:mm");
+                        // завешение наладки = начало изготовления
                         xlRow.Cell(15).Value = part.StartMachiningTime.ToString("HH:mm");
+                        // фактическое фремя наладки
                         xlRow.Cell(16).Value = partial ? 0 : part.SetupTimeFact.ToString(@"hh\:mm");
+                        // норматив на наладку
                         xlRow.Cell(17).Value = part.SetupTimePlan;
+                        // фактическое время наладки в минутах
                         xlRow.Cell(18).FormulaR1C1 = prevRow.Cell(18).FormulaR1C1;
+                        // разница план/факт наладки
                         xlRow.Cell(19).FormulaR1C1 = prevRow.Cell(19).FormulaR1C1;
+                        // завешение наладки = начало изготовления
                         xlRow.Cell(20).Value = part.StartMachiningTime.ToString("HH:mm");
+                        // завершение изготовления
                         xlRow.Cell(21).Value = part.EndMachiningTime.ToString("HH:mm");
+                        // фактическое время изготовления
                         xlRow.Cell(22).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
+                        // норматив штучный
                         xlRow.Cell(23).Value = part.SingleProductionTimePlan;
+                        // машинное время
                         xlRow.Cell(24).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
+                        // вычисления на 1 шт
                         for (var i = 25; i <= 33; i++)
                         {
                             xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                         }
 
                         var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
+                        // все простои в наладке кроме частичной
                         xlRow.Cell(34).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                        // все простои в изготовлении
                         xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
+                        // guid
                         xlRow.Cell(36).Value = part.Guid.ToString();
                         var partialSetupTime = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0);
+                        // частичная наладка
                         xlRow.Cell(37).Value = partialSetupTime > shiftTime ? shiftTime : partialSetupTime;
+                        // обслуживание
                         xlRow.Cell(38).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Maintenance }).TotalMinutes(), 0);
+                        // поиск и получение инструмента
                         xlRow.Cell(39).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolSearching }).TotalMinutes(), 0);
+                        // обучение и все такое
                         xlRow.Cell(40).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Mentoring }).TotalMinutes(), 0);
+                        // обращение в другие службы
                         xlRow.Cell(41).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0);
+                        // изготовление оснастки
                         xlRow.Cell(42).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0);
+                        // отказ оборудования
                         xlRow.Cell(43).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0);
 
                         for (var i = 1; i <= 43; i++)
@@ -259,37 +292,40 @@ namespace eLog.Infrastructure.Extensions
                         }
                         break;
                     }
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл."); }
                     Debug.Print("Write");
                     wb.Save(true);
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
                     Debug.Print("Ok");
                 }
 
             }
-            catch (IOException)
+            catch (IOException ioEx)
             {
                 Debug.Print("IOError");
+                if (AppSettings.Instance.DebugMode) { WriteLog(ioEx); }
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException keyNotFoundEx)
             {
-                WriteLog($"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(keyNotFoundEx, $"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 Debug.Print("KeyNotFoundException");
                 TryRestoreXl();
             }
-            catch (OutOfMemoryException)
+            catch (OutOfMemoryException outOfMemEx)
             {
-                WriteLog($"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(outOfMemEx, $"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 Debug.Print("OutOfMemoryException");
                 TryRestoreXl();
             }
-            catch (ArgumentException)
+            catch (ArgumentException argEx)
             {
                 Debug.Print("Нет таблицы");
+                if (AppSettings.Instance.DebugMode) { WriteLog(argEx); }
                 MessageBox.Show("Неверно указан путь к таблице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception e)
             {
-                Debug.Print("Битая таблица");
-                WriteLog(e, $"   Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(e, $"Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 TryCopyLog();
             }
             return id;
@@ -299,11 +335,9 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                using (var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false }))
-                {
-                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
-                    return true;
-                }
+                using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
+                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                return true;
             }
             catch
             {
@@ -330,8 +364,18 @@ namespace eLog.Infrastructure.Extensions
 
         public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
         {
-            if (!File.Exists(AppSettings.Instance.XlPath)) return WriteResult.FileNotExist;
-            if (part.IsFinished == Part.State.InProgress) return WriteResult.DontNeed;
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Обновление информации о детали - {part.Name}\n\t №{part.Id} - {part.Guid}"); }
+
+            if (!File.Exists(AppSettings.Instance.XlPath))
+            {
+                if (AppSettings.Instance.DebugMode) { WriteLog($"Путь к таблице не существует."); }
+                return WriteResult.FileNotExist;
+            }
+            if (part.IsFinished == Part.State.InProgress)
+            {
+                if (AppSettings.Instance.DebugMode) { WriteLog($"Изготовление в процессе, запись не требуется."); }
+                return WriteResult.DontNeed; 
+            }
             var result = WriteResult.NotFinded;
             try
             {
@@ -339,7 +383,10 @@ namespace eLog.Infrastructure.Extensions
 
                 if (doBackup)
                 {
-                    if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
+                    if (!BackupXl()) 
+                    {
+                        throw new IOException("Ошибка при создании бэкапа таблицы.");
+                    }
                 }
 
                 using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
@@ -348,7 +395,7 @@ namespace eLog.Infrastructure.Extensions
 
 
                     var combinedDownTimes = part.DownTimes.Combine();
-
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Поиск позиции..."); }
                     foreach (var xlRow in wb.Worksheet(1).Rows())
                     {
                         var rowWithPart = xlRow.Cell(1).Value.IsNumber;
@@ -361,11 +408,8 @@ namespace eLog.Infrastructure.Extensions
                         }
 
                         if (!rowWithPart || rowNum != part.Id || guid != part.Guid) continue;
+                        if (AppSettings.Instance.DebugMode) { WriteLog($"Позиция №{part.Id} найдена."); }
                         xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
-                        // если время завершения раньше 07:10, то отнимаем сутки для корректности отчетов
-                        //xlRow.Cell(6).Value = part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(7).AddMinutes(10)
-                        //    ? part.EndMachiningTime.AddDays(-1).ToString("dd.MM.yyyy")
-                        //    : part.EndMachiningTime.ToString("dd.MM.yyyy");
                         var needDiscrease = part.Shift == NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
                         xlRow.Cell(6).Value = needDiscrease
                             ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
@@ -403,26 +447,28 @@ namespace eLog.Infrastructure.Extensions
                         result = WriteResult.Ok;
                         break;
                     }
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл."); }
                     Debug.Print("Rewrite");
                     wb.Save(true);
                     Debug.Print("Ok");
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
                 }
             }
-            catch (IOException)
+            catch (IOException ioEx)
             {
-                Debug.Print("IOError");
+                if (AppSettings.Instance.DebugMode) { WriteLog(ioEx); }
                 return WriteResult.IOError;
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException keyNotFoundEx)
             {
-                WriteLog($"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(keyNotFoundEx, $"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 Debug.Print("KeyNotFoundException");
                 TryRestoreXl();
                 return WriteResult.Error;
             }
-            catch (OutOfMemoryException)
+            catch (OutOfMemoryException outOfMemEx)
             {
-                WriteLog($"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(outOfMemEx, $"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 Debug.Print("OutOfMemoryException");
                 TryRestoreXl();
                 return WriteResult.Error;
@@ -430,7 +476,7 @@ namespace eLog.Infrastructure.Extensions
             catch (Exception e)
             {
                 Debug.Print("Необработанное исключение");
-                WriteLog(e, $"   Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(e, $"Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
                 TryCopyLog();
                 TryRestoreXl();
                 return WriteResult.Error;
@@ -751,8 +797,11 @@ namespace eLog.Infrastructure.Extensions
 
         public static DateTime GetEndShiftTime()
         {
-            return AppSettings.Instance.CurrentShift == Text.DayShift ? DateTime.Today.AddHours(19) :
-                DateTime.Now.Hour < 7 ? DateTime.Today.AddHours(7) : DateTime.Today.AddDays(1).AddHours(7);
+            return AppSettings.Instance.CurrentShift == Text.DayShift 
+                ? DateTime.Today.AddHours(19) 
+                : DateTime.Now.Hour < 8 
+                    ? DateTime.Today.AddHours(7) 
+                    : DateTime.Today.AddDays(1).AddHours(7);
         }
 
         public static void AddDownTime(this Part part, DownTime.Types type)
