@@ -6,24 +6,33 @@
         xmlns:local="clr-namespace:eLog.Views.Windows.Dialogs"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        
+        xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         Title="О программе" Height="320" Width="640" ResizeMode="NoResize" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" WindowStyle="None">
-    <Border BorderBrush="DarkGray" BorderThickness="1">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition/>
-                <RowDefinition Height="100"/>
-            </Grid.RowDefinitions>
-            <StackPanel>
-                <TextBlock Grid.Row="0" Margin="0 10 0 0" Text="Электронный журнал" FontSize="18" TextAlignment="Center"/>
-                <TextBlock Grid.Row="0" Margin="0 0 0 10" Text="{Binding About}" FontSize="16" TextAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Margin="100 0" Grid.Row="1" Orientation="Horizontal">
-                <TextBlock Margin="0 0 30 0" Text="Видеоинструкция    =>" VerticalAlignment="Center" FontSize="24"/>
-                <Image Source="pack://application:,,,/Resources/qrcode.png" Width="150"/>
-            </StackPanel>
-            <Button Grid.Row="2" Margin="10 10" Content="OK" Style="{StaticResource GeneralButton}" Click="Button_Click"/>
-        </Grid>
-    </Border>
+    <Window.Resources>
+        <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
+        <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
+    </Window.Resources>
+    <Grid>
+        <Border BorderBrush="DarkGray" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition/>
+                    <RowDefinition Height="100"/>
+                </Grid.RowDefinitions>
+                <StackPanel>
+                    <TextBlock Grid.Row="0" Margin="0 10 0 0" Text="Электронный журнал" FontSize="18" TextAlignment="Center"/>
+                    <TextBlock Grid.Row="0" Margin="0 0 0 10" Text="{Binding About}" FontSize="16" TextAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="100 0" Grid.Row="1" Orientation="Horizontal">
+                    <TextBlock Margin="0 0 30 0" Text="Видеоинструкция    =>" VerticalAlignment="Center" FontSize="24" PreviewMouseLeftButtonUp="TextBlock_PreviewMouseLeftButtonUp"/>
+                    <Image Source="pack://application:,,,/Resources/qrcode.png" Width="150"/>
+                </StackPanel>
+                <Button Grid.Row="2" Margin="10 10" Content="OK" Style="{StaticResource GeneralButton}" Click="Button_Click"/>
+            </Grid>
+        </Border>
+        <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
+          Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
+          Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>
+    </Grid>
 </Window>

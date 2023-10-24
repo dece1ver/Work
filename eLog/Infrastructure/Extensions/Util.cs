@@ -168,9 +168,9 @@ namespace eLog.Infrastructure.Extensions
         /// <returns>Int32 - Id записи в таблице</returns>
         public static int WriteToXl(this Part part)
         {
-            if (AppSettings.Instance.DebugMode) { WriteLog($"Обновление информации о детали - {part.Name}\n\t{part.Guid}"); }
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Новая запись информации о детали - {part.Name}\n\t{part.Guid}"); }
             var id = -1;
-            if (!File.Exists(AppSettings.Instance.XlPath)) return id;
+            if (!File.Exists(AppSettings.Instance.XlPath)) return -3;
             try
             {
                 if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
@@ -307,13 +307,13 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (KeyNotFoundException keyNotFoundEx)
             {
-                WriteLog(keyNotFoundEx, $"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(keyNotFoundEx, $"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 Debug.Print("KeyNotFoundException");
                 TryRestoreXl();
             }
             catch (OutOfMemoryException outOfMemEx)
             {
-                WriteLog(outOfMemEx, $"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(outOfMemEx, $"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 Debug.Print("OutOfMemoryException");
                 TryRestoreXl();
             }
@@ -325,7 +325,7 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (Exception e)
             {
-                WriteLog(e, $"Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(e, $"Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 TryCopyLog();
             }
             return id;
@@ -364,7 +364,7 @@ namespace eLog.Infrastructure.Extensions
 
         public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
         {
-            if (AppSettings.Instance.DebugMode) { WriteLog($"Обновление информации о детали - {part.Name}\n\t №{part.Id} - {part.Guid}"); }
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Обновление информации о детали - {part.Name}\n\t№{part.Id} - {part.Guid}"); }
 
             if (!File.Exists(AppSettings.Instance.XlPath))
             {
