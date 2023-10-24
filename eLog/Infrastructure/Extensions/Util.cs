@@ -10,6 +10,7 @@ using System.IO;
 using eLog.Infrastructure.Extensions.Windows;
 using eLog.Views.Windows.Dialogs;
 using static eLog.Infrastructure.Extensions.Text;
+using System.Threading;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -168,7 +169,7 @@ namespace eLog.Infrastructure.Extensions
         /// <returns>Int32 - Id записи в таблице</returns>
         public static int WriteToXl(this Part part)
         {
-            if (AppSettings.Instance.DebugMode) { WriteLog($"Новая запись информации о детали - {part.Name}\n\t{part.Guid}"); }
+            if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Новая запись информации о детали."); }
             var id = -1;
             if (!File.Exists(AppSettings.Instance.XlPath)) return -3;
             try
@@ -331,18 +332,25 @@ namespace eLog.Infrastructure.Extensions
             return id;
         }
 
-        private static bool BackupXl()
+        private static bool BackupXl(int count = 3)
         {
-            try
+            for (int i = 1; i <= count; i++)
             {
-                using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
-                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
-                return true;
+                if (AppSettings.Instance.DebugMode) WriteLog($"Попытка бэкапа таблицы...{i}");
+                try
+                {
+                    using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
+                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                    if (AppSettings.Instance.DebugMode) WriteLog("Успешно.");
+                    return true;
+                }
+                catch 
+                {
+                    Thread.Sleep(1000);
+                }
             }
-            catch
-            {
-                return false;
-            }
+            return false;
+            
         }
 
         private static void TryRestoreXl()
@@ -364,7 +372,7 @@ namespace eLog.Infrastructure.Extensions
 
         public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
         {
-            if (AppSettings.Instance.DebugMode) { WriteLog($"Обновление информации о детали - {part.Name}\n\t№{part.Id} - {part.Guid}"); }
+            if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Обновление информации о детали."); }
 
             if (!File.Exists(AppSettings.Instance.XlPath))
             {
@@ -488,9 +496,9 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(Text.DateTimeFormat)}]: " +
+                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: " +
                                                         $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
-                                                        $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n   Caller: {exception.TargetSite}")}\n" +
+                                                        $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
                                                         $"{exception.GetType()}\n" +
                                                         $"{exception.StackTrace}\n\n");
                 if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
@@ -504,7 +512,24 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeFormat)}]: {message}\n\n");
+                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: {message}\n\n");
+                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public static void WriteLog(Part part, string message)
+        {
+            try
+            {
+                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: {message}\n\t" +
+                    $"Оператор: {AppSettings.Instance.CurrentOperator?.DisplayName}\n\t" +
+                    $"Деталь №{part.Id}: {part.Name} | {part.Setup} уст.\n\t" +
+                    $"М/Л: {part.Order} | {part.TotalCountInfo}\n\t" +
+                    $"GUID: {part.Guid}\n\n");
                 if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
             }
             catch (Exception e)

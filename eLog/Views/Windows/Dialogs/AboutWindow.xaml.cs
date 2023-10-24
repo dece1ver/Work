@@ -3,6 +3,7 @@ using eLog.Infrastructure.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,7 +33,7 @@ namespace eLog.Views.Windows.Dialogs
             InitializeComponent();
         }
         private int _secretMenuCounter = 0;
-        private (bool UnSyncAll, bool RemoveLog) serviceResult;
+        public (bool UnSyncAll, bool ClearLogs) ServiceResult;
 
         public static string About { get
             {
@@ -62,17 +63,27 @@ namespace eLog.Views.Windows.Dialogs
             {
                 using (Overlay = new())
                 {
-                    var passWindow = new GetPasswordDialogWindow() { Owner = this };
-                    passWindow.ShowDialog();
-                    _secretMenuCounter = 0;
-                    if (passWindow.Password == Encoding.UTF8.GetString(new byte[] { 97, 54, 54, 54, 114 }))
-                    {
+                    Util.WriteLog("Попытка входа в сервисное меню.");
+                    ServiceResult.UnSyncAll = false;
+                    ServiceResult.ClearLogs = false;
 
-                    } else
+                    var passWindow = new GetPasswordDialogWindow() { Owner = this };
+
+                    _secretMenuCounter = 0;
+                    if ((bool)passWindow.ShowDialog()! && passWindow.Password == Encoding.UTF8.GetString(new byte[] { 97, 54, 54, 54, 114 }))
                     {
-                        serviceResult.UnSyncAll = false;
-                        serviceResult.RemoveLog = false;
+                        Util.WriteLog("Успешный вход.");
+                        var serviceWindow = new ServiceMenuDialogWindow() { Owner = this };
+                        if ((bool)serviceWindow.ShowDialog()!)
+                        {
+                            ServiceResult.UnSyncAll = serviceWindow.UnsyncAllParts;
+                            ServiceResult.ClearLogs = serviceWindow.ClearLogs;
+                        }
                     }
+                    Util.WriteLog($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
+                    Util.WriteLog($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
+                    Debug.Print($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
+                    Debug.Print($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
                 }
             }
         }

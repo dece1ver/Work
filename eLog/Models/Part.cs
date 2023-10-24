@@ -361,7 +361,7 @@ namespace eLog.Models
             {
                 if (IsFinished == State.InProgress) return FullName;
                 var symbol = IsSynced ? "✓" : "🗘";
-                var partName = FullName.Length >= 83 ? FullName[..80] + "..." : FullName;
+                var partName = FullName.Length >= 123 ? FullName[..120] + "..." : FullName;
                 return $"{symbol} {partName}".Trim();
             }
         }

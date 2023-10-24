@@ -246,8 +246,44 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
+                if (AppSettings.Instance.DebugMode) WriteLog("Вход в справку.");
                 var aboutWindow = new AboutWindow() { Owner = Application.Current.MainWindow };
-                aboutWindow.ShowDialog();
+                bool aboutResult = (bool)aboutWindow.ShowDialog()!;
+                if (aboutResult)
+                {
+                    Debug.Print($"aboutResult = {aboutResult}");
+                    var serviceResult = aboutWindow.ServiceResult;
+                    if (serviceResult.ClearLogs)
+                    {
+                        try
+                        {
+                            File.Delete(AppSettings.LogFile);
+                            Status = "Логи очищены.";
+                            WriteLog("Лог файл очищен.");
+                            if (serviceResult.UnSyncAll) Status += " | ";
+                        }
+                        catch
+                        {
+                            Status = "Очистка логов не удалась.";
+                        }
+                    }
+                    if (serviceResult.UnSyncAll)
+                    {
+                        try
+                        {
+                            foreach (var part in Parts)
+                            {
+                                part.IsSynced = false;
+                            }
+                            Status += "Синхронизация сброшена.";
+                        }
+                        catch
+                        {
+                            Status = "Не удалось сбросить синхронизацию.";
+                        }
+                        
+                    }
+                }
             }
         }
         private static bool CanShowAboutCommandExecute(object p) => true;
@@ -313,7 +349,7 @@ namespace eLog.ViewModels
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
-                    if (AppSettings.Instance.DebugMode) { WriteLog($"Запущен простой [{downTime.Name}] на детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
+                    if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Запущен простой [{downTime.Name}]"); }
                 }
             }
         }
@@ -355,7 +391,7 @@ namespace eLog.ViewModels
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
-                    if (AppSettings.Instance.DebugMode) { WriteLog($"Завершен простой [{part.LastDownTime.Name}] на детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
+                    if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Завершен простой [{part.LastDownTime.Name}]"); }
                 }
             }
         }
@@ -368,6 +404,7 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
+                if (AppSettings.Instance.DebugMode) WriteLog("Вход в справку.");
                 var index = Parts.IndexOf((Part)p);
                 var part = Parts[index];
                 switch (WindowsUserDialogService.GetSetupResult())
@@ -547,7 +584,7 @@ namespace eLog.ViewModels
                     {
                         if (ProgressBarVisibility == Visibility.Visible) break;
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
-                        if (AppSettings.Instance.DebugMode) { WriteLog($"Нужна синхронизация - {part.Name}\n\t№{part.Id} - {part.Guid}"); }
+                        // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
                         var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
                         Status = $"Синхронизация: [{partName}]";
                         ProgressBarVisibility = Visibility.Visible;

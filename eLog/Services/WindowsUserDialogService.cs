@@ -54,13 +54,18 @@ namespace eLog.Services
         /// <returns>true если операторы были изменены, false при отмене, либо если все операторы остались неизменны</returns>
         public static bool EditOperators()
         {
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Редактирование операторов.\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
             var currentOperator = AppSettings.Instance.CurrentOperator is null ? null : new Operator(AppSettings.Instance.CurrentOperator);
             var dlg = new OperatorsEditWindow()
             {
                 Owner = Application.Current.MainWindow,
             };
             
-            if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators)) return false;
+            if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators)) 
+                {
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
+                    return false;
+                }
             AppSettings.Instance.Operators = new DeepObservableCollection<Operator>(dlg.Operators.ToList()
                 .Where(o => !string.IsNullOrWhiteSpace(o.DisplayName)));
             AppSettings.Instance.CurrentOperator = null;
@@ -68,7 +73,7 @@ namespace eLog.Services
             {
                 if (@operator.Equals(currentOperator)) AppSettings.Instance.CurrentOperator = @operator;
             }
-            
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
             return true;
         }
 
@@ -117,7 +122,7 @@ namespace eLog.Services
 
         public static bool EditDetail(ref Part part, bool newDetail = false)
         {
-            if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog($"Редактирование детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
+            if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog(part, $"Редактирование детали."); }
             var tempPart = new Part(part);
             var dlg = new EditDetailWindow(tempPart, newDetail)
             {
@@ -142,7 +147,7 @@ namespace eLog.Services
 
         public static bool FinishDetail(ref Part part)
         {
-            if (AppSettings.Instance.DebugMode) { WriteLog($"Завершение детали: {part.Name}\n\tОператор: {AppSettings.Instance.CurrentOperator?.DisplayName}"); }
+            if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Завершение детали."); }
             var tempPart = new Part(part);
             var dlg = new EndDetailDialogWindow(tempPart)
             {
