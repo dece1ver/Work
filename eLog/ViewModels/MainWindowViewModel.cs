@@ -608,7 +608,7 @@ namespace eLog.ViewModels
                                 case Util.WriteResult.IOError:
                                     Status = "Таблица занята.";
                                     ProgressBarVisibility = Visibility.Hidden;
-                                    Thread.Sleep(30000);
+                                    Thread.Sleep(new Random().Next(5000, 60000));
                                     break;
                                 case Util.WriteResult.Error:
                                     Status = "Ошибка записи.";
@@ -637,8 +637,13 @@ namespace eLog.ViewModels
                             var res = part.WriteToXl();
                             switch (res)
                             {
-                                case - 3:
+                                case -4:
+                                    Status = "Таблица занята.";
+                                    Thread.Sleep(new Random().Next(5000, 60000));
+                                    break;
+                                case -3:
                                     Status = "Таблица не найдена.";
+                                    Thread.Sleep(300000);
                                     break;
                                 case -2:
                                     Status = "Отмена записи, деталь была изменена.";
@@ -664,12 +669,12 @@ namespace eLog.ViewModels
                         //});
 
                     }
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000);
                     Application.Current.Dispatcher.Invoke(delegate
                     {
                         RemoveExcessParts();
                     });
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000);
                     if (needSave)
                     {
                         AppSettings.Instance.Parts = Parts;

@@ -11,11 +11,13 @@ using eLog.Infrastructure.Extensions.Windows;
 using eLog.Views.Windows.Dialogs;
 using static eLog.Infrastructure.Extensions.Text;
 using System.Threading;
+using DocumentFormat.OpenXml.Bibliography;
 
 namespace eLog.Infrastructure.Extensions
 {
     internal static class Util
     {
+        const long MaxLogSize = 8388608;
         public enum WriteResult
         {
             Ok, IOError, NotFinded, Error, FileNotExist, DontNeed
@@ -305,6 +307,7 @@ namespace eLog.Infrastructure.Extensions
             {
                 Debug.Print("IOError");
                 if (AppSettings.Instance.DebugMode) { WriteLog(ioEx); }
+                return -4;
             }
             catch (KeyNotFoundException keyNotFoundEx)
             {
@@ -342,11 +345,12 @@ namespace eLog.Infrastructure.Extensions
                     using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
                     File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
                     if (AppSettings.Instance.DebugMode) WriteLog("Успешно.");
+                    Thread.Sleep(200);
                     return true;
                 }
                 catch 
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
                 }
             }
             return false;
@@ -494,57 +498,120 @@ namespace eLog.Infrastructure.Extensions
 
         public static void WriteLog(Exception exception, string additionMessage = "")
         {
-            try
+            for (int i = 0; i < 3; i++)
             {
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: " +
-                                                        $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
-                                                        $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
-                                                        $"{exception.GetType()}\n" +
-                                                        $"{exception.StackTrace}\n\n");
-                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    Debug.Print(new FileInfo(AppSettings.LogFile).Length.ToString());
+                    if (new FileInfo(AppSettings.LogFile).Length > MaxLogSize)
+                    {
+                        var backupLog = AppSettings.LogFile + $".bk{DateTime.Now:ddMMyy}";
+                        File.Move(AppSettings.LogFile, backupLog);
+                        TryCopyBackup(backupLog);
+                    }
+                    File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: " +
+                                                            $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
+                                                            $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
+                                                            $"{exception.GetType()}\n" +
+                                                            $"{exception.StackTrace}\n\n");
+                    if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (i == 2)
+                    {
+                        MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    Thread.Sleep(1000);
+                }
             }
         }
         public static void WriteLog(string message)
         {
-            try
+            for (int i = 0; i < 3; i++)
             {
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: {message}\n\n");
-                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    Debug.Print(new FileInfo(AppSettings.LogFile).Length.ToString());
+                    if (new FileInfo(AppSettings.LogFile).Length > MaxLogSize)
+                    {
+                        var backupLog = AppSettings.LogFile + $".bk{DateTime.Now:ddMMyy}";
+                        File.Move(AppSettings.LogFile, backupLog);
+                        TryCopyBackup(backupLog);
+                    }
+                    File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: {message}\n\n");
+                    if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (i == 2)
+                    {
+                        MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    Thread.Sleep(1000);
+                }
             }
         }
 
         public static void WriteLog(Part part, string message)
         {
-            try
+            for (int i = 0; i < 3; i++)
             {
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: {message}\n\t" +
-                    $"Оператор: {AppSettings.Instance.CurrentOperator?.DisplayName}\n\t" +
-                    $"Деталь №{part.Id}: {part.Name} | {part.Setup} уст.\n\t" +
-                    $"М/Л: {part.Order} | {part.TotalCountInfo}\n\t" +
-                    $"GUID: {part.Guid}\n\n");
-                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    Debug.Print(new FileInfo(AppSettings.LogFile).Length.ToString());
+                    if (new FileInfo(AppSettings.LogFile).Length > MaxLogSize)
+                    {
+                        var backupLog = AppSettings.LogFile + $".bk{DateTime.Now:ddMMyy}";
+                        File.Move(AppSettings.LogFile, backupLog);
+                        TryCopyBackup(backupLog);
+                    }
+                    File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(DateTimeWithSecsFormat)}]: {message}\n\t" +
+                        $"Оператор: {AppSettings.Instance.CurrentOperator?.DisplayName}\n\t" +
+                        $"Деталь №{part.Id}: {part.Name} | {part.Setup} уст.\n\t" +
+                        $"М/Л: {part.Order} | {part.TotalCountInfo}\n\t" +
+                        $"GUID: {part.Guid}\n\n");
+                    if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (i == 2) 
+                    {
+                        MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                    Thread.Sleep(1000);
+                }
             }
         }
 
         public static void TryCopyLog()
         {
-            if (Directory.GetParent(AppSettings.Instance.XlPath) is not { Exists: true } parent) return;
-            var logsPath = Path.Combine(parent.FullName, "logs");
-            if (!Directory.Exists(logsPath)) { Directory.CreateDirectory(logsPath); }
-            File.Copy(AppSettings.LogFile, Path.Combine(logsPath, $"{Environment.UserName}.log"), true);
+            try
+            {
+                if (Directory.GetParent(AppSettings.Instance.XlPath) is not { Exists: true } parent) return;
+                var logsPath = Path.Combine(parent.FullName, "logs");
+                if (!Directory.Exists(logsPath)) { Directory.CreateDirectory(logsPath); }
+                File.Copy(AppSettings.LogFile, Path.Combine(logsPath, $"{Environment.UserName}.log"), true);
+            }
+            catch { }
+        }
 
+        public static void TryCopyBackup(string path)
+        {
+            try
+            {
+                if (Directory.GetParent(AppSettings.Instance.XlPath) is not { Exists: true } parent) return;
+                var logsPath = Path.Combine(parent.FullName, "logs");
+                if (!Directory.Exists(logsPath)) { Directory.CreateDirectory(logsPath); }
+                File.Copy(path, Path.Combine(logsPath, $"{Environment.UserName}.log.bk{DateTime.Now:ddMMyy}"), true);
+            }
+            catch { }
         }
 
 
