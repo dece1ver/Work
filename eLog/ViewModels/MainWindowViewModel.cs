@@ -411,7 +411,8 @@ namespace eLog.ViewModels
                 {
                     case EndSetupResult.Success:
                         part.StartMachiningTime = DateTime.Now.Rounded();
-                        Debug.Print($"Set partial for [{part.Name}]: {Util.SetPartialState(ref part)}");
+                        var partialRes = Util.SetPartialState(ref part);
+                        Debug.Print($"Set partial for [{part.Name}]: {partialRes}");
                         Parts.RemoveAt(index);
                         Parts.Insert(index, part);
                         break;
@@ -523,7 +524,8 @@ namespace eLog.ViewModels
                     Parts[index] = part;
                     //Parts.RemoveAt(index);
                     //Parts.Insert(index, part);
-                    Debug.Print($"Set partial for [{part.Name}]: {Util.SetPartialState(ref part)}");
+                    var resPartial = Util.SetPartialState(ref part);
+                    Debug.Print($"Set partial for [{part.Name}]: {resPartial}");
                     if (part.StartMachiningTime == DateTime.MinValue) part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
@@ -566,7 +568,6 @@ namespace eLog.ViewModels
         }
         private static bool CanEndDetailCommandExecute(object p) => true;
         #endregion
-
 
         #endregion
 
@@ -637,21 +638,31 @@ namespace eLog.ViewModels
                             var res = part.WriteToXl();
                             switch (res)
                             {
+                                // IO Ecxeption
                                 case -4:
                                     Status = "Таблица занята.";
+                                    ProgressBarVisibility = Visibility.Hidden;
                                     Thread.Sleep(new Random().Next(5000, 60000));
                                     break;
+                                // Not Exists
                                 case -3:
                                     Status = "Таблица не найдена.";
+                                    ProgressBarVisibility = Visibility.Hidden;
                                     Thread.Sleep(300000);
                                     break;
+                                // Part exists
                                 case -2:
                                     Status = "Отмена записи, деталь была изменена.";
+                                    ProgressBarVisibility = Visibility.Hidden;
                                     break;
+                                // Прочие ошибки
                                 case -1:
-                                    continue;
+                                    ProgressBarVisibility = Visibility.Hidden;
+                                    break;
+                                // Ок
                                 default:
                                     part.IsSynced = true;
+                                    ProgressBarVisibility = Visibility.Hidden;
                                     Status = $"Информация записана: [{partName}]";
                                     break;
                             }
