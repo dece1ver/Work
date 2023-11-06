@@ -2,8 +2,10 @@
 using eLog.Models;
 using eLog.Views.Windows.Dialogs;
 using libeLog;
+using libeLog.Infrastructure;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -15,7 +17,7 @@ namespace eLog.Infrastructure.Extensions;
 
 internal static class Util
 {
-    const long MaxLogSize = 8388608;
+    
     public enum WriteResult
     {
         Ok, IOError, NotFinded, Error, FileNotExist, DontNeed
@@ -304,7 +306,6 @@ internal static class Util
         catch (Exception e)
         {
             WriteLog(e, $"Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
-            TryCopyLog();
         }
         return id;
     }
@@ -463,130 +464,57 @@ internal static class Util
         {
             Debug.Print("Необработанное исключение");
             WriteLog(e, $"Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
-            TryCopyLog();
             TryRestoreXl();
             return WriteResult.Error;
         }
         return result;
     }
 
-    public static void WriteLog(Exception exception, string additionMessage = "")
+    /// <summary>
+    /// Получает директорию для копирования логов, которой является директория таблицы.
+    /// </summary>
+    /// <returns></returns>
+    private static string GetCopyDir()
     {
-        for (int i = 0; i < 3; i++)
+        if (Directory.Exists(AppSettings.Instance.XlPath) && Directory.GetParent(AppSettings.Instance.XlPath) is { Parent: not null} parent)
         {
-            try
-            {
-                Debug.Print(new FileInfo(AppSettings.LogFile).Length.ToString());
-                if (new FileInfo(AppSettings.LogFile).Length > MaxLogSize)
-                {
-                    var backupLog = AppSettings.LogFile + $".bk{DateTime.Now:ddMMyy}";
-                    File.Move(AppSettings.LogFile, backupLog);
-                    TryCopyBackup(backupLog);
-                }
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: " +
-                                                        $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
-                                                        $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
-                                                        $"{exception.GetType()}\n" +
-                                                        $"{exception.StackTrace}\n\n");
-                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
-                return;
-            }
-            catch (Exception e)
-            {
-                if (i == 2)
-                {
-                    MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                Thread.Sleep(1000);
-            }
+            return parent.FullName;
         }
-    }
-    public static void WriteLog(string message)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            try
-            {
-                Debug.Print(new FileInfo(AppSettings.LogFile).Length.ToString());
-                if (new FileInfo(AppSettings.LogFile).Length > MaxLogSize)
-                {
-                    var backupLog = AppSettings.LogFile + $".bk{DateTime.Now:ddMMyy}";
-                    File.Move(AppSettings.LogFile, backupLog);
-                    TryCopyBackup(backupLog);
-                }
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: {message}\n\n");
-                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
-                return;
-            }
-            catch (Exception e)
-            {
-                if (i == 2)
-                {
-                    MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                Thread.Sleep(1000);
-            }
-        }
+        return "";
     }
 
+    /// <summary>
+    /// Записывает информацию об исключении в лог.
+    /// </summary>
+    /// <param name="exception"></param>
+    /// <param name="additionMessage"></param>
+    public static void WriteLog(Exception exception, string additionMessage = "") 
+        => Logs.Write(AppSettings.LogFile, exception, additionMessage, GetCopyDir());
+
+
+    /// <summary>
+    /// Записывает сообщение в лог.
+    /// </summary>
+    /// <param name="message"></param>
+    public static void WriteLog(string message)
+        => Logs.Write(AppSettings.LogFile, message, GetCopyDir());
+
+
+    /// <summary>
+    /// Записывает информацию о детали в лог.
+    /// </summary>
+    /// <param name="part"></param>
+    /// <param name="message"></param>
     public static void WriteLog(Part part, string message)
     {
-        for (int i = 0; i < 3; i++)
-        {
-            try
-            {
-                Debug.Print(new FileInfo(AppSettings.LogFile).Length.ToString());
-                if (new FileInfo(AppSettings.LogFile).Length > MaxLogSize)
-                {
-                    var backupLog = AppSettings.LogFile + $".bk{DateTime.Now:ddMMyy}";
-                    File.Move(AppSettings.LogFile, backupLog);
-                    TryCopyBackup(backupLog);
-                }
-                File.AppendAllText(AppSettings.LogFile, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: {message}\n\t" +
+        var content = $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: {message}\n\t" +
                     $"Оператор: {AppSettings.Instance.CurrentOperator?.DisplayName}\n\t" +
                     $"Деталь №{part.Id}: {part.Name} | {part.Setup} уст.\n\t" +
                     $"М/Л: {part.Order} | {part.TotalCountInfo}\n\t" +
-                    $"GUID: {part.Guid}\n\n");
-                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.XlPath)) TryCopyLog();
-                return;
-            }
-            catch (Exception e)
-            {
-                if (i == 2)
-                {
-                    MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                Thread.Sleep(1000);
-            }
-        }
+                    $"GUID: {part.Guid}\n\n";
+        Logs.Write(AppSettings.LogFile, content, GetCopyDir());
     }
 
-    public static void TryCopyLog()
-    {
-        try
-        {
-            if (Directory.GetParent(AppSettings.Instance.XlPath) is not { Exists: true } parent) return;
-            var logsPath = Path.Combine(parent.FullName, "logs");
-            if (!Directory.Exists(logsPath)) { Directory.CreateDirectory(logsPath); }
-            File.Copy(AppSettings.LogFile, Path.Combine(logsPath, $"{Environment.UserName}.log"), true);
-        }
-        catch { }
-    }
-
-    public static void TryCopyBackup(string path)
-    {
-        try
-        {
-            if (Directory.GetParent(AppSettings.Instance.XlPath) is not { Exists: true } parent) return;
-            var logsPath = Path.Combine(parent.FullName, "logs");
-            if (!Directory.Exists(logsPath)) { Directory.CreateDirectory(logsPath); }
-            File.Copy(path, Path.Combine(logsPath, $"{Environment.UserName}.log.bk{DateTime.Now:ddMMyy}"), true);
-        }
-        catch { }
-    }
 
     /// <summary>
     /// Список простоев с временами.
