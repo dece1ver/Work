@@ -1,86 +1,79 @@
-﻿using eLog.Infrastructure.Commands.Base;
-using eLog.Models;
-using eLog.Views.Windows;
+﻿using eLog.Models;
 using eLog.Views.Windows.Dialogs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using libeLog.Base;
 
-namespace eLog.Infrastructure.Commands
+namespace eLog.Infrastructure.Commands;
+
+class CloseWindowCommand : Command
 {
-    class CloseWindowCommand : Command
+    public override bool CanExecute(object? parameter) => parameter is Window;
+
+    public override void Execute(object? parameter)
     {
-        public override bool CanExecute(object? parameter) => parameter is Window;
+        if (!CanExecute(parameter)) return;
 
-        public override void Execute(object? parameter)
-        {
-            if (!CanExecute(parameter)) return;
-
-            var window = (Window)parameter!;
-            window.Close();
-        }
+        var window = (Window)parameter!;
+        window.Close();
     }
+}
 
-    internal class CloseDialogCommand : Command
+internal class CloseDialogCommand : Command
+{
+    public bool DialogResult { get; set; }
+    public override bool CanExecute(object? parameter) => parameter is Window;
+
+    public override void Execute(object? parameter)
     {
-        public bool DialogResult { get; set; }
-        public override bool CanExecute(object? parameter) => parameter is Window;
+        if (!CanExecute(parameter)) return;
 
-        public override void Execute(object? parameter)
-        {
-            if (!CanExecute(parameter)) return;
-
-            var window = (Window)parameter!;
-            window.DialogResult = DialogResult;
-            window.Close();
-        }
+        var window = (Window)parameter!;
+        window.DialogResult = DialogResult;
+        window.Close();
     }
+}
 
-    internal class CloseEndSetupDialogCommand : Command
+internal class CloseEndSetupDialogCommand : Command
+{
+    public EndSetupResult EndSetupResult { get; set; }
+    public override bool CanExecute(object? parameter) => parameter is Window;
+
+    public override void Execute(object? parameter)
     {
-        public EndSetupResult EndSetupResult { get; set; }
-        public override bool CanExecute(object? parameter) => parameter is Window;
+        if (!CanExecute(parameter)) return;
 
-        public override void Execute(object? parameter)
-        {
-            if (!CanExecute(parameter)) return;
-
-            var window = (EndSetupDialogWindow)parameter!;
-            window.EndSetupResult = EndSetupResult;
-            window.Close();
-        }
+        var window = (EndSetupDialogWindow)parameter!;
+        window.EndSetupResult = EndSetupResult;
+        window.Close();
     }
+}
 
-    internal class SetDownTimeDialogCommand : Command
+internal class SetDownTimeDialogCommand : Command
+{
+    public DownTime.Types? DialogResult { get; set; } = null;
+    public override bool CanExecute(object? parameter) => parameter is Window;
+
+    public override void Execute(object? parameter)
     {
-        public DownTime.Types? DialogResult { get; set; } = null;
-        public override bool CanExecute(object? parameter) => parameter is Window;
+        if (!CanExecute(parameter)) return;
 
-        public override void Execute(object? parameter)
-        {
-            if (!CanExecute(parameter)) return;
-
-            var window = (SetDownTimeDialogWindow)parameter!;
-            window.Type = DialogResult;
-            window.Close();
-        }
+        var window = (SetDownTimeDialogWindow)parameter!;
+        window.Type = DialogResult;
+        window.Close();
     }
+}
 
-    internal class CloseEndDetailDialogCommand : Command
+internal class CloseEndDetailDialogCommand : Command
+{
+    public EndDetailResult EndDetailResult { get; set; }
+    public override bool CanExecute(object? parameter) => parameter is Window;
+
+    public override void Execute(object? parameter)
     {
-        public EndDetailResult EndDetailResult { get; set; }
-        public override bool CanExecute(object? parameter) => parameter is Window;
+        if (!CanExecute(parameter)) return;
 
-        public override void Execute(object? parameter)
-        {
-            if (!CanExecute(parameter)) return;
-
-            var window = (EndDetailDialogWindow)parameter!;
-            window.EndDetailResult = EndDetailResult;
-            window.Close();
-        }
+        var window = (EndDetailDialogWindow)parameter!;
+        window.EndDetailResult = EndDetailResult;
+        window.Close();
     }
 }

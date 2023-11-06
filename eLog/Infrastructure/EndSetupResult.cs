@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace eLog.Infrastructure;
 
-namespace eLog.Infrastructure
+public enum EndSetupResult
 {
-    public enum EndSetupResult
-    {
-        Success, Cancel, Stop, PartialComplete
-    }
+    Success, Cancel, Stop, PartialComplete
 }

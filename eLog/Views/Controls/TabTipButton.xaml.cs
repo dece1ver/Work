@@ -1,34 +1,33 @@
-﻿using System.Windows;
+﻿using libeLog.WinApi.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
-using Keyboard = eLog.Infrastructure.Extensions.Windows.Keyboard;
 
-namespace eLog.Views.Controls
+namespace eLog.Views.Controls;
+
+/// <summary>
+/// Логика взаимодействия для TabTipButton.xaml
+/// </summary>
+public partial class TabTipButton : UserControl
 {
-    /// <summary>
-    /// Логика взаимодействия для TabTipButton.xaml
-    /// </summary>
-    public partial class TabTipButton : UserControl
+    private bool _TabTipStatus;
+
+    public TabTipButton()
     {
-        private bool _TabTipStatus;
+        InitializeComponent();
+    }
 
-        public TabTipButton()
+    private void TabTipBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (_TabTipStatus)
         {
-            InitializeComponent();
+            Keyboard.KillTabTip(0);
+            _TabTipStatus = false;
         }
-
-        private void TabTipBtn_Click(object sender, RoutedEventArgs e)
+        else
         {
-            if (_TabTipStatus)
-            {
-                Keyboard.KillTabTip(0);
-                _TabTipStatus = false;
-            }
-            else
-            {
-                Keyboard.RunTabTip();
-                _TabTipStatus = true;
-            }
+            Keyboard.RunTabTip();
+            _TabTipStatus = true;
         }
     }
 }

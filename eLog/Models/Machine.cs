@@ -1,77 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using eLog.Infrastructure;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace eLog.Models
+namespace eLog.Models;
+
+public class Machine
 {
-    public class Machine
+    [JsonConstructor]
+    public Machine(int id)
     {
-        [JsonConstructor]
-        public Machine(int id)
+        Id = id;
+        switch (id)
         {
-            Id = id;
-            switch (id)
-            {
-                case 0:
-                    Name = "Goodway GS-1500";
-                    SafeName = "Goodway GS-1500";
-                    break;
-                case 1:
-                    Name = "Hyundai L230A";
-                    SafeName = "Hyundai L230A";
-                    break;
-                case 2:
-                    Name = "Hyundai WIA SKT21 №105";
-                    SafeName = "Hyundai WIA SKT21 (105)";
-                    break;
-                case 3:
-                    Name = "Hyundai WIA SKT21 №104";
-                    SafeName = "Hyundai WIA SKT21 (104)";
-                    break;
-                case 4:
-                    Name = "Hyundai XH6300";
-                    SafeName = "Hyundai XH6300";
-                    break;
-                case 5:
-                    Name = "Mazak QTS200ML";
-                    SafeName = "Mazak QTS200ML";
-                    break;
-                case 6:
-                    Name = "Mazak QTS350";
-                    SafeName = "Mazak QTS350";
-                    break;
-                case 7:
-                    Name = "Mazak Integrex i200";
-                    SafeName = "Mazak Integrex i200";
-                    break;
-                case 8:
-                    Name = "Mazak Nexus 5000";
-                    SafeName = "Mazak Nexus 5000";
-                    break;
-                case 9:
-                    Name = "Quaser MV134";
-                    SafeName = "Quaser MV134";
-                    break;
-                case 10:
-                    Name = "Victor A110";
-                    SafeName = "Victor A110";
-                    break;
-                default:
-                    Name = "-//-";
-                    SafeName = "---";
-                    break;
-            }
+            case 0:
+                Name = "Goodway GS-1500";
+                SafeName = "Goodway GS-1500";
+                break;
+            case 1:
+                Name = "Hyundai L230A";
+                SafeName = "Hyundai L230A";
+                break;
+            case 2:
+                Name = "Hyundai WIA SKT21 №105";
+                SafeName = "Hyundai WIA SKT21 (105)";
+                break;
+            case 3:
+                Name = "Hyundai WIA SKT21 №104";
+                SafeName = "Hyundai WIA SKT21 (104)";
+                break;
+            case 4:
+                Name = "Hyundai XH6300";
+                SafeName = "Hyundai XH6300";
+                break;
+            case 5:
+                Name = "Mazak QTS200ML";
+                SafeName = "Mazak QTS200ML";
+                break;
+            case 6:
+                Name = "Mazak QTS350";
+                SafeName = "Mazak QTS350";
+                break;
+            case 7:
+                Name = "Mazak Integrex i200";
+                SafeName = "Mazak Integrex i200";
+                break;
+            case 8:
+                Name = "Mazak Nexus 5000";
+                SafeName = "Mazak Nexus 5000";
+                break;
+            case 9:
+                Name = "Quaser MV134";
+                SafeName = "Quaser MV134";
+                break;
+            case 10:
+                Name = "Victor A110";
+                SafeName = "Victor A110";
+                break;
+            default:
+                Name = "-//-";
+                SafeName = "---";
+                break;
         }
-
-        public int Id { get; }
-
-        public string Name { get;}
-        [JsonIgnore]
-        public string SafeName { get; }
     }
+
+    public int Id { get; }
+
+    public string Name { get;}
+    [JsonIgnore]
+    public string SafeName { get; }
 }

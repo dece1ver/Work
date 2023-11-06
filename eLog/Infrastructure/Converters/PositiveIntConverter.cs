@@ -1,24 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows;
 
-namespace eLog.Infrastructure.Converters
-{
-    class PositiveIntConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return ((int)value >= 0 ? value.ToString() : string.Empty) ?? string.Empty;
-        }
+namespace eLog.Infrastructure.Converters;
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return DependencyProperty.UnsetValue;
-        }
+class PositiveIntConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return ((int)value >= 0 ? value.ToString() : string.Empty) ?? string.Empty;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return DependencyProperty.UnsetValue;
     }
 }

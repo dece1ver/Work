@@ -1,34 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Data;
-using System.Windows;
-using eLog.Models;
 
-namespace eLog.Infrastructure.Converters
+namespace eLog.Infrastructure.Converters;
+
+public class DownTimesValidationConverter : IMultiValueConverter
 {
-    public class DownTimesValidationConverter : IMultiValueConverter
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        bool hasErrors = false;
+        foreach (object value in values)
         {
-            bool hasErrors = false;
-            foreach (object value in values)
+            if ((bool)value == true)
             {
-                if ((bool)value == true)
-                {
-                    hasErrors = true;
-                    break;
-                }
+                hasErrors = true;
+                break;
             }
-            return !hasErrors;
         }
+        return !hasErrors;
+    }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
     }
 }

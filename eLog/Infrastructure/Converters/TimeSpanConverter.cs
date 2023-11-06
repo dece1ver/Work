@@ -1,29 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows;
 using eLog.Infrastructure.Extensions;
+using libeLog.Extensions;
+using libeLog;
 
-namespace eLog.Infrastructure.Converters
+namespace eLog.Infrastructure.Converters;
+
+internal class TimeSpanConverter : IValueConverter
 {
-    internal class TimeSpanConverter : IValueConverter
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        if (value is TimeSpan timeSpan)
         {
-            if (value is TimeSpan timeSpan)
-            {
-                return timeSpan == TimeSpan.Zero ? string.Empty : timeSpan.ToString(Text.TimeSpanFormat);
-            }
-            return value;
+            return timeSpan == TimeSpan.Zero ? string.Empty : timeSpan.ToString(Constants.TimeSpanFormat);
         }
+        return value;
+    }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return (value.ToString() ?? string.Empty).TimeParse(out var dateTime) ? dateTime : DependencyProperty.UnsetValue;
-        }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return (value.ToString() ?? string.Empty).TimeParse(out var dateTime) ? dateTime : DependencyProperty.UnsetValue;
     }
 }

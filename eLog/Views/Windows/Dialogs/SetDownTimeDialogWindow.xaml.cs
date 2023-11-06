@@ -1,29 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 using eLog.Models;
 
-namespace eLog.Views.Windows.Dialogs
+namespace eLog.Views.Windows.Dialogs;
+
+/// <summary>
+/// Логика взаимодействия для SetDownTimeDialogWindow.xaml
+/// </summary>
+public partial class SetDownTimeDialogWindow : Window
 {
-    /// <summary>
-    /// Логика взаимодействия для SetDownTimeDialogWindow.xaml
-    /// </summary>
-    public partial class SetDownTimeDialogWindow : Window
+    public DownTime.Types? Type { get; set; } = null;
+    public SetDownTimeDialogWindow()
     {
-        public DownTime.Types? Type { get; set; } = null;
-        public SetDownTimeDialogWindow()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

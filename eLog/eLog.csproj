@@ -42,6 +42,10 @@
   </ItemGroup>
     
   <ItemGroup>
+    <ProjectReference Include="..\libeLog\libeLog.csproj" />
+  </ItemGroup>
+    
+  <ItemGroup>
     <Resource Include="Resources\eLog.png" />
     <Resource Include="Resources\qrcode.png" />
   </ItemGroup>
