@@ -1,6 +1,6 @@
-﻿using System;
+﻿using libeLog.WinApi.pInvoke;
+using System;
 using System.Diagnostics;
-using libeLog.WinApi.pInvoke;
 
 namespace libeLog.WinApi.Windows;
 

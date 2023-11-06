@@ -1,10 +1,10 @@
-﻿using System.Collections.ObjectModel;
+﻿using eLog.Infrastructure;
+using eLog.Models;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using eLog.Infrastructure;
-using eLog.Models;
 
 namespace eLog.Views.Windows.Settings;
 
@@ -16,7 +16,7 @@ public partial class OperatorsEditWindow
 
     public OperatorsEditWindow()
     {
-        var tempOperators = 
+        var tempOperators =
 
         Operators = new ObservableCollection<Operator>(AppSettings.Instance.Operators.Select(op => new Operator(op)));
         InitializeComponent();
@@ -27,14 +27,14 @@ public partial class OperatorsEditWindow
         var grid = (DataGrid)sender;
         if (Key.Delete != e.Key) return;
         if (MessageBox.Show(
-                $"Удалить оператора?", 
+                $"Удалить оператора?",
                 "Подтверждение!",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question)
-            == MessageBoxResult.Yes 
+            == MessageBoxResult.Yes
             && grid.SelectedItem is Operator @operator)
         {
-            Operators.Remove(@operator);       
+            Operators.Remove(@operator);
         }
     }
 }

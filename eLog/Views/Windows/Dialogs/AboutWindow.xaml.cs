@@ -27,13 +27,15 @@ public partial class AboutWindow : Window, IOverlay, INotifyPropertyChanged
     private int _secretMenuCounter = 0;
     public (bool UnSyncAll, bool ClearLogs) ServiceResult;
 
-    public static string About { get
+    public static string About
+    {
+        get
         {
             var exe = Environment.ProcessPath;
             var date = exe is null ? string.Empty : $" от {File.GetLastWriteTime(exe).ToString(Constants.DateTimeFormat)}";
             var ver = Assembly.GetExecutingAssembly().GetName().Version!;
             return $"v{ver.Major}.{ver.Minor}.{ver.Build}{date}";
-        } 
+        }
     }
 
     private Overlay _Overlay = new() { State = false };

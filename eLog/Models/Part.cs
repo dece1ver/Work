@@ -1,15 +1,15 @@
-﻿using System;
+﻿using eLog.Infrastructure;
+using eLog.Infrastructure.Extensions;
+using libeLog;
+using libeLog.Extensions;
+using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using eLog.Infrastructure;
-using eLog.Infrastructure.Extensions;
-using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 using System.Windows.Threading;
-using libeLog;
-using libeLog.Extensions;
 
 namespace eLog.Models;
 
@@ -236,16 +236,16 @@ public class Part : INotifyPropertyChanged
                 .AddMinutes(SetupTimePlan)
                 .AddMinutes(downTimesMinutes)
                 .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), false));
-            
+
             if (StartSetupTime == StartMachiningTime) return "Без наладки";
             var result = endSetupTime > StartSetupTime ? endSetupTime.ToString(Constants.DateTimeFormat) : "-";
             if (result == "-") return result;
-            
+
             var breaks = Util.GetBreaksBetween(StartSetupTime, endSetupTime);
             var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
-            
-            var downTimesInfo = downTimesMinutes > 0 
-                ? $" + простои: {downTimesMinutes} мин" 
+
+            var downTimesInfo = downTimesMinutes > 0
+                ? $" + простои: {downTimesMinutes} мин"
                 : string.Empty;
             var planInfo = SetupTimePlan > 0 && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)
                 ? $" (Плановое: норматив {SetupTimePlan} мин{breaksInfo}{downTimesInfo})"
@@ -253,7 +253,7 @@ public class Part : INotifyPropertyChanged
             var productivity = SetupTimePlan > 0 && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)
                 ? $" ({SetupTimePlan / SetupTimeFact.TotalMinutes * 100:N0}%)"
                 : string.Empty;
-            
+
             switch (IsFinished)
             {
                 case State.PartialSetup:
@@ -288,7 +288,7 @@ public class Part : INotifyPropertyChanged
             if (EndMachiningTime == DateTime.MinValue && SingleProductionTimePlan == 0) return "-";
             var totalCount = (TotalCount > 1 ? TotalCount - 1 : TotalCount);
             var startMachiningTime = SetupIsFinished
-                ? StartMachiningTime 
+                ? StartMachiningTime
                 : StartSetupTime
                     .AddMinutes(SetupTimePlan)
                     .Add(Util.GetBreaksBetween(StartSetupTime, StartSetupTime.AddMinutes(SetupTimePlan), true));
@@ -306,7 +306,7 @@ public class Part : INotifyPropertyChanged
                 ? $" (Плановое: {totalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                 : string.Empty;
             var finishedCount = StartMachiningTime > StartSetupTime ? FinishedCount - 1 : FinishedCount;
-            var productivity = SingleProductionTimePlan > 0 
+            var productivity = SingleProductionTimePlan > 0
                 ? finishedCount * SingleProductionTimePlan / ProductionTimeFact.TotalMinutes * 100
                 : 0;
             var productivityInfo = productivity > 0 ? $" ({productivity:N0}%)" : string.Empty;
@@ -331,7 +331,9 @@ public class Part : INotifyPropertyChanged
 
 
     /// <summary> Фактическое время наладки с учетом перерывов </summary>
-    [JsonIgnore] public TimeSpan SetupTimeFact {
+    [JsonIgnore]
+    public TimeSpan SetupTimeFact
+    {
         get
         {
             double downTimesMinutes = 0;
@@ -340,8 +342,8 @@ public class Part : INotifyPropertyChanged
                 var partialBreaks = Util.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
                 downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
             }
-            return FullSetupTimeFact 
-                   - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime) 
+            return FullSetupTimeFact
+                   - Util.GetBreaksBetween(StartSetupTime, StartMachiningTime)
                    - TimeSpan.FromMinutes(downTimesMinutes);
         }
     }
@@ -372,7 +374,8 @@ public class Part : INotifyPropertyChanged
 
     /// <summary> Время изготовления с учетом перерывов </summary>
     [JsonIgnore]
-    public TimeSpan ProductionTimeFact {
+    public TimeSpan ProductionTimeFact
+    {
         get
         {
             double downTimesMinutes = 0;
@@ -385,7 +388,7 @@ public class Part : INotifyPropertyChanged
                                           - TimeSpan.FromMinutes(downTimesMinutes);
         }
     }
-    
+
     /// <summary>
     /// Может ли быть завершена деталь.
     /// True если время начала изготовления больше или равно времени начала наладки и если время начала изготовления раньше текущего.

@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using eLog.Models;
+using eLog.Services;
+using libeLog.Interfaces;
+using libeLog.Models;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
-using eLog.Models;
-using eLog.Services;
-using libeLog.Interfaces;
-using libeLog.Models;
 
 namespace eLog.Views.Windows.Dialogs;
 
@@ -19,7 +19,7 @@ public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged,
 {
     private Part _Part;
     private string _Status;
-    private Overlay _Overlay = new() {State = false};
+    private Overlay _Overlay = new() { State = false };
     private bool _CanBeClosed;
     private bool _CanAddDownTime;
 
@@ -132,7 +132,7 @@ public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged,
         foreach (var downTime in Part.DownTimes)
         {
             downTime.UpdateError();
-            if(downTime.HasError) result = false;
+            if (downTime.HasError) result = false;
         }
         CanBeClosed = result;
         CanAddDownTime = Part.DownTimesIsClosed && CanBeClosed;
@@ -141,7 +141,7 @@ public partial class EditDownTimesDialogWindow : Window, INotifyPropertyChanged,
 
     private void Border_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (sender is not Border { Parent: StackPanel {Parent: Grid } grid }) return;
+        if (sender is not Border { Parent: StackPanel { Parent: Grid } grid }) return;
         foreach (UIElement gridChild in grid.Children)
         {
             if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBox textBox } && Validation.GetErrors(textBox) is ICollection<ValidationError> { Count: > 0 } errors)

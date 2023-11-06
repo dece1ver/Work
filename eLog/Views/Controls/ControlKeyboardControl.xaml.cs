@@ -89,5 +89,5 @@ public partial class ControlKeyboardControl : UserControl
         Keyboard.KeyPress(Keys.Right);
     }
 
-    
+
 }

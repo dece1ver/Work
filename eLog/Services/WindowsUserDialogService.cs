@@ -1,15 +1,15 @@
 ﻿using eLog.Infrastructure;
+using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using eLog.Services.Interfaces;
 using eLog.Views.Windows.Dialogs;
+using eLog.Views.Windows.Settings;
+using libeLog;
 using System;
 using System.Linq;
 using System.Windows;
-using eLog.Infrastructure.Extensions;
-using eLog.Views.Windows.Settings;
-using OperatorsEditWindow = eLog.Views.Windows.Settings.OperatorsEditWindow;
 using static eLog.Infrastructure.Extensions.Util;
-using libeLog;
+using OperatorsEditWindow = eLog.Views.Windows.Settings.OperatorsEditWindow;
 
 namespace eLog.Services;
 
@@ -57,12 +57,12 @@ internal class WindowsUserDialogService : IUserDialogService
         {
             Owner = Application.Current.MainWindow,
         };
-        
-        if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators)) 
-            {
-                if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
-                return false;
-            }
+
+        if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators))
+        {
+            if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
+            return false;
+        }
         AppSettings.Instance.Operators = new DeepObservableCollection<Operator>(dlg.Operators.ToList()
             .Where(o => !string.IsNullOrWhiteSpace(o.DisplayName)));
         AppSettings.Instance.CurrentOperator = null;
@@ -81,7 +81,7 @@ internal class WindowsUserDialogService : IUserDialogService
         {
             Owner = Application.Current.MainWindow,
         };
-        if (dlg.ShowDialog() != true) 
+        if (dlg.ShowDialog() != true)
         {
             if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
             return false;
@@ -125,12 +125,12 @@ internal class WindowsUserDialogService : IUserDialogService
         {
             Owner = Application.Current.MainWindow,
         };
-        if (dlg.ShowDialog() != true) 
+        if (dlg.ShowDialog() != true)
         {
             if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog($"Отмена."); }
             return false;
         }
-        
+
         if (dlg.Part.FinishedCount > 0)
         {
             dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
@@ -153,7 +153,7 @@ internal class WindowsUserDialogService : IUserDialogService
             MachineTimeText = part.MachineTime.TotalMinutes > 0 ? part.MachineTime.ToString(Constants.TimeSpanFormat) : string.Empty,
         };
 
-        if (dlg.ShowDialog() != true) 
+        if (dlg.ShowDialog() != true)
         {
             if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
             return false;

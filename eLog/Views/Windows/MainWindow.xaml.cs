@@ -1,8 +1,8 @@
 ﻿using eLog.Infrastructure;
+using eLog.Models;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
-using eLog.Models;
 
 namespace eLog.Views.Windows;
 
@@ -25,31 +25,31 @@ public partial class MainWindow : Window
             case false:
                 return;
             case true when AppSettings.Instance.Parts.Count == AppSettings.Instance.Parts.Count(x => x.IsFinished is not Part.State.InProgress):
-            {
-                var res = MessageBox.Show("Смена не завершена.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                switch (res)
                 {
-                    case MessageBoxResult.OK:
-                        break;
-                    case MessageBoxResult.Cancel or _:
-                        e.Cancel = true;
-                        break;
+                    var res = MessageBox.Show("Смена не завершена.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    switch (res)
+                    {
+                        case MessageBoxResult.OK:
+                            break;
+                        case MessageBoxResult.Cancel or _:
+                            e.Cancel = true;
+                            break;
+                    }
+                    break;
                 }
-                break;
-            }
             case true when AppSettings.Instance.Parts.Count != AppSettings.Instance.Parts.Count(x => x.IsFinished is not Part.State.InProgress):
-            {
-                var res = MessageBox.Show("Есть незавершенные детали.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                switch (res)
                 {
-                    case MessageBoxResult.OK:
-                        break;
-                    case MessageBoxResult.Cancel or _:
-                        e.Cancel = true;
-                        break;
+                    var res = MessageBox.Show("Есть незавершенные детали.", "Внимание!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                    switch (res)
+                    {
+                        case MessageBoxResult.OK:
+                            break;
+                        case MessageBoxResult.Cancel or _:
+                            e.Cancel = true;
+                            break;
+                    }
+                    break;
                 }
-                break;
-            }
         }
     }
 }

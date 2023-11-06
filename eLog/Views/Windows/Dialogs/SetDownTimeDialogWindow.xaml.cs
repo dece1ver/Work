@@ -1,5 +1,5 @@
-﻿using System.Windows;
-using eLog.Models;
+﻿using eLog.Models;
+using System.Windows;
 
 namespace eLog.Views.Windows.Dialogs;
 

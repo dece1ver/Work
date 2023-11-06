@@ -1,13 +1,13 @@
-﻿using System;
+﻿using eLog.Infrastructure.Extensions;
+using eLog.Models;
+using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows.Threading;
-using eLog.Infrastructure.Extensions;
-using eLog.Models;
-using Newtonsoft.Json;
 using JsonException = System.Text.Json.JsonException;
 
 namespace eLog.Infrastructure;
@@ -19,7 +19,7 @@ public class AppSettings : INotifyPropertyChanged
 {
     private AppSettings()
     {
-        
+
     }
 
     [JsonIgnore] private static AppSettings? _Instance;
@@ -49,7 +49,7 @@ public class AppSettings : INotifyPropertyChanged
     /// <summary> Путь к файлу логов </summary>
     [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
 
-    
+
 
     private Machine _Machine;
     private string _XlPath;
@@ -175,7 +175,7 @@ public class AppSettings : INotifyPropertyChanged
         if (!File.Exists(ConfigFilePath) && File.Exists(ConfigBackupPath))
         {
             File.Copy(ConfigBackupPath, ConfigFilePath, true);
-        } 
+        }
         else if (!File.Exists(ConfigFilePath) && !File.Exists(ConfigBackupPath))
         {
             CreateBaseConfig();
@@ -234,7 +234,7 @@ public class AppSettings : INotifyPropertyChanged
                     Util.WriteLog(ex, msg);
                     CreateBaseConfig();
                 }
-                
+
             }
             else
             {
@@ -249,7 +249,7 @@ public class AppSettings : INotifyPropertyChanged
     /// </summary>
     public static void Save()
     {
-        
+
         var settings = new JsonSerializerSettings()
         {
             PreserveReferencesHandling = PreserveReferencesHandling.Objects,
@@ -281,7 +281,7 @@ public class AppSettings : INotifyPropertyChanged
                 Debug.WriteLine(msg);
                 Util.WriteLog(ex, msg);
             }
-            
+
         }
         catch (UnauthorizedAccessException)
         {
@@ -307,7 +307,7 @@ public class AppSettings : INotifyPropertyChanged
                 if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch { }
-            
+
             if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_w"), true);
             if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
         }

@@ -1,12 +1,12 @@
-﻿using System;
+﻿using eLog.Infrastructure.Extensions;
+using libeLog;
+using Newtonsoft.Json;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using eLog.Infrastructure.Extensions;
-using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
 using System.Windows.Threading;
-using libeLog;
 
 namespace eLog.Models;
 
@@ -136,7 +136,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
         }
     }
 
-    [JsonIgnore] 
+    [JsonIgnore]
     public string StartTimeText
     {
         get => _StartTimeText;
@@ -193,21 +193,21 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
             switch (columnName)
             {
                 case nameof(StartTimeText):
-                {
-                    if (StartTime == DateTime.MinValue)
                     {
-                        error = "Некорректно указано время начала";
+                        if (StartTime == DateTime.MinValue)
+                        {
+                            error = "Некорректно указано время начала";
+                        }
+                        else if (StartTime < ParentPart.StartSetupTime)
+                        {
+                            error = "Время начала простоя не может быть раньше времени запуска детали.";
+                        }
+                        else if (EndTime != DateTime.MinValue && EndTime <= StartTime)
+                        {
+                            error = "Время начала простоя раньше времени завершения.";
+                        }
+                        break;
                     }
-                    else if (StartTime < ParentPart.StartSetupTime)
-                    {
-                        error = "Время начала простоя не может быть раньше времени запуска детали.";
-                    }
-                    else if (EndTime != DateTime.MinValue && EndTime <= StartTime)
-                    {
-                        error = "Время начала простоя раньше времени завершения.";
-                    }
-                    break;
-                }
                 case nameof(EndTimeText):
                     if (EndTime != DateTime.MinValue && EndTime <= StartTime)
                     {

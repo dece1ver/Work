@@ -1,6 +1,5 @@
 ﻿using libeLog.WinApi.Windows;
 using System;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace libeLog.Extensions;
 

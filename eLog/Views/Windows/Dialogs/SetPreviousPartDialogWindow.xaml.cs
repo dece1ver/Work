@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using eLog.Models;
+using System.Collections.Generic;
 using System.Windows;
-using eLog.Models;
 
 namespace eLog.Views.Windows.Dialogs;
 

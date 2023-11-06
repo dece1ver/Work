@@ -1,7 +1,7 @@
-﻿using System;
+﻿using libeLog.WinApi.pInvoke;
+using System;
 using System.Globalization;
 using System.Text;
-using libeLog.WinApi.pInvoke;
 using static System.Threading.Thread;
 
 namespace libeLog.WinApi.Windows;

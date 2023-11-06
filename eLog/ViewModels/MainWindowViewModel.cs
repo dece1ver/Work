@@ -1,24 +1,23 @@
 ﻿using eLog.Infrastructure;
-using eLog.Infrastructure.Commands;
-using System;
-using System.IO;
-using System.Linq;
-using System.Windows;
-using System.Windows.Input;
-using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
+using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using eLog.Services;
-using eLog.Infrastructure.Extensions;
-using System.Threading;
 using eLog.Views.Windows.Dialogs;
-using System.Diagnostics;
-using static eLog.Infrastructure.Extensions.Util;
+using libeLog;
+using libeLog.Base;
+using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
-using libeLog.Base;
-using libeLog;
-using libeLog.Extensions;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Windows;
+using System.Windows.Input;
+using static eLog.Infrastructure.Extensions.Util;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace eLog.ViewModels;
 
@@ -50,7 +49,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     }
 
     #region Свойства-обертки настроек
-    
+
 
     /// <summary> Станок </summary>
     public Machine Machine
@@ -147,8 +146,8 @@ internal class MainWindowViewModel : ViewModel, IOverlay
 
     public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
 
-    public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is {};
-    public bool CanStartShift => CurrentOperator is {} && !string.IsNullOrEmpty(CurrentShift);
+    public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { };
+    public bool CanStartShift => CurrentOperator is { } && !string.IsNullOrEmpty(CurrentShift);
     public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;
     public bool CanEndShift => ShiftStarted && WorkIsNotInProgress;
 
@@ -158,14 +157,14 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     public bool ShiftStarted
     {
         get => _ShiftStarted;
-        set 
+        set
         {
             if (!Set(ref _ShiftStarted, value)) return;
             AppSettings.Instance.IsShiftStarted = value;
             OnPropertyChanged(nameof(WorkIsNotInProgress));
             OnPropertyChanged(nameof(CanEditShiftAndParams));
             OnPropertyChanged(nameof(CanAddPart));
-        } 
+        }
     }
 
     #region Команды
@@ -218,7 +217,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     }
     private static bool CanEditSettingsCommandExecute(object p) => true;
     #endregion
-    
+
     #region EditOperators
     public ICommand EditOperatorsCommand { get; }
     private void OnEditOperatorsCommandExecuted(object p)
@@ -276,7 +275,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                     {
                         Status = "Не удалось сбросить синхронизацию.";
                     }
-                    
+
                 }
             }
         }
@@ -298,11 +297,11 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                 Shift = AppSettings.Instance.CurrentShift,
                 Setup = 1,
             };
-            if (!WindowsUserDialogService.EditDetail(ref part, true)) 
+            if (!WindowsUserDialogService.EditDetail(ref part, true))
             {
                 if (AppSettings.Instance.DebugMode) WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
                 _editPart = false;
-                return; 
+                return;
             }
             if (AppSettings.Instance.DebugMode) WriteLog($"Подтверждение старта.\n\tВсего деталей: {Parts.Count}");
             Status = string.Empty;
@@ -359,12 +358,12 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         {
             var part = (Part)p;
             var index = Parts.IndexOf((Part)p);
-        
-            if (part.LastDownTime is {InProgress: true} 
+
+            if (part.LastDownTime is { InProgress: true }
                 && MessageBox.Show($"Завершить простой {part.LastDownTimeName}?",
                     "Подтверждение",
-                    MessageBoxButton.OKCancel, 
-                    MessageBoxImage.Question) 
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Question)
                 == MessageBoxResult.OK)
             {
                 var now = DateTime.Now;
@@ -376,9 +375,9 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                 }
                 else
                 {
-                
+
                     part.LastDownTime.EndTimeText = DateTime.Now.ToString(Constants.DateTimeFormat);
-                
+
                 }
                 OnPropertyChanged(nameof(part.DownTimes));
                 OnPropertyChanged(nameof(part.DownTimesIsClosed));
@@ -465,7 +464,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         {
             var part = new Part((Part)p);
             var index = Parts.IndexOf((Part)p);
-        
+
             if (WindowsUserDialogService.EditDetail(ref part))
             {
                 part.IsSynced = false;
@@ -663,7 +662,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                         }
                         if (part.Id == -1) continue;
 
-                        
+
                     }
                     ProgressBarVisibility = Visibility.Hidden;
                     OnPropertyChanged(nameof(part.Title));

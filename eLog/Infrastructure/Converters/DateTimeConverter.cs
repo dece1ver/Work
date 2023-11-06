@@ -1,8 +1,7 @@
-﻿using System;
+﻿using libeLog;
+using System;
 using System.Globalization;
 using System.Windows.Data;
-using eLog.Infrastructure.Extensions;
-using libeLog;
 
 namespace eLog.Infrastructure.Converters;
 

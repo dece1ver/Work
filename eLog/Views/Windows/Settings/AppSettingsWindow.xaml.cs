@@ -1,4 +1,8 @@
-﻿using System;
+﻿using eLog.Infrastructure;
+using eLog.Models;
+using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -6,10 +10,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Threading;
-using eLog.Infrastructure;
-using eLog.Models;
-using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace eLog.Views.Windows.Settings;
 
@@ -50,7 +50,7 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
         set => Set(ref _OrderQualifiers, value);
 
     }
-        public bool DebugMode
+    public bool DebugMode
     {
         get => _DebugMode;
         set => Set(ref _DebugMode, value);
@@ -58,7 +58,7 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
 
     public AppSettingsWindow()
     {
-       
+
         Machines = Enumerable.Range(0, 11).Select(i => new Machine(i)).ToList();
         _XlPath = AppSettings.Instance.XlPath;
         _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
@@ -94,7 +94,7 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
         try
         {
             string saveDir = "";
-            if (File.Exists(XlPath) && Directory.GetParent(XlPath) is { FullName: { } parent } )
+            if (File.Exists(XlPath) && Directory.GetParent(XlPath) is { FullName: { } parent })
             {
                 saveDir = parent;
             }
@@ -136,7 +136,7 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
         {
             MessageBox.Show($"Не удалось выполнить экспорт из-за непредвиденной ошибки.\n{ex.Message}", "Экспорт", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-        
+
     }
 
     #region PropertyChanged

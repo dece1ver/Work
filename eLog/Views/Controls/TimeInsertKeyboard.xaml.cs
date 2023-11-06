@@ -1,12 +1,12 @@
-﻿using System;
+﻿using eLog.Infrastructure;
+using eLog.Infrastructure.Extensions;
+using eLog.Models;
+using libeLog.Extensions;
+using libeLog.WinApi.Windows;
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using eLog.Infrastructure;
-using eLog.Infrastructure.Extensions;
-using libeLog.WinApi.Windows;
-using eLog.Models;
-using libeLog.Extensions;
 
 namespace eLog.Views.Controls;
 

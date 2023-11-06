@@ -1,17 +1,16 @@
 ﻿using eLog.Infrastructure;
 using eLog.Models;
+using libeLog.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows.Threading;
-using eLog.Infrastructure.Extensions;
 using Text = eLog.Infrastructure.Extensions.Text;
-using libeLog.Extensions;
 
 namespace eLog.Views.Windows.Dialogs;
 
@@ -75,8 +74,8 @@ public partial class EndDetailDialogWindow : Window, INotifyPropertyChanged, IDa
                     "Неверно указано количество изготовленных деталей.",
                 _ => string.Empty,
             };
-            
-            
+
+
             OnPropertyChanged(nameof(Status));
         }
     }

@@ -1,9 +1,9 @@
-﻿using System.ComponentModel;
+﻿using eLog.Infrastructure.Extensions;
+using eLog.Models;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Threading;
-using eLog.Infrastructure.Extensions;
-using eLog.Models;
 
 namespace eLog.Views.Windows.Dialogs;
 
@@ -22,7 +22,7 @@ public partial class EditMakerDialogWindow : Window, INotifyPropertyChanged
         InitializeComponent();
     }
 
-    
+
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {

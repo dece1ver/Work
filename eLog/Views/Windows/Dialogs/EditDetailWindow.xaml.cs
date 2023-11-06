@@ -1,4 +1,12 @@
-﻿using System;
+﻿using eLog.Infrastructure;
+using eLog.Infrastructure.Extensions;
+using eLog.Models;
+using eLog.Services;
+using libeLog;
+using libeLog.Extensions;
+using libeLog.Interfaces;
+using libeLog.WinApi.Windows;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -10,14 +18,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
-using eLog.Infrastructure;
-using eLog.Infrastructure.Extensions;
-using eLog.Models;
-using eLog.Services;
-using libeLog;
-using libeLog.Extensions;
-using libeLog.Interfaces;
-using libeLog.WinApi.Windows;
 using Overlay = libeLog.Models.Overlay;
 using Path = System.IO.Path;
 
@@ -224,7 +224,7 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         {
             DownTimesHasErrors = false;
             if (OrderValidation is OrderValidationTypes.Error || string.IsNullOrWhiteSpace(PartName)) return false;
-            
+
             if (Part is { DownTimesIsClosed: false, FinishedCount: > 0 } && Part.ProductionTimeFact > TimeSpan.Zero)
             {
                 Status = "Есть незавершенные простои";
@@ -239,15 +239,15 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
                 DownTimesHasErrors = true;
                 return false;
             }
-            
+
             var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                  (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
             if (Part is { IsFinished: Part.State.Finished, DownTimesIsClosed: true, FinishedCount: > 1 } && validPlanTimes) return true;
             switch (validPlanTimes)
             {
                 // старт наладки
-                case true when Part is { FinishedCount: 0, TotalCount: > 0, StartSetupTime.Ticks: > 0 } && 
-                               string.IsNullOrWhiteSpace(StartMachiningTime) && 
+                case true when Part is { FinishedCount: 0, TotalCount: > 0, StartSetupTime.Ticks: > 0 } &&
+                               string.IsNullOrWhiteSpace(StartMachiningTime) &&
                                string.IsNullOrWhiteSpace(EndMachiningTime):
                     Status = _ReadySetupStatus;
                     return true;
@@ -279,7 +279,7 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
     }
 
 
-    public enum OrderValidationTypes {Error, Empty, Valid}
+    public enum OrderValidationTypes { Error, Empty, Valid }
 
     public OrderValidationTypes OrderValidation
     {
@@ -369,8 +369,8 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
                 StartMachiningTime = _StartSetupTime;
                 OnPropertyChanged(nameof(StartMachiningTime));
             }
-            Part.StartSetupTime = DateTime.TryParseExact(_StartSetupTime, Constants.DateTimeFormat, null, DateTimeStyles.None, out var startSetupTime) 
-                ? startSetupTime 
+            Part.StartSetupTime = DateTime.TryParseExact(_StartSetupTime, Constants.DateTimeFormat, null, DateTimeStyles.None, out var startSetupTime)
+                ? startSetupTime
                 : DateTime.MinValue;
             OnPropertyChanged(nameof(CanBeClosed));
         }
@@ -383,8 +383,8 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         set
         {
             _StartMachiningTime = value;
-            Part.StartMachiningTime = DateTime.TryParseExact(_StartMachiningTime, Constants.DateTimeFormat, null, DateTimeStyles.None, out var startMachiningTime) 
-                ? startMachiningTime 
+            Part.StartMachiningTime = DateTime.TryParseExact(_StartMachiningTime, Constants.DateTimeFormat, null, DateTimeStyles.None, out var startMachiningTime)
+                ? startMachiningTime
                 : DateTime.MinValue;
             OnPropertyChanged(nameof(EndMachiningTime));
             OnPropertyChanged(nameof(CanBeClosed));
@@ -398,13 +398,13 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         set
         {
             _EndMachiningTime = value;
-            Part.EndMachiningTime = DateTime.TryParseExact(_EndMachiningTime, Constants.DateTimeFormat, null, DateTimeStyles.None, out var endMachiningTime) 
-                ? endMachiningTime 
+            Part.EndMachiningTime = DateTime.TryParseExact(_EndMachiningTime, Constants.DateTimeFormat, null, DateTimeStyles.None, out var endMachiningTime)
+                ? endMachiningTime
                 : DateTime.MinValue;
             OnPropertyChanged(nameof(FinishedCount));
             OnPropertyChanged(nameof(MachineTime));
             OnPropertyChanged(nameof(CanBeClosed));
-            
+
         }
     }
 
@@ -415,8 +415,8 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         set
         {
             _MachineTime = value;
-            Part.MachineTime = _MachineTime.TimeParse(out var machiningTime) 
-                ? machiningTime 
+            Part.MachineTime = _MachineTime.TimeParse(out var machiningTime)
+                ? machiningTime
                 : TimeSpan.Zero;
             OnPropertyChanged(nameof(CanBeClosed));
         }
@@ -559,7 +559,7 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         }
     }
 
-    
+
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
@@ -570,7 +570,7 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         }
         OnPropertyChanged(nameof(NonEmptyOrder));
         KeyboardVisibility = Visibility.Collapsed;
-        var updaterThread = new Thread(UpdateOrders) {IsBackground = true};
+        var updaterThread = new Thread(UpdateOrders) { IsBackground = true };
         updaterThread.Start();
     }
 
@@ -671,14 +671,14 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
             .GroupBy(x => new { x.FullName, x.Order, x.Setup })
             .Select(x => new Part()
             {
-                Name = x.Key.FullName, 
+                Name = x.Key.FullName,
                 Order = x.Key.Order,
                 Setup = x.Key.Setup,
                 StartSetupTime = DateTime.Now,
                 SetupTimePlan = x.First().SetupTimePlan,
                 SingleProductionTimePlan = x.First().SingleProductionTimePlan,
                 MachineTime = x.First().MachineTime,
-                TotalCount = x.First().TotalCount, 
+                TotalCount = x.First().TotalCount,
                 FinishedCount = x.Sum(p => p.FinishedCount)
             }).ToList();
         switch (parts.Count)
@@ -898,7 +898,7 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         if (sender is not TextBlock { Parent: Grid grid }) return;
         foreach (UIElement gridChild in grid.Children)
         {
-            if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBox textBox } && Validation.GetErrors(textBox) is ICollection<ValidationError> {Count: > 0} errors)
+            if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBox textBox } && Validation.GetErrors(textBox) is ICollection<ValidationError> { Count: > 0 } errors)
             {
                 MessageBox.Show(errors.First().ErrorContent.ToString(), "Некорректный ввод", MessageBoxButton.OK, MessageBoxImage.Warning);
             }

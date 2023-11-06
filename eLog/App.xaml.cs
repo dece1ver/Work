@@ -12,7 +12,7 @@ public partial class App : Application
 {
     public App()
     {
-        
+
         try
         {
             // try to open it - if another instance is running, it will exist , if not it will throw

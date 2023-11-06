@@ -63,7 +63,7 @@ public class Machine
 
     public int Id { get; }
 
-    public string Name { get;}
+    public string Name { get; }
     [JsonIgnore]
     public string SafeName { get; }
 }

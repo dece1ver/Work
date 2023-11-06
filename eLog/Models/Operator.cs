@@ -1,5 +1,4 @@
-﻿using eLog.Infrastructure.Extensions;
-using libeLog.Extensions;
+﻿using libeLog.Extensions;
 using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
@@ -25,19 +24,19 @@ public class Operator : INotifyPropertyChanged
 
     public string FirstName
     {
-        get => _FirstName; 
+        get => _FirstName;
         set => _FirstName = value.Capitalize();
     }
 
     public string LastName
     {
-        get => _LastName; 
+        get => _LastName;
         set => _LastName = value.Capitalize();
     }
 
     public string Patronymic
     {
-        get => _Patronymic; 
+        get => _Patronymic;
         set => _Patronymic = value.Capitalize();
     }
 

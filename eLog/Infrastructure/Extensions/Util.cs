@@ -1,17 +1,15 @@
-﻿using eLog.Models;
+﻿using ClosedXML.Excel;
+using eLog.Models;
+using eLog.Views.Windows.Dialogs;
+using libeLog;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Windows;
-using ClosedXML.Excel;
 using System.Diagnostics;
 using System.IO;
-using eLog.Views.Windows.Dialogs;
-using static eLog.Infrastructure.Extensions.Text;
+using System.Linq;
 using System.Threading;
-using libeLog.WinApi.Windows;
-using libeLog;
+using System.Windows;
+using static eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.Infrastructure.Extensions;
 
@@ -120,8 +118,8 @@ internal static class Util
         var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
         if (prevPart is null) return false;
         var partial = part.IsFinished == Part.State.PartialSetup ||
-                      prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 } 
-                      && part.SetupTimeFact.Ticks > 0 
+                      prevPart is { IsFinished: Part.State.PartialSetup, FinishedCount: 0 }
+                      && part.SetupTimeFact.Ticks > 0
                       && part.FullName == prevPart.FullName
                       && part.Order == prevPart.Order;
         if (partial)
@@ -324,13 +322,13 @@ internal static class Util
                 Thread.Sleep(200);
                 return true;
             }
-            catch 
+            catch
             {
                 Thread.Sleep(5000);
             }
         }
         return false;
-        
+
     }
 
     private static void TryRestoreXl()
@@ -362,7 +360,7 @@ internal static class Util
         if (part.IsFinished == Part.State.InProgress)
         {
             if (AppSettings.Instance.DebugMode) { WriteLog($"Изготовление в процессе, запись не требуется."); }
-            return WriteResult.DontNeed; 
+            return WriteResult.DontNeed;
         }
         var result = WriteResult.NotFinded;
         try
@@ -371,7 +369,7 @@ internal static class Util
 
             if (doBackup)
             {
-                if (!BackupXl()) 
+                if (!BackupXl())
                 {
                     throw new IOException("Ошибка при создании бэкапа таблицы.");
                 }
@@ -556,7 +554,7 @@ internal static class Util
             }
             catch (Exception e)
             {
-                if (i == 2) 
+                if (i == 2)
                 {
                     MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
@@ -674,15 +672,18 @@ internal static class Util
             breaks += TimeSpan.FromMinutes(15);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(15);
         }
-        if (nightShiftFirstBreak >= startTime && nightShiftFirstBreak <= endTime) {
+        if (nightShiftFirstBreak >= startTime && nightShiftFirstBreak <= endTime)
+        {
             breaks += TimeSpan.FromMinutes(30);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(30);
         }
-        if (nightShiftSecondBreak >= startTime && nightShiftSecondBreak <= endTime) {
+        if (nightShiftSecondBreak >= startTime && nightShiftSecondBreak <= endTime)
+        {
             breaks += TimeSpan.FromMinutes(30);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(30);
         }
-        if (nightShiftThirdBreak >= startTime && nightShiftThirdBreak <= endTime) {
+        if (nightShiftThirdBreak >= startTime && nightShiftThirdBreak <= endTime)
+        {
             breaks += TimeSpan.FromMinutes(30);
         }
 
@@ -763,10 +764,10 @@ internal static class Util
 
     public static DateTime GetEndShiftTime()
     {
-        return AppSettings.Instance.CurrentShift == Text.DayShift 
-            ? DateTime.Today.AddHours(19) 
-            : DateTime.Now.Hour < 8 
-                ? DateTime.Today.AddHours(7) 
+        return AppSettings.Instance.CurrentShift == Text.DayShift
+            ? DateTime.Today.AddHours(19)
+            : DateTime.Now.Hour < 8
+                ? DateTime.Today.AddHours(7)
                 : DateTime.Today.AddDays(1).AddHours(7);
     }
 
