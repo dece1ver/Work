@@ -9,7 +9,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/StyleDictionary.xaml"/>
-                <ResourceDictionary Source="/IconsDictionary.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/libeLog;component/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
             <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>

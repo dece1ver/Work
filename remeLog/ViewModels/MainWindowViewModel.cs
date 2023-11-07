@@ -22,6 +22,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
         EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
         ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
+        TestProcessCommand = new LambdaCommand(OnTestProcessCommandExecuted, CanTestProcessCommandExecute);
     }
 
 
@@ -71,7 +72,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         set => Set(ref _ProgressBarVisibility, value);
     }
 
-    private Visibility _ProgressBarVisibility = Visibility.Collapsed;
+    private Visibility _ProgressBarVisibility = Visibility.Hidden;
 
 
     #region Команды
@@ -109,6 +110,15 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         }
     }
     private static bool CanShowAboutCommandExecute(object p) => true;
+    #endregion
+
+    #region TestProcessCommand
+    public ICommand TestProcessCommand { get; }
+    private void OnTestProcessCommandExecuted(object p)
+    {
+        ProgressBarVisibility = ProgressBarVisibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
+    }
+    private bool CanTestProcessCommandExecute(object p) => true;
     #endregion
 
     #endregion

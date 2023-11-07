@@ -7,33 +7,32 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Отчеты электронного журнала" Height="450" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" >
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
     <Grid>
         <DockPanel LastChildFill="True" Grid.Column="0">
+            
             <Menu DockPanel.Dock="Top" Background="Transparent">
                 <MenuItem Header="Параметры">
                     <MenuItem Header="Параметры"
-                      Command="{Binding EditSettingsCommand}" />
+                      Command="{Binding EditSettingsCommand}" Icon="{StaticResource SettingsIcon}"/>
                 </MenuItem>
                 <MenuItem Header="Справка">
                     <MenuItem Header="О программе"
-                      Command="{Binding ShowAboutCommand}" />
+                      Command="{Binding ShowAboutCommand}" Icon="{StaticResource AboutIcon}"/>
                 </MenuItem>
             </Menu>
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>
                     <TextBlock Text="{Binding Status}" FontSize="16" Margin="0 -1"/>
                 </StatusBarItem>
-                <StatusBarItem HorizontalAlignment="Right" VerticalContentAlignment="Stretch">
-                    <ProgressBar Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}" IsIndeterminate="True"
-                             Visibility="{Binding ProgressBarVisibility}" Width="200" Margin="0"/>
-                </StatusBarItem>
             </StatusBar>
+            <ProgressBar DockPanel.Dock="Bottom" Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}" IsIndeterminate="True"
+                Visibility="{Binding ProgressBarVisibility}" Height="2" />
             <DockPanel>
-                
+                <Button Margin="150" Command="{Binding TestProcessCommand}"/>
             </DockPanel>
         </DockPanel>
     </Grid>

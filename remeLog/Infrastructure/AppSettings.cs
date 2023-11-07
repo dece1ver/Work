@@ -41,6 +41,12 @@ public class AppSettings
     /// <summary> Режим отладки </summary>
     public bool DebugMode { get; set; }
 
+    /// <summary> Путь к файлу занесения </summary>
+    public string SourcePath { get; set; }
+
+    /// <summary> Путь к файлу отчетов </summary>
+    public string ReportsPath { get; set; }
+
     /// <summary> Директория для копирования логов </summary>
     public string LogsCopyDir { get; set; }
 
