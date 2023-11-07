@@ -3,6 +3,7 @@ using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
+using remeLog.Infrastructure.Types;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -19,7 +20,9 @@ internal class SettingsWindowViewModel : ViewModel
 {
     public SettingsWindowViewModel()
     {
-        ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
+        SetSourceTableCommand = new LambdaCommand(OnSetSourceTableCommandExecuted, CanSetSourceTableCommandExecute);
+        SetReportsTableCommand = new LambdaCommand(OnSetReportsTableCommandExecuted, CanSetReportsTableCommandExecute);
+        SetCopyDirCommand = new LambdaCommand(OnSetCopyDirCommandExecuted, CanSetCopyDirCommandExecute);
     }
 
     private string _Status = string.Empty;
@@ -30,18 +33,120 @@ internal class SettingsWindowViewModel : ViewModel
         set => Set(ref _Status, value);
     }
 
+    private double _Progress = 1;
+    /// <summary> Значение прогрессбара </summary>
+    public double Progress
+    {
+        get => _Progress;
+        set
+        {
+            Set(ref _Progress, value);
+            OnPropertyChanged(nameof(ProgressBarVisibility));
+        }
+    }
+
+    private double _ProgressMaxValue = 1;
+    /// <summary> Максимальное значение прогрессбара </summary>
+    public double ProgressMaxValue
+    {
+        get => _ProgressMaxValue;
+        set
+        {
+            Set(ref _ProgressMaxValue, value);
+            OnPropertyChanged(nameof(ProgressBarVisibility));
+        }
+    }
+
+    private Visibility _ProgressBarVisibility = Visibility.Hidden;
+    /// <summary> Видимость прогрессбара </summary>
+    public Visibility ProgressBarVisibility
+    {
+        get => _ProgressBarVisibility;
+        set => Set(ref _ProgressBarVisibility, value);
+    }
+
+
+    private string _SourcePath = string.Empty;
+    /// <summary> Путь к таблице </summary>
+    public string SourcePath
+    {
+        get => _SourcePath;
+        set => Set(ref _SourcePath, value);
+    }
+
+
+    private string _ReportsPath = string.Empty;
+    /// <summary> Путь к файлу с отчетами </summary>
+    public string ReportsPath
+    {
+        get => _ReportsPath;
+        set => Set(ref _ReportsPath, value);
+    }
+
+    private string _LogsCopyDir = string.Empty;
+    /// <summary> Путь к директирии с копией логов </summary>
+    public string LogsCopyDir
+    {
+        get => _LogsCopyDir;
+        set => Set(ref _LogsCopyDir, value);
+    }
+
+
+    private CheckStatus _SourceCheckStatus = 0;
+    /// <summary> Статус таблицы </summary>
+    public CheckStatus SourceCheckStatus
+    {
+        get => _SourceCheckStatus;
+        set => Set(ref _SourceCheckStatus, value);
+    }
+
+    private CheckStatus _ReportsCheckStatus = 0;
+    /// <summary> Статус отчетов </summary>
+    public CheckStatus ReportsCheckStatus
+    {
+        get => _ReportsCheckStatus;
+        set => Set(ref _ReportsCheckStatus, value);
+    }
+
+    private CheckStatus _CopyDirCheckStatus = 0;
+    /// <summary> Статус отчетов </summary>
+    public CheckStatus CopyDirCheckStatus
+    {
+        get => _CopyDirCheckStatus;
+        set => Set(ref _CopyDirCheckStatus, value);
+    }
+
 
     #region Команды
 
-    private static bool CanCloseApplicationCommandExecute(object p) => true;
-
-    #region ShowAbout
-    public ICommand ShowAboutCommand { get; }
-    private void OnShowAboutCommandExecuted(object p)
+    #region SetSourceTable
+    public ICommand SetSourceTableCommand { get; }
+    private void OnSetSourceTableCommandExecuted(object p)
     {
-        
+        SourceCheckStatus = (CheckStatus)new Random().Next(0, 3);
+        Status = $"Source: {SourceCheckStatus} | Reports: {ReportsCheckStatus} | CopyDir: {CopyDirCheckStatus}";
     }
-    private static bool CanShowAboutCommandExecute(object p) => true;
+    private static bool CanSetSourceTableCommandExecute(object p) => true;
+    #endregion
+
+    #region SetReportsTable
+    public ICommand SetReportsTableCommand { get; }
+    private void OnSetReportsTableCommandExecuted(object p)
+    {
+        ReportsCheckStatus = (CheckStatus)new Random().Next(0, 3);
+        Status = $"Source: {SourceCheckStatus} | Reports: {ReportsCheckStatus} | CopyDir: {CopyDirCheckStatus}";
+    }
+    private static bool CanSetReportsTableCommandExecute(object p) => true;
+    #endregion
+
+    #region SetCopyDir
+    public ICommand SetCopyDirCommand { get; }
+    private void OnSetCopyDirCommandExecuted(object p)
+    {
+        CopyDirCheckStatus = (CheckStatus)new Random().Next(0, 3);
+        Status = $"Source: {SourceCheckStatus} | Reports: {ReportsCheckStatus} | CopyDir: {CopyDirCheckStatus}";
+    }
+    private static bool CanSetCopyDirCommandExecute(object p) => true;
     #endregion
 
     #endregion

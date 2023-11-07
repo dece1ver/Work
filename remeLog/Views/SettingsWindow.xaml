@@ -4,16 +4,84 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views"
+        xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:SettingsWindowViewModel}"
         mc:Ignorable="d"
-        Title="Параметры" Height="450" Width="800">
+        Title="Параметры" Height="450" Width="600">
+    <Window.DataContext>
+        <vm:SettingsWindowViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <Style TargetType="TextBlock" x:Key="settingLabel">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="5" />
+        </Style>
+        <Style TargetType="TextBlock" x:Key="statusLabel">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Margin" Value="5" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="2 4 0 0" />
+            <Setter Property="IsReadOnly" Value="True" />
+        </Style>
+    </Window.Resources>
     <DockPanel LastChildFill="True" Grid.Column="0">
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
                 <TextBlock Text="{Binding Status}" FontSize="16" Margin="0 -1"/>
             </StatusBarItem>
         </StatusBar>
-        <Grid>
+        <ProgressBar DockPanel.Dock="Bottom" Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}" IsIndeterminate="True"
+            Visibility="{Binding ProgressBarVisibility}" Height="2" />
+        <Grid Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="100" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition />
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" 
+                       Text="Таблица" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SourcePath}" 
+                     d:Text="C:\ProgramData\dece1ver\remeLog\2023.xlsm"/>
+            <DockPanel Grid.Row="0" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}"
+                       Content="{Binding SourceCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Обзор..." Command="{Binding SetSourceTableCommand}"/>
+            </DockPanel>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" 
+                       Text="Отчеты" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ReportsPath}" 
+                     d:Text="C:\ProgramData\dece1ver\remeLog\reports.xlsx"/>
+            <DockPanel Grid.Row="1" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}"
+                       Content="{Binding ReportsCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Обзор..." Command="{Binding SetReportsTableCommand}"/>
+            </DockPanel>
             
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Text="Логи (сервер)" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ReportsPath}" 
+                     d:Text="C:\ProgramData\dece1ver\remeLog\"/>
+            <DockPanel Grid.Row="2" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}"
+                       Content="{Binding CopyDirCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Обзор..." Command="{Binding SetCopyDirCommand}"/>
+            </DockPanel>
         </Grid>
     </DockPanel>
 </Window>

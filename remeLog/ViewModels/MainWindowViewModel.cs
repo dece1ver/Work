@@ -3,6 +3,7 @@ using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
+using remeLog.Views;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -116,7 +117,8 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     public ICommand TestProcessCommand { get; }
     private void OnTestProcessCommandExecuted(object p)
     {
-        ProgressBarVisibility = ProgressBarVisibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
+        SettingsWindow settingsWindow = new SettingsWindow();
+        settingsWindow.ShowDialog();
     }
     private bool CanTestProcessCommandExecute(object p) => true;
     #endregion

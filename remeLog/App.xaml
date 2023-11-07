@@ -2,12 +2,14 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:remeLog"
+             xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/libeLog;component/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <cnv:StatusVisibilityConverter x:Key="StatusVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
