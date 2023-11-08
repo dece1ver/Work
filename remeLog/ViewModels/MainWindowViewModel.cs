@@ -93,9 +93,8 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     {
         using (Overlay = new())
         {
-            MessageBox.Show("Редактирование настроек.");
-            //if (!WindowsUserDialogService.EditSettings()) return;
-            //OnPropertyChanged(nameof(Machine));
+            SettingsWindow settingsWindow = new SettingsWindow() { Owner = Application.Current.MainWindow };
+            settingsWindow.ShowDialog();
         }
     }
     private static bool CanEditSettingsCommandExecute(object p) => true;
@@ -117,8 +116,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     public ICommand TestProcessCommand { get; }
     private void OnTestProcessCommandExecuted(object p)
     {
-        SettingsWindow settingsWindow = new SettingsWindow();
-        settingsWindow.ShowDialog();
+        
     }
     private bool CanTestProcessCommandExecute(object p) => true;
     #endregion

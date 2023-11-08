@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Application = System.Windows.Application;
@@ -23,8 +24,12 @@ internal class SettingsWindowViewModel : ViewModel
         SetSourceTableCommand = new LambdaCommand(OnSetSourceTableCommandExecuted, CanSetSourceTableCommandExecute);
         SetReportsTableCommand = new LambdaCommand(OnSetReportsTableCommandExecuted, CanSetReportsTableCommandExecute);
         SetCopyDirCommand = new LambdaCommand(OnSetCopyDirCommandExecuted, CanSetCopyDirCommandExecute);
+        _ = CheckSourceAsync();
+        _ = CheckReports();
+        _ = CheckCopyDir();
     }
 
+    #region Свойства
     private string _Status = string.Empty;
     /// <summary> Статус </summary>
     public string Status
@@ -116,6 +121,7 @@ internal class SettingsWindowViewModel : ViewModel
         set => Set(ref _CopyDirCheckStatus, value);
     }
 
+    #endregion
 
     #region Команды
 
@@ -151,4 +157,48 @@ internal class SettingsWindowViewModel : ViewModel
 
     #endregion
 
+    private async Task CheckSourceAsync()
+    {
+        await Task.Run(() =>
+        {
+            SourceCheckStatus = CheckStatus.Sync;
+            Thread.Sleep(1000);
+            if (File.Exists(SourcePath))
+            {
+                SourceCheckStatus |= CheckStatus.Ok;
+                return;
+            }
+            SourceCheckStatus = CheckStatus.Error;
+        });
+    }
+
+    private async Task CheckReports()
+    {
+        await Task.Run(() =>
+        {
+            ReportsCheckStatus = CheckStatus.Sync;
+            Thread.Sleep(1000);
+            if (File.Exists(ReportsPath))
+            {
+                ReportsCheckStatus |= CheckStatus.Ok;
+                return;
+            }
+            ReportsCheckStatus = CheckStatus.Error;
+        });
+    }
+
+    private async Task CheckCopyDir()
+    {
+        await Task.Run(() =>
+        {
+            CopyDirCheckStatus = CheckStatus.Sync;
+            Thread.Sleep(1000);
+            if (Directory.Exists(LogsCopyDir))
+            {
+                CopyDirCheckStatus |= CheckStatus.Ok;
+                return;
+            }
+            CopyDirCheckStatus = CheckStatus.Error;
+        });
+    }
 }
