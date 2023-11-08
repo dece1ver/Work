@@ -42,13 +42,10 @@ public class AppSettings
     public bool DebugMode { get; set; }
 
     /// <summary> Путь к файлу занесения </summary>
-    public string SourcePath { get; set; }
+    public string? SourcePath { get; set; }
 
     /// <summary> Путь к файлу отчетов </summary>
-    public string ReportsPath { get; set; }
-
-    /// <summary> Директория для копирования логов </summary>
-    public string LogsCopyDir { get; set; }
+    public string? ReportsPath { get; set; }
 
 
     /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
@@ -57,7 +54,8 @@ public class AppSettings
         if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
         if (File.Exists(ConfigBackupPath)) File.Delete(ConfigBackupPath);
         if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
-        LogsCopyDir = "";
+        SourcePath = "";
+        ReportsPath = "";
         Save();
     }
 

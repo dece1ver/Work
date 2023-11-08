@@ -7,13 +7,12 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="Отчеты электронного журнала" Height="450" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" >
+        Title="Отчеты электронного журнала" Height="640" Width="960" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" >
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
     <Grid>
         <DockPanel LastChildFill="True" Grid.Column="0">
-            
             <Menu DockPanel.Dock="Top" Background="Transparent">
                 <MenuItem Header="Параметры">
                     <MenuItem Header="Параметры"
@@ -35,5 +34,8 @@
                 <Button Margin="150" Command="{Binding TestProcessCommand}"/>
             </DockPanel>
         </DockPanel>
+        <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
+              Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
+              Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>
     </Grid>
 </Window>

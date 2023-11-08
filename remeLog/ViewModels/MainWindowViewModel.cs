@@ -3,6 +3,7 @@ using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
+using remeLog.Infrastructure;
 using remeLog.Views;
 using System;
 using System.Diagnostics;
@@ -24,6 +25,9 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
         ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
         TestProcessCommand = new LambdaCommand(OnTestProcessCommandExecuted, CanTestProcessCommandExecute);
+
+        // var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
+        // backgroundWorker.Start();
     }
 
 
@@ -94,7 +98,13 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         using (Overlay = new())
         {
             SettingsWindow settingsWindow = new SettingsWindow() { Owner = Application.Current.MainWindow };
-            settingsWindow.ShowDialog();
+            if (settingsWindow.ShowDialog() == true && settingsWindow.DataContext is SettingsWindowViewModel settings)
+            {
+                AppSettings.Instance.SourcePath = settings.SourcePath; 
+                AppSettings.Instance.ReportsPath = settings.ReportsPath; 
+                AppSettings.Save();
+                Status = "Параметры сохранены";
+            }
         }
     }
     private static bool CanEditSettingsCommandExecute(object p) => true;
@@ -123,4 +133,11 @@ internal class MainWindowViewModel : ViewModel, IOverlay
 
     #endregion
 
+    private void BackgroundWorker()
+    {
+        while (true)
+        {
+
+        }
+    }
 }

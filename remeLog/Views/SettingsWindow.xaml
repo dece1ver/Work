@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views"
+        xmlns:cmd="clr-namespace:remeLog.Infrastructure.Commands"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:SettingsWindowViewModel}"
         mc:Ignorable="d"
-        Title="Параметры" Height="450" Width="600">
+        Title="Параметры" Height="450" Width="640" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Icon="/Resources/Settings.png">
     <Window.DataContext>
         <vm:SettingsWindowViewModel />
     </Window.DataContext>
@@ -41,7 +42,7 @@
             Visibility="{Binding ProgressBarVisibility}" Height="2" />
         <Grid Margin="5">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="80" />
                 <ColumnDefinition />
                 <ColumnDefinition Width="100" />
             </Grid.ColumnDefinitions>
@@ -50,7 +51,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition />
-                <RowDefinition Height="auto"/>
+                <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" 
@@ -73,15 +74,21 @@
                 <Button Content="Обзор..." Command="{Binding SetReportsTableCommand}"/>
             </DockPanel>
             
-            <TextBlock Grid.Row="2" Grid.Column="0" 
-                       Text="Логи (сервер)" Style="{StaticResource settingLabel}" />
-            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ReportsPath}" 
-                     d:Text="C:\ProgramData\dece1ver\remeLog\"/>
-            <DockPanel Grid.Row="2" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}"
-                       Content="{Binding CopyDirCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
-                <Button Content="Обзор..." Command="{Binding SetCopyDirCommand}"/>
-            </DockPanel>
+            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" 
+                        Orientation="Horizontal" FlowDirection="RightToLeft">
+                <Button Content="Ok" Width="100" Margin="0 0 5 0" 
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:SettingsWindow}}">
+                    <Button.Command>
+                        <cmd:CloseDialogCommand DialogResult="True"/>
+                    </Button.Command>
+                </Button>
+                <Button Content="Отмена" Width="100"
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:SettingsWindow}}">
+                    <Button.Command>
+                        <cmd:CloseDialogCommand DialogResult="False"/>
+                    </Button.Command>
+                </Button>
+            </StackPanel>
         </Grid>
     </DockPanel>
 </Window>

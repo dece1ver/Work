@@ -1,8 +1,11 @@
-﻿using libeLog;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
+using Microsoft.Win32;
+using remeLog.Infrastructure;
 using remeLog.Infrastructure.Types;
 using System;
 using System.Diagnostics;
@@ -23,10 +26,10 @@ internal class SettingsWindowViewModel : ViewModel
     {
         SetSourceTableCommand = new LambdaCommand(OnSetSourceTableCommandExecuted, CanSetSourceTableCommandExecute);
         SetReportsTableCommand = new LambdaCommand(OnSetReportsTableCommandExecuted, CanSetReportsTableCommandExecute);
-        SetCopyDirCommand = new LambdaCommand(OnSetCopyDirCommandExecuted, CanSetCopyDirCommandExecute);
+        SourcePath = AppSettings.Instance.SourcePath ?? "";
+        ReportsPath = AppSettings.Instance.ReportsPath ?? "";
         _ = CheckSourceAsync();
-        _ = CheckReports();
-        _ = CheckCopyDir();
+        _ = CheckReportsAsync();
     }
 
     #region Свойства
@@ -129,8 +132,14 @@ internal class SettingsWindowViewModel : ViewModel
     public ICommand SetSourceTableCommand { get; }
     private void OnSetSourceTableCommandExecuted(object p)
     {
-        SourceCheckStatus = (CheckStatus)new Random().Next(0, 3);
-        Status = $"Source: {SourceCheckStatus} | Reports: {ReportsCheckStatus} | CopyDir: {CopyDirCheckStatus}";
+        OpenFileDialog dlg = new()
+        {
+            Filter = "Excel книга с макросами (*.xlsm)|*.xlsm",
+            DefaultExt = "xlsm"
+        };
+        if (dlg.ShowDialog() != true) return;
+        SourcePath = dlg.FileName;
+        _ = CheckSourceAsync();
     }
     private static bool CanSetSourceTableCommandExecute(object p) => true;
     #endregion
@@ -139,21 +148,18 @@ internal class SettingsWindowViewModel : ViewModel
     public ICommand SetReportsTableCommand { get; }
     private void OnSetReportsTableCommandExecuted(object p)
     {
-        ReportsCheckStatus = (CheckStatus)new Random().Next(0, 3);
-        Status = $"Source: {SourceCheckStatus} | Reports: {ReportsCheckStatus} | CopyDir: {CopyDirCheckStatus}";
+        OpenFileDialog dlg = new()
+        {
+            Filter = "Excel книга с макросами (*.xlsm)|*.xlsm",
+            DefaultExt = "xlsm"
+        };
+        if (dlg.ShowDialog() != true) return;
+        ReportsPath = dlg.FileName;
+        _ = CheckReportsAsync();
     }
     private static bool CanSetReportsTableCommandExecute(object p) => true;
     #endregion
 
-    #region SetCopyDir
-    public ICommand SetCopyDirCommand { get; }
-    private void OnSetCopyDirCommandExecuted(object p)
-    {
-        CopyDirCheckStatus = (CheckStatus)new Random().Next(0, 3);
-        Status = $"Source: {SourceCheckStatus} | Reports: {ReportsCheckStatus} | CopyDir: {CopyDirCheckStatus}";
-    }
-    private static bool CanSetCopyDirCommandExecute(object p) => true;
-    #endregion
 
     #endregion
 
@@ -162,43 +168,26 @@ internal class SettingsWindowViewModel : ViewModel
         await Task.Run(() =>
         {
             SourceCheckStatus = CheckStatus.Sync;
-            Thread.Sleep(1000);
             if (File.Exists(SourcePath))
             {
-                SourceCheckStatus |= CheckStatus.Ok;
+                SourceCheckStatus = CheckStatus.Ok;
                 return;
             }
             SourceCheckStatus = CheckStatus.Error;
         });
     }
 
-    private async Task CheckReports()
+    private async Task CheckReportsAsync()
     {
         await Task.Run(() =>
         {
             ReportsCheckStatus = CheckStatus.Sync;
-            Thread.Sleep(1000);
             if (File.Exists(ReportsPath))
             {
-                ReportsCheckStatus |= CheckStatus.Ok;
+                ReportsCheckStatus = CheckStatus.Ok;
                 return;
             }
             ReportsCheckStatus = CheckStatus.Error;
-        });
-    }
-
-    private async Task CheckCopyDir()
-    {
-        await Task.Run(() =>
-        {
-            CopyDirCheckStatus = CheckStatus.Sync;
-            Thread.Sleep(1000);
-            if (Directory.Exists(LogsCopyDir))
-            {
-                CopyDirCheckStatus |= CheckStatus.Ok;
-                return;
-            }
-            CopyDirCheckStatus = CheckStatus.Error;
         });
     }
 }
