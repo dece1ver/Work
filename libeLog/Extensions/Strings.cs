@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace libeLog.Extensions;
 
@@ -138,28 +139,30 @@ public static class Strings
         {
             try
             {
+                WindowsIdentity currentIdentity = WindowsIdentity.GetCurrent();
+                WindowsPrincipal currentPrincipal = new WindowsPrincipal(currentIdentity);
                 DirectorySecurity directorySecurity = directoryInfo.GetAccessControl();
-
-                AuthorizationRuleCollection accessRules = directorySecurity.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
-
-                CheckDirectoryRightsResult hasAccess = CheckDirectoryRightsResult.NoAccess;
+                AuthorizationRuleCollection accessRules = directorySecurity.GetAccessRules(true, true, typeof(NTAccount));
 
                 foreach (FileSystemAccessRule rule in accessRules)
                 {
-                    if (rule.AccessControlType == AccessControlType.Allow && (rule.FileSystemRights & requiredRights) != 0)
+                    if (rule.AccessControlType == AccessControlType.Allow &&
+                        (rule.FileSystemRights & requiredRights) != 0
+                        && (currentPrincipal.IsInRole(rule.IdentityReference.Value) 
+                        || rule.IdentityReference.Value == currentIdentity.Name))
                     {
-                        hasAccess = CheckDirectoryRightsResult.HasAccess;
-                        break;
+                         return CheckDirectoryRightsResult.HasAccess;
                     }
                 }
-                return hasAccess;
+
+                return CheckDirectoryRightsResult.NoAccess;
             }
             catch
             {
                 return CheckDirectoryRightsResult.Error;
             }
-
         }
+
         return CheckDirectoryRightsResult.NotExists;
     }
 }

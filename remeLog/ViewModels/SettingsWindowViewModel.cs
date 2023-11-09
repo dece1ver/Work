@@ -99,7 +99,7 @@ internal class SettingsWindowViewModel : ViewModel
     }
 
 
-    private string _SourceCheckTip;
+    private string _SourceCheckTip = string.Empty;
     /// <summary> Подсказка для  </summary>
     public string SourceCheckTip
     {
@@ -129,7 +129,7 @@ internal class SettingsWindowViewModel : ViewModel
         set => Set(ref _ReportsCheckStatus, value);
     }
     
-    private string _ReportsCheckTip;
+    private string _ReportsCheckTip = string.Empty;
     /// <summary> Подсказка для файла отчетов </summary>
     public string ReportsCheckTip
     {
@@ -158,7 +158,7 @@ internal class SettingsWindowViewModel : ViewModel
     }
     
 
-    private string _DailyReportsDirCheckTip;
+    private string _DailyReportsDirCheckTip = string.Empty;
     /// <summary> Подсказка для директории с суточными отчетами </summary>
     public string DailyReportsDirCheckTip
     {
@@ -229,11 +229,11 @@ internal class SettingsWindowViewModel : ViewModel
             if (File.Exists(SourcePath))
             {
                 SourceCheckStatus = CheckStatus.Ok;
-                SourceCheckTip = "Файл корректный";
+                SourceCheckTip = Constants.StatusTips.Ok;
                 return;
             }
             SourceCheckStatus = CheckStatus.Error;
-            SourceCheckTip = "Файл отсутствует";
+            SourceCheckTip = Constants.StatusTips.NoFile;
         });
     }
 
@@ -245,11 +245,11 @@ internal class SettingsWindowViewModel : ViewModel
             if (File.Exists(ReportsPath))
             {
                 ReportsCheckStatus = CheckStatus.Ok;
-                ReportsCheckTip = "Файл корректный";
+                ReportsCheckTip = Constants.StatusTips.Ok;
                 return;
             }
             ReportsCheckStatus = CheckStatus.Error;
-            ReportsCheckTip = "Файл отсутствует";
+            ReportsCheckTip = Constants.StatusTips.NoFile;
         });
     }
 
@@ -262,29 +262,21 @@ internal class SettingsWindowViewModel : ViewModel
             {
                 case CheckDirectoryRightsResult.HasAccess:
                     DailyReportsDirCheckStatus = CheckStatus.Ok;
-                    DailyReportsDirCheckTip = "Все в порядке.";
+                    DailyReportsDirCheckTip = Constants.StatusTips.Ok;
                     break;
                 case CheckDirectoryRightsResult.NoAccess:
-                    DailyReportsDirCheckStatus = CheckStatus.Error;
-                    DailyReportsDirCheckTip = "Нет доступа на запись.";
+                    DailyReportsDirCheckStatus = CheckStatus.Warning;
+                    DailyReportsDirCheckTip = Constants.StatusTips.NoWriteAccess;
                     break;
                 case CheckDirectoryRightsResult.NotExists:
                     DailyReportsDirCheckStatus = CheckStatus.Error;
-                    DailyReportsDirCheckTip = "Директория не существует.";
+                    DailyReportsDirCheckTip = Constants.StatusTips.NoAccessToDirectory;
                     break;
                 case CheckDirectoryRightsResult.Error:
                     DailyReportsDirCheckStatus = CheckStatus.Error;
-                    DailyReportsDirCheckTip = "Не удалось получить доступ к директории.";
+                    DailyReportsDirCheckTip = Constants.StatusTips.AccessError;
                     break;
             }
-            if (Directory.Exists(DailyReportsDir) && DailyReportsDir.CheckDirectoryRights(FileSystemRights.Write) is CheckDirectoryRightsResult.HasAccess)
-            {
-                DailyReportsDirCheckStatus = CheckStatus.Ok;
-                return;
-            }
-            DailyReportsDirCheckStatus = CheckStatus.Error;
         });
     }
-
-
 }

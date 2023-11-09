@@ -5,7 +5,7 @@ using System.Windows.Threading;
 
 namespace libeLog.Base;
 
-public abstract class ViewModel : DependencyObject, INotifyPropertyChanged
+public abstract class ViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 

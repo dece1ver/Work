@@ -19,6 +19,12 @@ internal class StatusVisibilityConverter : IValueConverter
                     return statusOk;
                 }
                 break;
+            case CheckStatus.Warning:
+                if (Application.Current.TryFindResource("StatusWarningIcon") is Viewbox statusWarning)
+                {
+                    return statusWarning;
+                }
+                break;
             case CheckStatus.Error:
                 if (Application.Current.TryFindResource("StatusErrorIcon") is Viewbox statusErr)
                 {

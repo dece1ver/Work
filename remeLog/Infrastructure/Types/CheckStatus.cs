@@ -9,6 +9,7 @@ namespace remeLog.Infrastructure.Types
     public enum CheckStatus
     {
         Ok,
+        Warning,
         Error,
         Sync
     }
