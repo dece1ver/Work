@@ -7,7 +7,7 @@
         xmlns:cmd="clr-namespace:remeLog.Infrastructure.Commands"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:SettingsWindowViewModel}"
         mc:Ignorable="d"
-        Title="Параметры" Height="450" Width="640" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Icon="/Resources/Settings.png">
+        Title="Параметры" Height="450" Width="800" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Icon="/Resources/Settings.png">
     <Window.DataContext>
         <vm:SettingsWindowViewModel />
     </Window.DataContext>
@@ -42,7 +42,7 @@
             Visibility="{Binding ProgressBarVisibility}" Height="2" />
         <Grid Margin="5">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="120" />
                 <ColumnDefinition />
                 <ColumnDefinition Width="100" />
             </Grid.ColumnDefinitions>
@@ -59,21 +59,31 @@
             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SourcePath}" 
                      d:Text="C:\ProgramData\dece1ver\remeLog\2023.xlsm"/>
             <DockPanel Grid.Row="0" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}"
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding SourceCheckTip, UpdateSourceTrigger=PropertyChanged}"
                        Content="{Binding SourceCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Обзор..." Command="{Binding SetSourceTableCommand}"/>
             </DockPanel>
 
             <TextBlock Grid.Row="1" Grid.Column="0" 
-                       Text="Отчеты" Style="{StaticResource settingLabel}" />
+                       Text="Файл отчётов" Style="{StaticResource settingLabel}" />
             <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ReportsPath}" 
                      d:Text="C:\ProgramData\dece1ver\remeLog\reports.xlsx"/>
             <DockPanel Grid.Row="1" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}"
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding ReportsCheckTip, UpdateSourceTrigger=PropertyChanged}"
                        Content="{Binding ReportsCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Обзор..." Command="{Binding SetReportsTableCommand}"/>
             </DockPanel>
-            
+
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Text="Суточные отчёты" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DailyReportsDir}" 
+                        d:Text="C:\ProgramData\dece1ver\remeLog\"/>
+            <DockPanel Grid.Row="2" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding DailyReportsDirCheckTip, UpdateSourceTrigger=PropertyChanged}"
+                        Content="{Binding DailyReportsDirCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Обзор..." Command="{Binding SetDailyReportsDirCommand}"/>
+            </DockPanel>
+
             <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" 
                         Orientation="Horizontal" FlowDirection="RightToLeft">
                 <Button Content="Ok" Width="100" Margin="0 0 5 0" 

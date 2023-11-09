@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace libeLog.Base;
 
-public abstract class ViewModel : INotifyPropertyChanged
+public abstract class ViewModel : DependencyObject, INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 

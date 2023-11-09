@@ -47,6 +47,9 @@ public class AppSettings
     /// <summary> Путь к файлу отчетов </summary>
     public string? ReportsPath { get; set; }
 
+    /// <summary> Путь к директории с суточными отчетами </summary>
+    public string? DailyReportsDir { get; set; }
+
 
     /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
     private void CreateBaseConfig()
@@ -56,6 +59,7 @@ public class AppSettings
         if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
         SourcePath = "";
         ReportsPath = "";
+        DailyReportsDir = "";
         Save();
     }
 

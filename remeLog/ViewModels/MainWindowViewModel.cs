@@ -102,6 +102,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             {
                 AppSettings.Instance.SourcePath = settings.SourcePath; 
                 AppSettings.Instance.ReportsPath = settings.ReportsPath; 
+                AppSettings.Instance.DailyReportsDir = settings.DailyReportsDir; 
                 AppSettings.Save();
                 Status = "Параметры сохранены";
             }

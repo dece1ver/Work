@@ -1,6 +1,9 @@
-﻿using System;
+﻿using libeLog.Models;
+using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 
 namespace libeLog.Extensions;
 
@@ -119,5 +122,44 @@ public static class Strings
             return result;
         }
         return defaultValue;
+    }
+
+    /// <summary>
+    /// Проверяет наличие директории и права доступа к ней
+    /// </summary>
+    /// <param name="directoryPath"></param>
+    /// <param name="requiredRights"></param>
+    /// <returns></returns>
+    public static CheckDirectoryRightsResult CheckDirectoryRights(this string directoryPath, FileSystemRights requiredRights)
+    {
+        if (string.IsNullOrEmpty(directoryPath)) return CheckDirectoryRightsResult.NotExists;
+        DirectoryInfo directoryInfo = new DirectoryInfo(directoryPath);
+        if (directoryInfo.Exists)
+        {
+            try
+            {
+                DirectorySecurity directorySecurity = directoryInfo.GetAccessControl();
+
+                AuthorizationRuleCollection accessRules = directorySecurity.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount));
+
+                CheckDirectoryRightsResult hasAccess = CheckDirectoryRightsResult.NoAccess;
+
+                foreach (FileSystemAccessRule rule in accessRules)
+                {
+                    if (rule.AccessControlType == AccessControlType.Allow && (rule.FileSystemRights & requiredRights) != 0)
+                    {
+                        hasAccess = CheckDirectoryRightsResult.HasAccess;
+                        break;
+                    }
+                }
+                return hasAccess;
+            }
+            catch
+            {
+                return CheckDirectoryRightsResult.Error;
+            }
+
+        }
+        return CheckDirectoryRightsResult.NotExists;
     }
 }
