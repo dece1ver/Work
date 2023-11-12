@@ -1,5 +1,6 @@
 ﻿using eLog.Infrastructure.Extensions;
 using libeLog;
+using libeLog.Extensions;
 using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
@@ -63,9 +64,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
         set
         {
             if (Set(ref _ParentPart, value))
-            {
                 OnPropertyChanged(nameof(Relation));
-            }
         }
     }
 
@@ -91,9 +90,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
         set
         {
             if (Set(ref _Type, value))
-            {
                 OnPropertyChanged(nameof(Name));
-            }
         }
     }
 
@@ -180,7 +177,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
         }
     }
 
-    [JsonIgnore] public TimeSpan Time => (EndTime - StartTime) - Util.GetBreaksBetween(StartTime, EndTime);
+    [JsonIgnore] public TimeSpan Time => EndTime - StartTime - DateTimes.GetBreaksBetween(StartTime, EndTime);
     [JsonIgnore] public bool InProgress => EndTime < StartTime;
 
     public bool HasError { get; private set; }
@@ -195,9 +192,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
                 case nameof(StartTimeText):
                     {
                         if (StartTime == DateTime.MinValue)
-                        {
                             error = "Некорректно указано время начала";
-                        }
                         else if (StartTime < ParentPart.StartSetupTime)
                         {
                             error = "Время начала простоя не может быть раньше времени запуска детали.";
@@ -210,9 +205,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
                     }
                 case nameof(EndTimeText):
                     if (EndTime != DateTime.MinValue && EndTime <= StartTime)
-                    {
                         error = "Время завершения простоя не может быть раньше времени начала.";
-                    }
                     else if (Relation is Relations.Setup && ParentPart.SetupIsFinished &&
                              EndTime > ParentPart.StartMachiningTime)
                     {
@@ -255,9 +248,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
         foreach (var action in invokationList)
         {
             if (action.Target is DispatcherObject dispatcherObject)
-            {
                 dispatcherObject.Dispatcher.Invoke(action, this, args);
-            }
             else
             {
                 action.DynamicInvoke(this, args);
@@ -278,9 +269,7 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
     {
         HasError = false;
         if (StartTime == DateTime.MinValue)
-        {
             HasError = true;
-        }
         else if (StartTime < ParentPart.StartSetupTime)
         {
             HasError = true;

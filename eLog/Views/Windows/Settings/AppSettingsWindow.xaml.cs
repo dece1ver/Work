@@ -1,5 +1,6 @@
 ﻿using eLog.Infrastructure;
 using eLog.Models;
+using libeLog.Models;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;

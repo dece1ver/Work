@@ -10,11 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\eLogSplashScreen.png" />
+    <None Remove="Resources\remeLogSplashScreen.png" />
     <None Remove="Views\Settings.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Properties\" />
   </ItemGroup>
 
@@ -30,6 +31,10 @@
 
   <ItemGroup>
     <Resource Include="Resources\Settings.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SplashScreen Include="Resources\remeLogSplashScreen.png" />
   </ItemGroup>
 
 </Project>

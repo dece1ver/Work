@@ -2,6 +2,7 @@
 using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using libeLog.Extensions;
+using libeLog.Models;
 using libeLog.WinApi.Windows;
 using System;
 using System.Linq;

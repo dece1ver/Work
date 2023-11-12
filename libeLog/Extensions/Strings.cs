@@ -130,7 +130,7 @@ public static class Strings
     /// </summary>
     /// <param name="directoryPath"></param>
     /// <param name="requiredRights"></param>
-    /// <returns></returns>
+    /// <returns>CheckDirectoryRightsResult</returns>
     public static CheckDirectoryRightsResult CheckDirectoryRights(this string directoryPath, FileSystemRights requiredRights)
     {
         if (string.IsNullOrEmpty(directoryPath)) return CheckDirectoryRightsResult.NotExists;

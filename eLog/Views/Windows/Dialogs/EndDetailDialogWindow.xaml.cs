@@ -1,6 +1,7 @@
 ﻿using eLog.Infrastructure;
 using eLog.Models;
 using libeLog.Extensions;
+using libeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

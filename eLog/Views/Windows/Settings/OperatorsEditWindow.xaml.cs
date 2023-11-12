@@ -1,5 +1,6 @@
 ﻿using eLog.Infrastructure;
 using eLog.Models;
+using libeLog.Models;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;

@@ -2,7 +2,7 @@
 
 namespace eLog.Models;
 
-class CombinedDownTime
+public class CombinedDownTime
 {
     public DownTime.Types Type { get; set; }
     public string Name { get; set; }

@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace eLog.Infrastructure.Extensions;
+namespace eLog.Models;
 
 public delegate void ListedItemPropertyChangedEventHandler(IList SourceList, object Item, PropertyChangedEventArgs e);
 public class DeepObservableCollection<T> : ObservableCollection<T> where T : INotifyPropertyChanged
@@ -44,7 +44,7 @@ public class DeepObservableCollection<T> : ObservableCollection<T> where T : INo
         {
             if (prop.PropertyType.IsPrimitive ||
                 Convert.GetTypeCode(prop.GetValue(item)) != TypeCode.Object) continue;
-            ((prop.GetValue(item) as INotifyPropertyChanged)!).PropertyChanged += new PropertyChangedEventHandler(Handler!);
+            (prop.GetValue(item) as INotifyPropertyChanged)!.PropertyChanged += new PropertyChangedEventHandler(Handler!);
             RecursivelyApplyEventHandler((INotifyPropertyChanged)prop.GetValue(item)!);
         }
     }

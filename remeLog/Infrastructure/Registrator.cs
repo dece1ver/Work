@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using remeLog.ViewModels;
 
-namespace remeLog.ViewModels;
+namespace remeLog.Infrastructure;
 
 internal static class Registrator
 {

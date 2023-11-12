@@ -5,6 +5,7 @@ using eLog.Services.Interfaces;
 using eLog.Views.Windows.Dialogs;
 using eLog.Views.Windows.Settings;
 using libeLog;
+using libeLog.Models;
 using System;
 using System.Linq;
 using System.Windows;

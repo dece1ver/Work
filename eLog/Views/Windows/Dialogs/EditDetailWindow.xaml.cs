@@ -5,6 +5,7 @@ using eLog.Services;
 using libeLog;
 using libeLog.Extensions;
 using libeLog.Interfaces;
+using libeLog.Models;
 using libeLog.WinApi.Windows;
 using System;
 using System.Collections.Generic;

@@ -1,4 +1,6 @@
-﻿namespace libeLog;
+﻿using System;
+
+namespace libeLog;
 
 public static class Constants
 {
@@ -21,5 +23,30 @@ public static class Constants
         public const string NoAccessToDirectory = "Директория не существует или отсутствуют права на её чтение.";
         public const string NoWriteAccess = "Нет доступа на запись. Работа в режиме чтения.";
         
+    }
+
+    public static class WorkTime
+    {
+        public static readonly DateTime DayShiftFirstBreak = new(1, 1, 1, 9, 0, 0);
+        public static readonly DateTime DayShiftSecondBreak = new(1, 1, 1, 12, 30, 0);
+        public static readonly DateTime DayShiftThirdBreak = new(1, 1, 1, 15, 15, 0);
+        public static readonly DateTime NightShiftFirstBreak = new(1, 1, 1, 22, 30, 0);
+        public static readonly DateTime NightShiftSecondBreak = new(1, 1, 1, 1, 30, 0);
+        public static readonly DateTime NightShiftThirdBreak = new(1, 1, 1, 4, 30, 0);
+    }
+
+    public static class Machines 
+    {
+        public const string GoodwayGs1500 = "Goodway GS-1500";
+        public const string HuyndaiSkt21_104 = "Hyundai WIA SKT21 №104";
+        public const string HuyndaiSkt21_105 = "Hyundai WIA SKT21 №105";
+        public const string HuyndaiL230A = "Hyundai L230A";
+        public const string HuyndaiXH6300 = "Hyundai XH6300";
+        public const string MazakQts200Ml = "Mazak QTS200ML";
+        public const string MazakQts350 = "Mazak QTS350";
+        public const string MazakNexus5000 = "Mazak Nexus 5000";
+        public const string MazakIntegrexI200 = "Mazak Integrex i200";
+        public const string QuaserMv134 = "Quaser MV134";
+        public const string VictorA110 = "Victor A110";
     }
 }

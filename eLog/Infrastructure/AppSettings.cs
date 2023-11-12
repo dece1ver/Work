@@ -1,5 +1,6 @@
 ﻿using eLog.Infrastructure.Extensions;
 using eLog.Models;
+using libeLog.Models;
 using Newtonsoft.Json;
 using System;
 using System.ComponentModel;

@@ -1,6 +1,7 @@
 ﻿using eLog.Models;
 using eLog.Views.Windows.Dialogs;
 using libeLog.Base;
+using libeLog.Models;
 using System.Windows;
 
 namespace eLog.Infrastructure.Commands;

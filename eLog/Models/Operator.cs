@@ -49,9 +49,7 @@ public class Operator : INotifyPropertyChanged
             if (string.IsNullOrEmpty(FirstName)) return result;
             result += " " + FirstName[0] + ".";
             if (!string.IsNullOrEmpty(Patronymic))
-            {
                 result += " " + Patronymic[0] + ".";
-            }
             return result;
         }
     }
@@ -65,9 +63,7 @@ public class Operator : INotifyPropertyChanged
             if (string.IsNullOrEmpty(FirstName)) return result;
             result += " " + FirstName;
             if (!string.IsNullOrEmpty(Patronymic))
-            {
                 result += " " + Patronymic;
-            }
             return result;
         }
     }
@@ -75,9 +71,7 @@ public class Operator : INotifyPropertyChanged
     public override bool Equals(object? obj)
     {
         if (obj is null || GetType() != obj.GetType())
-        {
             return false;
-        }
 
         var other = (Operator)obj;
         return FirstName == other.FirstName
@@ -100,9 +94,7 @@ public class Operator : INotifyPropertyChanged
         foreach (var action in invokationList)
         {
             if (action.Target is DispatcherObject dispatcherObject)
-            {
                 dispatcherObject.Dispatcher.Invoke(action, this, args);
-            }
             else
             {
                 action.DynamicInvoke(this, args);

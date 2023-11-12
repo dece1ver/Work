@@ -1,5 +1,6 @@
 ﻿using eLog.Infrastructure.Extensions;
 using eLog.Models;
+using libeLog.Models;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;

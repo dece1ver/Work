@@ -18,16 +18,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Models\Interfaces\**" />
-    <EmbeddedResource Remove="Models\Interfaces\**" />
-    <None Remove="Models\Interfaces\**" />
-    <Page Remove="Models\Interfaces\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Resources\eLog.png" />
+    <None Remove="Resources\eLogSplashScreen.png" />
     <None Remove="Resources\qrcode.png" />
-    <None Remove="SplashScreen.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,7 +44,7 @@
   </ItemGroup>
     
   <ItemGroup>
-    <SplashScreen Include="SplashScreen.png" />
+    <SplashScreen Include="Resources\eLogSplashScreen.png" />
   </ItemGroup>
 
   <ItemGroup>

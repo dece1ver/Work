@@ -1,4 +1,5 @@
 ﻿using eLog.Models;
+using libeLog.Models;
 using System.Windows;
 
 namespace eLog.Views.Windows.Dialogs;
