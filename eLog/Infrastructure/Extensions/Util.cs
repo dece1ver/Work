@@ -2,6 +2,7 @@
 using eLog.Models;
 using eLog.Views.Windows.Dialogs;
 using libeLog;
+using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Models;
 using System;
@@ -151,6 +152,8 @@ internal static class Util
         if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Новая запись информации о детали."); }
         var id = -1;
         if (!File.Exists(AppSettings.Instance.XlPath)) return -3;
+        var partIndex = AppSettings.Instance.Parts.IndexOf(part);
+        var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex ? AppSettings.Instance.Parts[partIndex + 1] : null;
         try
         {
             if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
@@ -243,7 +246,7 @@ internal static class Util
                         xlRow.Cell(i).FormulaR1C1 = prevRow.Cell(i).FormulaR1C1;
                     }
 
-                    var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
+                    var shiftTime = part.Shift == Text.DayShift ? 660 : 630;
                     // все простои в наладке кроме частичной
                     xlRow.Cell(34).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                     // все простои в изготовлении
@@ -265,14 +268,19 @@ internal static class Util
                     xlRow.Cell(42).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0);
                     // отказ оборудования
                     xlRow.Cell(43).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0);
+                    // если текущая деталь уже записывалась, то норматив наладки 0, чтобы они не суммировались при подсчете выработки
+                    var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
+                    if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
+                    // норматив наладки для отчета
+                    xlRow.Cell(44).Value = partSetupTimePlanReport;
 
-                    for (var i = 1; i <= 43; i++)
+                    for (var i = 1; i <= 44; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
                     }
                     break;
                 }
-                if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл."); }
+                if (AppSettings.Instance.DebugMode) { WriteLog($"Присвоен номер {id}. Запись в файл..."); }
                 Debug.Print("Write");
                 wb.Save(true);
                 if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
@@ -352,7 +360,12 @@ internal static class Util
 
     public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
     {
+        var partIndex = AppSettings.Instance.Parts.IndexOf(part);
+        var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex ? AppSettings.Instance.Parts[partIndex + 1] : null;
+
         if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Обновление информации о детали."); }
+
+        if (AppSettings.Instance.DebugMode && prevPart != null) { WriteLog(prevPart, $"Прошлая деталь."); }
 
         if (!File.Exists(AppSettings.Instance.XlPath))
         {
@@ -418,8 +431,7 @@ internal static class Util
                     xlRow.Cell(22).Value = part.ProductionTimeFact.ToString(@"hh\:mm");
                     xlRow.Cell(23).Value = part.SingleProductionTimePlan;
                     xlRow.Cell(24).Value = Math.Round(part.MachineTime.TotalMinutes, 2);
-
-                    var shiftTime = AppSettings.Instance.CurrentShift == Text.DayShift ? 660 : 630;
+                    var shiftTime = part.Shift == Text.DayShift ? 660 : 630;
                     xlRow.Cell(34).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0);
                     xlRow.Cell(35).Value = Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0);
                     xlRow.Cell(36).Value = part.Guid.ToString();
@@ -431,11 +443,13 @@ internal static class Util
                     xlRow.Cell(41).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0);
                     xlRow.Cell(42).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0);
                     xlRow.Cell(43).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0);
-
+                    var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
+                    if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
+                    xlRow.Cell(44).Value = partSetupTimePlanReport;
                     result = WriteResult.Ok;
                     break;
                 }
-                if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл."); }
+                if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл..."); }
                 Debug.Print("Rewrite");
                 wb.Save(true);
                 Debug.Print("Ok");
@@ -477,7 +491,7 @@ internal static class Util
     /// <returns></returns>
     private static string GetCopyDir()
     {
-        if (Directory.Exists(AppSettings.Instance.XlPath) && Directory.GetParent(AppSettings.Instance.XlPath) is { Parent: not null} parent)
+        if (File.Exists(AppSettings.Instance.XlPath) && Directory.GetParent(AppSettings.Instance.XlPath) is { Exists: true} parent)
         {
             return parent.FullName;
         }
