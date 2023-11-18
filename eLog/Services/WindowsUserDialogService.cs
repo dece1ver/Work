@@ -141,7 +141,7 @@ internal class WindowsUserDialogService : IUserDialogService
         part = dlg.Part;
         //if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
         //if (part.EndMachiningTime != DateTime.MinValue && part.FullProductionTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
-        if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog($"Подтверждено."); }
+        if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
         return true;
     }
 

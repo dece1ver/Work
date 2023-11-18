@@ -772,6 +772,8 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
             Part.Setup++;
             if (!WithSetup) WithSetup = true;
         }
+        PartSetupTimePlan = "";
+        SingleProductionTimePlan = "";
         OnPropertyChanged(nameof(CanIncreaseSetup));
         OnPropertyChanged(nameof(CanDecreaseSetup));
     }
@@ -782,6 +784,8 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         {
             Part.Setup--;
         }
+        PartSetupTimePlan = "";
+        SingleProductionTimePlan = "";
         OnPropertyChanged(nameof(CanIncreaseSetup));
         OnPropertyChanged(nameof(CanDecreaseSetup));
     }
