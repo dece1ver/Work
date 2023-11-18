@@ -1,4 +1,5 @@
-﻿using eLog.Infrastructure;
+﻿using DocumentFormat.OpenXml.Office2019.Drawing.Diagram11;
+using eLog.Infrastructure;
 using eLog.Models;
 using libeLog.Models;
 using Microsoft.Win32;
@@ -24,6 +25,10 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     private Machine _Machine;
     private string[] _OrderQualifiers;
     private bool _DebugMode;
+    private StorageType _StorageType;
+    private string _ConnectionString;
+
+    public List<StorageType> StorageTypes { get; }
     public IReadOnlyList<Machine> Machines { get; }
 
     public string XlPath
@@ -51,20 +56,42 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
         set => Set(ref _OrderQualifiers, value);
 
     }
+
+    public StorageType StorageType
+    {
+        get => _StorageType;
+        set => Set(ref _StorageType, value);
+    }
+
+
     public bool DebugMode
     {
         get => _DebugMode;
         set => Set(ref _DebugMode, value);
     }
 
+    public string ConnectionString
+    {
+        get => _ConnectionString;
+        set => Set(ref _ConnectionString, value);
+    }
+
+
     public AppSettingsWindow()
     {
-
         Machines = Enumerable.Range(0, 11).Select(i => new Machine(i)).ToList();
+        StorageTypes = new List<StorageType>() 
+        {
+            new StorageType(StorageType.Types.Excel),
+            new StorageType(StorageType.Types.Database),
+            new StorageType (StorageType.Types.All) 
+        };
         _XlPath = AppSettings.Instance.XlPath;
         _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
         _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
         _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
+        _StorageType = StorageTypes.First(x => x.Type == AppSettings.Instance.StorageType.Type) ?? new StorageType(StorageType.Types.Excel);
+        _ConnectionString = AppSettings.Instance.ConnetctionString ?? "";
         _DebugMode = AppSettings.Instance.DebugMode;
         InitializeComponent();
     }
@@ -73,8 +100,8 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     {
         OpenFileDialog dlg = new()
         {
-            Filter = "Excel таблица с макросами(*.xlsm)|*.xlsm|Excel таблица (*.xlsx)|*.xlsx",
-            DefaultExt = "xlsx"
+            Filter = "Книга Excel с макросами (*.xlsm)|*.xlsm|Книга Excel(*.xlsx)|*.xlsx",
+            DefaultExt = "xlsm"
         };
         if (dlg.ShowDialog() != true) return;
         XlPath = dlg.FileName;
@@ -83,7 +110,7 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     {
         OpenFileDialog dlg = new()
         {
-            Filter = "Excel таблица (*.xlsx)|*.xlsx",
+            Filter = "Книга Excel (*.xlsx)|*.xlsx",
             DefaultExt = "xlsx"
         };
         if (dlg.ShowDialog() != true) return;

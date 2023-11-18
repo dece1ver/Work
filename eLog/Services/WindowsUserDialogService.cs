@@ -92,6 +92,8 @@ internal class WindowsUserDialogService : IUserDialogService
         AppSettings.Instance.OrdersSourcePath = dlg.OrdersSourcePathTextBox.Text;
         AppSettings.Instance.OrderQualifiers = dlg.OrderQualifiers;
         AppSettings.Instance.DebugMode = dlg.DebugMode;
+        AppSettings.Instance.StorageType = dlg.StorageType;
+        AppSettings.Instance.ConnetctionString = dlg.ConnectionString;
         if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
         return true;
     }

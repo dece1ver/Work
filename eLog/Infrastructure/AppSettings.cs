@@ -61,6 +61,8 @@ public class AppSettings : INotifyPropertyChanged
     private DeepObservableCollection<Part> _Parts;
     private bool _IsShiftStarted;
     private Operator? _CurrentOperator;
+    private StorageType _StorageType;
+    private string _ConnetctionString;
     private bool _DebugMode;
 
     /// <summary> Текущий станок </summary>
@@ -123,6 +125,22 @@ public class AppSettings : INotifyPropertyChanged
         get => _Parts;
         set => Set(ref _Parts, value);
     }
+
+    /// <summary> Тип хранения </summary>
+    public StorageType StorageType
+    {
+        get => _StorageType;
+        set => Set(ref _StorageType, value);
+    }
+
+    /// <summary> Строка подключения к БД </summary>
+    public string ConnetctionString
+    {
+        get => _ConnetctionString;
+        set => Set(ref _ConnetctionString, value);
+    }
+
+
     /// <summary> Режим отладки </summary>
     public bool DebugMode
     {
@@ -164,6 +182,8 @@ public class AppSettings : INotifyPropertyChanged
             "ЗУ",
             "СЛ",
         };
+        StorageType = new StorageType(StorageType.Types.Excel);
+        ConnetctionString = string.Empty;
         IsShiftStarted = false;
         Save();
     }

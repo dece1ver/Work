@@ -12,6 +12,9 @@
         Title="Параметры" Height="480" Width="640" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <cnv:ArrayConverter x:Key="ArrayConverter"/>
+        <Style TargetType="TextBlock">
+            <Setter Property="TextAlignment" Value="Right"/>
+        </Style>
     </Window.Resources>
     <DockPanel>
         <DockPanel DockPanel.Dock="Bottom">
@@ -34,7 +37,7 @@
 
         <Grid Margin="4" Visibility="Visible">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="130" />
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
@@ -42,32 +45,43 @@
                 <RowDefinition Height="24"/>
                 <RowDefinition Height="24"/>
                 <RowDefinition Height="24"/>
+                <RowDefinition x:Name="ConnetcionStringRow" Height="24"/>
+                <RowDefinition Height="24"/>
                 <RowDefinition Height="24"/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Станок:" Margin="5 0 0 0" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Станок:" Margin="5 0 5 0" VerticalAlignment="Center"/>
             <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" Margin="0 1"
                       ItemsSource="{Binding Machines}" 
                       SelectedItem="{Binding Machine}" 
                       DisplayMemberPath="Name"/>
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Занесение:" VerticalAlignment="Center" Margin="5 0 0 0" />
-            <DockPanel Grid.Row="1" Grid.Column="1" Margin="0" 
-                        VerticalAlignment="Stretch" LastChildFill="True">
-                <Button x:Name="SetOrdersSourcePathButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Padding="15 1" Click="SetXlPathButton_Click"/>
-                <TextBox x:Name="XlPathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
-                         Text="{Binding XlPath}"/>
-            </DockPanel>
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Номенклатура:" VerticalAlignment="Center" Margin="5 0 0 0" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Метод хранения:" VerticalAlignment="Center" Margin="5 0 5 0" />
+            <ComboBox Grid.Row="1" Grid.Column="1"
+                      ItemsSource="{Binding StorageTypes}" SelectedItem="{Binding StorageType}" DisplayMemberPath="Name"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Номенклатура:" VerticalAlignment="Center" Margin="5 0 5 0" />
             <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" 
                        VerticalAlignment="Stretch" LastChildFill="True">
                 <Button x:Name="SetOrdersSourceButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Padding="15 1" Click="SetOrdersSourceButton_Click"/>
                 <TextBox x:Name="OrdersSourcePathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
                          Text="{Binding OrdersSourcePath}"/>
             </DockPanel>
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="Типы М/Л:" VerticalAlignment="Center" Margin="5 0 0 0" />
-            <TextBox Grid.Row="3" Grid.Column="1" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Занесение:" VerticalAlignment="Center" Margin="5 0 5 0" />
+            <DockPanel Grid.Row="3" Grid.Column="1" Margin="0" 
+            VerticalAlignment="Stretch" LastChildFill="True">
+                <Button x:Name="SetOrdersSourcePathButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Padding="15 1" Click="SetXlPathButton_Click"/>
+                <TextBox x:Name="XlPathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
+             Text="{Binding XlPath}"/>
+            </DockPanel>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Строка подключения:" VerticalAlignment="Center" Margin="5 0 5 0" />
+            <TextBox x:Name="ConnectionStringTextBox" Grid.Row="4" Grid.Column="1" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1" 
+                     Text="{Binding ConnectionString}"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Типы М/Л:" VerticalAlignment="Center" Margin="5 0 5 0" />
+            <TextBox Grid.Row="5" Grid.Column="1" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
                      Text="{Binding OrderQualifiers, Converter={StaticResource ArrayConverter}}"/>
 
-            <CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="Запись дополнительных отладочных логов"
+            <CheckBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="Запись дополнительных отладочных логов"
                       VerticalAlignment="Center" IsChecked="{Binding DebugMode}" Margin="5 0 0 0"/>
         </Grid>
     </DockPanel>
