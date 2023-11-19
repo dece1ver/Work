@@ -153,7 +153,7 @@ internal static class Util
         var id = -1;
         if (!File.Exists(AppSettings.Instance.XlPath)) return -3;
         var partIndex = AppSettings.Instance.Parts.IndexOf(part);
-        var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex ? AppSettings.Instance.Parts[partIndex + 1] : null;
+        var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
         try
         {
             if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
@@ -322,7 +322,7 @@ internal static class Util
     public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
     {
         var partIndex = AppSettings.Instance.Parts.IndexOf(part);
-        var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex ? AppSettings.Instance.Parts[partIndex + 1] : null;
+        var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
 
         if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Обновление информации о детали."); }
 

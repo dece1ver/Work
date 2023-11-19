@@ -1,4 +1,5 @@
-﻿using eLog.Models;
+﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
+using eLog.Models;
 using libeLog.Extensions;
 using Microsoft.Data.SqlClient;
 using System;
@@ -27,7 +28,7 @@ namespace eLog.Infrastructure.Extensions
                         "Shift, " +
                         "Operator, " +
                         "PartName, " +
-                        "Order, " +
+                        "[Order], " +
                         "Setup, " +
                         "FinishedCount, " +
                         "TotalCount, " +
@@ -52,11 +53,11 @@ namespace eLog.Infrastructure.Extensions
                         "@EndMachiningTime, " +
                         "@SetupTimePlan, " +
                         "@SingleProductionTimePlan, " +
-                        "@MachiningTime) ";
+                        "@MachiningTime); SELECT SCOPE_IDENTITY();";
                     using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
-                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine);
+                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
                         cmd.Parameters.AddWithValue("@Shift", part.Shift);
                         cmd.Parameters.AddWithValue("@Operator", part.Operator.FullName);
                         cmd.Parameters.AddWithValue("@PartName", part.FullName);
@@ -70,12 +71,28 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
-
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();
-                        if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}");
+                        using (SqlCommand countCmd = new SqlCommand("SELECT COUNT(*) FROM Parts", connection))
+                        {
+                            part.Id = (int)countCmd.ExecuteScalar();
+                        }
+                        if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}\nПрисвоен Id: {part.Id}");
                         result = true;
                     }
+                    connection.Close();
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                if (sqlEx.Number is 2601 or 2627)
+                {
+                    Util.WriteLog("Запись уже существует.");
+                    return UpdatePart(part);
+                }
+                else
+                {
+                    Util.WriteLog(sqlEx);
                 }
             }
             catch (Exception ex)
@@ -100,7 +117,7 @@ namespace eLog.Infrastructure.Extensions
                         "Shift = @Shift, " +
                         "Operator = @Operator, " +
                         "PartName = @PartName, " +
-                        "Order = @Order, " +
+                        "[Order] = @Order, " +
                         "Setup = @Setup, " +
                         "FinishedCount = @FinishedCount, " +
                         "TotalCount = @TotalCount, " +
@@ -114,7 +131,7 @@ namespace eLog.Infrastructure.Extensions
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
-                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine);
+                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
                         cmd.Parameters.AddWithValue("@Shift", part.Shift);
                         cmd.Parameters.AddWithValue("@Operator", part.Operator.FullName);
                         cmd.Parameters.AddWithValue("@PartName", part.FullName);
@@ -132,8 +149,13 @@ namespace eLog.Infrastructure.Extensions
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Изменено строк: {execureResult}");
+                        if (execureResult == 0)
+                        {
+                            return WritePart(part);
+                        }
                         result = true;
                     }
+                    connection.Close();
                 }
             }
             catch (Exception ex)

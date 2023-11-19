@@ -583,16 +583,27 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                     if (ProgressBarVisibility == Visibility.Visible) break;
                     if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
                     // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
-                    
+                    var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
+
                     switch (AppSettings.Instance.StorageType.Type)
                     {
                         case StorageType.Types.Database:
+
+                            ProgressBarVisibility = Visibility.Visible;
+                            Status = $"Запись в БД: {partName}";
+                            part.IsSynced = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part); ;
+                            ProgressBarVisibility = Visibility.Hidden;
+                            Status = $"Готово";
                             break;
                         case StorageType.Types.Excel:
-                            WriteToXl(part, i);
+                            WriteToXl(part, i, partName);
                             break;
                         case StorageType.Types.All:
-                            WriteToXl(part, i);
+                            ProgressBarVisibility = Visibility.Visible;
+                            Status = $"Запись в БД: {partName}";
+                            part.IsSynced = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part);
+                            Status = $"Готово";
+                            WriteToXl(part, i, partName);
                             break;
                         default:
                             break;
@@ -654,9 +665,8 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         }
     }
 
-    private bool WriteToXl(Part part, int i)
+    private bool WriteToXl(Part part, int i, string partName)
     {
-        var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
         Status = $"Синхронизация: [{partName}]";
         ProgressBarVisibility = Visibility.Visible;
         _needSave = true;

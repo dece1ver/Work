@@ -90,7 +90,14 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
         _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
         _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
         _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
-        _StorageType = StorageTypes.First(x => x.Type == AppSettings.Instance.StorageType.Type) ?? new StorageType(StorageType.Types.Excel);
+        if (AppSettings.Instance.StorageType is null)
+        {
+            _StorageType = new StorageType(StorageType.Types.Excel);
+        } 
+        else
+        {
+            _StorageType = StorageTypes.First(x => x.Type == AppSettings.Instance.StorageType.Type);
+        }
         _ConnectionString = AppSettings.Instance.ConnetctionString ?? "";
         _DebugMode = AppSettings.Instance.DebugMode;
         InitializeComponent();

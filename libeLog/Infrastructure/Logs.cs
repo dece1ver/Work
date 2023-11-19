@@ -36,7 +36,7 @@ namespace libeLog.Infrastructure
             {
                 try
                 {
-                    CheckLogSize(path);
+                    if (File.Exists(path)) CheckLogSize(path);
                     File.AppendAllText(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: " +
                                                             $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
                                                             $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
@@ -68,7 +68,7 @@ namespace libeLog.Infrastructure
             {
                 try
                 {
-                    CheckLogSize(path);
+                    if (File.Exists(path)) CheckLogSize(path);
                     File.AppendAllText(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: {message}\n\n");
                     if (!string.IsNullOrWhiteSpace(copyDir)) TryCopyLog(path, copyDir);
                     return;
