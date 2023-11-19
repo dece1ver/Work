@@ -319,45 +319,6 @@ internal static class Util
         return id;
     }
 
-    private static bool BackupXl(int count = 3)
-    {
-        for (int i = 1; i <= count; i++)
-        {
-            if (AppSettings.Instance.DebugMode) WriteLog($"Попытка бэкапа таблицы...{i}");
-            try
-            {
-                using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
-                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
-                if (AppSettings.Instance.DebugMode) WriteLog("Успешно.");
-                Thread.Sleep(200);
-                return true;
-            }
-            catch
-            {
-                Thread.Sleep(5000);
-            }
-        }
-        return false;
-
-    }
-
-    private static void TryRestoreXl()
-    {
-        try
-        {
-            Debug.Print("Restore");
-            WriteLog("Попытка восстановления XL файла после ошибки...");
-            File.Copy(AppSettings.XlReservedPath, AppSettings.Instance.XlPath, true);
-            WriteLog("Успешно.");
-            Debug.Print("Ok");
-        }
-        catch
-        {
-            Debug.Print("Failed");
-            WriteLog("Неудачно.");
-        }
-    }
-
     public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
     {
         var partIndex = AppSettings.Instance.Parts.IndexOf(part);
@@ -484,6 +445,46 @@ internal static class Util
         }
         return result;
     }
+
+    private static bool BackupXl(int count = 3)
+    {
+        for (int i = 1; i <= count; i++)
+        {
+            if (AppSettings.Instance.DebugMode) WriteLog($"Попытка бэкапа таблицы...{i}");
+            try
+            {
+                using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
+                File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                if (AppSettings.Instance.DebugMode) WriteLog("Успешно.");
+                Thread.Sleep(200);
+                return true;
+            }
+            catch
+            {
+                Thread.Sleep(5000);
+            }
+        }
+        return false;
+
+    }
+
+    private static void TryRestoreXl()
+    {
+        try
+        {
+            Debug.Print("Restore");
+            WriteLog("Попытка восстановления XL файла после ошибки...");
+            File.Copy(AppSettings.XlReservedPath, AppSettings.Instance.XlPath, true);
+            WriteLog("Успешно.");
+            Debug.Print("Ok");
+        }
+        catch
+        {
+            Debug.Print("Failed");
+            WriteLog("Неудачно.");
+        }
+    }
+
 
     /// <summary>
     /// Получает директорию для копирования логов, которой является директория таблицы.

@@ -756,6 +756,10 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
 
         Part.TotalCount = prev.TotalCount;
         TotalCount = Part.TotalCount.ToString();
+
+        OnPropertyChanged(nameof(CanIncreaseSetup));
+        OnPropertyChanged(nameof(CanDecreaseSetup));
+
         OnPropertyChanged(nameof(TotalCount));
         OnPropertyChanged(nameof(CanBeClosed));
     }
@@ -772,8 +776,19 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
             Part.Setup++;
             if (!WithSetup) WithSetup = true;
         }
-        PartSetupTimePlan = "";
-        SingleProductionTimePlan = "";
+        try
+        {
+            var prev = AppSettings.Instance.Parts.First(x => x.Name == Part.Name && x.Setup == Part.Setup);
+            PartSetupTimePlan = prev.SetupTimePlan.ToString();
+            SingleProductionTimePlan = prev.SingleProductionTimePlan.ToString();
+        }
+        catch
+        {
+            PartSetupTimePlan = "";
+            SingleProductionTimePlan = "";
+        }
+        OnPropertyChanged(nameof(PartSetupTimePlan));
+        OnPropertyChanged(nameof(SingleProductionTimePlan));
         OnPropertyChanged(nameof(CanIncreaseSetup));
         OnPropertyChanged(nameof(CanDecreaseSetup));
     }
@@ -784,8 +799,21 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         {
             Part.Setup--;
         }
-        PartSetupTimePlan = "";
-        SingleProductionTimePlan = "";
+        try
+        {
+            var prev = AppSettings.Instance.Parts.First(x => x.Name == Part.Name && x.Setup == Part.Setup);
+            PartSetupTimePlan = prev.SetupTimePlan.ToString();
+            SingleProductionTimePlan = prev.SingleProductionTimePlan.ToString();
+        }
+        catch
+        {
+            PartSetupTimePlan = "";
+            SingleProductionTimePlan = "";
+        }
+        
+        
+        OnPropertyChanged(nameof(PartSetupTimePlan));
+        OnPropertyChanged(nameof(SingleProductionTimePlan));
         OnPropertyChanged(nameof(CanIncreaseSetup));
         OnPropertyChanged(nameof(CanDecreaseSetup));
     }

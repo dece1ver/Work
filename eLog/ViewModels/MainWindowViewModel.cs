@@ -1,4 +1,5 @@
-﻿using eLog.Infrastructure;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using eLog.Services;
@@ -18,12 +19,14 @@ using System.Windows.Input;
 using static eLog.Infrastructure.Extensions.Util;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+using Text = eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.ViewModels;
 
 internal class MainWindowViewModel : ViewModel, IOverlay
 {
     bool _editPart = false;
+    bool _needSave = false;
     public MainWindowViewModel()
     {
         CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
@@ -574,95 +577,25 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             {
                 if (_editPart) throw new InvalidOperationException();
                 Status = "";
-                bool needSave = false;
+                _needSave = false;
                 for (var i = Parts.Count - 1; i >= 0; i--)
                 {
                     if (ProgressBarVisibility == Visibility.Visible) break;
                     if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
                     // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
-                    var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
-                    Status = $"Синхронизация: [{partName}]";
-                    ProgressBarVisibility = Visibility.Visible;
-                    needSave = true;
-                    //Thread.Sleep(1000);
-                    var index = i;
-                    if (part.Id != -1)
+                    
+                    switch (AppSettings.Instance.StorageType.Type)
                     {
-                        var rewriteResult = part.RewriteToXl();
-                        switch (rewriteResult)
-                        {
-                            case Util.WriteResult.Ok:
-                                part.IsSynced = true;
-                                Status = $"Информация обновлена: [{partName}]";
-                                break;
-                            case Util.WriteResult.FileNotExist:
-                                Status = "Таблица не найдена.";
-                                ProgressBarVisibility = Visibility.Hidden;
-                                Thread.Sleep(300000);
-                                break;
-                            case Util.WriteResult.IOError:
-                                Status = "Таблица занята.";
-                                ProgressBarVisibility = Visibility.Hidden;
-                                Thread.Sleep(new Random().Next(5000, 60000));
-                                break;
-                            case Util.WriteResult.Error:
-                                Status = "Ошибка записи.";
-                                ProgressBarVisibility = Visibility.Hidden;
-                                Thread.Sleep(30000);
-                                break;
-                            case Util.WriteResult.DontNeed:
-                                ProgressBarVisibility = Visibility.Hidden;
-                                Thread.Sleep(30000);
-                                break;
-                            case Util.WriteResult.NotFinded:
-                                part.Id = part.WriteToXl();
-                                if (part.Id == -1) continue;
-                                part.IsSynced = true;
-                                Status = $"Информация записана: [{partName}]";
-                                ProgressBarVisibility = Visibility.Hidden;
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-
-                        if (rewriteResult is not Util.WriteResult.Ok) continue;
-                    }
-                    else
-                    {
-                        var res = part.WriteToXl();
-                        switch (res)
-                        {
-                            // IO Ecxeption
-                            case -4:
-                                Status = "Таблица занята.";
-                                ProgressBarVisibility = Visibility.Hidden;
-                                Thread.Sleep(new Random().Next(5000, 60000));
-                                break;
-                            // Not Exists
-                            case -3:
-                                Status = "Таблица не найдена.";
-                                ProgressBarVisibility = Visibility.Hidden;
-                                Thread.Sleep(300000);
-                                break;
-                            // Part exists
-                            case -2:
-                                Status = "Отмена записи, деталь была изменена.";
-                                ProgressBarVisibility = Visibility.Hidden;
-                                break;
-                            // Прочие ошибки
-                            case -1:
-                                ProgressBarVisibility = Visibility.Hidden;
-                                break;
-                            // Ок
-                            default:
-                                part.IsSynced = true;
-                                ProgressBarVisibility = Visibility.Hidden;
-                                Status = $"Информация записана: [{partName}]";
-                                break;
-                        }
-                        if (part.Id == -1) continue;
-
-
+                        case StorageType.Types.Database:
+                            break;
+                        case StorageType.Types.Excel:
+                            WriteToXl(part, i);
+                            break;
+                        case StorageType.Types.All:
+                            WriteToXl(part, i);
+                            break;
+                        default:
+                            break;
                     }
                     ProgressBarVisibility = Visibility.Hidden;
                     OnPropertyChanged(nameof(part.Title));
@@ -680,7 +613,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                     RemoveExcessParts();
                 });
                 Thread.Sleep(2000);
-                if (needSave)
+                if (_needSave)
                 {
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
@@ -719,5 +652,93 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             }
             OnPropertyChanged(nameof(Parts));
         }
+    }
+
+    private bool WriteToXl(Part part, int i)
+    {
+        var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
+        Status = $"Синхронизация: [{partName}]";
+        ProgressBarVisibility = Visibility.Visible;
+        _needSave = true;
+        //Thread.Sleep(1000);
+        var index = i;
+
+        if (part.Id != -1)
+        {
+            var rewriteResult = part.RewriteToXl();
+            switch (rewriteResult)
+            {
+                case Util.WriteResult.Ok:
+                    part.IsSynced = true;
+                    Status = $"Информация обновлена: [{partName}]";
+                    break;
+                case Util.WriteResult.FileNotExist:
+                    Status = "Таблица не найдена.";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Thread.Sleep(300000);
+                    break;
+                case Util.WriteResult.IOError:
+                    Status = "Таблица занята.";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Thread.Sleep(new Random().Next(5000, 60000));
+                    break;
+                case Util.WriteResult.Error:
+                    Status = "Ошибка записи.";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Thread.Sleep(30000);
+                    break;
+                case Util.WriteResult.DontNeed:
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Thread.Sleep(30000);
+                    break;
+                case Util.WriteResult.NotFinded:
+                    part.Id = part.WriteToXl();
+                    if (part.Id == -1) return false;
+                    part.IsSynced = true;
+                    Status = $"Информация записана: [{partName}]";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (rewriteResult is not Util.WriteResult.Ok) return false;
+        }
+        else
+        {
+            var res = part.WriteToXl();
+            switch (res)
+            {
+                // IO Ecxeption
+                case -4:
+                    Status = "Таблица занята.";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Thread.Sleep(new Random().Next(5000, 60000));
+                    break;
+                // Not Exists
+                case -3:
+                    Status = "Таблица не найдена.";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Thread.Sleep(300000);
+                    break;
+                // Part exists
+                case -2:
+                    Status = "Отмена записи, деталь была изменена.";
+                    ProgressBarVisibility = Visibility.Hidden;
+                    break;
+                // Прочие ошибки
+                case -1:
+                    ProgressBarVisibility = Visibility.Hidden;
+                    break;
+                // Ок
+                default:
+                    part.IsSynced = true;
+                    ProgressBarVisibility = Visibility.Hidden;
+                    Status = $"Информация записана: [{partName}]";
+                    break;
+            }
+            if (part.Id == -1) return false;
+        }
+        return true;
     }
 }

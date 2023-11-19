@@ -29,6 +29,7 @@
     
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.102.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="WindowsAPICodePack" Version="7.0.4" />
