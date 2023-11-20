@@ -585,6 +585,8 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                     // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
                     var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
 
+                    if (AppSettings.Instance.StorageType == null ) { AppSettings.Instance.StorageType = new StorageType(StorageType.Types.Excel); }
+
                     switch (AppSettings.Instance.StorageType.Type)
                     {
                         case StorageType.Types.Database:
