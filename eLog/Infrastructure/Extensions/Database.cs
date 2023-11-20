@@ -38,9 +38,9 @@ namespace eLog.Infrastructure.Extensions
                         "StartMachiningTime, " +
                         "EndMachiningTime, " +
                         "SetupTimePlan, " +
+                        "SetupTimePlanForReport, " +
                         "SingleProductionTimePlan, " +
-                        "MachiningTime, " +
-                        "SetupTimePlanForReport) " +
+                        "MachiningTime) " +
                         "VALUES (" +
                         "@Guid, " +
                         "@Machine, " +
@@ -55,9 +55,9 @@ namespace eLog.Infrastructure.Extensions
                         "@StartMachiningTime, " +
                         "@EndMachiningTime, " +
                         "@SetupTimePlan, " +
+                        "@SetupTimePlanForReport, " +
                         "@SingleProductionTimePlan, " +
-                        "@MachiningTime, " +
-                        "@SetupTimePlanForReport); SELECT SCOPE_IDENTITY();";
+                        "@MachiningTime); SELECT SCOPE_IDENTITY();";
                     using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
@@ -134,9 +134,9 @@ namespace eLog.Infrastructure.Extensions
                         "StartMachiningTime = @StartMachiningTime, " +
                         "EndMachiningTime = @EndMachiningTime, " +
                         "SetupTimePlan = @SetupTimePlan, " +
+                        "SetupTimePlanForReport = @SetupTimePlanForReport, " +
                         "SingleProductionTimePlan = @SingleProductionTimePlan, " +
                         "MachiningTime = @MachiningTime " +
-                        "SetupTimePlanForReport = @SetupTimePlanForReport " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
@@ -153,11 +153,11 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@StartMachiningTime", part.StartMachiningTime);
                         cmd.Parameters.AddWithValue("@EndMachiningTime", part.EndMachiningTime);
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
-                        cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
-                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
                         var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
                         if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
+                        cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
+                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
 
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();

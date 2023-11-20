@@ -368,9 +368,8 @@ internal static class Util
                     {
                         guid = Guid.Empty;
                     }
-
-                    if (!rowWithPart || rowNum != part.Id || guid != part.Guid) continue;
-                    if (AppSettings.Instance.DebugMode) { WriteLog($"Позиция №{part.Id} найдена."); }
+                    if (!rowWithPart || (rowNum == part.Id && guid == Guid.Empty) || guid != part.Guid) continue;
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Позиция найдена на строке №{rowNum}."); }
                     xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
                     var needDiscrease = part.Shift == NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
                     xlRow.Cell(6).Value = needDiscrease
@@ -408,13 +407,14 @@ internal static class Util
                     if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
                     xlRow.Cell(44).Value = partSetupTimePlanReport;
                     result = WriteResult.Ok;
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл..."); }
+                    Debug.Print("Rewrite");
+                    wb.Save(true);
+                    Debug.Print("Ok");
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
                     break;
                 }
-                if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл..."); }
-                Debug.Print("Rewrite");
-                wb.Save(true);
-                Debug.Print("Ok");
-                if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
+                if (AppSettings.Instance.DebugMode && result is WriteResult.NotFinded) { WriteLog($"Деталь не найдена."); }
             }
         }
         catch (IOException ioEx)

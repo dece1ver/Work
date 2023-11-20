@@ -12,6 +12,7 @@ public partial class ServiceMenuDialogWindow : Window
         InitializeComponent();
     }
     public bool UnsyncAllParts { get; set; }
+    public bool ClearParts { get; set; }
     public bool ClearLogs { get; set; }
 
     private void Button_Click(object sender, RoutedEventArgs e)

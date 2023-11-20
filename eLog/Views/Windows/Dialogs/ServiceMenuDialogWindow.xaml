@@ -23,7 +23,9 @@
                 </Grid.RowDefinitions>
                 <CheckBox Grid.Row="0" Content="Сбросить синхронизацию на всех деталях" VerticalContentAlignment="Center" Margin="0 5"
                           IsChecked="{Binding UnsyncAllParts}"/>
-                <CheckBox Grid.Row="1" Content="Очистить логи" VerticalContentAlignment="Center" Margin="0 5"
+                <CheckBox Grid.Row="1" Content="Очистить детали" VerticalContentAlignment="Center" Margin="0 5"
+                          IsChecked="{Binding ClearParts}"/>
+                <CheckBox Grid.Row="2" Content="Очистить логи" VerticalContentAlignment="Center" Margin="0 5"
                           IsChecked="{Binding ClearLogs}"/>
                 <Button Grid.Row="5" Style="{StaticResource GeneralButton}" DockPanel.Dock="Bottom" Margin="5" Content="Ok" FontSize="24" Padding="30 5" IsDefault="True" 
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:ServiceMenuDialogWindow}}">
