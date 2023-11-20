@@ -28,6 +28,7 @@ namespace eLog.Infrastructure.Extensions
                         "Guid, " +
                         "Machine, " +
                         "Shift, " +
+                        "ShiftDate, " +
                         "Operator, " +
                         "PartName, " +
                         "[Order], " +
@@ -45,6 +46,7 @@ namespace eLog.Infrastructure.Extensions
                         "@Guid, " +
                         "@Machine, " +
                         "@Shift, " +
+                        "@ShiftDate, " +
                         "@Operator, " +
                         "@PartName, " +
                         "@Order, " +
@@ -63,6 +65,11 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
                         cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
                         cmd.Parameters.AddWithValue("@Shift", part.Shift);
+                        var needDiscrease = part.Shift == Text.NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
+                        var shiftDate = needDiscrease
+                            ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
+                            : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
+                        cmd.Parameters.AddWithValue("@ShiftDate", shiftDate);
                         cmd.Parameters.AddWithValue("@Operator", part.Operator.FullName);
                         cmd.Parameters.AddWithValue("@PartName", part.FullName);
                         cmd.Parameters.AddWithValue("@Order", part.Order);
@@ -124,6 +131,7 @@ namespace eLog.Infrastructure.Extensions
                     string updateQuery = "UPDATE Parts SET " +
                         "Machine = @Machine, " +
                         "Shift = @Shift, " +
+                        "ShiftDate = @ShiftDate, " +
                         "Operator = @Operator, " +
                         "PartName = @PartName, " +
                         "[Order] = @Order, " +
@@ -143,6 +151,11 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
                         cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
                         cmd.Parameters.AddWithValue("@Shift", part.Shift);
+                        var needDiscrease = part.Shift == Text.NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
+                        var shiftDate = needDiscrease
+                            ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
+                            : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
+                        cmd.Parameters.AddWithValue("@ShiftDate", shiftDate);
                         cmd.Parameters.AddWithValue("@Operator", part.Operator.FullName);
                         cmd.Parameters.AddWithValue("@PartName", part.FullName);
                         cmd.Parameters.AddWithValue("@Order", part.Order);
