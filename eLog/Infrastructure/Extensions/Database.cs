@@ -21,7 +21,9 @@ namespace eLog.Infrastructure.Extensions
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
                 {
                     connection.Open();
-                    if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто."); 
+                    if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
+                    var partIndex = AppSettings.Instance.Parts.IndexOf(part);
+                    var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
                     string insertQuery = "INSERT INTO Parts (" +
                         "Guid, " +
                         "Machine, " +
@@ -37,7 +39,8 @@ namespace eLog.Infrastructure.Extensions
                         "EndMachiningTime, " +
                         "SetupTimePlan, " +
                         "SingleProductionTimePlan, " +
-                        "MachiningTime) " +
+                        "MachiningTime, " +
+                        "SetupTimePlanForReport) " +
                         "VALUES (" +
                         "@Guid, " +
                         "@Machine, " +
@@ -53,7 +56,8 @@ namespace eLog.Infrastructure.Extensions
                         "@EndMachiningTime, " +
                         "@SetupTimePlan, " +
                         "@SingleProductionTimePlan, " +
-                        "@MachiningTime); SELECT SCOPE_IDENTITY();";
+                        "@MachiningTime, " +
+                        "@SetupTimePlanForReport); SELECT SCOPE_IDENTITY();";
                     using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
@@ -71,6 +75,9 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
+                        if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
+                        cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();
                         using (SqlCommand countCmd = new SqlCommand("SELECT COUNT(*) FROM Parts", connection))
@@ -105,6 +112,8 @@ namespace eLog.Infrastructure.Extensions
         public static bool UpdatePart(this Part part)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Обновление информации об изготовлении в БД.");
+            var partIndex = AppSettings.Instance.Parts.IndexOf(part);
+            var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
             var result = false;
             try
             {
@@ -127,6 +136,7 @@ namespace eLog.Infrastructure.Extensions
                         "SetupTimePlan = @SetupTimePlan, " +
                         "SingleProductionTimePlan = @SingleProductionTimePlan, " +
                         "MachiningTime = @MachiningTime " +
+                        "SetupTimePlanForReport = @SetupTimePlanForReport " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
@@ -145,12 +155,16 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
+                        if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
+                        cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
 
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Изменено строк: {execureResult}");
                         if (execureResult == 0)
                         {
+                            Util.WriteLog("Деталь не найдена, добавение новой.");
                             return WritePart(part);
                         }
                         result = true;

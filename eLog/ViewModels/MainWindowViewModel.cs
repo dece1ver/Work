@@ -601,7 +601,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                         case StorageType.Types.All:
                             ProgressBarVisibility = Visibility.Visible;
                             Status = $"Запись в БД: {partName}";
-                            part.IsSynced = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part);
+                            _ = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part);
                             Status = $"Готово";
                             WriteToXl(part, i, partName);
                             break;
