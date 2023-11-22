@@ -592,10 +592,24 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                         case StorageType.Types.Database:
 
                             ProgressBarVisibility = Visibility.Visible;
-                            Status = $"Запись в БД: {partName}";
-                            part.IsSynced = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part); ;
+                            Status = $"Запись в БД: [{partName}]";
+                            var writeResult = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part);
+                            switch (writeResult)
+                            {
+                                case Database.WriteResult.Ok:
+                                    part.IsSynced = true;
+                                    Status = $"Готово";
+                                    break;
+                                case Database.WriteResult.AuthError:
+                                    Status = $"Ошибка авторизации в БД";
+                                    break;
+                                case Database.WriteResult.Error:
+                                    Status = $"Ошибка записи в БД";
+                                    break;
+                            }
+                            
                             ProgressBarVisibility = Visibility.Hidden;
-                            Status = $"Готово";
+                            
                             break;
                         case StorageType.Types.Excel:
                             WriteToXl(part, i, partName);

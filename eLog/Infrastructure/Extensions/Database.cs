@@ -12,10 +12,13 @@ namespace eLog.Infrastructure.Extensions
 {
     public static class Database
     {
-        public static bool WritePart(this Part part)
+        public enum WriteResult
+        {
+            Ok, AuthError, Error
+        }
+        public static WriteResult WritePart(this Part part)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Добавление информации об изготовлении в БД.");
-            var result = false;
             try
             {
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
@@ -92,36 +95,38 @@ namespace eLog.Infrastructure.Extensions
                             part.Id = (int)countCmd.ExecuteScalar();
                         }
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}\nПрисвоен Id: {part.Id}");
-                        result = true;
                     }
                     connection.Close();
+                    return WriteResult.Ok;
                 }
             }
             catch (SqlException sqlEx)
             {
-                if (sqlEx.Number is 2601 or 2627)
+                switch (sqlEx.Number)
                 {
-                    Util.WriteLog("Запись уже существует.");
-                    return UpdatePart(part);
-                }
-                else
-                {
-                    Util.WriteLog(sqlEx);
+                    case 2601 or 2627:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
+                        return UpdatePart(part);
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return WriteResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return WriteResult.Error;
                 }
             }
             catch (Exception ex)
             {
                 Util.WriteLog(ex);
+                return WriteResult.Error;
             }
-            return result;
         }
 
-        public static bool UpdatePart(this Part part)
+        public static WriteResult UpdatePart(this Part part)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Обновление информации об изготовлении в БД.");
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
             var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
-            var result = false;
             try
             {
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
@@ -180,16 +185,28 @@ namespace eLog.Infrastructure.Extensions
                             Util.WriteLog("Деталь не найдена, добавение новой.");
                             return WritePart(part);
                         }
-                        result = true;
                     }
                     connection.Close();
+                    return WriteResult.Ok;
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return WriteResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return WriteResult.Error;
                 }
             }
             catch (Exception ex)
             {
                 Util.WriteLog(ex);
+                return WriteResult.Error;
             }
-            return result;
         }
     }
 }

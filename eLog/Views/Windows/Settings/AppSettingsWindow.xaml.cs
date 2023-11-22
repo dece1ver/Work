@@ -2,6 +2,7 @@
 using eLog.Infrastructure;
 using eLog.Models;
 using libeLog.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
@@ -207,7 +208,35 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
         return true;
     }
 
+
     #endregion
 
-
+    private void CheckDbConnectionButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                connection.Close();
+                MessageBox.Show("Ок", $"Подключение доступно.", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (SqlException sqlEx)
+        {
+            switch (sqlEx.Number)
+            {
+                case 18456:
+                    MessageBox.Show($"Ошибка авторизации №{sqlEx.Number}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    break;
+                default:
+                    MessageBox.Show($"Ошибка №{sqlEx.Number}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"{ex}", $"{ex.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 }
