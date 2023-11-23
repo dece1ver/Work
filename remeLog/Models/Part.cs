@@ -12,14 +12,14 @@ namespace remeLog.Models
         public string SetupProductivity { get; set; }
         public string MachiningProductivity { get; set; }
         public string OperatorComment { get; set; }
-        public string Date { get; set; }
+        public DateTime Date { get; set; }
         public string Machine { get; set; }
         public string Shift { get; set; }
         public string Operator { get; set; }
         public string Name { get; set; }
         public string Order { get; set; }
-        public string FinishedCount { get; set; }
-        public string Setup { get; set; }
+        public int FinishedCount { get; set; }
+        public int Setup { get; set; }
         public DateTime StartSetup { get; set; }
         public DateTime StartMachining { get; set; }
         public DateTime EndMachining { get; set; }

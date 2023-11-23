@@ -16,6 +16,8 @@
         <Style TargetType="Button" x:Key="OperationButton">
             <Setter Property="Width" Value="87"/>
             <Setter Property="Margin" Value="1"/>
+            <Setter Property="BorderBrush" Value="#abadb3"/>
+            
             <Style.Resources>
                 <Style TargetType="Border">
                     <Setter Property="CornerRadius" Value="2"/>
@@ -115,15 +117,16 @@
                                 </TextBox.Style>
                             </TextBox>
                             <UniformGrid Columns="2" Margin="1">
-                                <Button Content="▼" IsEnabled="{Binding CanDecreaseSetup}"
+                                <Button Content="▼" IsEnabled="{Binding CanDecreaseSetup}" BorderBrush="#abadb3"
                                     Style="{StaticResource KeyboardButton}" Margin="0 -1 -1 0" Click="DecrementSetupButton_Click">
                                     <Button.Resources>
                                         <Style TargetType="Border">
                                             <Setter Property="CornerRadius" Value="0 0 0 2"/>
+                                            
                                         </Style>
                                     </Button.Resources>
                                 </Button>
-                                <Button Content="▲" IsEnabled="{Binding CanIncreaseSetup}"
+                                <Button Content="▲" IsEnabled="{Binding CanIncreaseSetup}" BorderBrush="#abadb3"
                                     Style="{StaticResource KeyboardButton}" Margin="0 -1 0 0" Click="IncrementSetupButton_Click">
                                     <Button.Resources>
                                         <Style TargetType="Border">
@@ -348,12 +351,9 @@
                     <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom" LastChildFill="True">
                         <Button Click="Button_Click" Content="SCAN" DockPanel.Dock="Right" Visibility="Collapsed"/>
-                        <Button Margin="0 0 0 0" Height="60" Style="{StaticResource GeneralButton}"
-                            HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+                        <Button Margin="0 0 0 0" Height="60" Style="{StaticResource GeneralButton}" Padding="0 3 0 0"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="{StaticResource CloseIcon}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
-                            <Button.Content>
-                                <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                            </Button.Content>
                             <Button.Command>
                                 <cmd:CloseDialogCommand DialogResult="False"/>
                             </Button.Command>
@@ -373,12 +373,9 @@
                                              Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
 
                     <Button Grid.Column="5" Grid.Row="8" Style="{StaticResource GeneralButton}"
-                        Margin="1 0 0 0" Height="60"
+                        Margin="1 0 0 0" Height="60" Content="{StaticResource ConfirmIcon}"
                         VerticalAlignment="Bottom" IsEnabled="{Binding CanBeClosed}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
-                        <Button.Content>
-                            <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                        </Button.Content>
                         <Button.Command>
                             <cmd:CloseDialogCommand DialogResult="True"/>
                         </Button.Command>

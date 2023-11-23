@@ -24,22 +24,16 @@
                       SelectedItem="{Binding Shift}"/>
             <UniformGrid Columns="2">
                 <Button Margin="20" 
-                        VerticalAlignment="Bottom"
+                        VerticalAlignment="Bottom" Content="{StaticResource CloseIcon}" Padding="0 3 0 0" Height="42"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:EditMakerDialogWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
                     <Button.Command>
                         <commands:CloseDialogCommand DialogResult="False"/>
                     </Button.Command>
                 </Button>
 
-                <Button Margin="20" 
+                <Button Margin="20" Content="{StaticResource ConfirmIcon}" Height="42"
                         VerticalAlignment="Bottom"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:EditMakerDialogWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
                     <Button.Command>
                         <commands:CloseDialogCommand DialogResult="True"/>
                     </Button.Command>

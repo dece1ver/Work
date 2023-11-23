@@ -46,24 +46,18 @@
                 </StatusBar>
                 <DockPanel DockPanel.Dock="Bottom" >
                     <Button DockPanel.Dock="Left" Width="200"
-                        Margin="10" Height="60" Style="{StaticResource GeneralButton}"
-                        HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+                        Margin="10" Height="60" Style="{StaticResource GeneralButton}" Padding="0 3 0 0"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="{StaticResource CloseIcon}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDownTimesDialogWindow}}">
-                        <Button.Content>
-                            <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                        </Button.Content>
                         <Button.Command>
                             <cmd:CloseDialogCommand DialogResult="False"/>
                         </Button.Command>
                     </Button>
                     <Button x:Name="OkButton" DockPanel.Dock="Right" Width="260" HorizontalAlignment="Right"
                             Margin="10" Height="60" Style="{StaticResource GeneralButton}"
-                            VerticalAlignment="Bottom"
+                            VerticalAlignment="Bottom" Content="{StaticResource ConfirmIcon}"
                             IsEnabled="{Binding CanBeClosed}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDownTimesDialogWindow}}">
-                        <Button.Content>
-                            <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                        </Button.Content>
                         <Button.Command>
                             <cmd:CloseDialogCommand DialogResult="True"/>
                         </Button.Command>

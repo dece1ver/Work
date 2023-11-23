@@ -16,23 +16,17 @@
     <Border BorderBrush="Gray" BorderThickness="1">
         <DockPanel>
             <UniformGrid DockPanel.Dock="Bottom" Columns="2">
-                <Button Margin="20" Width="120"
-                        VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                <Button Margin="20" Width="120" Height="42"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Left" Content="{StaticResource CloseIcon}" Padding="0 3 0 0"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=dialogs:SetPreviousPartDialogWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✗" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
                     <Button.Command>
                         <commands:CloseDialogCommand DialogResult="False"/>
                     </Button.Command>
                 </Button>
 
-                <Button Margin="20" Width="120" x:Name="OkButton"
-                        VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                <Button Margin="20" Width="120" x:Name="OkButton" Height="42"
+                        VerticalAlignment="Bottom" HorizontalAlignment="Right" Content="{StaticResource ConfirmIcon}" 
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=dialogs:SetPreviousPartDialogWindow}}">
-                    <Button.Content>
-                        <TextBlock Text="✓" FontSize="28" HorizontalAlignment="Center" TextAlignment="Center"/>
-                    </Button.Content>
                     <Button.Command>
                         <commands:CloseDialogCommand DialogResult="True"/>
                     </Button.Command>

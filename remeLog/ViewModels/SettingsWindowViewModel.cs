@@ -226,6 +226,7 @@ internal class SettingsWindowViewModel : ViewModel
         await Task.Run(() =>
         {
             SourceCheckStatus = CheckStatus.Sync;
+            SourceCheckTip = Constants.StatusTips.Checking;
             if (File.Exists(SourcePath))
             {
                 SourceCheckStatus = CheckStatus.Ok;
@@ -242,6 +243,7 @@ internal class SettingsWindowViewModel : ViewModel
         await Task.Run(() =>
         {
             ReportsCheckStatus = CheckStatus.Sync;
+            ReportsCheckTip = Constants.StatusTips.Checking;
             if (File.Exists(ReportsPath))
             {
                 ReportsCheckStatus = CheckStatus.Ok;
@@ -258,6 +260,7 @@ internal class SettingsWindowViewModel : ViewModel
         await Task.Run(() =>
         {
             DailyReportsDirCheckStatus = CheckStatus.Sync;
+            DailyReportsDirCheckTip = Constants.StatusTips.Checking;
             switch (DailyReportsDir.CheckDirectoryRights(FileSystemRights.WriteData))
             {
                 case CheckDirectoryRightsResult.HasAccess:

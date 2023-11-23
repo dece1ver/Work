@@ -20,22 +20,22 @@
         </Grid.RowDefinitions>
 
         <Button x:Name="BackspaceButton" Grid.Column="0" Grid.Row="0" Content="⌫"
-                Style="{StaticResource KeyboardButton}" Click="BackspaceButton_Click"/>
+                Style="{StaticResource KeyboardMonoButton}" Click="BackspaceButton_Click"/>
         <Button x:Name="ClearButton" Grid.Column="1" Grid.Row="0" Content="␥" FontSize="22"
-                Style="{StaticResource KeyboardButton}" Click="ClearButton_Click"/>
+                Style="{StaticResource KeyboardMonoButton}" Click="ClearButton_Click"/>
         <Button x:Name="CopyButton" Grid.Column="2" Grid.Row="0" Content="📑"
-                Style="{StaticResource KeyboardButton}" Click="CopyButton_Click"/>
+                Style="{StaticResource KeyboardMonoButton}" Click="CopyButton_Click"/>
         <Button x:Name="PasteButton" Grid.Column="3" Grid.Row="0" Content="📋"
-                Style="{StaticResource KeyboardButton}" Click="PasteButton_Click"/>
+                Style="{StaticResource KeyboardMonoButton}" Click="PasteButton_Click"/>
 
         <Button x:Name="DelButton" Grid.Column="0" Grid.Row="1" Content="Del" FontSize="14"
-                Style="{StaticResource KeyboardButton}" Click="DelButton_Click"/>
+                Style="{StaticResource KeyboardMonoButton}" Click="DelButton_Click"/>
         <Button x:Name="UndoButton" Grid.Column="1" Grid.Row="1" Content="⤾" FontSize="28" Padding="-5"
-                Style="{StaticResource KeyboardButton}" Click="UndoButton_Click" />
+                Style="{StaticResource KeyboardMonoButton}" Click="UndoButton_Click" />
         <Button x:Name="ArrowUpButton" Grid.Column="2" Grid.Row="1" Content="▲"
                 Style="{StaticResource KeyboardButton}" Click="ArrowUpButton_Click"/>
         <Button x:Name="RedoButton" Grid.Column="3" Grid.Row="1" Content="⤿" FontSize="28" Padding="-5"
-                Style="{StaticResource KeyboardButton}" Click="RedoButton_Click" />
+                Style="{StaticResource KeyboardMonoButton}" Click="RedoButton_Click" />
 
         <Button x:Name="EnterButton" Grid.Column="0" Grid.Row="2" Content="⏎" FontSize="28" Padding="-5"
                 Style="{StaticResource KeyboardButton}" Click="EnterButton_Click"/>

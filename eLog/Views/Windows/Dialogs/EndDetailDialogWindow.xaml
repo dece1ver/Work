@@ -98,21 +98,15 @@
                              HorizontalAlignment="Stretch"/>
                 </Grid>
                 <UniformGrid Grid.Column="0" Grid.Row="2" Columns="2" Margin="0 0 4 10">
-                    <Button Margin="5 2 1 0" IsCancel="True"
+                    <Button Margin="5 2 1 0" IsCancel="True" Content="{StaticResource CloseIcon}" Padding="0 3 0 0"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}">
-                        <Button.Content>
-                            <TextBlock Text="✗" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-                        </Button.Content>
                         <Button.Command>
                             <cmd:CloseDialogCommand DialogResult="False"/>
                         </Button.Command>
                     </Button>
                     <Button Margin="1 2 1 0"
-                        IsEnabled="{Binding Valid}"
+                        IsEnabled="{Binding Valid}" Content="{StaticResource ConfirmIcon}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EndDetailDialogWindow}}">
-                        <Button.Content>
-                            <TextBlock Text="✓" FontSize="36" Margin="0 -7 0 0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-                        </Button.Content>
                         <Button.Command>
                             <cmd:CloseDialogCommand DialogResult="True"/>
                         </Button.Command>

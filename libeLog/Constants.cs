@@ -15,13 +15,14 @@ public static class Constants
 
     public class StatusTips
     {
-        public const string Ok = "Всё в порядке.";
-        public const string AccessError = "Ошибка при проверке доступа.";
+        public const string Ok = "Всё в порядке";
+        public const string Checking = "Проверка";
+        public const string AccessError = "Ошибка при проверке доступа";
 
-        public const string NoFile = "Файл не существует.";
+        public const string NoFile = "Файл не существует";
 
-        public const string NoAccessToDirectory = "Директория не существует или отсутствуют права на её чтение.";
-        public const string NoWriteAccess = "Нет доступа на запись. Работа в режиме чтения.";
+        public const string NoAccessToDirectory = "Директория не существует или отсутствуют права на её чтение";
+        public const string NoWriteAccess = "Нет доступа на запись. Работа в режиме чтения";
         
     }
 

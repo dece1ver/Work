@@ -65,11 +65,8 @@
                     <cmd:SetDownTimeDialogCommand DialogResult="ContactingDepartments"/>
                 </Button.Command>
             </Button>
-            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0 2 2 0" 
+            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0 2 2 0" Content="{StaticResource CloseIcon}" Padding="0 3 0 0"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:SetDownTimeDialogWindow}}">
-                <Button.Content>
-                    <TextBlock Text="✗" FontSize="36" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" TextAlignment="Center"/>
-                </Button.Content>
                 <Button.Command>
                     <cmd:SetDownTimeDialogCommand DialogResult="{x:Null}"/>
                 </Button.Command>
