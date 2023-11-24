@@ -73,11 +73,11 @@
              Text="{Binding XlPath}"/>
             </DockPanel>
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Строка подключения:" VerticalAlignment="Center" Margin="5 0 5 0" />
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Строка подключения:" VerticalAlignment="Center" Margin="5 0 5 0" PreviewMouseLeftButtonUp="TextBlock_PreviewMouseLeftButtonUp" />
             <DockPanel Grid.Row="4" Grid.Column="1" >
                 <Button x:Name="CheckDbConnectionButton" DockPanel.Dock="Right" Content="Проверить" Margin="2 1 0 1" Width="80" Click="CheckDbConnectionButton_Click" />
                 <TextBox x:Name="ConnectionStringTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1" 
-                         Text="{Binding ConnectionString}"/>
+                         Text="{Binding ConnectionString}" IsEnabled="False"/>
             </DockPanel>
 
             <TextBlock Grid.Row="5" Grid.Column="0" Text="Типы М/Л:" VerticalAlignment="Center" Margin="5 0 5 0" />

@@ -28,6 +28,7 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     private bool _DebugMode;
     private StorageType _StorageType;
     private string _ConnectionString;
+    private int _secretMenuCounter;
 
     public List<StorageType> StorageTypes { get; }
     public IReadOnlyList<Machine> Machines { get; }
@@ -237,6 +238,15 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
         catch (Exception ex)
         {
             MessageBox.Show($"{ex}", $"{ex.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void TextBlock_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        _secretMenuCounter++;
+        if (_secretMenuCounter >= 5)
+        {
+            ConnectionStringTextBox.IsEnabled = true;
         }
     }
 }

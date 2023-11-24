@@ -16,7 +16,14 @@ namespace eLog.Infrastructure.Extensions
         {
             Ok, AuthError, Error
         }
-        public static WriteResult WritePart(this Part part)
+
+        /// <summary>
+        /// Запись информации о детали в БЖ
+        /// </summary>
+        /// <param name="part">Деталь</param>
+        /// <param name="passive">Нужно ли присваивать Id, false используется для одновременной работы с двумя источниками, тогда Id назначается при записи в XL</param>
+        /// <returns></returns>
+        public static WriteResult WritePart(this Part part, bool passive = false)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Добавление информации об изготовлении в БД.");
             try
@@ -90,11 +97,14 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();
-                        using (SqlCommand countCmd = new SqlCommand("SELECT COUNT(*) FROM Parts", connection))
+                        if (!passive)
                         {
-                            part.Id = (int)countCmd.ExecuteScalar();
+                            using (SqlCommand countCmd = new SqlCommand("SELECT COUNT(*) FROM Parts", connection))
+                            {
+                                part.Id = (int)countCmd.ExecuteScalar();
+                            }
                         }
-                        if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}\nПрисвоен Id: {part.Id}");
+                        if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}\n{(passive ? "Оставлен" : "Присвоен")} Id: {part.Id}");
                     }
                     connection.Close();
                     return WriteResult.Ok;
@@ -122,7 +132,14 @@ namespace eLog.Infrastructure.Extensions
             }
         }
 
-        public static WriteResult UpdatePart(this Part part)
+        /// <summary>
+        /// Обновление информации о детали в БД
+        /// </summary>
+        /// <param name="part">Деталь</param>
+        /// <param name="passive">Нужно ли присваивать Id, false используется для одновременной работы с двумя источниками, тогда Id назначается при записи в XL. 
+        /// В этом методе используется только для передачи в метод WritePart.</param>
+        /// <returns></returns>
+        public static WriteResult UpdatePart(this Part part, bool passive = false)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Обновление информации об изготовлении в БД.");
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
@@ -183,7 +200,7 @@ namespace eLog.Infrastructure.Extensions
                         if (execureResult == 0)
                         {
                             Util.WriteLog("Деталь не найдена, добавение новой.");
-                            return WritePart(part);
+                            return WritePart(part, passive);
                         }
                     }
                     connection.Close();

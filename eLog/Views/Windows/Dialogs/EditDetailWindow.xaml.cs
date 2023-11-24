@@ -779,8 +779,10 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         try
         {
             var prev = AppSettings.Instance.Parts.First(x => x.Name == Part.Name && x.Setup == Part.Setup);
-            PartSetupTimePlan = prev.SetupTimePlan.ToString().Replace(",",".");
-            SingleProductionTimePlan = prev.SingleProductionTimePlan.ToString().Replace(",", ".");
+            var prevSetupTimePlan = prev.SetupTimePlan.ToString().Replace(",", ".");
+            PartSetupTimePlan = prevSetupTimePlan == "0" ? "-" : prevSetupTimePlan;
+            var singleProductionTimePlan = prev.SingleProductionTimePlan.ToString().Replace(",", ".");
+            SingleProductionTimePlan = singleProductionTimePlan == "0" ? "-" : singleProductionTimePlan;
         }
         catch
         {
@@ -802,8 +804,10 @@ public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, 
         try
         {
             var prev = AppSettings.Instance.Parts.First(x => x.Name == Part.Name && x.Setup == Part.Setup);
-            PartSetupTimePlan = prev.SetupTimePlan.ToString().Replace(",", ".");
-            SingleProductionTimePlan = prev.SingleProductionTimePlan.ToString().Replace(",", ".");
+            var prevSetupTimePlan = prev.SetupTimePlan.ToString().Replace(",", ".");
+            PartSetupTimePlan = prevSetupTimePlan == "0" ? "-" : prevSetupTimePlan;
+            var singleProductionTimePlan = prev.SingleProductionTimePlan.ToString().Replace(",", ".");
+            SingleProductionTimePlan = singleProductionTimePlan == "0" ? "-" : singleProductionTimePlan;
         }
         catch
         {
