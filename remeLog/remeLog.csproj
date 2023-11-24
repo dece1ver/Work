@@ -5,7 +5,7 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>Resources\AddForm.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\remeLog.ico</ApplicationIcon>
     <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
 
@@ -13,6 +13,10 @@
     <None Remove="Resources\eLogSplashScreen.png" />
     <None Remove="Resources\remeLogSplashScreen.png" />
     <None Remove="Views\Settings.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\remeLog.ico" />
   </ItemGroup>
 
   <ItemGroup>
