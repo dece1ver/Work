@@ -8,6 +8,7 @@
         xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
+        Icon="/Views/Windows/elog.ico"
         mc:Ignorable="d" xmlns:vm="clr-namespace:eLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         Title="Электронный журнал" MinWidth="930" MinHeight="480" Width="1300" Height="710" WindowState="Maximized">
     <Window.DataContext>

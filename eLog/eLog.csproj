@@ -21,6 +21,7 @@
     <None Remove="Resources\eLog.png" />
     <None Remove="Resources\eLogSplashScreen.png" />
     <None Remove="Resources\qrcode.png" />
+    <None Remove="Views\Windows\elog.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +43,7 @@
   <ItemGroup>
     <Resource Include="Resources\eLog.png" />
     <Resource Include="Resources\qrcode.png" />
+    <Resource Include="Views\Windows\elog.ico" />
   </ItemGroup>
     
   <ItemGroup>
