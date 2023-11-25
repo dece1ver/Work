@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using remeLog.Models;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -40,6 +41,8 @@ public class AppSettings
 
     /// <summary> Режим отладки </summary>
     public bool DebugMode { get; set; }
+    /// <summary> Источник информации </summary>
+    public DataSource DataSource { get; set; }
 
     /// <summary> Путь к файлу занесения </summary>
     public string? SourcePath { get; set; }
@@ -49,6 +52,8 @@ public class AppSettings
 
     /// <summary> Путь к директории с суточными отчетами </summary>
     public string? DailyReportsDir { get; set; }
+    /// <summary> Строка подключения к БД </summary>
+    public string? ConnectionString { get; set; }
 
 
     /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
@@ -57,9 +62,11 @@ public class AppSettings
         if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
         if (File.Exists(ConfigBackupPath)) File.Delete(ConfigBackupPath);
         if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
+        DataSource = new DataSource(DataSource.Types.Database);
         SourcePath = "";
         ReportsPath = "";
         DailyReportsDir = "";
+        ConnectionString = "";
         Save();
     }
 
@@ -129,9 +136,7 @@ public class AppSettings
         }
     }
 
-    /// <summary>
-    /// Обновляет конфиг
-    /// </summary>
+    /// <summary> Сохраняет конфиг </summary>
     public static void Save()
     {
 

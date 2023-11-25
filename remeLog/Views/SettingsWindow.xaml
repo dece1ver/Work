@@ -13,7 +13,7 @@
     </Window.DataContext>
     <Window.Resources>
         <Style TargetType="TextBlock" x:Key="settingLabel">
-            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Margin" Value="5" />
@@ -42,11 +42,13 @@
             Visibility="{Binding ProgressBarVisibility}" Height="2" />
         <Grid Margin="5">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="130" />
                 <ColumnDefinition />
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="120" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
@@ -55,36 +57,52 @@
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" 
+                       Text="Источник данных" Style="{StaticResource settingLabel}" />
+
+            <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0 0 31 0" Padding="5"
+                      ItemsSource="{Binding DataSourceTypes}" SelectedItem="{Binding DataSource}" DisplayMemberPath="Name"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" 
                        Text="Таблица" Style="{StaticResource settingLabel}" />
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SourcePath}" 
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SourcePath.Value}" 
                      d:Text="C:\ProgramData\dece1ver\remeLog\2023.xlsm"/>
-            <DockPanel Grid.Row="0" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding SourceCheckTip, UpdateSourceTrigger=PropertyChanged}"
-                       Content="{Binding SourceCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
+            <DockPanel Grid.Row="1" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding SourcePath.Tip, UpdateSourceTrigger=PropertyChanged}"
+                       Content="{Binding SourcePath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Обзор..." Command="{Binding SetSourceTableCommand}"/>
             </DockPanel>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" 
+            <TextBlock Grid.Row="2" Grid.Column="0" 
                        Text="Файл отчётов" Style="{StaticResource settingLabel}" />
-            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ReportsPath}" 
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ReportsPath.Value}" 
                      d:Text="C:\ProgramData\dece1ver\remeLog\reports.xlsx"/>
-            <DockPanel Grid.Row="1" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding ReportsCheckTip, UpdateSourceTrigger=PropertyChanged}"
-                       Content="{Binding ReportsCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
+            <DockPanel Grid.Row="2" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding ReportsPath.Tip, UpdateSourceTrigger=PropertyChanged}"
+                       Content="{Binding ReportsPath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Обзор..." Command="{Binding SetReportsTableCommand}"/>
             </DockPanel>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" 
+            <TextBlock Grid.Row="3" Grid.Column="0" 
                        Text="Суточные отчёты" Style="{StaticResource settingLabel}" />
-            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DailyReportsDir}" 
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DailyReportsDir.Value}" 
                         d:Text="C:\ProgramData\dece1ver\remeLog\"/>
-            <DockPanel Grid.Row="2" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding DailyReportsDirCheckTip, UpdateSourceTrigger=PropertyChanged}"
-                        Content="{Binding DailyReportsDirCheckStatus, Converter={StaticResource StatusVisibilityConverter}}" />
+            <DockPanel Grid.Row="3" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding DailyReportsDir.Tip, UpdateSourceTrigger=PropertyChanged}"
+                        Content="{Binding DailyReportsDir.Status, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Обзор..." Command="{Binding SetDailyReportsDirCommand}"/>
             </DockPanel>
 
-            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" 
+            <TextBlock x:Name="ConnectionStringTextBlock" Grid.Row="4" Grid.Column="0" 
+                       Text="Строка подключения" Style="{StaticResource settingLabel}" PreviewMouseLeftButtonUp="ConnectionStringTextBlock_PreviewMouseLeftButtonUp" />
+            <TextBox x:Name="ConnectionStringTextBox" Grid.Row="4" Grid.Column="1" Text="{Binding ConnectionString.Value}" IsReadOnly="False" IsEnabled="False"
+                     d:Text="Data Source=..."/>
+            <DockPanel Grid.Row="4" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding ConnectionString.Tip, UpdateSourceTrigger=PropertyChanged}"
+                       Content="{Binding ConnectionString.Status, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Проверить" Command="{Binding CheckConnectionStringCommand}"/>
+            </DockPanel>
+
+            <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" 
                         Orientation="Horizontal" FlowDirection="RightToLeft">
                 <Button Content="Ok" Width="100" Margin="0 0 5 0" 
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:SettingsWindow}}">

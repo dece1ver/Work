@@ -218,9 +218,11 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             SettingsWindow settingsWindow = new SettingsWindow() { Owner = Application.Current.MainWindow };
             if (settingsWindow.ShowDialog() == true && settingsWindow.DataContext is SettingsWindowViewModel settings)
             {
-                AppSettings.Instance.SourcePath = settings.SourcePath; 
-                AppSettings.Instance.ReportsPath = settings.ReportsPath; 
-                AppSettings.Instance.DailyReportsDir = settings.DailyReportsDir; 
+                AppSettings.Instance.DataSource = settings.DataSource; 
+                AppSettings.Instance.SourcePath = settings.SourcePath.Value; 
+                AppSettings.Instance.ReportsPath = settings.ReportsPath.Value; 
+                AppSettings.Instance.DailyReportsDir = settings.DailyReportsDir.Value; 
+                AppSettings.Instance.ConnectionString = settings.ConnectionString.Value; 
                 AppSettings.Save();
                 Status = "Параметры сохранены";
             }

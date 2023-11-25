@@ -1,10 +1,12 @@
 ﻿using libeLog.Models;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Windows;
 
 namespace libeLog.Extensions;
 
@@ -165,4 +167,32 @@ public static class Strings
 
         return CheckDirectoryRightsResult.NotExists;
     }
+
+    public static (DbResult result, string message) CheckDbConnection(this string connectionString) 
+    {
+        if (string.IsNullOrEmpty(connectionString)) return (DbResult.Error, "Строка подключения не инициализирована");
+
+        try
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                return (DbResult.Ok, "Ok");
+            }
+        }
+        catch (SqlException sqlEx)
+        {
+            return sqlEx.Number switch
+            {
+                -1 => (DbResult.Error, $"Сервер БД не найден или недоступен"),
+                18456 => (DbResult.AuthError, $"Неверные учетные данные"),
+                _ => (DbResult.Error, $"Ошибка БД №{sqlEx.Number}"),
+            };
+        }
+        catch (Exception ex)
+        {
+            return (DbResult.Error, $"Ошибка: {ex.Message}");
+        }
+    }
+
 }

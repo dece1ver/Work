@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
 using eLog.Models;
 using libeLog.Extensions;
+using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -12,10 +13,7 @@ namespace eLog.Infrastructure.Extensions
 {
     public static class Database
     {
-        public enum WriteResult
-        {
-            Ok, AuthError, Error
-        }
+        
 
         /// <summary>
         /// Запись информации о детали в БЖ
@@ -23,7 +21,7 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="part">Деталь</param>
         /// <param name="passive">Нужно ли присваивать Id, false используется для одновременной работы с двумя источниками, тогда Id назначается при записи в XL</param>
         /// <returns></returns>
-        public static WriteResult WritePart(this Part part, bool passive = false)
+        public static DbResult WritePart(this Part part, bool passive = false)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Добавление информации об изготовлении в БД.");
             try
@@ -107,7 +105,7 @@ namespace eLog.Infrastructure.Extensions
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}\n{(passive ? "Оставлен" : "Присвоен")} Id: {part.Id}");
                     }
                     connection.Close();
-                    return WriteResult.Ok;
+                    return DbResult.Ok;
                 }
             }
             catch (SqlException sqlEx)
@@ -119,16 +117,16 @@ namespace eLog.Infrastructure.Extensions
                         return UpdatePart(part);
                     case 18456:
                         Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
-                        return WriteResult.AuthError;
+                        return DbResult.AuthError;
                     default:
                         Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
-                        return WriteResult.Error;
+                        return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
                 Util.WriteLog(ex);
-                return WriteResult.Error;
+                return DbResult.Error;
             }
         }
 
@@ -139,7 +137,7 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="passive">Нужно ли присваивать Id, false используется для одновременной работы с двумя источниками, тогда Id назначается при записи в XL. 
         /// В этом методе используется только для передачи в метод WritePart.</param>
         /// <returns></returns>
-        public static WriteResult UpdatePart(this Part part, bool passive = false)
+        public static DbResult UpdatePart(this Part part, bool passive = false)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Обновление информации об изготовлении в БД.");
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
@@ -204,7 +202,7 @@ namespace eLog.Infrastructure.Extensions
                         }
                     }
                     connection.Close();
-                    return WriteResult.Ok;
+                    return DbResult.Ok;
                 }
             }
             catch (SqlException sqlEx)
@@ -213,16 +211,16 @@ namespace eLog.Infrastructure.Extensions
                 {
                     case 18456:
                         Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
-                        return WriteResult.AuthError;
+                        return DbResult.AuthError;
                     default:
                         Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
-                        return WriteResult.Error;
+                        return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
                 Util.WriteLog(ex);
-                return WriteResult.Error;
+                return DbResult.Error;
             }
         }
     }

@@ -7,7 +7,9 @@ using libeLog.Models;
 using Microsoft.Win32;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Types;
+using remeLog.Models;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -17,8 +19,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 namespace remeLog.ViewModels;
@@ -30,15 +30,27 @@ internal class SettingsWindowViewModel : ViewModel
         SetSourceTableCommand = new LambdaCommand(OnSetSourceTableCommandExecuted, CanSetSourceTableCommandExecute);
         SetReportsTableCommand = new LambdaCommand(OnSetReportsTableCommandExecuted, CanSetReportsTableCommandExecute);
         SetDailyReportsDirCommand = new LambdaCommand(OnSetDailyReportsDirCommandExecuted, CanSetDailyReportsDirCommandExecute);
-        SourcePath = AppSettings.Instance.SourcePath ?? "";
-        ReportsPath = AppSettings.Instance.ReportsPath ?? "";
-        DailyReportsDir = AppSettings.Instance.DailyReportsDir ?? "";
+        CheckConnectionStringCommand = new LambdaCommand(OnCheckConnectionStringCommandExecuted, CanCheckConnectionStringCommandExecute);
+
+        _DataSource = AppSettings.Instance.DataSource;
+        _SourcePath = new SettingsItem(AppSettings.Instance.SourcePath ?? "");
+        _ReportsPath = new SettingsItem(AppSettings.Instance.ReportsPath ?? "");
+        _DailyReportsDir = new SettingsItem(AppSettings.Instance.DailyReportsDir ?? "");
+        _ConnectionString = new SettingsItem(AppSettings.Instance.ConnectionString ?? "");
+
         _ = CheckSourceAsync();
         _ = CheckReportsAsync();
         _ = CheckDailyReportsDirAsync();
+        _ = CheckConnectionStringAsync();
     }
 
     #region Свойства
+
+    public List<DataSource> DataSourceTypes { get; set; } = new() {
+        new DataSource(DataSource.Types.Database),
+        new DataSource(DataSource.Types.Excel),
+    };
+
     private string _Status = string.Empty;
     /// <summary> Статус </summary>
     public string Status
@@ -80,93 +92,46 @@ internal class SettingsWindowViewModel : ViewModel
     }
 
 
-    #region SourcePath
+    private DataSource _DataSource;
+    /// <summary> Описание </summary>
+    public DataSource DataSource
+    {
+        get => _DataSource;
+        set => Set(ref _DataSource, value);
+    }
 
-    private string _SourcePath = string.Empty;
+
+    private SettingsItem _SourcePath;
     /// <summary> Путь к таблице </summary>
-    public string SourcePath
+    public SettingsItem SourcePath
     {
         get => _SourcePath;
         set => Set(ref _SourcePath, value);
     }
 
-    private CheckStatus _SourceCheckStatus = 0;
-    /// <summary> Статус таблицы </summary>
-    public CheckStatus SourceCheckStatus
-    {
-        get => _SourceCheckStatus;
-        set => Set(ref _SourceCheckStatus, value);
-    }
-
-
-    private string _SourceCheckTip = string.Empty;
-    /// <summary> Подсказка для  </summary>
-    public string SourceCheckTip
-    {
-        get => _SourceCheckTip;
-        set => Set(ref _SourceCheckTip, value);
-    }
-
-
-    #endregion
-
-    #region ReportsPath
-
-    private string _ReportsPath = string.Empty;
+    private SettingsItem _ReportsPath;
     /// <summary> Путь к файлу с отчетами </summary>
-    public string ReportsPath
+    public SettingsItem ReportsPath
     {
         get => _ReportsPath;
         set => Set(ref _ReportsPath, value);
     }
 
-    private CheckStatus _ReportsCheckStatus = 0;
-
-    /// <summary> Статус отчетов </summary>
-    public CheckStatus ReportsCheckStatus
-    {
-        get => _ReportsCheckStatus;
-        set => Set(ref _ReportsCheckStatus, value);
-    }
-    
-    private string _ReportsCheckTip = string.Empty;
-    /// <summary> Подсказка для файла отчетов </summary>
-    public string ReportsCheckTip
-    {
-        get => _ReportsCheckTip;
-        set => Set(ref _ReportsCheckTip, value);
-    }
-
-
-    #endregion
-
-    #region DailyReportsDir
-    private string _DailyReportsDir = string.Empty;
+    private SettingsItem _DailyReportsDir;
     /// <summary> Путь к директирии с суточными отчетами </summary>
-    public string DailyReportsDir
+    public SettingsItem DailyReportsDir
     {
         get => _DailyReportsDir;
         set => Set(ref _DailyReportsDir, value);
     }
 
-    private CheckStatus _DailyReportsDirCheckStatus = 0;
-    /// <summary> Статус директории суточных отчетов </summary>
-    public CheckStatus DailyReportsDirCheckStatus
+    private SettingsItem _ConnectionString;
+    /// <summary> Строка подключения к БД </summary>
+    public SettingsItem ConnectionString
     {
-        get => _DailyReportsDirCheckStatus;
-        set => Set(ref _DailyReportsDirCheckStatus, value);
+        get => _ConnectionString;
+        set => Set(ref _ConnectionString, value);
     }
-    
-
-    private string _DailyReportsDirCheckTip = string.Empty;
-    /// <summary> Подсказка для директории с суточными отчетами </summary>
-    public string DailyReportsDirCheckTip
-    {
-        get => _DailyReportsDirCheckTip;
-        set => Set(ref _DailyReportsDirCheckTip, value);
-    }
-
-    #endregion
 
     #endregion
 
@@ -182,7 +147,7 @@ internal class SettingsWindowViewModel : ViewModel
             DefaultExt = "xlsm"
         };
         if (dlg.ShowDialog() != true) return;
-        SourcePath = dlg.FileName;
+        SourcePath.Value = dlg.FileName;
         _ = CheckSourceAsync();
     }
     private static bool CanSetSourceTableCommandExecute(object p) => true;
@@ -198,12 +163,11 @@ internal class SettingsWindowViewModel : ViewModel
             DefaultExt = "xlsm"
         };
         if (dlg.ShowDialog() != true) return;
-        ReportsPath = dlg.FileName;
+        ReportsPath.Value = dlg.FileName;
         _ = CheckReportsAsync();
     }
     private static bool CanSetReportsTableCommandExecute(object p) => true;
     #endregion
-
 
     #region SetDailyReportsDir
     public ICommand SetDailyReportsDirCommand { get; }
@@ -212,10 +176,19 @@ internal class SettingsWindowViewModel : ViewModel
         FolderBrowserDialog dlg = new()
             ;
         if (dlg.ShowDialog() != DialogResult.OK) return;
-        DailyReportsDir = dlg.SelectedPath;
+        DailyReportsDir.Value = dlg.SelectedPath;
         _ = CheckDailyReportsDirAsync();
     }
     private static bool CanSetDailyReportsDirCommandExecute(object p) => true;
+    #endregion
+
+    #region CheckConnectionString
+    public ICommand CheckConnectionStringCommand { get; }
+    private void OnCheckConnectionStringCommandExecuted(object p)
+    {
+        _ = CheckConnectionStringAsync();
+    }
+    private static bool CanCheckConnectionStringCommandExecute(object p) => true;
     #endregion
 
 
@@ -225,16 +198,16 @@ internal class SettingsWindowViewModel : ViewModel
     {
         await Task.Run(() =>
         {
-            SourceCheckStatus = CheckStatus.Sync;
-            SourceCheckTip = Constants.StatusTips.Checking;
-            if (File.Exists(SourcePath))
+            SourcePath.Status = CheckStatus.Sync;
+            SourcePath.Tip = Constants.StatusTips.Checking;
+            if (File.Exists(SourcePath.Value))
             {
-                SourceCheckStatus = CheckStatus.Ok;
-                SourceCheckTip = Constants.StatusTips.Ok;
+                SourcePath.Status = CheckStatus.Ok;
+                SourcePath.Tip = Constants.StatusTips.Ok;
                 return;
             }
-            SourceCheckStatus = CheckStatus.Error;
-            SourceCheckTip = Constants.StatusTips.NoFile;
+            SourcePath.Status = CheckStatus.Error;
+            SourcePath.Tip = Constants.StatusTips.NoFile;
         });
     }
 
@@ -242,16 +215,16 @@ internal class SettingsWindowViewModel : ViewModel
     {
         await Task.Run(() =>
         {
-            ReportsCheckStatus = CheckStatus.Sync;
-            ReportsCheckTip = Constants.StatusTips.Checking;
-            if (File.Exists(ReportsPath))
+            ReportsPath.Status = CheckStatus.Sync;
+            ReportsPath.Tip = Constants.StatusTips.Checking;
+            if (File.Exists(ReportsPath.Value))
             {
-                ReportsCheckStatus = CheckStatus.Ok;
-                ReportsCheckTip = Constants.StatusTips.Ok;
+                ReportsPath.Status = CheckStatus.Ok;
+                ReportsPath.Tip = Constants.StatusTips.Ok;
                 return;
             }
-            ReportsCheckStatus = CheckStatus.Error;
-            ReportsCheckTip = Constants.StatusTips.NoFile;
+            ReportsPath.Status = CheckStatus.Error;
+            ReportsPath.Tip = Constants.StatusTips.NoFile;
         });
     }
 
@@ -259,27 +232,50 @@ internal class SettingsWindowViewModel : ViewModel
     {
         await Task.Run(() =>
         {
-            DailyReportsDirCheckStatus = CheckStatus.Sync;
-            DailyReportsDirCheckTip = Constants.StatusTips.Checking;
-            switch (DailyReportsDir.CheckDirectoryRights(FileSystemRights.WriteData))
+            DailyReportsDir.Status = CheckStatus.Sync;
+            DailyReportsDir.Tip = Constants.StatusTips.Checking;
+            switch (DailyReportsDir.Value.CheckDirectoryRights(FileSystemRights.WriteData))
             {
                 case CheckDirectoryRightsResult.HasAccess:
-                    DailyReportsDirCheckStatus = CheckStatus.Ok;
-                    DailyReportsDirCheckTip = Constants.StatusTips.Ok;
+                    DailyReportsDir.Status = CheckStatus.Ok;
+                    DailyReportsDir.Tip = Constants.StatusTips.Ok;
                     break;
                 case CheckDirectoryRightsResult.NoAccess:
-                    DailyReportsDirCheckStatus = CheckStatus.Warning;
-                    DailyReportsDirCheckTip = Constants.StatusTips.NoWriteAccess;
+                    DailyReportsDir.Status = CheckStatus.Warning;
+                    DailyReportsDir.Tip = Constants.StatusTips.NoWriteAccess;
                     break;
                 case CheckDirectoryRightsResult.NotExists:
-                    DailyReportsDirCheckStatus = CheckStatus.Error;
-                    DailyReportsDirCheckTip = Constants.StatusTips.NoAccessToDirectory;
+                    DailyReportsDir.Status = CheckStatus.Error;
+                    DailyReportsDir.Tip = Constants.StatusTips.NoAccessToDirectory;
                     break;
                 case CheckDirectoryRightsResult.Error:
-                    DailyReportsDirCheckStatus = CheckStatus.Error;
-                    DailyReportsDirCheckTip = Constants.StatusTips.AccessError;
+                    DailyReportsDir.Status = CheckStatus.Error;
+                    DailyReportsDir.Tip = Constants.StatusTips.AccessError;
                     break;
             }
+        });
+    }
+
+    private async Task CheckConnectionStringAsync()
+    {
+        await Task.Run(() =>
+        {
+            ConnectionString.Status = CheckStatus.Sync;
+            ConnectionString.Tip = Constants.StatusTips.Checking;
+            var res = ConnectionString.Value.CheckDbConnection();
+            switch (res.result)
+            {
+                case DbResult.Ok:
+                    ConnectionString.Status = CheckStatus.Ok;
+                    break;
+                case DbResult.AuthError:
+                    ConnectionString.Status= CheckStatus.Error;
+                    break;
+                case DbResult.Error:
+                    ConnectionString.Status = CheckStatus.Error;
+                    break;
+            }
+            ConnectionString.Tip = res.message;
         });
     }
 }

@@ -596,14 +596,14 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                             var writeResult = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part);
                             switch (writeResult)
                             {
-                                case Database.WriteResult.Ok:
+                                case DbResult.Ok:
                                     part.IsSynced = true;
                                     Status = $"Готово";
                                     break;
-                                case Database.WriteResult.AuthError:
+                                case DbResult.AuthError:
                                     Status = $"Ошибка авторизации в БД";
                                     break;
-                                case Database.WriteResult.Error:
+                                case DbResult.Error:
                                     Status = $"Ошибка записи в БД";
                                     break;
                             }
