@@ -67,7 +67,17 @@ namespace eLog.Infrastructure.Extensions
                         "@SetupTimePlan, " +
                         "@SetupTimePlanForReport, " +
                         "@SingleProductionTimePlan, " +
-                        "@MachiningTime); SELECT SCOPE_IDENTITY();";
+                        "@MachiningTime" +
+                        "@SetupDowntimes" +
+                        "@MachiningDowntimes" +
+                        "@PartialSetupTime" +
+                        "@MaintenanceTime" +
+                        "@ToolSearchingTime" +
+                        "@MentoringTime" +
+                        "@ContactingDepartmentsTime" +
+                        "@FixtureMakingTime" +
+                        "@HardwareFailureTime" +
+                        "); SELECT SCOPE_IDENTITY();";
                     using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
@@ -90,6 +100,15 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@MaintenanceTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Maintenance }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@ToolSearchingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolSearching }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@MentoringTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Mentoring }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@ContactingDepartmentsTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@FixtureMakingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@HardwareFailureTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0));
                         var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
                         if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
@@ -165,6 +184,15 @@ namespace eLog.Infrastructure.Extensions
                         "SetupTimePlanForReport = @SetupTimePlanForReport, " +
                         "SingleProductionTimePlan = @SingleProductionTimePlan, " +
                         "MachiningTime = @MachiningTime " +
+                        "SetupDowntimes = @SetupDowntimes " +
+                        "MachiningDowntimes = @MachiningDowntimes " +
+                        "PartialSetupTime = @PartialSetupTime " +
+                        "MaintenanceTime = @MaintenanceTime " +
+                        "ToolSearchingTime = @ToolSearchingTime " +
+                        "MentoringTime = @MentoringTime " +
+                        "ContactingDepartmentsTime = @ContactingDepartmentsTime " +
+                        "FixtureMakingTime = @FixtureMakingTime " +
+                        "HardwareFailureTime = @HardwareFailureTime " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
@@ -191,6 +219,15 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@MaintenanceTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Maintenance }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@ToolSearchingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolSearching }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@MentoringTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Mentoring }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@ContactingDepartmentsTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@FixtureMakingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@HardwareFailureTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0));
 
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();

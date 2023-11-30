@@ -287,7 +287,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             List<Part> data = new List<Part>();
             for (int i = 0; i < 5000000; i++)
             {
-                data.Add(new Part(i, "60%", "100%", "Просто", DateTime.Today, machines[new Random().Next(machines.Length)], "День", "Бабохин К.Г.", "Корпус клапана АР110-01-001", "УЧ-3/00045.1.1", 10, 1, DateTime.Now.AddHours(-2), DateTime.Now.AddHours(-1), DateTime.Now, 60, 40, 60, 75, 10, 15));
+                //data.Add(new Part(i, "60%", "100%", "Просто", DateTime.Today, machines[new Random().Next(machines.Length)], "День", "Бабохин К.Г.", "Корпус клапана АР110-01-001", "УЧ-3/00045.1.1", 10, 1, DateTime.Now.AddHours(-2), DateTime.Now.AddHours(-1), DateTime.Now, 60, 40, 60, 75, 10, 15));
             }
 
             foreach (Part part in data)
