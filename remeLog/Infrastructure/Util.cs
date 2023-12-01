@@ -34,6 +34,7 @@ namespace remeLog.Infrastructure
         public static ICollection<Part> ReadPartsFromXl()
         {
             List <Part> parts = new List<Part>();
+            if (!Directory.Exists(AppSettings.Instance.SourcePath)) { return parts; }
 
             using (var fs = new FileStream(AppSettings.Instance.SourcePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             {
@@ -43,32 +44,43 @@ namespace remeLog.Infrastructure
                 {
                     if (!xlRow.Cell(1).Value.IsNumber) break;
                     parts.Add(new Part(
-                        (int)xlRow.Cell(1).Value.GetNumber(),     // id
-                        xlRow.Cell(2).Value.GetText(),            // наладка %
-                        xlRow.Cell(3).Value.GetText(),            // изг %
-                        xlRow.Cell(5).Value.GetText(),            // комментарий
-                        xlRow.Cell(6).Value.GetDateTime(),        // дата
-                        xlRow.Cell(7).Value.GetText(),            // станок
-                        xlRow.Cell(8).Value.GetText(),            // смена
-                        xlRow.Cell(9).Value.GetText(),            // оператор
-                        xlRow.Cell(10).Value.GetText(),           // деталь
-                        xlRow.Cell(11).Value.GetText(),           // м/л
-                        (int)xlRow.Cell(12).Value.GetNumber(),    // количество
-                        (int)xlRow.Cell(13).Value.GetNumber(),    // установка
-                        xlRow.Cell(14).Value.GetDateTime(),       // начало наладки
-                        xlRow.Cell(15).Value.GetDateTime(),       // начало изготовления
-                        xlRow.Cell(21).Value.GetDateTime(),       // конец изготовления
-                        xlRow.Cell(16).Value.GetNumber(),         // фактическая наладка
-                        xlRow.Cell(17).Value.GetNumber(),         // плановая наладка
-                        xlRow.Cell(22).Value.GetNumber(),         // фактическое изготовление
-                        xlRow.Cell(23).Value.GetNumber(),         // плановое изготовление
-                        xlRow.Cell(34).Value.GetNumber(),         // простои в наладке
-                        xlRow.Cell(35).Value.GetNumber()          // простои в изготовлении
+                        Guid.Parse(xlRow.Cell(36).Value.GetText()),
+                        xlRow.Cell(7).Value.GetText(),
+                        xlRow.Cell(6).Value.GetDateTime(),
+                        xlRow.Cell(8).Value.GetText(),
+                        xlRow.Cell(9).Value.GetText(),
+                        xlRow.Cell(10).Value.GetText(),
+                        xlRow.Cell(11).Value.GetText(),
+                        (int)xlRow.Cell(13).Value.GetNumber(),
+                        (int)xlRow.Cell(12).Value.GetNumber(),
+                        0,
+                        xlRow.Cell(14).Value.GetDateTime(),
+                        xlRow.Cell(15).Value.GetDateTime(),
+                        xlRow.Cell(21).Value.GetDateTime(),
+                        xlRow.Cell(17).Value.GetNumber(),
+                        xlRow.Cell(44).Value.GetNumber(),
+                        xlRow.Cell(23).Value.GetNumber(),
+                        TimeSpan.FromMinutes(xlRow.Cell(24).Value.GetNumber()),
+                        xlRow.Cell(34).Value.GetNumber(),
+                        xlRow.Cell(35).Value.GetNumber(),
+                        xlRow.Cell(37).Value.GetNumber(),
+                        xlRow.Cell(38).Value.GetNumber(),
+                        xlRow.Cell(39).Value.GetNumber(),
+                        xlRow.Cell(40).Value.GetNumber(),
+                        xlRow.Cell(41).Value.GetNumber(),
+                        xlRow.Cell(42).Value.GetNumber(),
+                        xlRow.Cell(43).Value.GetNumber()
                         ));
                 }
             }
 
             return parts;
+        }
+
+        public static ICollection<Part> ReadPartsFromDb()
+        {
+            var parts = new List<Part>();
+            throw new NotImplementedException();
         }
     }
 }

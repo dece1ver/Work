@@ -8,7 +8,37 @@ namespace remeLog.Models
 {
     public class Part
     {
-        public Part(Guid guid, string machine, DateTime shiftDate, string shift, string @operator, string partName, string order, int setup, int finishedCount, int totalCount, DateTime startSetupTime, DateTime startMachiningTime, DateTime endMachiningTime, double setupTimePlan, double setupTimePlanForReport, double singleProductionTimePlan, TimeSpan machiningTime, double setupDowntimes, double machiningDowntimes, double partialSetupTime, double maintenanceTime, double toolSearchingTime, double mentoringTime, double contactingDepartmentsTime, double fixtureMakingTime, double hardwareFailureTime)
+        public Part(Guid guid, 
+            string machine, 
+            DateTime shiftDate, 
+            string shift, 
+            string @operator, 
+            string partName, 
+            string order, 
+            int setup, 
+            int finishedCount, 
+            int totalCount, 
+            DateTime startSetupTime,
+            DateTime startMachiningTime,
+            DateTime endMachiningTime, 
+            double setupTimePlan,
+            double setupTimePlanForReport,
+            double singleProductionTimePlan,
+            TimeSpan machiningTime, 
+            double setupDowntimes,
+            double machiningDowntimes,
+            double partialSetupTime, 
+            double maintenanceTime, 
+            double toolSearchingTime, 
+            double mentoringTime, 
+            double contactingDepartmentsTime, 
+            double fixtureMakingTime, 
+            double hardwareFailureTime,
+            string masterSetupComment = "",
+            string masterMachiningComment = "", 
+            string specifiedDowntimesComment = "",
+            string unspecifiedDowntimeComment = "", 
+            string engineerComment = "")
         {
             Guid = guid;
             Machine = machine;
@@ -36,6 +66,11 @@ namespace remeLog.Models
             ContactingDepartmentsTime = contactingDepartmentsTime;
             FixtureMakingTime = fixtureMakingTime;
             HardwareFailureTime = hardwareFailureTime;
+            MasterSetupComment = masterSetupComment;
+            MasterMachiningComment = masterMachiningComment;
+            SpecifiedDowntimesComment = specifiedDowntimesComment;
+            UnspecifiedDowntimeComment = unspecifiedDowntimeComment;
+            EngineerComment = engineerComment;
         }
 
         public Guid Guid { get; set; }
@@ -64,6 +99,11 @@ namespace remeLog.Models
         public double ContactingDepartmentsTime { get; set; }
         public double FixtureMakingTime { get; set; }
         public double HardwareFailureTime { get; set; }
+        public string MasterSetupComment { get; set; }
+        public string MasterMachiningComment { get; set; }
+        public string SpecifiedDowntimesComment { get; set; }
+        public string UnspecifiedDowntimeComment { get; set; }
+        public string EngineerComment { get; set; }
     }
     
     

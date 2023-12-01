@@ -49,7 +49,17 @@ namespace eLog.Infrastructure.Extensions
                         "SetupTimePlan, " +
                         "SetupTimePlanForReport, " +
                         "SingleProductionTimePlan, " +
-                        "MachiningTime) " +
+                        "MachiningTime, " +
+                        "SetupDowntimes, " +
+                        "MachiningDowntimes, " +
+                        "PartialSetupTime, " +
+                        "MaintenanceTime, " +
+                        "ToolSearchingTime, " +
+                        "MentoringTime, " +
+                        "ContactingDepartmentsTime, " +
+                        "FixtureMakingTime, " +
+                        "HardwareFailureTime" +
+                        ") " +
                         "VALUES (" +
                         "@Guid, " +
                         "@Machine, " +
@@ -67,15 +77,15 @@ namespace eLog.Infrastructure.Extensions
                         "@SetupTimePlan, " +
                         "@SetupTimePlanForReport, " +
                         "@SingleProductionTimePlan, " +
-                        "@MachiningTime" +
-                        "@SetupDowntimes" +
-                        "@MachiningDowntimes" +
-                        "@PartialSetupTime" +
-                        "@MaintenanceTime" +
-                        "@ToolSearchingTime" +
-                        "@MentoringTime" +
-                        "@ContactingDepartmentsTime" +
-                        "@FixtureMakingTime" +
+                        "@MachiningTime, " +
+                        "@SetupDowntimes, " +
+                        "@MachiningDowntimes, " +
+                        "@PartialSetupTime, " +
+                        "@MaintenanceTime, " +
+                        "@ToolSearchingTime, " +
+                        "@MentoringTime, " +
+                        "@ContactingDepartmentsTime, " +
+                        "@FixtureMakingTime, " +
                         "@HardwareFailureTime" +
                         "); SELECT SCOPE_IDENTITY();";
                     using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
@@ -183,15 +193,15 @@ namespace eLog.Infrastructure.Extensions
                         "SetupTimePlan = @SetupTimePlan, " +
                         "SetupTimePlanForReport = @SetupTimePlanForReport, " +
                         "SingleProductionTimePlan = @SingleProductionTimePlan, " +
-                        "MachiningTime = @MachiningTime " +
-                        "SetupDowntimes = @SetupDowntimes " +
-                        "MachiningDowntimes = @MachiningDowntimes " +
-                        "PartialSetupTime = @PartialSetupTime " +
-                        "MaintenanceTime = @MaintenanceTime " +
-                        "ToolSearchingTime = @ToolSearchingTime " +
-                        "MentoringTime = @MentoringTime " +
-                        "ContactingDepartmentsTime = @ContactingDepartmentsTime " +
-                        "FixtureMakingTime = @FixtureMakingTime " +
+                        "MachiningTime = @MachiningTime, " +
+                        "SetupDowntimes = @SetupDowntimes, " +
+                        "MachiningDowntimes = @MachiningDowntimes, " +
+                        "PartialSetupTime = @PartialSetupTime, " +
+                        "MaintenanceTime = @MaintenanceTime, " +
+                        "ToolSearchingTime = @ToolSearchingTime, " +
+                        "MentoringTime = @MentoringTime, " +
+                        "ContactingDepartmentsTime = @ContactingDepartmentsTime, " +
+                        "FixtureMakingTime = @FixtureMakingTime, " +
                         "HardwareFailureTime = @HardwareFailureTime " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))

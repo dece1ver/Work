@@ -11,10 +11,10 @@
     <RepositoryUrl>https://github.com/dece1ver/Work</RepositoryUrl>
     <PackageIcon>eLog.png</PackageIcon>
     <ApplicationIcon>Resources\eLog.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.*</AssemblyVersion>
-    <FileVersion>1.0.*</FileVersion>
     <Version>$(VersionPrefix)</Version>
 	  <Deterministic>false</Deterministic>
+	  <AssemblyVersion>1.1.1</AssemblyVersion>
+	  <FileVersion>1.1.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
