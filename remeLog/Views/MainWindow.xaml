@@ -12,6 +12,13 @@
         <vm:MainWindowViewModel/>
     </Window.DataContext>
     <Window.Resources>
+        <Style TargetType="Button" x:Key="UppedPanelButton">
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="2"/>
+                </Style>
+            </Style.Resources>
+        </Style>
         <Style TargetType="ListViewItem" x:Key="ListViewItemsStyle">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Focusable" Value="false"/>
@@ -69,20 +76,50 @@
                         </StackPanel>
                     </GroupBox.Header>
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="Сформировать" FontSize="16" Padding="10 0" Margin="0 0 2 0" Command="{Binding TestProcessCommand}">
+                        <Button DockPanel.Dock="Right" Content="Сформировать" FontSize="16" Padding="10 0" 
+                                Margin="-3 -7 -3 -5" Width="137" Command="{Binding TestProcessCommand}">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="2"/>
                                 </Style>
                             </Button.Resources>
                         </Button>
-                        <DatePicker DockPanel.Dock="Left" FontSize="16" SelectedDate="{Binding Date}" Margin="2 0">
-                            <DatePicker.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="2"/>
-                                </Style>
-                            </DatePicker.Resources>
-                        </DatePicker>
+                        <StackPanel DockPanel.Dock="Left">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="От" FontSize="16" VerticalAlignment="Center" TextAlignment="Center" Width="30"/>
+                                <DatePicker DockPanel.Dock="Left" FontSize="16" SelectedDate="{Binding FromDate}" Margin="2 0 2 0">
+                                    <DatePicker.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="2"/>
+                                        </Style>
+                                    </DatePicker.Resources>
+                                </DatePicker>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="До" FontSize="16" VerticalAlignment="Center" TextAlignment="Center" Width="30"/>
+                                <DatePicker DockPanel.Dock="Left" FontSize="16" SelectedDate="{Binding ToDate}" Margin="2 2 0 0">
+                                    <DatePicker.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="2"/>
+                                        </Style>
+                                    </DatePicker.Resources>
+                                </DatePicker>
+                            </StackPanel>
+                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="140"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Button Grid.Row="0" Grid.Column="0" Content="+ сутки" Margin="0 0 1 1" Style="{StaticResource UppedPanelButton}"/>
+                            <Button Grid.Row="1" Grid.Column="0" Content="- сутки" Margin="0 1 1 0" Style="{StaticResource UppedPanelButton}"/>
+                            <Button Grid.Row="0" Grid.Column="1" Content="Вчера" Margin="1 0 0 1" Style="{StaticResource UppedPanelButton}"/>
+                            <Button Grid.Row="1" Grid.Column="1" Content="Неделя" Margin="1 1 0 0" Style="{StaticResource UppedPanelButton}"/>
+                        </Grid>
                     </DockPanel>
                 </GroupBox>
                 <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" IsManipulationEnabled="True" FontSize="16" DockPanel.Dock="Top" Focusable="False" 
@@ -111,18 +148,21 @@
                                                 <RowDefinition/>
                                                 <RowDefinition/>
                                             </Grid.RowDefinitions>
-                                            <TextBlock Grid.Column="0" Grid.Row="0" Margin="5 -1" 
-                                                       Text="{Binding Operator}"/>
-                                            <TextBlock Grid.Column="1" Grid.Row="0" Margin="5 -1" 
-                                                       Text="{Binding Shift}" />
-                                            <TextBlock Grid.Column="0" Grid.Row="1" Margin="5 -1" 
-                                                       Text="Запусков: "/>
-                                            <TextBlock Grid.Column="1" Grid.Row="1" Margin="5 -1" 
-                                                       Text="{Binding Parts.Count}" />
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Наладка сред: " VerticalAlignment="Center" Margin="0 0"/>
+                                                    <TextBlock Text="{Binding SetupRatio2}" VerticalAlignment="Center" Margin="0 0"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Наладка общ: " VerticalAlignment="Center" Margin="0 0"/>
+                                                    <TextBlock Text="{Binding SetupRatio3}" VerticalAlignment="Center" Margin="0 0"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
                                         </Grid>
                                         <Button Margin="0 -6 0 0" Width="120" HorizontalAlignment="Right"
                                             CommandParameter="{Binding}" 
-                                            Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.EditDetailCommand}" Content="Подробно">
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.ShowPartsInfoCommand}" Content="Подробно">
                                             <Button.Resources>
                                                 <Style TargetType="Border">
                                                     <Setter Property="CornerRadius" Value="2"/>

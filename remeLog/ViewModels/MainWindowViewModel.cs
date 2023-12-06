@@ -33,6 +33,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
         EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
         ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
+        ShowPartsInfoCommand = new LambdaCommand(OnShowPartsInfoCommandExecuted, CanShowPartsInfoCommandExecute);
         TestProcessCommand = new LambdaCommand(OnTestProcessCommandExecuted, CanTestProcessCommandExecute);
 
         
@@ -92,12 +93,20 @@ internal class MainWindowViewModel : ViewModel, IOverlay
 
 
 
-    private DateTime _Date = DateTime.Today.AddDays(-1);
+    private DateTime _FromDate = DateTime.Today.AddDays(-1);
     /// <summary> Дата отчета </summary>
-    public DateTime Date
+    public DateTime FromDate
     {
-        get => _Date;
-        set => Set(ref _Date, value);
+        get => _FromDate;
+        set => Set(ref _FromDate, value);
+    }
+
+    private DateTime _ToDate = DateTime.Today.AddDays(-1);
+    /// <summary> Дата отчета </summary>
+    public DateTime ToDate
+    {
+        get => _ToDate;
+        set => Set(ref _ToDate, value);
     }
 
     private ObservableCollection<CombinedParts> _Parts = new();
@@ -176,8 +185,8 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     /// <summary> Объединенный список по станку Victor </summary>
     public CombinedParts A110
     {
-        get => _XH6300;
-        set => Set(ref _XH6300, value);
+        get => _A110;
+        set => Set(ref _A110, value);
     }
 
     private CombinedParts _MV134 = new(Machines.QuaserMv134);
@@ -243,6 +252,22 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     private static bool CanShowAboutCommandExecute(object p) => true;
     #endregion
 
+    #region ShowPartsInfo
+    public ICommand ShowPartsInfoCommand { get; }
+    private void OnShowPartsInfoCommandExecuted(object p)
+    {
+        using (Overlay = new())
+        {
+            var partsInfo = (CombinedParts)p;
+            partsInfo.FromDate = FromDate; 
+            partsInfo.ToDate = ToDate;
+            var partsInfoWindow = new PartsInfoWindow(partsInfo) { Owner = Application.Current.MainWindow };
+            partsInfoWindow.ShowDialog();
+        }
+    }
+    private static bool CanShowPartsInfoCommandExecute(object p) => true;
+    #endregion
+
     #region TestProcessCommand
     public ICommand TestProcessCommand { get; }
     private void OnTestProcessCommandExecuted(object p)
@@ -271,61 +296,59 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             Machines.QuaserMv134,
             Machines.MazakIntegrexI200,
             };
-            Skt21_104Parts.Parts.Clear();
-            Skt21_105Parts.Parts.Clear();
-            L230Parts.Parts.Clear();
-            QTS200.Parts.Clear();
-            GS1500.Parts.Clear();
-            QTS350.Parts.Clear();
-            N5000.Parts.Clear();
-            XH6300.Parts.Clear();
-            A110.Parts.Clear();
-            MV134.Parts.Clear();
-            i200.Parts.Clear();
-            
+            Application.Current.Dispatcher.Invoke(() => { Skt21_104Parts.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { Skt21_105Parts.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { L230Parts.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { GS1500.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { N5000.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { XH6300.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { A110.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { MV134.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { i200.Parts.Clear(); });
 
-            List<Part> data = new List<Part>();
-            for (int i = 0; i < 5000000; i++)
-            {
-                //data.Add(new Part(i, "60%", "100%", "Просто", DateTime.Today, machines[new Random().Next(machines.Length)], "День", "Бабохин К.Г.", "Корпус клапана АР110-01-001", "УЧ-3/00045.1.1", 10, 1, DateTime.Now.AddHours(-2), DateTime.Now.AddHours(-1), DateTime.Now, 60, 40, 60, 75, 10, 15));
-            }
+
+            ObservableCollection<Part> data = new ObservableCollection<Part>();
+
+            data = Database.ReadPartsByShiftDate(FromDate, ToDate);
 
             foreach (Part part in data)
             {
                 switch (part.Machine)
                 {
                     case Machines.HuyndaiSkt21_104:
-                        Skt21_104Parts.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { Skt21_104Parts.Parts.Add(part); });
                         break;
                     case Machines.HuyndaiSkt21_105:
-                        Skt21_105Parts.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { Skt21_105Parts.Parts.Add(part); });
                         break;
                     case Machines.HuyndaiL230A:
-                        L230Parts.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { L230Parts.Parts.Add(part); });
                         break;
                     case Machines.MazakQts200Ml:
-                        QTS200.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Add(part); });
                         break;
                     case Machines.GoodwayGs1500:
-                        GS1500.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => {  GS1500.Parts.Add(part); });
                         break;
                     case Machines.MazakQts350:
-                        QTS350.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Add(part); });
                         break;
                     case Machines.MazakNexus5000:
-                        N5000.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { N5000.Parts.Add(part); });
                         break;
                     case Machines.HuyndaiXH6300:
-                        XH6300.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { XH6300.Parts.Add(part); });
                         break;
                     case Machines.VictorA110:
-                        A110.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { A110.Parts.Add(part); });
                         break;
                     case Machines.QuaserMv134:
-                        MV134.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { MV134.Parts.Add(part); });
                         break;
                     case Machines.MazakIntegrexI200:
-                        i200.Parts.Add(part);
+                        Application.Current.Dispatcher.Invoke(() => { i200.Parts.Add(part); });
                         break;
                     default:
                         break;

@@ -45,10 +45,12 @@ namespace eLog.Infrastructure.Extensions
                         "TotalCount, " +
                         "StartSetupTime, " +
                         "StartMachiningTime, " +
+                        "SetupTimeFact, " +
                         "EndMachiningTime, " +
                         "SetupTimePlan, " +
                         "SetupTimePlanForReport, " +
                         "SingleProductionTimePlan, " +
+                        "ProductionTimeFact, " +
                         "MachiningTime, " +
                         "SetupDowntimes, " +
                         "MachiningDowntimes, " +
@@ -58,7 +60,8 @@ namespace eLog.Infrastructure.Extensions
                         "MentoringTime, " +
                         "ContactingDepartmentsTime, " +
                         "FixtureMakingTime, " +
-                        "HardwareFailureTime" +
+                        "HardwareFailureTime, " +
+                        "OperatorComment" +
                         ") " +
                         "VALUES (" +
                         "@Guid, " +
@@ -73,10 +76,12 @@ namespace eLog.Infrastructure.Extensions
                         "@TotalCount, " +
                         "@StartSetupTime, " +
                         "@StartMachiningTime, " +
+                        "@SetupTimeFact, " +
                         "@EndMachiningTime, " +
                         "@SetupTimePlan, " +
                         "@SetupTimePlanForReport, " +
                         "@SingleProductionTimePlan, " +
+                        "@ProductionTimeFact, " +
                         "@MachiningTime, " +
                         "@SetupDowntimes, " +
                         "@MachiningDowntimes, " +
@@ -86,7 +91,8 @@ namespace eLog.Infrastructure.Extensions
                         "@MentoringTime, " +
                         "@ContactingDepartmentsTime, " +
                         "@FixtureMakingTime, " +
-                        "@HardwareFailureTime" +
+                        "@HardwareFailureTime, " +
+                        "@OperatorComment" +
                         "); SELECT SCOPE_IDENTITY();";
                     using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
                     {
@@ -106,9 +112,14 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@TotalCount", part.TotalCount);
                         cmd.Parameters.AddWithValue("@StartSetupTime", part.StartSetupTime);
                         cmd.Parameters.AddWithValue("@StartMachiningTime", part.StartMachiningTime);
+                        cmd.Parameters.AddWithValue("@SetupTimeFact", part.SetupTimeFact.TotalMinutes);
                         cmd.Parameters.AddWithValue("@EndMachiningTime", part.EndMachiningTime);
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
+                        var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
+                        if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
+                        cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
+                        cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact.TotalMinutes);
                         cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
@@ -119,9 +130,8 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@ContactingDepartmentsTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@FixtureMakingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@HardwareFailureTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0));
-                        var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
-                        if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
-                        cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
+                        var combinedDownTimes = part.DownTimes.Combine();
+                        cmd.Parameters.AddWithValue("@OperatorComment", $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim());
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();
                         if (!passive)
@@ -190,9 +200,11 @@ namespace eLog.Infrastructure.Extensions
                         "StartSetupTime = @StartSetupTime, " +
                         "StartMachiningTime = @StartMachiningTime, " +
                         "EndMachiningTime = @EndMachiningTime, " +
+                        "SetupTimeFact = @SetupTimeFact, " +
                         "SetupTimePlan = @SetupTimePlan, " +
                         "SetupTimePlanForReport = @SetupTimePlanForReport, " +
                         "SingleProductionTimePlan = @SingleProductionTimePlan, " +
+                        "ProductionTimeFact = @ProductionTimeFact, " +
                         "MachiningTime = @MachiningTime, " +
                         "SetupDowntimes = @SetupDowntimes, " +
                         "MachiningDowntimes = @MachiningDowntimes, " +
@@ -202,7 +214,8 @@ namespace eLog.Infrastructure.Extensions
                         "MentoringTime = @MentoringTime, " +
                         "ContactingDepartmentsTime = @ContactingDepartmentsTime, " +
                         "FixtureMakingTime = @FixtureMakingTime, " +
-                        "HardwareFailureTime = @HardwareFailureTime " +
+                        "HardwareFailureTime = @HardwareFailureTime, " +
+                        "OperatorComment = @OperatorComment " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
@@ -222,12 +235,14 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@TotalCount", part.TotalCount);
                         cmd.Parameters.AddWithValue("@StartSetupTime", part.StartSetupTime);
                         cmd.Parameters.AddWithValue("@StartMachiningTime", part.StartMachiningTime);
+                        cmd.Parameters.AddWithValue("@SetupTimeFact", part.SetupTimeFact.TotalMinutes);
                         cmd.Parameters.AddWithValue("@EndMachiningTime", part.EndMachiningTime);
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
                         var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
                         if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
+                        cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact.TotalMinutes);
                         cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
@@ -238,6 +253,8 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@ContactingDepartmentsTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ContactingDepartments }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@FixtureMakingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.FixtureMaking }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@HardwareFailureTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0));
+                        var combinedDownTimes = part.DownTimes.Combine();
+                        cmd.Parameters.AddWithValue("@OperatorComment", $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim());
 
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
                         var execureResult = cmd.ExecuteNonQuery();

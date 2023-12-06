@@ -38,6 +38,33 @@ public class AppSettings
 
     /// <summary> Путь к файлу логов </summary>
     [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
+    [JsonIgnore] public static readonly string[] SetupReasons = new string[] {
+        "Освоение", 
+        "Работа ученика", 
+        "Неопытный оператор", 
+        "Некорректное занесение", 
+        "Некорректные нормативы", 
+        "Отсутствие нормативов", 
+        "Небрежное отношение к работе", 
+        "Другое" };
+
+    [JsonIgnore]
+    public static readonly string[] ProductionReasons = new string[] {
+        "Работа ученика",
+        "Неопытный оператор",
+        "Особенности изготовления",
+        "Штучная/длительная работа",
+        "Некорректное занесение",
+        "Некорректные нормативы",
+        "Отсутствие нормативов",
+        "Небрежное отношение к работе",
+        "Другое" };
+    [JsonIgnore]
+    public static readonly string[] UnspecifiedDowntimesReasons = new string[] {
+        "Ремонт оборудования",
+        "Отсутствие оператора",
+        "Отсутствие электричества",
+        "Другое" };
 
     /// <summary> Режим отладки </summary>
     public bool DebugMode { get; set; }

@@ -8,36 +8,40 @@ namespace remeLog.Models
 {
     public class Part
     {
-        public Part(Guid guid, 
-            string machine, 
-            DateTime shiftDate, 
-            string shift, 
-            string @operator, 
-            string partName, 
-            string order, 
-            int setup, 
-            int finishedCount, 
-            int totalCount, 
+        public Part(
+            Guid guid,
+            string machine,
+            DateTime shiftDate,
+            string shift,
+            string @operator,
+            string partName,
+            string order,
+            int setup,
+            int finishedCount,
+            int totalCount,
             DateTime startSetupTime,
             DateTime startMachiningTime,
-            DateTime endMachiningTime, 
+            double setupTimeFact,
+            DateTime endMachiningTime,
             double setupTimePlan,
             double setupTimePlanForReport,
             double singleProductionTimePlan,
-            TimeSpan machiningTime, 
+            double productionTimeFact, TimeSpan machiningTime,
             double setupDowntimes,
             double machiningDowntimes,
-            double partialSetupTime, 
-            double maintenanceTime, 
-            double toolSearchingTime, 
-            double mentoringTime, 
-            double contactingDepartmentsTime, 
-            double fixtureMakingTime, 
+            double partialSetupTime,
+            double maintenanceTime,
+            double toolSearchingTime,
+            double mentoringTime,
+            double contactingDepartmentsTime,
+            double fixtureMakingTime,
             double hardwareFailureTime,
-            string masterSetupComment = "",
-            string masterMachiningComment = "", 
-            string specifiedDowntimesComment = "",
-            string unspecifiedDowntimeComment = "", 
+            string operatorComment, 
+            string masterSetupComment = "", 
+            string masterMachiningComment = "",
+            string specifiedDowntimesComment = "", 
+            string unspecifiedDowntimesComment = "", 
+            string masterComment = "", 
             string engineerComment = "")
         {
             Guid = guid;
@@ -52,10 +56,12 @@ namespace remeLog.Models
             TotalCount = totalCount;
             StartSetupTime = startSetupTime;
             StartMachiningTime = startMachiningTime;
+            SetupTimeFact = setupTimeFact;
             EndMachiningTime = endMachiningTime;
             SetupTimePlan = setupTimePlan;
             SetupTimePlanForReport = setupTimePlanForReport;
             SingleProductionTimePlan = singleProductionTimePlan;
+            ProductionTimeFact = productionTimeFact;
             MachiningTime = machiningTime;
             SetupDowntimes = setupDowntimes;
             MachiningDowntimes = machiningDowntimes;
@@ -66,10 +72,12 @@ namespace remeLog.Models
             ContactingDepartmentsTime = contactingDepartmentsTime;
             FixtureMakingTime = fixtureMakingTime;
             HardwareFailureTime = hardwareFailureTime;
+            OperatorComment = operatorComment;
             MasterSetupComment = masterSetupComment;
             MasterMachiningComment = masterMachiningComment;
             SpecifiedDowntimesComment = specifiedDowntimesComment;
-            UnspecifiedDowntimeComment = unspecifiedDowntimeComment;
+            UnspecifiedDowntimesComment = unspecifiedDowntimesComment;
+            MasterComment = masterComment;
             EngineerComment = engineerComment;
         }
 
@@ -85,10 +93,12 @@ namespace remeLog.Models
         public int TotalCount { get; set; }
         public DateTime StartSetupTime { get; set; }
         public DateTime StartMachiningTime { get; set; }
+        public double SetupTimeFact { get; set; }
         public DateTime EndMachiningTime { get; set; }
         public double SetupTimePlan { get; set; }
         public double SetupTimePlanForReport { get; set; }
         public double SingleProductionTimePlan { get; set; }
+        public double ProductionTimeFact { get; set; }
         public TimeSpan MachiningTime { get; set; }
         public double SetupDowntimes { get; set; }
         public double MachiningDowntimes { get; set; }
@@ -99,12 +109,16 @@ namespace remeLog.Models
         public double ContactingDepartmentsTime { get; set; }
         public double FixtureMakingTime { get; set; }
         public double HardwareFailureTime { get; set; }
+        public string OperatorComment { get; set; }
         public string MasterSetupComment { get; set; }
         public string MasterMachiningComment { get; set; }
         public string SpecifiedDowntimesComment { get; set; }
-        public string UnspecifiedDowntimeComment { get; set; }
+        public string UnspecifiedDowntimesComment { get; set; }
+        public string MasterComment { get; set; }
         public string EngineerComment { get; set; }
+        public double SetupRatio => SetupTimePlan / SetupTimeFact;
+        public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : $"{SetupRatio:0%}";
+        public double ProductionRatio => FinishedCount * SingleProductionTimePlan / ProductionTimeFact;
+        public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity ? "б/и" : $"{ProductionRatio:0%}";
     }
-    
-    
 }
