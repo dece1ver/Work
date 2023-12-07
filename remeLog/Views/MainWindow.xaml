@@ -72,12 +72,12 @@
                 <GroupBox DockPanel.Dock="Top" BorderBrush="DarkGray" Margin="3" Padding="0 0 3 5">
                     <GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock FontSize="18" Text="Дата смены" FontWeight="DemiBold"/>
+                            <TextBlock FontSize="18" Text="Период" FontWeight="DemiBold"/>
                         </StackPanel>
                     </GroupBox.Header>
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Content="Сформировать" FontSize="16" Padding="10 0" 
-                                Margin="-3 -7 -3 -5" Width="137" Command="{Binding TestProcessCommand}">
+                                Margin="-3 -7 -3 -5" Width="137" Command="{Binding LoadPartsInfoCommand}">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="2"/>
@@ -108,17 +108,25 @@
                         </StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="100"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition/>
                                 <RowDefinition/>
                             </Grid.RowDefinitions>
-                            <Button Grid.Row="0" Grid.Column="0" Content="+ сутки" Margin="0 0 1 1" Style="{StaticResource UppedPanelButton}"/>
-                            <Button Grid.Row="1" Grid.Column="0" Content="- сутки" Margin="0 1 1 0" Style="{StaticResource UppedPanelButton}"/>
-                            <Button Grid.Row="0" Grid.Column="1" Content="Вчера" Margin="1 0 0 1" Style="{StaticResource UppedPanelButton}"/>
-                            <Button Grid.Row="1" Grid.Column="1" Content="Неделя" Margin="1 1 0 0" Style="{StaticResource UppedPanelButton}"/>
+                            <Button Grid.Row="0" Grid.Column="0" Content="+ сутки" 
+                                    Margin="0 0 1 1" Style="{StaticResource UppedPanelButton}"
+                                    Command="{Binding IncreaseDateCommand}"/>
+                            <Button Grid.Row="1" Grid.Column="0" Content="- сутки" 
+                                    Margin="0 1 1 0" Style="{StaticResource UppedPanelButton}"
+                                    Command="{Binding DecreaseDateCommand}"/>
+                            <Button Grid.Row="0" Grid.Column="1" Content="Вчера" 
+                                    Margin="1 0 0 1" Style="{StaticResource UppedPanelButton}"
+                                    Command="{Binding SetYesterdayDateCommand}"/>
+                            <Button Grid.Row="1" Grid.Column="1" Content="Неделя" 
+                                    Margin="1 1 0 0" Style="{StaticResource UppedPanelButton}"
+                                    Command="{Binding SetWeekDateCommand}"/>
                         </Grid>
                     </DockPanel>
                 </GroupBox>

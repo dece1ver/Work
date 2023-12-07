@@ -32,11 +32,14 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     {
         CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
         EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
+        LoadPartsInfoCommand = new LambdaCommand(OnLoadPartsInfoCommandExecuted, CanLoadPartsInfoCommandExecute);
         ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
         ShowPartsInfoCommand = new LambdaCommand(OnShowPartsInfoCommandExecuted, CanShowPartsInfoCommandExecute);
-        TestProcessCommand = new LambdaCommand(OnTestProcessCommandExecuted, CanTestProcessCommandExecute);
+        IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
+        DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
+        SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
+        SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
 
-        
 
         // var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
         // backgroundWorker.Start();
@@ -240,6 +243,15 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     private static bool CanEditSettingsCommandExecute(object p) => true;
     #endregion
 
+    #region LoadPartsInfo
+    public ICommand LoadPartsInfoCommand { get; }
+    private void OnLoadPartsInfoCommandExecuted(object p)
+    {
+        _ = LoadPartsAsync();
+    }
+    private static bool CanLoadPartsInfoCommandExecute(object p) => true;
+    #endregion
+
     #region ShowAbout
     public ICommand ShowAboutCommand { get; }
     private void OnShowAboutCommandExecuted(object p)
@@ -268,13 +280,50 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     private static bool CanShowPartsInfoCommandExecute(object p) => true;
     #endregion
 
-    #region TestProcessCommand
-    public ICommand TestProcessCommand { get; }
-    private void OnTestProcessCommandExecuted(object p)
+    #region IncreaseDateCommand
+    public ICommand IncreaseDateCommand { get; }
+    private void OnIncreaseDateCommandExecuted(object p)
+    {
+
+        FromDate = FromDate.AddDays(1);
+        ToDate = ToDate.AddDays(1);
+    }
+    private bool CanIncreaseDateCommandExecute(object p) => true;
+    #endregion
+
+    #region DecreaseDateCommand
+    public ICommand DecreaseDateCommand { get; }
+    private void OnDecreaseDateCommandExecuted(object p)
+    {
+
+        FromDate = FromDate.AddDays(-1);
+        ToDate = ToDate.AddDays(-1);
+    }
+    private bool CanDecreaseDateCommandExecute(object p) => true;
+    #endregion
+
+    #region SetYesterdayDateCommand
+    public ICommand SetYesterdayDateCommand { get; }
+    private void OnSetYesterdayDateCommandExecuted(object p)
     {
         
-        _ = LoadPartsAsync();
+        FromDate = DateTime.Today.AddDays(-1);
+        ToDate = FromDate;
     }
+    private bool CanSetYesterdayDateCommandExecute(object p) => true;
+    #endregion
+
+    #region SetWeekDateCommand
+    public ICommand SetWeekDateCommand { get; }
+    private void OnSetWeekDateCommandExecuted(object p)
+    {
+
+        FromDate = FromDate.AddDays(-7);
+    }
+    private bool CanSetWeekDateCommandExecute(object p) => true;
+    #endregion
+
+    #endregion
 
     private async Task LoadPartsAsync()
     {
@@ -330,7 +379,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                         Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Add(part); });
                         break;
                     case Machines.GoodwayGs1500:
-                        Application.Current.Dispatcher.Invoke(() => {  GS1500.Parts.Add(part); });
+                        Application.Current.Dispatcher.Invoke(() => { GS1500.Parts.Add(part); });
                         break;
                     case Machines.MazakQts350:
                         Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Add(part); });
@@ -371,11 +420,6 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             ProgressBarVisibility = Visibility.Collapsed;
         });
     }
-
-    private bool CanTestProcessCommandExecute(object p) => true;
-    #endregion
-
-    #endregion
 
     private void UpdateParts()
     {

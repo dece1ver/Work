@@ -38,6 +38,10 @@ public class AppSettings
 
     /// <summary> Путь к файлу логов </summary>
     [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
+
+    [JsonIgnore]
+    public static readonly string[] ShiftTypes = new string[] { "День", "Ночь" };
+
     [JsonIgnore] public static readonly string[] SetupReasons = new string[] {
         "Освоение", 
         "Работа ученика", 
