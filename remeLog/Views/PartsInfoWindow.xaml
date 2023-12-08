@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views" xmlns:controls="clr-namespace:remeLog.Views.Controls"
-        mc:Ignorable="d" xmlns:inf="clr-namespace:remeLog.Infrastructure"
+        mc:Ignorable="d" xmlns:inf="clr-namespace:remeLog.Infrastructure" xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
         Title="{Binding PartsInfo.Machine}" Height="720" Width="1280" WindowStartupLocation="CenterOwner" WindowState="Maximized">
     <Window.Resources>
@@ -43,6 +43,46 @@
         </Style>
     </Window.Resources>
     <DockPanel>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Text="{Binding Status}" FontSize="16" Margin="0 -1"/>
+            </StatusBarItem>
+        </StatusBar>
+        <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="True"
+                     Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}}" Height="2" />
+        <GroupBox DockPanel.Dock="Bottom" Header="Итог по выборке">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="60"/>
+
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="100%"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="100%"/>
+                
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="100%"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="100%"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
+                <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
+                <TextBlock Grid.Row="0" Grid.Column="5" Text="8%"/>
+                <TextBlock Grid.Row="1" Grid.Column="5" Text="3%"/>
+
+            </Grid>
+        </GroupBox>
         <GroupBox DockPanel.Dock="Top" Header="Фильтры">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -68,18 +108,20 @@
             </Grid>
         </GroupBox>
         <DataGrid ItemsSource="{Binding Parts}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="Gray"
-                      ColumnWidth="SizeToCells" VerticalScrollBarVisibility="Visible">
+                      ColumnWidth="SizeToCells" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
             <DataGrid.Resources>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
                     <Setter Property="VerticalContentAlignment" Value="Center" />
+                    <Setter Property="SnapsToDevicePixels" Value="True"/>
                     <Setter Property="ContentTemplate" >
                         <Setter.Value>
                             <DataTemplate>
                                 <TextBlock TextWrapping="Wrap" Text="{Binding}"
-                                   Width="100"
-                                   VerticalAlignment="Center" TextAlignment="Center"
-                                   HorizontalAlignment="Center">
+                                           SnapsToDevicePixels="True"
+                                           Width="100"
+                                           VerticalAlignment="Center" TextAlignment="Center"
+                                           HorizontalAlignment="Center">
                                     <TextBlock.LayoutTransform>
                                         <RotateTransform Angle="270" />
                                     </TextBlock.LayoutTransform>
@@ -97,6 +139,14 @@
                     <Setter Property="Margin" Value="0"/>
                     <Setter Property="Padding" Value="0"/>
                 </Style>
+                <Style TargetType="TextBlock" x:Key="TableLargeTextBlock">
+                    <Setter Property="TextWrapping" Value="Wrap" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="TextAlignment" Value="Left"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Padding" Value="0"/>
+                </Style>
+                
                 <Style TargetType="TextBox" x:Key="TableTextBox">
                     <Setter Property="TextWrapping" Value="Wrap" />
                     <Setter Property="TextAlignment" Value="Center"/>
@@ -104,6 +154,7 @@
                     <Setter Property="Margin" Value="0"/>
                     <Setter Property="Padding" Value="0"/>
                 </Style>
+
                 <Style TargetType="TextBox" x:Key="TableLargeTextBox">
                     <Setter Property="TextWrapping" Value="Wrap" />
                     <Setter Property="VerticalAlignment" Value="Center" />
@@ -114,10 +165,9 @@
                 </Style>
                 <Style TargetType="ComboBox" x:Key="TableComboBox">
                     <Setter Property="HorizontalAlignment" Value="Center"/>
-                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="VerticalAlignment" Value="Stretch"/>
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
                     <Setter Property="VerticalContentAlignment" Value="Center"/>
-
                 </Style>
             </DataGrid.Resources>
 
@@ -140,12 +190,19 @@
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
                     </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
-                <DataGridComboBoxColumn Header="Смена" ItemsSource="{x:Static inf:AppSettings.ShiftTypes}" 
-                                            SelectedItemBinding="{Binding Shift}" Width="60">
-                    <DataGridComboBoxColumn.ElementStyle>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource TableComboBox}"/>
-                    </DataGridComboBoxColumn.ElementStyle>
-                </DataGridComboBoxColumn>
+                <DataGridTemplateColumn Header="Смена" Width="60">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Shift}" Style="{StaticResource TableTextBlock}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{x:Static inf:AppSettings.ShiftTypes}" 
+                                      SelectedItem="{Binding Shift}" Style="{StaticResource TableComboBox}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Оператор" Binding="{Binding Operator}" Width="90">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
@@ -219,6 +276,22 @@
                     </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Норматив наладки" Binding="{Binding SetupTimePlan}" Width="36">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.EditingElementStyle>
+                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+                    </DataGridTextColumn.EditingElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Фактическая наладка" Binding="{Binding SetupTimeFact}" Width="36">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                    </DataGridTextColumn.ElementStyle>
+                    <DataGridTextColumn.EditingElementStyle>
+                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+                    </DataGridTextColumn.EditingElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Фактическое изготовление" Binding="{Binding ProductionTimeFact}" Width="36">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
@@ -316,26 +389,41 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="165">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
                     <DataGridTextColumn.EditingElementStyle>
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
                     </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
-                <DataGridComboBoxColumn Header="Невыполнение норматива наладки"
-                                        ItemsSource="{x:Static inf:AppSettings.SetupReasons}" 
-                                        SelectedItemBinding="{Binding MasterSetupComment}" Width="120">
-                    <DataGridComboBoxColumn.ElementStyle>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource TableComboBox}"/>
-                    </DataGridComboBoxColumn.ElementStyle>
-                </DataGridComboBoxColumn>
-                <DataGridComboBoxColumn Header="Невыполнение норматива изготовления" 
-                                            ItemsSource="{x:Static inf:AppSettings.ProductionReasons}" 
-                                            SelectedItemBinding="{Binding MasterMachiningComment}" Width="120">
-                    <DataGridComboBoxColumn.ElementStyle>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource TableComboBox}"/>
-                    </DataGridComboBoxColumn.ElementStyle>
-                </DataGridComboBoxColumn>
+                <DataGridTemplateColumn Header="Невыполнение норматива наладки" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding MasterSetupComment}" Style="{StaticResource TableTextBlock}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{x:Static inf:AppSettings.SetupReasons}" 
+                                      SelectedItem="{Binding MasterSetupComment}" Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Невыполнение норматива наладки" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding MasterSetupComment}" Style="{StaticResource TableTextBlock}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{x:Static inf:AppSettings.ProductionReasons}" 
+                      SelectedItem="{Binding MasterMachiningComment}" Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+               
                 <DataGridTextColumn Header="Отмеченные простои" Binding="{Binding SpecifiedDowntimesComment}" Width="120">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
@@ -344,7 +432,7 @@
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
                     </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="212">
+                <DataGridTextColumn Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="140">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>

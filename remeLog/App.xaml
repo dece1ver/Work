@@ -12,6 +12,8 @@
             <cnv:StatusVisibilityConverter x:Key="StatusVisibilityConverter"/>
             <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
             <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
+            <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
+            <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

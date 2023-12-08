@@ -149,23 +149,33 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="136"/>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="190"/>
+                                                <ColumnDefinition Width="60"/>
+
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition/>
                                                 <RowDefinition/>
                                             </Grid.RowDefinitions>
-                                            <StackPanel>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="Наладка сред: " VerticalAlignment="Center" Margin="0 0"/>
-                                                    <TextBlock Text="{Binding SetupRatio2}" VerticalAlignment="Center" Margin="0 0"/>
-                                                </StackPanel>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="Наладка общ: " VerticalAlignment="Center" Margin="0 0"/>
-                                                    <TextBlock Text="{Binding SetupRatio3}" VerticalAlignment="Center" Margin="0 0"/>
-                                                </StackPanel>
-                                            </StackPanel>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupRatio2}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SetupRatio3}"/>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="3" Text="100%"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="3" Text="100%"/>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="5" Text="8%"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="5" Text="3%"/>
 
                                         </Grid>
                                         <Button Margin="0 -6 0 0" Width="120" HorizontalAlignment="Right"

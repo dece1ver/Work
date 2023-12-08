@@ -94,6 +94,23 @@ namespace remeLog.ViewModels
         public CombinedParts PartsInfo { get; set; }
 
 
+        private bool _InProgress;
+        /// <summary> Загрузка информации </summary>
+        public bool InProgress
+        {
+            get => _InProgress;
+            set => Set(ref _InProgress, value);
+        }
+
+        private string _Status = string.Empty;
+        /// <summary> Статус </summary>
+        public string Status
+        {
+            get => _Status;
+            set => Set(ref _Status, value);
+        }
+
+
         #region ClearContent
         public ICommand ClearContentCommand { get; }
         private void OnClearContentCommandExecuted(object p)
@@ -111,6 +128,7 @@ namespace remeLog.ViewModels
             await Task.Run(() => {
                 try
                 {
+                    InProgress = true;
                     Parts = Database.ReadPartsWithConditions($"Machine = '{PartsInfo.Machine}' AND ShiftDate BETWEEN '{PartsInfo.FromDate}' AND '{PartsInfo.ToDate}' " +
                     $"{(ShiftFilter == ShiftFilterItems[0] ? "" : $"AND Shift = '{ShiftFilter}'")}" +
                     $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
@@ -124,7 +142,7 @@ namespace remeLog.ViewModels
                 }
                 finally
                 {
-
+                    InProgress = false;
                 }
             });
         }
