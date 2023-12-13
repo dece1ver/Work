@@ -21,12 +21,20 @@ namespace remeLog.ViewModels
         public PartsInfoWindowViewModel(CombinedParts parts)
         {
             ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
+            IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
+            DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
+            SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
+            SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
 
             PartsInfo = parts;
             ShiftFilterItems = new string[3] { "Все смены", "День", "Ночь" };
             _ShiftFilter = ShiftFilterItems[0];
             _OperatorFilter = "";
             _Parts = PartsInfo.Parts;
+            _OrderFilter = "";
+            _PartNameFilter = "";
+            _FromDate = PartsInfo.FromDate;
+            _ToDate = PartsInfo.ToDate;
         }
 
 
@@ -37,9 +45,40 @@ namespace remeLog.ViewModels
         public ObservableCollection<Part> Parts
         {
             get => _Parts;
-            set => Set(ref _Parts, value);
+            set 
+            {
+                Set(ref _Parts, value);
+                OnPropertyChanged(nameof(SetupTimeRatio));
+                OnPropertyChanged(nameof(AverageSetupRatio));
+                OnPropertyChanged(nameof(ProductionTimeRatio));
+                OnPropertyChanged(nameof(AverageProductionRatio));
+            }
         }
 
+
+        private DateTime _FromDate;
+        /// <summary> Описание </summary>
+        public DateTime FromDate
+        {
+            get => _FromDate;
+            set 
+            {
+                Set(ref _FromDate, value);
+                _ = UpdateParts();
+            }
+        }
+
+        private DateTime _ToDate;
+        /// <summary> Описание </summary>
+        public DateTime ToDate
+        {
+            get => _ToDate;
+            set
+            {
+                Set(ref _ToDate, value);
+                _ = UpdateParts();
+            }
+        }
 
         private string _ShiftFilter;
         /// <summary> Фильтр смены </summary>
@@ -49,7 +88,7 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _ShiftFilter, value);
-                UpdateParts();
+                _ = UpdateParts();
             }
         }
 
@@ -62,7 +101,7 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _OperatorFilter, value);
-                UpdateParts();
+                _ = UpdateParts();
             }
         }
 
@@ -74,7 +113,7 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _PartNameFilter, value);
-                UpdateParts();
+                _ = UpdateParts();
             }
         }
 
@@ -86,7 +125,7 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _OrderFilter, value);
-                UpdateParts();
+                _ = UpdateParts();
             }
         }
 
@@ -110,6 +149,84 @@ namespace remeLog.ViewModels
             set => Set(ref _Status, value);
         }
 
+        public double AverageSetupRatio
+        {
+            get
+            {
+                var validSetupRatios = Parts.Where(p => p.SetupRatio > 0 && !double.IsNaN(p.SetupRatio) && !double.IsPositiveInfinity(p.SetupRatio)).Select(p => p.SetupRatio);
+                return validSetupRatios.Any() ? validSetupRatios.Average() : 0.0;
+            }
+        }
+
+        public double AverageProductionRatio
+        {
+            get
+            {
+                var validProductionRatios = Parts.Where(p => p.ProductionRatio > 0 && !double.IsNaN(p.ProductionRatio) && !double.IsPositiveInfinity(p.ProductionRatio)).Select(p => p.ProductionRatio);
+                return validProductionRatios.Any() ? validProductionRatios.Average() : 0.0;
+            }
+        }
+
+        public double SetupTimeRatio
+        {
+            get
+            {
+                var validSetupTimes = Parts.Where(p => p.SetupTimePlan > 0 && p.SetupTimeFact > 0 && !double.IsPositiveInfinity(p.SetupTimeFact)).Select(p => p.SetupTimePlan / p.SetupTimeFact);
+                return validSetupTimes.Any() ? validSetupTimes.Sum() : 0.0;
+            }
+        }
+
+        public double ProductionTimeRatio
+        {
+            get
+            {
+                var validRatios = Parts.Where(p => p.FinishedCount > 0 && p.SingleProductionTimePlan > 0 && p.ProductionTimeFact > 0 && !double.IsPositiveInfinity(p.ProductionTimeFact)).Select(p => (p.FinishedCount * p.SingleProductionTimePlan) / p.ProductionTimeFact);
+                return validRatios.Any() ? validRatios.Sum() : 0.0;
+            }
+        }
+
+        #region IncreaseDateCommand
+        public ICommand IncreaseDateCommand { get; }
+        private void OnIncreaseDateCommandExecuted(object p)
+        {
+
+            FromDate = FromDate.AddDays(1);
+            ToDate = ToDate.AddDays(1);
+        }
+        private bool CanIncreaseDateCommandExecute(object p) => true;
+        #endregion
+
+        #region DecreaseDateCommand
+        public ICommand DecreaseDateCommand { get; }
+        private void OnDecreaseDateCommandExecuted(object p)
+        {
+
+            FromDate = FromDate.AddDays(-1);
+            ToDate = ToDate.AddDays(-1);
+        }
+        private bool CanDecreaseDateCommandExecute(object p) => true;
+        #endregion
+
+        #region SetYesterdayDateCommand
+        public ICommand SetYesterdayDateCommand { get; }
+        private void OnSetYesterdayDateCommandExecuted(object p)
+        {
+
+            FromDate = DateTime.Today.AddDays(-1);
+            ToDate = FromDate;
+        }
+        private bool CanSetYesterdayDateCommandExecute(object p) => true;
+        #endregion
+
+        #region SetWeekDateCommand
+        public ICommand SetWeekDateCommand { get; }
+        private void OnSetWeekDateCommandExecuted(object p)
+        {
+
+            FromDate = FromDate.AddDays(-7);
+        }
+        private bool CanSetWeekDateCommandExecute(object p) => true;
+        #endregion
 
         #region ClearContent
         public ICommand ClearContentCommand { get; }
@@ -129,7 +246,7 @@ namespace remeLog.ViewModels
                 try
                 {
                     InProgress = true;
-                    Parts = Database.ReadPartsWithConditions($"Machine = '{PartsInfo.Machine}' AND ShiftDate BETWEEN '{PartsInfo.FromDate}' AND '{PartsInfo.ToDate}' " +
+                    Parts = Database.ReadPartsWithConditions($"Machine = '{PartsInfo.Machine}' AND ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
                     $"{(ShiftFilter == ShiftFilterItems[0] ? "" : $"AND Shift = '{ShiftFilter}'")}" +
                     $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
                     $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +

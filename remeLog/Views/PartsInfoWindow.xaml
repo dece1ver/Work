@@ -67,18 +67,18 @@
                 </Grid.RowDefinitions>
                 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}" d:Text="100%"/>
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="100%"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="100%"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}" d:Text="100%"/>
                 
                 <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}" d:Text="100%"/>
                 <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
-                <TextBlock Grid.Row="0" Grid.Column="3" Text="100%"/>
-                <TextBlock Grid.Row="1" Grid.Column="3" Text="100%"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}" d:Text="100%"/>
 
                 <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
-                <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
                 <TextBlock Grid.Row="0" Grid.Column="5" Text="8%"/>
+                <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
                 <TextBlock Grid.Row="1" Grid.Column="5" Text="3%"/>
 
             </Grid>
@@ -90,6 +90,11 @@
                     <ColumnDefinition Width="200"/>
                     <ColumnDefinition Width="75"/>
                     <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="22"/>
@@ -105,6 +110,27 @@
                 <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}"/>
                 <TextBlock Grid.Row="1" Grid.Column="2" Text="Этап" Margin="25 0 0 0"/>
                 <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding OrderFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}"/>
+
+                <TextBlock  Grid.Row="0" Grid.Column="5" Text="От" FontSize="16" VerticalAlignment="Center" TextAlignment="Right" Width="30"/>
+                <DatePicker Grid.Row="0" Grid.Column="6" SelectedDate="{Binding FromDate}"/>
+
+                <TextBlock  Grid.Row="1" Grid.Column="5" Text="До" FontSize="16" VerticalAlignment="Center" TextAlignment="Right" Width="30"/>
+                <DatePicker Grid.Row="1" Grid.Column="6" SelectedDate="{Binding ToDate}"/>
+
+                <Button Grid.Row="0" Grid.Column="7" Content="+ сутки" 
+                        Margin="0"
+                        Command="{Binding IncreaseDateCommand}"/>
+                <Button Grid.Row="1" Grid.Column="7" Content="- сутки" 
+                        Margin="0"
+                        Command="{Binding DecreaseDateCommand}"/>
+                <Button Grid.Row="0" Grid.Column="8" Content="Вчера" 
+                        Margin="0"
+                        Command="{Binding SetYesterdayDateCommand}"/>
+                <Button Grid.Row="1" Grid.Column="8" Content="Неделя" 
+                        Margin="0"
+                        Command="{Binding SetWeekDateCommand}"/>
+
+                <!--<Button Grid.Column="6" Grid.Row="0" Grid.RowSpan="2" Content="{StaticResource SyncIcon}"/>-->
             </Grid>
         </GroupBox>
         <DataGrid ItemsSource="{Binding Parts}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="Gray"
@@ -409,10 +435,10 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Невыполнение норматива наладки" Width="120">
+                <DataGridTemplateColumn Header="Невыполнение норматива изготовления" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding MasterSetupComment}" Style="{StaticResource TableTextBlock}"/>
+                            <TextBlock Text="{Binding MasterMachiningComment}" Style="{StaticResource TableTextBlock}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                     <DataGridTemplateColumn.CellEditingTemplate>

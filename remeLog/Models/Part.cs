@@ -159,6 +159,14 @@ namespace remeLog.Models
             set => Set(ref _FinishedCount, value);
         }
 
+        /// <summary> Изготовлено по факту с учетом наладок </summary>
+        public int FinishedCountFact
+        {
+            get
+            {
+                return StartSetupTime != StartMachiningTime && FinishedCount != 0 ? FinishedCount - 1 : FinishedCount;
+            }
+        }
 
         private int _TotalCount;
         /// <summary> Всего партия </summary>
@@ -401,7 +409,7 @@ namespace remeLog.Models
 
         public double SetupRatio => SetupTimePlan / SetupTimeFact;
         public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : $"{SetupRatio:0%}";
-        public double ProductionRatio => FinishedCount * SingleProductionTimePlan / ProductionTimeFact;
+        public double ProductionRatio => FinishedCountFact * SingleProductionTimePlan / ProductionTimeFact;
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity ? "б/и" : $"{ProductionRatio:0%}";
     }
 }

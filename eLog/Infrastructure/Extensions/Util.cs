@@ -128,6 +128,11 @@ internal static class Util
                       && part.Order == prevPart.Order;
         if (partial)
         {
+            //if (part.DownTimes.Count > 1)
+            //{
+            //    /// TODO добавить логику для частичных простоев 
+            //}
+
             part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining))
             {
                 new DownTime(part, DownTime.Types.PartialSetup)
@@ -308,9 +313,8 @@ internal static class Util
         }
         catch (ArgumentException argEx)
         {
-            Debug.Print("Нет таблицы");
             if (AppSettings.Instance.DebugMode) { WriteLog(argEx); }
-            MessageBox.Show("Неверно указан путь к таблице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"{argEx.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         catch (Exception e)
         {
@@ -542,7 +546,7 @@ internal static class Util
         : string.Empty;
 
     public static string Report(this IEnumerable<CombinedDownTime> downTimes) => downTimes.Any()
-        ? downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Name}: {Math.Round(downTime.Time.TotalMinutes, 1)} м\n")
+        ? downTimes.Aggregate("Отмеченные простои:\n", (current, downTime) => current + $"{downTime.Description}")
         : string.Empty;
 
     public static double TotalMinutes(this IEnumerable<DownTime> downTimes) =>
@@ -553,19 +557,26 @@ internal static class Util
 
     public static IEnumerable<CombinedDownTime> Combine(this ICollection<DownTime> downTimes)
     {
-        return downTimes
-            .GroupBy(s => new { s.Name, s.Type, s.Relation })
-            .Select(g => new CombinedDownTime()
+        if (downTimes == null || downTimes.Count < 1)
+        {
+            return new List<CombinedDownTime>();
+        }
+
+        var groupedDownTimes = downTimes.GroupBy(x => new { x.Type, x.Relation });
+
+        return groupedDownTimes.Select(group =>
+        {
+            var combinedDownTime = new CombinedDownTime(group.ToList())
             {
-                Name = (g.Key.Relation is DownTime.Relations.Setup ? "(н) " : "(и) ") + g.Key.Name,
-                Type = g.Key.Type,
-                Relation = g.Key.Relation,
-                Time = new TimeSpan(g.Sum(d => d.Time.Ticks))
-            }).OrderBy(x => x.Relation);
+                Type = group.Key.Type,
+                Relation = group.Key.Relation
+            };
+            return combinedDownTime;
+        });
     }
 
 
-    
+
 
     public static DateTime GetStartShiftTime()
     {
