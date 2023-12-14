@@ -271,11 +271,14 @@ public class Part : INotifyPropertyChanged
                 case State.InProgress when FullSetupTimeFact.Ticks < 0 && DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup):
                     result += " (Неполная наладка)";
                     break;
+                case State.Finished when DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup):
+                    result += " (Неполная наладка)";
+                    break;
                 case State.Finished:
                     result += productivity;
                     break;
             }
-            return $"{result}{(breaks.Ticks > 0 && SetupTimeFact.Ticks > 0 && IsFinished is State.InProgress ? breaksInfo : string.Empty)}";
+            return $"{result}{(breaks.Ticks > 0 && SetupTimeFact.Ticks > 0 && IsFinished is State.InProgress && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup) ? breaksInfo : string.Empty)}";
         }
     }
 
@@ -469,6 +472,7 @@ public class Part : INotifyPropertyChanged
         {
             Set(ref _IsSynced, value);
             OnPropertyChanged(nameof(Title));
+            OnPropertyChanged(nameof(EndSetupInfo));
         }
     }
 
@@ -555,6 +559,7 @@ public class Part : INotifyPropertyChanged
         OnPropertyChanged(nameof(LastDownTime));
         OnPropertyChanged(nameof(LastDownTimeName));
         OnPropertyChanged(nameof(DownTimesIsClosed));
+        OnPropertyChanged(nameof(EndSetupInfo));
         Debug.WriteLine($"Сработал {MethodBase.GetCurrentMethod()?.Name}");
     }
 
@@ -584,6 +589,7 @@ public class Part : INotifyPropertyChanged
         OnPropertyChanged(nameof(LastDownTime));
         OnPropertyChanged(nameof(LastDownTimeName));
         OnPropertyChanged(nameof(DownTimesIsClosed));
+        OnPropertyChanged(nameof(EndSetupInfo));
         //AppSettings.Save();
     }
 

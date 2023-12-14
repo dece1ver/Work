@@ -14,10 +14,10 @@ public class CombinedDownTime
         if (downtimes.All(x => x.Relation != downtimes.First().Relation)) throw new ArgumentException("Простои должны относиться к одному этапу изготовления.");
         Name = downtimes.First().Name;
         Relation = downtimes.First().Relation;
-        Description = $"[{(Relation is DownTime.Relations.Setup ? "н" : "и")}] {Name} - {downtimes.Sum(x => x.Time.TotalMinutes)} мин\n";
+        Description = $"[{(Relation is DownTime.Relations.Setup ? "н" : "и")}] {Name}: {downtimes.Sum(x => x.Time.TotalMinutes)} мин\n";
         foreach (var downtime in downtimes)
         {
-            Description += $" └──{downtime.StartTime:t} ─ {downtime.EndTime:t}\n";
+            if (downtime.Type is not DownTime.Types.PartialSetup) Description += $" └── {downtime.StartTime:t} ─ {downtime.EndTime:t}\n";
             Time += downtime.Time;
         }
     }

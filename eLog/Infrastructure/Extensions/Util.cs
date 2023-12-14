@@ -7,6 +7,7 @@ using libeLog.Infrastructure;
 using libeLog.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
@@ -116,7 +117,7 @@ internal static class Util
     /// </summary>
     /// <param name="part">Текущая деталь</param>
     /// <returns>Является ли наладка данной детали "доналадкой" после частичной наладки.</returns>
-    public static bool SetPartialState(ref Part part)
+    public static bool SetPartialState(ref Part part, bool update = true)
     {
         var index = AppSettings.Instance.Parts.IndexOf(part);
         var prevPart = index != -1 && AppSettings.Instance.Parts.Count > index + 1 ? AppSettings.Instance.Parts[index + 1] : null;
@@ -128,20 +129,39 @@ internal static class Util
                       && part.Order == prevPart.Order;
         if (partial)
         {
-            //if (part.DownTimes.Count > 1)
-            //{
-            //    /// TODO добавить логику для частичных простоев 
-            //}
-
-            part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining))
+            if (!update) return partial;
+            if (part.DownTimes.Any(x => x.Type is not DownTime.Types.PartialSetup))
             {
-                new DownTime(part, DownTime.Types.PartialSetup)
+                part.DownTimes = new DeepObservableCollection<DownTime>(
+                    part.DownTimes.Where(downtime => downtime.Type != DownTime.Types.PartialSetup));
+                var sortedDowntimes = part.DownTimes.Where(d => d.Relation is DownTime.Relations.Setup).OrderBy(d => d.StartTime).ToList();
+                DateTime currentStartTime = part.StartSetupTime;
+                foreach (var downtime in sortedDowntimes)
                 {
-
-                    StartTimeText = part.StartSetupTime.ToString(Constants.DateTimeFormat),
-                    EndTimeText = part.StartMachiningTime.ToString(Constants.DateTimeFormat)
+                    if (currentStartTime < downtime.StartTime)
+                    {
+                        part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup, currentStartTime, downtime.StartTime));
+                    }
+                    currentStartTime = downtime.EndTime;
                 }
-            };
+                if (currentStartTime < part.StartMachiningTime)
+                {
+                    part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup, currentStartTime, part.StartMachiningTime));
+                }
+            } else if (part.DownTimes.Count == 0)
+            {
+                part.DownTimes.Add(new DownTime(part, DownTime.Types.PartialSetup, part.StartSetupTime, part.StartMachiningTime));
+            }
+
+            //part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(x => x.Relation == DownTime.Relations.Machining))
+            //{
+            //    new DownTime(part, DownTime.Types.PartialSetup)
+            //    {
+
+            //        StartTimeText = part.StartSetupTime.ToString(Constants.DateTimeFormat),
+            //        EndTimeText = part.StartMachiningTime.ToString(Constants.DateTimeFormat)
+            //    }
+            //};
         }
         return partial;
     }
@@ -168,7 +188,7 @@ internal static class Util
                 var ws = wb.Worksheet(1);
                 ws.LastRowUsed().InsertRowsBelow(1);
                 IXLRow? prevRow = null;
-                var partial = SetPartialState(ref part);
+                var partial = SetPartialState(ref part, false);
                 var combinedDownTimes = part.DownTimes.Combine();
                 foreach (var xlRow in ws.Rows())
                 {
@@ -345,8 +365,9 @@ internal static class Util
         var result = WriteResult.NotFinded;
         try
         {
-            var partial = SetPartialState(ref part);
-
+            //Thread.Sleep(5000);
+            var partial = SetPartialState(ref part, false);
+            //Thread.Sleep(5000);
             if (doBackup)
             {
                 if (!BackupXl())
@@ -354,7 +375,7 @@ internal static class Util
                     throw new IOException("Ошибка при создании бэкапа таблицы.");
                 }
             }
-
+            
             using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
             {
                 var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });

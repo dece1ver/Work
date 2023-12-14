@@ -82,7 +82,7 @@
                 </StatusBarItem>
             </StatusBar>
             <DockPanel LastChildFill="True">
-                <ListView ItemsSource="{Binding Parts}" IsManipulationEnabled="True" FontSize="16" DockPanel.Dock="Top" Focusable="False" 
+                <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" IsManipulationEnabled="True" FontSize="16" DockPanel.Dock="Top" Focusable="False" 
                           BorderBrush="Transparent" Margin="-4 0" ItemContainerStyle="{StaticResource ListViewItemsStyle}"
                           ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListView.Resources>
@@ -177,7 +177,7 @@
                                                    Text="{Binding StartSetupTime, StringFormat={}{0:dd.MM.yyy HH:mm}}" />
                                             <TextBlock Grid.Column="0" Grid.Row="4" Margin="5 -1" Text="Завершение наладки:" />
                                             <TextBlock Grid.Column="1" Grid.Row="4" Margin="5 -1" 
-                                                   Text="{Binding EndSetupInfo}" />
+                                                   Text="{Binding EndSetupInfo, UpdateSourceTrigger=PropertyChanged}" />
                                             <TextBlock Grid.Column="0" Grid.Row="5" Margin="5 -1" Text="Завершение изготовления:" />
                                             <TextBlock Grid.Column="1" Grid.Row="5" Margin="5 -1" 
                                                    Text="{Binding EndDetailInfo}" />

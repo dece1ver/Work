@@ -123,7 +123,10 @@ internal class WindowsUserDialogService : IUserDialogService
     public static bool EditDetail(ref Part part, bool newDetail = false)
     {
         if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog(part, $"Редактирование детали."); }
+        
         var tempPart = new Part(part);
+        tempPart.DownTimes = new DeepObservableCollection<DownTime>(
+                    tempPart.DownTimes.Where(downtime => downtime.Type != DownTime.Types.PartialSetup));
         var dlg = new EditDetailWindow(tempPart, newDetail)
         {
             Owner = Application.Current.MainWindow,
@@ -134,13 +137,12 @@ internal class WindowsUserDialogService : IUserDialogService
             return false;
         }
 
-        if (dlg.Part.FinishedCount > 0)
-        {
-            dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
-        }
+        //if (dlg.Part.FinishedCount > 0)
+        //{
+        //    dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
+        //}
         part = dlg.Part;
-        //if (part.StartMachiningTime != DateTime.MinValue && part.SetupTimeFact.TotalMinutes < 0) part.StartMachiningTime = DateTime.MinValue;
-        //if (part.EndMachiningTime != DateTime.MinValue && part.FullProductionTimeFact.TotalMinutes < 0) part.EndMachiningTime = DateTime.MinValue;
+
         if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
         return true;
     }

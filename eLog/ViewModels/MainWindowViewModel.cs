@@ -408,7 +408,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             {
                 case EndSetupResult.Success:
                     part.StartMachiningTime = DateTime.Now.Rounded();
-                    var partialRes = Util.SetPartialState(ref part);
+                    var partialRes = SetPartialState(ref part);
                     Debug.Print($"Set partial for [{part.Name}]: {partialRes}");
                     Parts.RemoveAt(index);
                     Parts.Insert(index, part);
@@ -470,61 +470,16 @@ internal class MainWindowViewModel : ViewModel, IOverlay
 
             if (WindowsUserDialogService.EditDetail(ref part))
             {
-                part.IsSynced = false;
                 OnPropertyChanged(nameof(part.Title));
-
-                {
-                    //ProgressBarVisibility = Visibility.Visible;
-                    //Status = "Запись в процессе";
-                    //await Task.Run(() =>
-                    //{
-                    //    switch (part)
-                    //    {
-                    //        case { Id: -1, IsFinished: not Part.State.InProgress }:
-                    //            part.Id = part.WriteToXl();
-                    //            if (part.Id > 0)
-                    //            {
-                    //                part.IsSynced = true;
-                    //                Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                    //            }
-                    //            break;
-                    //        case { Id: > 0, IsFinished: not Part.State.InProgress }:
-                    //        {
-                    //            switch (part.RewriteToXl())
-                    //            {
-                    //                case Util.WriteResult.Ok:
-                    //                    part.IsSynced = true;
-                    //                    Status = $"Информация об изготовлении id{part.Id} обновлена.";
-                    //                    break;
-                    //                case Util.WriteResult.IOError:
-                    //                    Status = $"Таблица занята, запись будет произведена позже.";
-                    //                    break;
-                    //                case Util.WriteResult.NotFinded:
-                    //                    part.Id = part.WriteToXl();
-                    //                    if (part.Id > 0)
-                    //                    {
-                    //                        part.IsSynced = true;
-                    //                        Status = $"Информация об изготовлении id{part.Id} зафиксирована.";
-                    //                    }
-                    //                    break;
-                    //                case Util.WriteResult.Error:
-                    //                    break;
-                    //            }
-                    //            break;
-                    //        }
-                    //    }
-                    //});
-                    //ProgressBarVisibility = Visibility.Collapsed;
-                } // попытка записи сразу
-
                 Status = string.Empty;
                 Parts[index] = part;
                 //Parts.RemoveAt(index);
                 //Parts.Insert(index, part);
-                var resPartial = Util.SetPartialState(ref part);
+                var resPartial = SetPartialState(ref part);
                 Debug.Print($"Set partial for [{part.Name}]: {resPartial}");
                 if (part.StartMachiningTime == DateTime.MinValue) part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
                 OnPropertyChanged(nameof(Parts));
+                part.IsSynced = false;
                 AppSettings.Instance.Parts = Parts;
                 AppSettings.Save();
             }
@@ -552,7 +507,11 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                 Status = string.Empty;
                 Parts.RemoveAt(index);
                 Parts.Insert(index, part);
+                var resPartial = SetPartialState(ref part);
+                Debug.Print($"Set partial for [{part.Name}]: {resPartial}");
+                if (part.StartMachiningTime == DateTime.MinValue) part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
                 OnPropertyChanged(nameof(Parts));
+                part.IsSynced = false;
                 AppSettings.Instance.Parts = Parts;
                 AppSettings.Save();
             };
@@ -686,9 +645,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         Status = $"Синхронизация: [{partName}]";
         ProgressBarVisibility = Visibility.Visible;
         _needSave = true;
-        //Thread.Sleep(1000);
         var index = i;
-
         if (part.Id != -1)
         {
             var rewriteResult = part.RewriteToXl();
