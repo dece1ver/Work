@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -52,6 +53,7 @@ namespace remeLog.ViewModels
                 OnPropertyChanged(nameof(AverageSetupRatio));
                 OnPropertyChanged(nameof(ProductionTimeRatio));
                 OnPropertyChanged(nameof(AverageProductionRatio));
+                OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
             }
         }
 
@@ -153,6 +155,17 @@ namespace remeLog.ViewModels
         {
             get
             {
+                //double sum = 0;
+                //int cnt = 0;
+                //foreach (var part in Parts)
+                //{
+                //    if (part.SetupTimeFact > 0 && part.SetupTimePlan > 0)
+                //    {
+                //        sum += part.SetupTimePlan / part.SetupTimeFact;
+                //        cnt++;
+                //    }
+                //}
+                //return cnt == 0 ? 0 : sum / cnt;
                 var validSetupRatios = Parts.Where(p => p.SetupRatio > 0 && !double.IsNaN(p.SetupRatio) && !double.IsPositiveInfinity(p.SetupRatio)).Select(p => p.SetupRatio);
                 return validSetupRatios.Any() ? validSetupRatios.Average() : 0.0;
             }
@@ -171,6 +184,14 @@ namespace remeLog.ViewModels
         {
             get
             {
+                double planSum = 0;
+                double factSum = 0;
+                foreach (var part in Parts)
+                {
+                    factSum += part.SetupTimeFact + part.PartialSetupTime;
+                    planSum += part.SetupTimePlanForReport;
+                }
+                return factSum == 0 ? 0 : planSum / factSum;
                 var validSetupTimes = Parts.Where(p => p.SetupTimePlan > 0 && p.SetupTimeFact > 0 && !double.IsPositiveInfinity(p.SetupTimeFact)).Select(p => p.SetupTimePlan / p.SetupTimeFact);
                 return validSetupTimes.Any() ? validSetupTimes.Sum() : 0.0;
             }
@@ -180,10 +201,30 @@ namespace remeLog.ViewModels
         {
             get
             {
+                double planSum = 0;
+                double factSum = 0;
+                foreach (var part in Parts)
+                {
+                    factSum += part.ProductionTimeFact;
+                    planSum += part.FinishedCountFact * part.SingleProductionTimePlan;
+                }
+                return factSum == 0 ? 0 : planSum / factSum;
                 var validRatios = Parts.Where(p => p.FinishedCount > 0 && p.SingleProductionTimePlan > 0 && p.ProductionTimeFact > 0 && !double.IsPositiveInfinity(p.ProductionTimeFact)).Select(p => (p.FinishedCount * p.SingleProductionTimePlan) / p.ProductionTimeFact);
                 return validRatios.Any() ? validRatios.Sum() : 0.0;
             }
         }
+
+        public double SpecifiedDowntimesRatio { get 
+            {
+                double sum = 0;
+                foreach (var part in Parts)
+                {
+                    sum += part.SetupDowntimes + part.MachiningDowntimes;
+                }
+                var totalWorkMinutes = (ToDate.AddDays(1) - ToDate).TotalDays * 1290;
+                return sum / totalWorkMinutes;
+
+            } }
 
         #region IncreaseDateCommand
         public ICommand IncreaseDateCommand { get; }

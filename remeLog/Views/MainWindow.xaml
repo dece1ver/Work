@@ -164,13 +164,13 @@
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
                                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupRatio2}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SetupRatio3}"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}"/>
 
                                             <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
                                             <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="3" Text="100%"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="3" Text="100%"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}"/>
 
                                             <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
                                             <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>

@@ -32,6 +32,7 @@ namespace eLog.Infrastructure.Extensions
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
                     var partIndex = AppSettings.Instance.Parts.IndexOf(part);
                     var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
+                    var partial = Util.SetPartialState(ref part, false);
                     string insertQuery = "INSERT INTO Parts (" +
                         "Guid, " +
                         "Machine, " +
@@ -112,7 +113,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@TotalCount", part.TotalCount);
                         cmd.Parameters.AddWithValue("@StartSetupTime", part.StartSetupTime);
                         cmd.Parameters.AddWithValue("@StartMachiningTime", part.StartMachiningTime);
-                        cmd.Parameters.AddWithValue("@SetupTimeFact", part.SetupTimeFact.TotalMinutes);
+                        cmd.Parameters.AddWithValue("@SetupTimeFact", partial ? 0 : part.SetupTimeFact.TotalMinutes);
                         cmd.Parameters.AddWithValue("@EndMachiningTime", part.EndMachiningTime);
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
                         var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
@@ -181,6 +182,7 @@ namespace eLog.Infrastructure.Extensions
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Обновление информации об изготовлении в БД.");
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
             var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
+            var partial = Util.SetPartialState(ref part, false);
             try
             {
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
@@ -235,7 +237,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@TotalCount", part.TotalCount);
                         cmd.Parameters.AddWithValue("@StartSetupTime", part.StartSetupTime);
                         cmd.Parameters.AddWithValue("@StartMachiningTime", part.StartMachiningTime);
-                        cmd.Parameters.AddWithValue("@SetupTimeFact", part.SetupTimeFact.TotalMinutes);
+                        cmd.Parameters.AddWithValue("@SetupTimeFact", partial ? 0 : part.SetupTimeFact.TotalMinutes);
                         cmd.Parameters.AddWithValue("@EndMachiningTime", part.EndMachiningTime);
                         cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
                         var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;

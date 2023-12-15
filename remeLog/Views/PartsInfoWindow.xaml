@@ -77,7 +77,7 @@
                 <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}" d:Text="100%"/>
 
                 <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
-                <TextBlock Grid.Row="0" Grid.Column="5" Text="8%"/>
+                <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}" d:Text="8%"/>
                 <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
                 <TextBlock Grid.Row="1" Grid.Column="5" Text="3%"/>
 
