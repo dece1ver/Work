@@ -45,41 +45,42 @@ namespace remeLog.Models
             string masterComment = "",
             string engineerComment = "")
         {
-            Guid = guid;
-            Machine = machine;
-            ShiftDate = shiftDate;
-            Shift = shift;
-            Operator = @operator;
-            PartName = partName;
-            Order = order;
-            Setup = setup;
-            FinishedCount = finishedCount;
-            TotalCount = totalCount;
-            StartSetupTime = startSetupTime;
-            StartMachiningTime = startMachiningTime;
-            SetupTimeFact = setupTimeFact;
-            EndMachiningTime = endMachiningTime;
-            SetupTimePlan = setupTimePlan;
-            SetupTimePlanForReport = setupTimePlanForReport;
-            SingleProductionTimePlan = singleProductionTimePlan;
-            ProductionTimeFact = productionTimeFact;
-            MachiningTime = machiningTime;
-            SetupDowntimes = setupDowntimes;
-            MachiningDowntimes = machiningDowntimes;
-            PartialSetupTime = partialSetupTime;
-            MaintenanceTime = maintenanceTime;
-            ToolSearchingTime = toolSearchingTime;
-            MentoringTime = mentoringTime;
-            ContactingDepartmentsTime = contactingDepartmentsTime;
-            FixtureMakingTime = fixtureMakingTime;
-            HardwareFailureTime = hardwareFailureTime;
-            OperatorComment = operatorComment;
-            MasterSetupComment = masterSetupComment;
-            MasterMachiningComment = masterMachiningComment;
-            SpecifiedDowntimesComment = specifiedDowntimesComment;
-            UnspecifiedDowntimesComment = unspecifiedDowntimesComment;
-            MasterComment = masterComment;
-            EngineerComment = engineerComment;
+            _Guid = guid;
+            _Machine = machine;
+            _ShiftDate = shiftDate;
+            _Shift = shift;
+            _Operator = @operator;
+            _PartName = partName;
+            _Order = order;
+            _Setup = setup;
+            _FinishedCount = finishedCount;
+            _TotalCount = totalCount;
+            _StartSetupTime = startSetupTime;
+            _StartMachiningTime = startMachiningTime;
+            _SetupTimeFact = setupTimeFact;
+            _EndMachiningTime = endMachiningTime;
+            _SetupTimePlan = setupTimePlan;
+            _SetupTimePlanForReport = setupTimePlanForReport;
+            _SingleProductionTimePlan = singleProductionTimePlan;
+            _ProductionTimeFact = productionTimeFact;
+            _MachiningTime = machiningTime;
+            _SetupDowntimes = setupDowntimes;
+            _MachiningDowntimes = machiningDowntimes;
+            _PartialSetupTime = partialSetupTime;
+            _MaintenanceTime = maintenanceTime;
+            _ToolSearchingTime = toolSearchingTime;
+            _MentoringTime = mentoringTime;
+            _ContactingDepartmentsTime = contactingDepartmentsTime;
+            _FixtureMakingTime = fixtureMakingTime;
+            _HardwareFailureTime = hardwareFailureTime;
+            _OperatorComment = operatorComment;
+            _MasterSetupComment = masterSetupComment;
+            _MasterMachiningComment = masterMachiningComment;
+            _SpecifiedDowntimesComment = specifiedDowntimesComment;
+            _UnspecifiedDowntimesComment = unspecifiedDowntimesComment;
+            _MasterComment = masterComment;
+            _EngineerComment = engineerComment;
+            NeedUpdate = false;
         }
 
         private Guid _Guid;
@@ -87,7 +88,12 @@ namespace remeLog.Models
         public Guid Guid
         {
             get => _Guid;
-            set => Set(ref _Guid, value);
+            set {
+                if (Set(ref _Guid, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
         private string _Machine;
@@ -95,7 +101,13 @@ namespace remeLog.Models
         public string Machine
         {
             get => _Machine;
-            set => Set(ref _Machine, value);
+            set
+            {
+                if (Set(ref _Machine, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
         private DateTime _ShiftDate;
@@ -103,7 +115,13 @@ namespace remeLog.Models
         public DateTime ShiftDate
         {
             get => _ShiftDate;
-            set => Set(ref _ShiftDate, value);
+            set
+            {
+                if (Set(ref _ShiftDate, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -112,7 +130,13 @@ namespace remeLog.Models
         public string Shift
         {
             get => _Shift;
-            set => Set(ref _Shift, value);
+            set
+            {
+                if (Set(ref _Shift, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
         private string _Operator;
@@ -120,7 +144,13 @@ namespace remeLog.Models
         public string Operator
         {
             get => _Operator;
-            set => Set(ref _Operator, value);
+            set
+            {
+                if (Set(ref _Operator, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -129,7 +159,13 @@ namespace remeLog.Models
         public string PartName
         {
             get => _PartName;
-            set => Set(ref _PartName, value);
+            set
+            {
+                if (Set(ref _PartName, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -138,7 +174,12 @@ namespace remeLog.Models
         public string Order
         {
             get => _Order;
-            set => Set(ref _Order, value);
+            set {
+                if (Set(ref _Order, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -147,7 +188,12 @@ namespace remeLog.Models
         public int Setup
         {
             get => _Setup;
-            set => Set(ref _Setup, value);
+            set {
+                if (Set(ref _Setup, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -156,7 +202,12 @@ namespace remeLog.Models
         public int FinishedCount
         {
             get => _FinishedCount;
-            set => Set(ref _FinishedCount, value);
+            set {
+                if (Set(ref _FinishedCount, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
         /// <summary> Изготовлено по факту с учетом наладок </summary>
@@ -173,7 +224,12 @@ namespace remeLog.Models
         public int TotalCount
         {
             get => _TotalCount;
-            set => Set(ref _TotalCount, value);
+            set {
+                if (Set(ref _TotalCount, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -182,7 +238,12 @@ namespace remeLog.Models
         public DateTime StartSetupTime
         {
             get => _StartSetupTime;
-            set => Set(ref _StartSetupTime, value);
+            set {
+                if (Set(ref _StartSetupTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
         private DateTime _StartMachiningTime;
@@ -190,7 +251,12 @@ namespace remeLog.Models
         public DateTime StartMachiningTime
         {
             get => _StartMachiningTime;
-            set => Set(ref _StartMachiningTime, value);
+            set {
+                if (Set(ref _StartMachiningTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
         private double _SetupTimeFact;
@@ -200,9 +266,13 @@ namespace remeLog.Models
             get => _SetupTimeFact;
             set
             {
-                Set(ref _SetupTimeFact, value);
-                OnPropertyChanged(nameof(SetupRatio));
-                OnPropertyChanged(nameof(SetupRatioTitle));
+                if (Set(ref _SetupTimeFact, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                }
+                
             }
         }
 
@@ -211,7 +281,12 @@ namespace remeLog.Models
         public DateTime EndMachiningTime
         {
             get => _EndMachiningTime;
-            set => Set(ref _EndMachiningTime, value);
+            set {
+                if (Set(ref _EndMachiningTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
         private double _SetupTimePlan;
@@ -221,9 +296,12 @@ namespace remeLog.Models
             get => _SetupTimePlan;
             set
             {
-                Set(ref _SetupTimePlan, value);
-                OnPropertyChanged(nameof(SetupRatio));
-                OnPropertyChanged(nameof(SetupRatioTitle));
+                if(Set(ref _SetupTimePlan, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                }
             }
         }
 
@@ -233,7 +311,12 @@ namespace remeLog.Models
         public double SetupTimePlanForReport
         {
             get => _SetupTimePlanForReport;
-            set => Set(ref _SetupTimePlanForReport, value);
+            set {
+                if (Set(ref _SetupTimePlanForReport, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -242,7 +325,12 @@ namespace remeLog.Models
         public double SingleProductionTimePlan
         {
             get => _SingleProductionTimePlan;
-            set => Set(ref _SingleProductionTimePlan, value);
+            set {
+                if (Set(ref _SingleProductionTimePlan, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -251,7 +339,12 @@ namespace remeLog.Models
         public double ProductionTimeFact
         {
             get => _ProductionTimeFact;
-            set => Set(ref _ProductionTimeFact, value);
+            set {
+                if (Set(ref _ProductionTimeFact, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -260,7 +353,12 @@ namespace remeLog.Models
         public TimeSpan MachiningTime
         {
             get => _MachiningTime;
-            set => Set(ref _MachiningTime, value);
+            set {
+                if (Set(ref _MachiningTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -269,7 +367,12 @@ namespace remeLog.Models
         public double SetupDowntimes
         {
             get => _SetupDowntimes;
-            set => Set(ref _SetupDowntimes, value);
+            set {
+                if (Set(ref _SetupDowntimes, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -278,7 +381,12 @@ namespace remeLog.Models
         public double MachiningDowntimes
         {
             get => _MachiningDowntimes;
-            set => Set(ref _MachiningDowntimes, value);
+            set {
+                if (Set(ref _MachiningDowntimes, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -287,7 +395,12 @@ namespace remeLog.Models
         public double PartialSetupTime
         {
             get => _PartialSetupTime;
-            set => Set(ref _PartialSetupTime, value);
+            set {
+                if (Set(ref _PartialSetupTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -296,7 +409,12 @@ namespace remeLog.Models
         public double MaintenanceTime
         {
             get => _MaintenanceTime;
-            set => Set(ref _MaintenanceTime, value);
+            set {
+                if (Set(ref _MaintenanceTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -305,7 +423,12 @@ namespace remeLog.Models
         public double ToolSearchingTime
         {
             get => _ToolSearchingTime;
-            set => Set(ref _ToolSearchingTime, value);
+            set {
+                if (Set(ref _ToolSearchingTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -314,7 +437,12 @@ namespace remeLog.Models
         public double MentoringTime
         {
             get => _MentoringTime;
-            set => Set(ref _MentoringTime, value);
+            set {
+                if (Set(ref _MentoringTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -323,7 +451,12 @@ namespace remeLog.Models
         public double ContactingDepartmentsTime
         {
             get => _ContactingDepartmentsTime;
-            set => Set(ref _ContactingDepartmentsTime, value);
+            set {
+                if (Set(ref _ContactingDepartmentsTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -332,7 +465,12 @@ namespace remeLog.Models
         public double FixtureMakingTime
         {
             get => _FixtureMakingTime;
-            set => Set(ref _FixtureMakingTime, value);
+            set {
+                if (Set(ref _FixtureMakingTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -341,7 +479,12 @@ namespace remeLog.Models
         public double HardwareFailureTime
         {
             get => _HardwareFailureTime;
-            set => Set(ref _HardwareFailureTime, value);
+            set {
+                if (Set(ref _HardwareFailureTime, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -350,7 +493,12 @@ namespace remeLog.Models
         public string OperatorComment
         {
             get => _OperatorComment;
-            set => Set(ref _OperatorComment, value);
+            set {
+                if (Set(ref _OperatorComment, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -359,7 +507,12 @@ namespace remeLog.Models
         public string MasterSetupComment
         {
             get => _MasterSetupComment;
-            set => Set(ref _MasterSetupComment, value);
+            set {
+                if (Set(ref _MasterSetupComment, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -368,7 +521,12 @@ namespace remeLog.Models
         public string MasterMachiningComment
         {
             get => _MasterMachiningComment;
-            set => Set(ref _MasterMachiningComment, value);
+            set {
+                if (Set(ref _MasterMachiningComment, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -377,7 +535,12 @@ namespace remeLog.Models
         public string SpecifiedDowntimesComment
         {
             get => _SpecifiedDowntimesComment;
-            set => Set(ref _SpecifiedDowntimesComment, value);
+            set {
+                if (Set(ref _SpecifiedDowntimesComment, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -386,7 +549,12 @@ namespace remeLog.Models
         public string UnspecifiedDowntimesComment
         {
             get => _UnspecifiedDowntimesComment;
-            set => Set(ref _UnspecifiedDowntimesComment, value);
+            set {
+                if (Set(ref _UnspecifiedDowntimesComment, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -395,7 +563,12 @@ namespace remeLog.Models
         public string MasterComment
         {
             get => _MasterComment;
-            set => Set(ref _MasterComment, value);
+            set {
+                if (Set(ref _MasterComment, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
 
 
@@ -404,8 +577,15 @@ namespace remeLog.Models
         public string EngineerComment
         {
             get => _EngineerComment;
-            set => Set(ref _EngineerComment, value);
+            set {
+                if (Set(ref _EngineerComment, value))
+                {
+                    NeedUpdate = true;
+                }
+            }
         }
+
+        public bool NeedUpdate { get; set; }
 
         public double SetupRatio => SetupTimePlan / SetupTimeFact;
         public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : $"{SetupRatio:0%}";

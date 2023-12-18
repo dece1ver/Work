@@ -50,39 +50,49 @@
         </StatusBar>
         <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="True"
                      Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}}" Height="2" />
-        <GroupBox DockPanel.Dock="Bottom" Header="Итог по выборке">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120"/>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="60"/>
+        <DockPanel DockPanel.Dock="Bottom">
+            <Button DockPanel.Dock="Right" Content="Сохранить" Margin="0 10 0 1" Width="100">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="2"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+            <GroupBox Header="Итог по выборке">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="60"/>
 
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}" d:Text="100%"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}" d:Text="100%"/>
-                
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
-                <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}" d:Text="100%"/>
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
-                <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}" d:Text="100%"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
-                <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}" d:Text="8%"/>
-                <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
-                <TextBlock Grid.Row="1" Grid.Column="5" Text="3%"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}" d:Text="100%"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}" d:Text="100%"/>
 
-            </Grid>
-        </GroupBox>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
+                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}" d:Text="100%"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
+                    <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}" d:Text="100%"/>
+
+                    <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
+                    <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}" d:Text="8%"/>
+                    <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
+                    <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}" d:Text="3%"/>
+
+                </Grid>
+            </GroupBox>
+            
+        </DockPanel>
         <GroupBox DockPanel.Dock="Top" Header="Фильтры">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -172,7 +182,7 @@
                     <Setter Property="Margin" Value="0"/>
                     <Setter Property="Padding" Value="0"/>
                 </Style>
-                
+
                 <Style TargetType="TextBox" x:Key="TableTextBox">
                     <Setter Property="TextWrapping" Value="Wrap" />
                     <Setter Property="TextAlignment" Value="Center"/>
@@ -449,7 +459,7 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
-               
+
                 <DataGridTextColumn Header="Отмеченные простои" Binding="{Binding SpecifiedDowntimesComment}" Width="120">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>

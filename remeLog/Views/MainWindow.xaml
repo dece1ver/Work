@@ -174,8 +174,8 @@
 
                                             <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
                                             <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="5" Text="8%"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="5" Text="3%"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}"/>
 
                                         </Grid>
                                         <Button Margin="0 -6 0 0" Width="120" HorizontalAlignment="Right"
