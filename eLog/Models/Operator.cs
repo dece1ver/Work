@@ -25,19 +25,19 @@ public class Operator : INotifyPropertyChanged
     public string FirstName
     {
         get => _FirstName;
-        set => _FirstName = value.Capitalize();
+        set => _FirstName = value.Capitalize().Trim();
     }
 
     public string LastName
     {
         get => _LastName;
-        set => _LastName = value.Capitalize();
+        set => _LastName = value.Capitalize().Trim();
     }
 
     public string Patronymic
     {
         get => _Patronymic;
-        set => _Patronymic = value.Capitalize();
+        set => _Patronymic = value.Capitalize().Trim();
     }
 
     [JsonIgnore]
@@ -59,11 +59,11 @@ public class Operator : INotifyPropertyChanged
     {
         get
         {
-            var result = LastName;
+            var result = LastName.Trim();
             if (string.IsNullOrEmpty(FirstName)) return result;
-            result += " " + FirstName;
+            result += " " + FirstName.Trim();
             if (!string.IsNullOrEmpty(Patronymic))
-                result += " " + Patronymic;
+                result += " " + Patronymic.Trim();
             return result;
         }
     }

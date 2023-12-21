@@ -66,7 +66,7 @@ namespace remeLog.Infrastructure.Extensions
                 sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
             }
             var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * 1290;
-            return totalWorkMinutes - sum / totalWorkMinutes;
+            return (totalWorkMinutes - sum) / totalWorkMinutes;
         }
     }
 }

@@ -52,6 +52,7 @@ namespace remeLog.ViewModels
                 OnPropertyChanged(nameof(ProductionTimeRatio));
                 OnPropertyChanged(nameof(AverageProductionRatio));
                 OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                OnPropertyChanged(nameof(UnspecifiedDowntimesRatio));
             }
         }
 
