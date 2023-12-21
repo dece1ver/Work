@@ -51,7 +51,7 @@
         <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="True"
                      Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}}" Height="2" />
         <DockPanel DockPanel.Dock="Bottom">
-            <Button DockPanel.Dock="Right" Content="Сохранить" Margin="0 10 0 1" Width="100">
+            <Button DockPanel.Dock="Right" Content="Записать" Margin="0 10 0 1" Width="100" Command="{Binding UpdatePartsCommand}">
                 <Button.Resources>
                     <Style TargetType="Border">
                         <Setter Property="CornerRadius" Value="2"/>
@@ -145,6 +145,15 @@
         </GroupBox>
         <DataGrid ItemsSource="{Binding Parts}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="Gray"
                       ColumnWidth="SizeToCells" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding NeedUpdate}" Value="True">
+                            <Setter Property="Foreground" Value="Red"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
             <DataGrid.Resources>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -423,7 +432,7 @@
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
                     </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="165">
+                <DataGridTextColumn Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="270">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>

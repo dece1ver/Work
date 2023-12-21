@@ -24,7 +24,7 @@ public static class Constants
         public const string NoAccessToDirectory = "Директория не существует или отсутствуют права на её чтение";
         public const string NoWriteAccess = "Нет доступа на запись. Работа в режиме чтения";
 
-        public const string NoConnectionToDb = "Не удается соединится с БД";
+        public const string NoConnectionToDb = "Сервер БД не найден или недоступен";
         public const string AuthFailedToDb = "Неверные учетные данные";
         
     }

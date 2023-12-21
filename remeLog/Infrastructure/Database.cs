@@ -1,4 +1,6 @@
-﻿using libeLog.Extensions;
+﻿using DocumentFormat.OpenXml.VariantTypes;
+using libeLog.Extensions;
+using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using remeLog.Models;
 using System;
@@ -8,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace remeLog.Infrastructure
 {
@@ -69,6 +72,112 @@ namespace remeLog.Infrastructure
             }
 
             return parts;
+        }
+
+        public static DbResult UpdatePart(this Part part)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    connection.Open();
+                    string updateQuery = "UPDATE Parts SET " +
+                        "Machine = @Machine, " +
+                        "Shift = @Shift, " +
+                        "ShiftDate = @ShiftDate, " +
+                        "Operator = @Operator, " +
+                        "PartName = @PartName, " +
+                        "[Order] = @Order, " +
+                        "Setup = @Setup, " +
+                        "FinishedCount = @FinishedCount, " +
+                        "TotalCount = @TotalCount, " +
+                        "StartSetupTime = @StartSetupTime, " +
+                        "StartMachiningTime = @StartMachiningTime, " +
+                        "EndMachiningTime = @EndMachiningTime, " +
+                        "SetupTimeFact = @SetupTimeFact, " +
+                        "SetupTimePlan = @SetupTimePlan, " +
+                        "SetupTimePlanForReport = @SetupTimePlanForReport, " +
+                        "SingleProductionTimePlan = @SingleProductionTimePlan, " +
+                        "ProductionTimeFact = @ProductionTimeFact, " +
+                        "MachiningTime = @MachiningTime, " +
+                        "SetupDowntimes = @SetupDowntimes, " +
+                        "MachiningDowntimes = @MachiningDowntimes, " +
+                        "PartialSetupTime = @PartialSetupTime, " +
+                        "MaintenanceTime = @MaintenanceTime, " +
+                        "ToolSearchingTime = @ToolSearchingTime, " +
+                        "MentoringTime = @MentoringTime, " +
+                        "ContactingDepartmentsTime = @ContactingDepartmentsTime, " +
+                        "FixtureMakingTime = @FixtureMakingTime, " +
+                        "HardwareFailureTime = @HardwareFailureTime, " +
+                        "OperatorComment = @OperatorComment, " +
+                        "MasterSetupComment = @MasterSetupComment, " +
+                        "MasterMachiningComment = @MasterMachiningComment, " +
+                        "SpecifiedDowntimesComment = @SpecifiedDowntimesComment, " +
+                        "UnspecifiedDowntimeComment = @UnspecifiedDowntimeComment, " +
+                        "MasterComment = @MasterComment, " +
+                        "EngineerComment = @EngineerComment " +
+                        "WHERE Guid = @Guid";
+                    using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Guid", part.Guid);
+                        cmd.Parameters.AddWithValue("@Machine", part.Machine);
+                        cmd.Parameters.AddWithValue("@Shift", part.Shift);
+                        cmd.Parameters.AddWithValue("@ShiftDate", part.ShiftDate);
+                        cmd.Parameters.AddWithValue("@Operator", part.Operator);
+                        cmd.Parameters.AddWithValue("@PartName", part.PartName);
+                        cmd.Parameters.AddWithValue("@Order", part.Order);
+                        cmd.Parameters.AddWithValue("@Setup", part.Setup);
+                        cmd.Parameters.AddWithValue("@FinishedCount", part.FinishedCount);
+                        cmd.Parameters.AddWithValue("@TotalCount", part.TotalCount);
+                        cmd.Parameters.AddWithValue("@StartSetupTime", part.StartSetupTime);
+                        cmd.Parameters.AddWithValue("@StartMachiningTime", part.StartMachiningTime);
+                        cmd.Parameters.AddWithValue("@SetupTimeFact", part.SetupTimeFact);
+                        cmd.Parameters.AddWithValue("@EndMachiningTime", part.EndMachiningTime);
+                        cmd.Parameters.AddWithValue("@SetupTimePlan", part.SetupTimePlan);
+                        cmd.Parameters.AddWithValue("@SetupTimePlanForReport", part.SetupTimePlanForReport);
+                        cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
+                        cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact);
+                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachiningTime);
+                        cmd.Parameters.AddWithValue("@SetupDowntimes", part.SetupDowntimes);
+                        cmd.Parameters.AddWithValue("@MachiningDowntimes", part.MachiningDowntimes);
+                        cmd.Parameters.AddWithValue("@PartialSetupTime", part.PartialSetupTime);
+                        cmd.Parameters.AddWithValue("@MaintenanceTime", part.MaintenanceTime);
+                        cmd.Parameters.AddWithValue("@ToolSearchingTime", part.ToolSearchingTime);
+                        cmd.Parameters.AddWithValue("@MentoringTime", part.MentoringTime);
+                        cmd.Parameters.AddWithValue("@ContactingDepartmentsTime", part.ContactingDepartmentsTime);
+                        cmd.Parameters.AddWithValue("@FixtureMakingTime", part.FixtureMakingTime);
+                        cmd.Parameters.AddWithValue("@HardwareFailureTime", part.HardwareFailureTime);
+                        cmd.Parameters.AddWithValue("@OperatorComment", part.OperatorComment);
+                        cmd.Parameters.AddWithValue("@MasterSetupComment", part.MasterSetupComment);
+                        cmd.Parameters.AddWithValue("@MasterMachiningComment", part.MasterMachiningComment);
+                        cmd.Parameters.AddWithValue("@SpecifiedDowntimesComment", part.SpecifiedDowntimesComment);
+                        cmd.Parameters.AddWithValue("@UnspecifiedDowntimeComment", part.UnspecifiedDowntimesComment);
+                        cmd.Parameters.AddWithValue("@MasterComment", part.MasterComment);
+                        cmd.Parameters.AddWithValue("@EngineerComment", part.EngineerComment);
+
+                        var execureResult = cmd.ExecuteNonQuery();
+                    }
+                    connection.Close();
+                    return DbResult.Ok;
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
         }
 
         static void FillParts(this ICollection<Part> parts, SqlCommand command)

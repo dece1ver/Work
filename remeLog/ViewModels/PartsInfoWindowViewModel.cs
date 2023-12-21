@@ -5,6 +5,7 @@ using remeLog.Infrastructure.Extensions;
 using remeLog.Models;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -195,7 +196,7 @@ namespace remeLog.ViewModels
         private void OnSetWeekDateCommandExecuted(object p)
         {
 
-            FromDate = FromDate.AddDays(-7);
+            FromDate = ToDate.AddDays(-7);
         }
         private bool CanSetWeekDateCommandExecute(object p) => true;
         #endregion
@@ -216,7 +217,23 @@ namespace remeLog.ViewModels
         public ICommand UpdatePartsCommand { get; }
         private void OnUpdatePartsCommandExecuted(object p)
         {
-            MessageBox.Show("Еще не сделано.");
+            foreach (var part in Parts.Where(p => p.NeedUpdate))
+            {
+                switch (part.UpdatePart())
+                {
+                    case libeLog.Models.DbResult.Ok:
+                        part.NeedUpdate = false;
+                        break;
+                    case libeLog.Models.DbResult.AuthError:
+                        MessageBox.Show("Ошибка авторизации");
+                        break;
+                    case libeLog.Models.DbResult.Error:
+                        MessageBox.Show("Ошибка");
+                        break;
+                }
+                
+            }
+
         }
         private static bool CanUpdatePartsCommandExecute(object p) => true;
         #endregion

@@ -4,6 +4,7 @@ using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
+using Microsoft.Data.SqlClient;
 using remeLog.Infrastructure;
 using remeLog.Models;
 using remeLog.Views;
@@ -28,6 +29,9 @@ namespace remeLog.ViewModels;
 
 internal class MainWindowViewModel : ViewModel, IOverlay
 {
+    /// <summary>
+    /// TODO: Обновление без кнопки
+    /// </summary>
     public MainWindowViewModel()
     {
         CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
@@ -120,28 +124,28 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         set => Set(ref _Parts, value);
     }
 
-    private CombinedParts _Skt21_104Parts = new(Machines.HuyndaiSkt21_104);
+    private CombinedParts _Skt21_104 = new(Machines.HuyndaiSkt21_104);
     /// <summary> Объединенный список по станку SKT21 #1 </summary>
-    public CombinedParts Skt21_104Parts
+    public CombinedParts Skt21_104
     {
-        get => _Skt21_104Parts;
-        set => Set(ref _Skt21_104Parts, value);
+        get => _Skt21_104;
+        set => Set(ref _Skt21_104, value);
     }
 
-    private CombinedParts _Skt21_105Parts = new(Machines.HuyndaiSkt21_105);
+    private CombinedParts _Skt21_105 = new(Machines.HuyndaiSkt21_105);
     /// <summary> Объединенный список по станку SKT21 #2 </summary>
-    public CombinedParts Skt21_105Parts
+    public CombinedParts Skt21_105
     {
-        get => _Skt21_105Parts;
-        set => Set(ref _Skt21_105Parts, value);
+        get => _Skt21_105;
+        set => Set(ref _Skt21_105, value);
     }
 
-    private CombinedParts _L230Parts = new(Machines.HuyndaiL230A);
+    private CombinedParts _L230 = new(Machines.HuyndaiL230A);
     /// <summary> Объединенный список по станку L230 </summary>
-    public CombinedParts L230Parts
+    public CombinedParts L230
     {
-        get => _L230Parts;
-        set => Set(ref _L230Parts, value);
+        get => _L230;
+        set => Set(ref _L230, value);
     }
 
     private CombinedParts _QTS200 = new(Machines.MazakQts200Ml);
@@ -245,9 +249,9 @@ internal class MainWindowViewModel : ViewModel, IOverlay
 
     #region LoadPartsInfo
     public ICommand LoadPartsInfoCommand { get; }
-    private void OnLoadPartsInfoCommandExecuted(object p)
+    private async void OnLoadPartsInfoCommandExecuted(object p)
     {
-        _ = LoadPartsAsync();
+        await LoadPartsAsync();
     }
     private static bool CanLoadPartsInfoCommandExecute(object p) => true;
     #endregion
@@ -318,7 +322,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     private void OnSetWeekDateCommandExecuted(object p)
     {
 
-        FromDate = FromDate.AddDays(-7);
+        FromDate = ToDate.AddDays(-7);
     }
     private bool CanSetWeekDateCommandExecute(object p) => true;
     #endregion
@@ -329,9 +333,9 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     {
         await Task.Run(() =>
         {
-            Application.Current.Dispatcher.Invoke(() => { Parts.Clear(); });
-            Status = "Загрузка информации...";
             ProgressBarVisibility = Visibility.Visible;
+            Status = "Загрузка информации...";
+            Application.Current.Dispatcher.Invoke(() => { Parts.Clear(); });
             string[] machines = {
             Machines.HuyndaiSkt21_104,
             Machines.HuyndaiSkt21_105,
@@ -345,77 +349,130 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             Machines.QuaserMv134,
             Machines.MazakIntegrexI200,
             };
-            Application.Current.Dispatcher.Invoke(() => { Skt21_104Parts.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { Skt21_105Parts.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { L230Parts.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { GS1500.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { N5000.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { XH6300.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { A110.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { MV134.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { i200.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => {
+                Skt21_104.FromDate = FromDate;
+                Skt21_104.ToDate = ToDate;
+                Skt21_104.Parts.Clear(); });
+            var a = Skt21_104.TotalShifts;
+            var b = Skt21_104.WorkedShifts;
+            Application.Current.Dispatcher.Invoke(() => { 
+                Skt21_105.FromDate = FromDate;
+                Skt21_105.ToDate = ToDate;
+                Skt21_105.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => {
+                L230.FromDate = FromDate;
+                L230.ToDate = ToDate;
+                L230.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { 
+                QTS200.FromDate = FromDate;
+                QTS200.ToDate = ToDate;
+                QTS200.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { 
+                GS1500.FromDate = FromDate;
+                GS1500.ToDate = ToDate;
+                GS1500.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { 
+                QTS350.FromDate = FromDate;
+                QTS350.ToDate = ToDate;
+                QTS350.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { 
+                N5000.FromDate = FromDate;
+                N5000.ToDate = ToDate;
+                N5000.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { 
+                XH6300.FromDate = FromDate;
+                XH6300.ToDate = ToDate;
+                XH6300.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { 
+                A110.FromDate = FromDate;
+                A110.ToDate = ToDate;
+                A110.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => { 
+                MV134.FromDate = FromDate;
+                MV134.ToDate = ToDate;
+                MV134.Parts.Clear(); });
+            Application.Current.Dispatcher.Invoke(() => {
+                i200.FromDate = FromDate;
+                i200.ToDate = ToDate;
+                i200.Parts.Clear(); });
 
 
             ObservableCollection<Part> data = new ObservableCollection<Part>();
 
-            data = Database.ReadPartsByShiftDate(FromDate, ToDate);
-
-            foreach (Part part in data)
+            try
             {
-                switch (part.Machine)
+                data = Database.ReadPartsByShiftDate(FromDate, ToDate);
+
+                foreach (Part part in data)
                 {
-                    case Machines.HuyndaiSkt21_104:
-                        Application.Current.Dispatcher.Invoke(() => { Skt21_104Parts.Parts.Add(part); });
-                        break;
-                    case Machines.HuyndaiSkt21_105:
-                        Application.Current.Dispatcher.Invoke(() => { Skt21_105Parts.Parts.Add(part); });
-                        break;
-                    case Machines.HuyndaiL230A:
-                        Application.Current.Dispatcher.Invoke(() => { L230Parts.Parts.Add(part); });
-                        break;
-                    case Machines.MazakQts200Ml:
-                        Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Add(part); });
-                        break;
-                    case Machines.GoodwayGs1500:
-                        Application.Current.Dispatcher.Invoke(() => { GS1500.Parts.Add(part); });
-                        break;
-                    case Machines.MazakQts350:
-                        Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Add(part); });
-                        break;
-                    case Machines.MazakNexus5000:
-                        Application.Current.Dispatcher.Invoke(() => { N5000.Parts.Add(part); });
-                        break;
-                    case Machines.HuyndaiXH6300:
-                        Application.Current.Dispatcher.Invoke(() => { XH6300.Parts.Add(part); });
-                        break;
-                    case Machines.VictorA110:
-                        Application.Current.Dispatcher.Invoke(() => { A110.Parts.Add(part); });
-                        break;
-                    case Machines.QuaserMv134:
-                        Application.Current.Dispatcher.Invoke(() => { MV134.Parts.Add(part); });
-                        break;
-                    case Machines.MazakIntegrexI200:
-                        Application.Current.Dispatcher.Invoke(() => { i200.Parts.Add(part); });
-                        break;
-                    default:
-                        break;
+                    switch (part.Machine)
+                    {
+                        case Machines.HuyndaiSkt21_104:
+                            Application.Current.Dispatcher.Invoke(() => { Skt21_104.Parts.Add(part); });
+                            break;
+                        case Machines.HuyndaiSkt21_105:
+                            Application.Current.Dispatcher.Invoke(() => { Skt21_105.Parts.Add(part); });
+                            break;
+                        case Machines.HuyndaiL230A:
+                            Application.Current.Dispatcher.Invoke(() => { L230.Parts.Add(part); });
+                            break;
+                        case Machines.MazakQts200Ml:
+                            Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Add(part); });
+                            break;
+                        case Machines.GoodwayGs1500:
+                            Application.Current.Dispatcher.Invoke(() => { GS1500.Parts.Add(part); });
+                            break;
+                        case Machines.MazakQts350:
+                            Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Add(part); });
+                            break;
+                        case Machines.MazakNexus5000:
+                            Application.Current.Dispatcher.Invoke(() => { N5000.Parts.Add(part); });
+                            break;
+                        case Machines.HuyndaiXH6300:
+                            Application.Current.Dispatcher.Invoke(() => { XH6300.Parts.Add(part); });
+                            break;
+                        case Machines.VictorA110:
+                            Application.Current.Dispatcher.Invoke(() => { A110.Parts.Add(part); });
+                            break;
+                        case Machines.QuaserMv134:
+                            Application.Current.Dispatcher.Invoke(() => { MV134.Parts.Add(part); });
+                            break;
+                        case Machines.MazakIntegrexI200:
+                            Application.Current.Dispatcher.Invoke(() => { i200.Parts.Add(part); });
+                            break;
+                        default:
+                            break;
+                    }
                 }
+                Application.Current.Dispatcher.Invoke(() => {
+                    Parts.Add(Skt21_104);
+                    Parts.Add(Skt21_105);
+                    Parts.Add(L230);
+                    Parts.Add(QTS200);
+                    Parts.Add(GS1500);
+                    Parts.Add(QTS350);
+                    Parts.Add(N5000);
+                    Parts.Add(XH6300);
+                    Parts.Add(A110);
+                    Parts.Add(MV134);
+                    Parts.Add(i200);
+                });
             }
-            Application.Current.Dispatcher.Invoke(() => {
-                Parts.Add(Skt21_104Parts);
-                Parts.Add(Skt21_105Parts);
-                Parts.Add(L230Parts);
-                Parts.Add(QTS200);
-                Parts.Add(GS1500);
-                Parts.Add(QTS350);
-                Parts.Add(N5000);
-                Parts.Add(XH6300);
-                Parts.Add(A110);
-                Parts.Add(MV134);
-                Parts.Add(i200);
-            });
+            catch (SqlException sqlEx)
+            {
+                var (_, message) = sqlEx.Number switch
+                {
+                    -1 => (DbResult.Error, StatusTips.NoConnectionToDb),
+                    18456 => (DbResult.AuthError, StatusTips.AuthFailedToDb),
+                    _ => (DbResult.Error, $"Ошибка БД №{sqlEx.Number}"),
+                };
+                MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            
             Status = "";
             ProgressBarVisibility = Visibility.Collapsed;
         });
@@ -423,7 +480,6 @@ internal class MainWindowViewModel : ViewModel, IOverlay
 
     private void UpdateParts()
     {
-        
         
     } 
 

@@ -92,6 +92,7 @@ namespace remeLog.Models
                 if (Set(ref _Guid, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -106,6 +107,7 @@ namespace remeLog.Models
                 if (Set(ref _Machine, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -120,6 +122,7 @@ namespace remeLog.Models
                 if (Set(ref _ShiftDate, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -135,6 +138,7 @@ namespace remeLog.Models
                 if (Set(ref _Shift, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -149,6 +153,7 @@ namespace remeLog.Models
                 if (Set(ref _Operator, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -164,6 +169,7 @@ namespace remeLog.Models
                 if (Set(ref _PartName, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -178,6 +184,7 @@ namespace remeLog.Models
                 if (Set(ref _Order, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -192,6 +199,7 @@ namespace remeLog.Models
                 if (Set(ref _Setup, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -206,6 +214,7 @@ namespace remeLog.Models
                 if (Set(ref _FinishedCount, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -228,6 +237,7 @@ namespace remeLog.Models
                 if (Set(ref _TotalCount, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -242,6 +252,7 @@ namespace remeLog.Models
                 if (Set(ref _StartSetupTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -255,6 +266,7 @@ namespace remeLog.Models
                 if (Set(ref _StartMachiningTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -269,6 +281,7 @@ namespace remeLog.Models
                 if (Set(ref _SetupTimeFact, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                     OnPropertyChanged(nameof(SetupRatio));
                     OnPropertyChanged(nameof(SetupRatioTitle));
                 }
@@ -285,6 +298,7 @@ namespace remeLog.Models
                 if (Set(ref _EndMachiningTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -299,6 +313,7 @@ namespace remeLog.Models
                 if(Set(ref _SetupTimePlan, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                     OnPropertyChanged(nameof(SetupRatio));
                     OnPropertyChanged(nameof(SetupRatioTitle));
                 }
@@ -315,6 +330,7 @@ namespace remeLog.Models
                 if (Set(ref _SetupTimePlanForReport, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -329,6 +345,7 @@ namespace remeLog.Models
                 if (Set(ref _SingleProductionTimePlan, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -343,6 +360,7 @@ namespace remeLog.Models
                 if (Set(ref _ProductionTimeFact, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -357,6 +375,7 @@ namespace remeLog.Models
                 if (Set(ref _MachiningTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -371,6 +390,7 @@ namespace remeLog.Models
                 if (Set(ref _SetupDowntimes, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -385,6 +405,7 @@ namespace remeLog.Models
                 if (Set(ref _MachiningDowntimes, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -399,6 +420,7 @@ namespace remeLog.Models
                 if (Set(ref _PartialSetupTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -413,6 +435,7 @@ namespace remeLog.Models
                 if (Set(ref _MaintenanceTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -427,6 +450,7 @@ namespace remeLog.Models
                 if (Set(ref _ToolSearchingTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -441,6 +465,7 @@ namespace remeLog.Models
                 if (Set(ref _MentoringTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -455,6 +480,7 @@ namespace remeLog.Models
                 if (Set(ref _ContactingDepartmentsTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -469,6 +495,7 @@ namespace remeLog.Models
                 if (Set(ref _FixtureMakingTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -483,6 +510,7 @@ namespace remeLog.Models
                 if (Set(ref _HardwareFailureTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -497,6 +525,7 @@ namespace remeLog.Models
                 if (Set(ref _OperatorComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -511,6 +540,7 @@ namespace remeLog.Models
                 if (Set(ref _MasterSetupComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -525,6 +555,7 @@ namespace remeLog.Models
                 if (Set(ref _MasterMachiningComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -539,6 +570,7 @@ namespace remeLog.Models
                 if (Set(ref _SpecifiedDowntimesComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -553,6 +585,7 @@ namespace remeLog.Models
                 if (Set(ref _UnspecifiedDowntimesComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -567,6 +600,7 @@ namespace remeLog.Models
                 if (Set(ref _MasterComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -581,11 +615,25 @@ namespace remeLog.Models
                 if (Set(ref _EngineerComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
 
-        public bool NeedUpdate { get; set; }
+
+        private bool _NeedUpdate;
+        /// <summary> Описание </summary>
+        public bool NeedUpdate
+        {
+            get => _NeedUpdate;
+            set { 
+                if (Set(ref _NeedUpdate, value))
+                {
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
 
         public double SetupRatio => SetupTimePlan / SetupTimeFact;
         public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : $"{SetupRatio:0%}";

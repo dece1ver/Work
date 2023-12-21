@@ -20,6 +20,14 @@ namespace remeLog.Models
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
         public ObservableCollection<Part> Parts { get; set; } = new();
+        public int TotalShifts => (int)(ToDate.AddDays(1) - FromDate).TotalDays * 2;
+        public int WorkedShifts { 
+            get {
+                var partsByDates = Parts.Where(part => part.ShiftDate >= FromDate && part.ShiftDate <= ToDate)
+            .Select(part => new { part.ShiftDate.Date, part.Shift })
+            .Distinct();
+                return partsByDates.Count();
+            } }
         public double AverageSetupRatio => Parts.AverageSetupRatio();
         public double AverageProductionRatio => Parts.AverageProductionRatio();
         public double SetupTimeRatio => Parts.SetupRatio();

@@ -7,7 +7,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="Отчеты электронного журнала" Height="640" Width="960" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" >
+        Title="Отчеты электронного журнала" Height="640" Width="1080" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" >
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
@@ -149,6 +149,8 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="140"/>
+                                                <ColumnDefinition Width="40"/>
                                                 <ColumnDefinition Width="136"/>
                                                 <ColumnDefinition Width="60"/>
                                                 <ColumnDefinition Width="180"/>
@@ -162,20 +164,25 @@
                                                 <RowDefinition/>
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Смен всего:"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Смен отработано:"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TotalShifts}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding WorkedShifts}"/>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Наладка общая:"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Наладка средняя:"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding SetupTimeRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageSetupRatio, StringFormat=0%}"/>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="4" Text="Изготовление общее:"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="4" Text="Изготовление среднее:"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding ProductionTimeRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding AverageProductionRatio, StringFormat=0%}"/>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="6" Text="Отмеченные простои:"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="6" Text="Неотмеченные простои:"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="7" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="7" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}"/>
 
                                         </Grid>
                                         <Button Margin="0 -6 0 0" Width="120" HorizontalAlignment="Right"

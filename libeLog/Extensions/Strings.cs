@@ -184,8 +184,8 @@ public static class Strings
         {
             return sqlEx.Number switch
             {
-                -1 => (DbResult.Error, $"Сервер БД не найден или недоступен"),
-                18456 => (DbResult.AuthError, $"Неверные учетные данные"),
+                -1 => (DbResult.Error, Constants.StatusTips.NoConnectionToDb),
+                18456 => (DbResult.AuthError, Constants.StatusTips.AuthFailedToDb),
                 _ => (DbResult.Error, $"Ошибка БД №{sqlEx.Number}"),
             };
         }
