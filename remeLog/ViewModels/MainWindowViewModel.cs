@@ -30,7 +30,7 @@ namespace remeLog.ViewModels;
 internal class MainWindowViewModel : ViewModel, IOverlay
 {
     /// <summary>
-    /// TODO: Обновление без кнопки
+    /// TODO: Обновление без кнопки, столбцы с простоями, незарегистрированные простои от смен, а не от суток
     /// </summary>
     public MainWindowViewModel()
     {

@@ -217,16 +217,6 @@
             </DataGrid.Resources>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="36" IsReadOnly="True">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Изготовление" Binding="{Binding ProductionRatioTitle}" Width="36" IsReadOnly="True">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
                 <DataGridTextColumn Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yyyy}">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
@@ -440,6 +430,11 @@
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
                     </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
+                <DataGridTextColumn Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="36" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
                 <DataGridTemplateColumn Header="Невыполнение норматива наладки" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -453,7 +448,11 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
-
+                <DataGridTextColumn Header="Изготовление" Binding="{Binding ProductionRatioTitle}" Width="36" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
                 <DataGridTemplateColumn Header="Невыполнение норматива изготовления" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
