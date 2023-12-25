@@ -86,6 +86,8 @@ public class AppSettings
     /// <summary> Строка подключения к БД </summary>
     public string? ConnectionString { get; set; }
 
+    public bool InstantUpdateOnMainWindow { get; set; }
+
 
     /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
     private void CreateBaseConfig()
@@ -94,6 +96,7 @@ public class AppSettings
         if (File.Exists(ConfigBackupPath)) File.Delete(ConfigBackupPath);
         if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
         DataSource = new DataSource(DataSource.Types.Database);
+        InstantUpdateOnMainWindow = false;
         SourcePath = "";
         ReportsPath = "";
         DailyReportsDir = "";

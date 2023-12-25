@@ -2,6 +2,7 @@
 using libeLog.Base;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
+using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using System;
 using System.Collections.ObjectModel;
@@ -27,8 +28,8 @@ namespace remeLog.ViewModels
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
 
             PartsInfo = parts;
-            ShiftFilterItems = new string[3] { "Все смены", "День", "Ночь" };
-            _ShiftFilter = ShiftFilterItems[0];
+            ShiftFilterItems = new Shift[3] { new Shift(ShiftType.All), new Shift(ShiftType.Day), new Shift(ShiftType.Night) };
+            _ShiftFilter = ShiftFilterItems.FirstOrDefault();
             _OperatorFilter = "";
             _Parts = PartsInfo.Parts;
             _OrderFilter = "";
@@ -38,7 +39,7 @@ namespace remeLog.ViewModels
         }
 
 
-        public string[] ShiftFilterItems { get; set; }
+        public Shift[] ShiftFilterItems { get; set; }
 
         private ObservableCollection<Part> _Parts;
         /// <summary> Описание </summary>
@@ -66,7 +67,7 @@ namespace remeLog.ViewModels
             set 
             {
                 Set(ref _FromDate, value);
-                _ = UpdateParts();
+                _ = LoadPartsAsync();
             }
         }
 
@@ -78,19 +79,19 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _ToDate, value);
-                _ = UpdateParts();
+                _ = LoadPartsAsync();
             }
         }
 
-        private string _ShiftFilter;
+        private Shift _ShiftFilter;
         /// <summary> Фильтр смены </summary>
-        public string ShiftFilter
+        public Shift ShiftFilter
         {
             get => _ShiftFilter;
             set
             {
                 Set(ref _ShiftFilter, value);
-                _ = UpdateParts();
+                _ = LoadPartsAsync();
             }
         }
 
@@ -103,7 +104,7 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _OperatorFilter, value);
-                _ = UpdateParts();
+                _ = LoadPartsAsync();
             }
         }
 
@@ -115,7 +116,7 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _PartNameFilter, value);
-                _ = UpdateParts();
+                _ = LoadPartsAsync();
             }
         }
 
@@ -127,7 +128,7 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _OrderFilter, value);
-                _ = UpdateParts();
+                _ = LoadPartsAsync();
             }
         }
 
@@ -155,8 +156,8 @@ namespace remeLog.ViewModels
         public double AverageProductionRatio => Parts.AverageProductionRatio();
         public double SetupTimeRatio => Parts.SetupRatio();
         public double ProductionTimeRatio => Parts.ProductionRatio();
-        public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(FromDate, ToDate);
-        public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate);
+        public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter);
+        public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter);
 
         #region IncreaseDateCommand
         public ICommand IncreaseDateCommand { get; }
@@ -231,21 +232,20 @@ namespace remeLog.ViewModels
                         MessageBox.Show("Ошибка");
                         break;
                 }
-                
             }
-
+            _ = LoadPartsAsync();
         }
         private static bool CanUpdatePartsCommandExecute(object p) => true;
         #endregion
 
-        private async Task UpdateParts()
+        private async Task LoadPartsAsync()
         {
             await Task.Run(() => {
                 try
                 {
                     InProgress = true;
                     Parts = Database.ReadPartsWithConditions($"Machine = '{PartsInfo.Machine}' AND ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
-                    $"{(ShiftFilter == ShiftFilterItems[0] ? "" : $"AND Shift = '{ShiftFilter}'")}" +
+                    $"{(ShiftFilter is { Type: ShiftType.All } ? "" : $"AND Shift = '{ShiftFilter.FilterText}'")}" +
                     $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
                     $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
                     $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +

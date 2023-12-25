@@ -29,9 +29,8 @@ namespace remeLog.ViewModels;
 
 internal class MainWindowViewModel : ViewModel, IOverlay
 {
-    /// <summary>
-    /// TODO: Обновление без кнопки, столбцы с простоями, незарегистрированные простои от смен, а не от суток
-    /// </summary>
+    private readonly object lockObject = new object();
+    
     public MainWindowViewModel()
     {
         CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
@@ -44,7 +43,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
         SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
         SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
 
-
+        if (AppSettings.Instance.InstantUpdateOnMainWindow) { _ = LoadPartsAsync(); }
         // var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
         // backgroundWorker.Start();
     }
@@ -101,19 +100,29 @@ internal class MainWindowViewModel : ViewModel, IOverlay
 
 
     private DateTime _FromDate = DateTime.Today.AddDays(-1);
-    /// <summary> Дата отчета </summary>
     public DateTime FromDate
     {
         get => _FromDate;
-        set => Set(ref _FromDate, value);
+        set
+        {
+            if (Set(ref _FromDate, value) && AppSettings.Instance.InstantUpdateOnMainWindow)
+            {
+                _ = LoadPartsAsync();
+            }
+        }
     }
 
     private DateTime _ToDate = DateTime.Today.AddDays(-1);
-    /// <summary> Дата отчета </summary>
     public DateTime ToDate
     {
         get => _ToDate;
-        set => Set(ref _ToDate, value);
+        set
+        {
+            if (Set(ref _ToDate, value) && AppSettings.Instance.InstantUpdateOnMainWindow)
+            {
+                _ = LoadPartsAsync();
+            }
+        }
     }
 
     private ObservableCollection<CombinedParts> _Parts = new();
@@ -238,7 +247,8 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                 AppSettings.Instance.SourcePath = settings.SourcePath.Value; 
                 AppSettings.Instance.ReportsPath = settings.ReportsPath.Value; 
                 AppSettings.Instance.DailyReportsDir = settings.DailyReportsDir.Value; 
-                AppSettings.Instance.ConnectionString = settings.ConnectionString.Value; 
+                AppSettings.Instance.ConnectionString = settings.ConnectionString.Value;
+                AppSettings.Instance.InstantUpdateOnMainWindow = settings.InstantUpdateOnMainWindow;
                 AppSettings.Save();
                 Status = "Параметры сохранены";
             }
@@ -333,155 +343,149 @@ internal class MainWindowViewModel : ViewModel, IOverlay
     {
         await Task.Run(() =>
         {
-            ProgressBarVisibility = Visibility.Visible;
-            Status = "Загрузка информации...";
-            Application.Current.Dispatcher.Invoke(() => { Parts.Clear(); });
-            string[] machines = {
-            Machines.HuyndaiSkt21_104,
-            Machines.HuyndaiSkt21_105,
-            Machines.HuyndaiL230A,
-            Machines.MazakQts200Ml,
-            Machines.GoodwayGs1500,
-            Machines.MazakQts350,
-            Machines.MazakNexus5000,
-            Machines.HuyndaiXH6300,
-            Machines.VictorA110,
-            Machines.QuaserMv134,
-            Machines.MazakIntegrexI200,
-            };
-            Application.Current.Dispatcher.Invoke(() => {
-                Skt21_104.FromDate = FromDate;
-                Skt21_104.ToDate = ToDate;
-                Skt21_104.Parts.Clear(); });
-            var a = Skt21_104.TotalShifts;
-            var b = Skt21_104.WorkedShifts;
-            Application.Current.Dispatcher.Invoke(() => { 
-                Skt21_105.FromDate = FromDate;
-                Skt21_105.ToDate = ToDate;
-                Skt21_105.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => {
-                L230.FromDate = FromDate;
-                L230.ToDate = ToDate;
-                L230.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { 
-                QTS200.FromDate = FromDate;
-                QTS200.ToDate = ToDate;
-                QTS200.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { 
-                GS1500.FromDate = FromDate;
-                GS1500.ToDate = ToDate;
-                GS1500.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { 
-                QTS350.FromDate = FromDate;
-                QTS350.ToDate = ToDate;
-                QTS350.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { 
-                N5000.FromDate = FromDate;
-                N5000.ToDate = ToDate;
-                N5000.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { 
-                XH6300.FromDate = FromDate;
-                XH6300.ToDate = ToDate;
-                XH6300.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { 
-                A110.FromDate = FromDate;
-                A110.ToDate = ToDate;
-                A110.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => { 
-                MV134.FromDate = FromDate;
-                MV134.ToDate = ToDate;
-                MV134.Parts.Clear(); });
-            Application.Current.Dispatcher.Invoke(() => {
-                i200.FromDate = FromDate;
-                i200.ToDate = ToDate;
-                i200.Parts.Clear(); });
-
-
-            ObservableCollection<Part> data = new ObservableCollection<Part>();
-
-            try
+            lock (lockObject)
             {
-                data = Database.ReadPartsByShiftDate(FromDate, ToDate);
-
-                foreach (Part part in data)
-                {
-                    switch (part.Machine)
-                    {
-                        case Machines.HuyndaiSkt21_104:
-                            Application.Current.Dispatcher.Invoke(() => { Skt21_104.Parts.Add(part); });
-                            break;
-                        case Machines.HuyndaiSkt21_105:
-                            Application.Current.Dispatcher.Invoke(() => { Skt21_105.Parts.Add(part); });
-                            break;
-                        case Machines.HuyndaiL230A:
-                            Application.Current.Dispatcher.Invoke(() => { L230.Parts.Add(part); });
-                            break;
-                        case Machines.MazakQts200Ml:
-                            Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Add(part); });
-                            break;
-                        case Machines.GoodwayGs1500:
-                            Application.Current.Dispatcher.Invoke(() => { GS1500.Parts.Add(part); });
-                            break;
-                        case Machines.MazakQts350:
-                            Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Add(part); });
-                            break;
-                        case Machines.MazakNexus5000:
-                            Application.Current.Dispatcher.Invoke(() => { N5000.Parts.Add(part); });
-                            break;
-                        case Machines.HuyndaiXH6300:
-                            Application.Current.Dispatcher.Invoke(() => { XH6300.Parts.Add(part); });
-                            break;
-                        case Machines.VictorA110:
-                            Application.Current.Dispatcher.Invoke(() => { A110.Parts.Add(part); });
-                            break;
-                        case Machines.QuaserMv134:
-                            Application.Current.Dispatcher.Invoke(() => { MV134.Parts.Add(part); });
-                            break;
-                        case Machines.MazakIntegrexI200:
-                            Application.Current.Dispatcher.Invoke(() => { i200.Parts.Add(part); });
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                ProgressBarVisibility = Visibility.Visible;
+                Status = "Загрузка информации...";
+                Application.Current.Dispatcher.Invoke(() => { Parts.Clear(); });
                 Application.Current.Dispatcher.Invoke(() => {
-                    Parts.Add(Skt21_104);
-                    Parts.Add(Skt21_105);
-                    Parts.Add(L230);
-                    Parts.Add(QTS200);
-                    Parts.Add(GS1500);
-                    Parts.Add(QTS350);
-                    Parts.Add(N5000);
-                    Parts.Add(XH6300);
-                    Parts.Add(A110);
-                    Parts.Add(MV134);
-                    Parts.Add(i200);
+                    Skt21_104.FromDate = FromDate;
+                    Skt21_104.ToDate = ToDate;
+                    Skt21_104.Parts.Clear();
                 });
-            }
-            catch (SqlException sqlEx)
-            {
-                var (_, message) = sqlEx.Number switch
+                Application.Current.Dispatcher.Invoke(() => {
+                    Skt21_105.FromDate = FromDate;
+                    Skt21_105.ToDate = ToDate;
+                    Skt21_105.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    L230.FromDate = FromDate;
+                    L230.ToDate = ToDate;
+                    L230.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    QTS200.FromDate = FromDate;
+                    QTS200.ToDate = ToDate;
+                    QTS200.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    GS1500.FromDate = FromDate;
+                    GS1500.ToDate = ToDate;
+                    GS1500.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    QTS350.FromDate = FromDate;
+                    QTS350.ToDate = ToDate;
+                    QTS350.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    N5000.FromDate = FromDate;
+                    N5000.ToDate = ToDate;
+                    N5000.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    XH6300.FromDate = FromDate;
+                    XH6300.ToDate = ToDate;
+                    XH6300.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    A110.FromDate = FromDate;
+                    A110.ToDate = ToDate;
+                    A110.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    MV134.FromDate = FromDate;
+                    MV134.ToDate = ToDate;
+                    MV134.Parts.Clear();
+                });
+                Application.Current.Dispatcher.Invoke(() => {
+                    i200.FromDate = FromDate;
+                    i200.ToDate = ToDate;
+                    i200.Parts.Clear();
+                });
+
+
+                ObservableCollection<Part> data = new ObservableCollection<Part>();
+
+                try
                 {
-                    -1 => (DbResult.Error, StatusTips.NoConnectionToDb),
-                    18456 => (DbResult.AuthError, StatusTips.AuthFailedToDb),
-                    _ => (DbResult.Error, $"Ошибка БД №{sqlEx.Number}"),
-                };
-                MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    data = Database.ReadPartsByShiftDate(FromDate, ToDate);
+
+                    foreach (Part part in data)
+                    {
+                        switch (part.Machine)
+                        {
+                            case Machines.HuyndaiSkt21_104:
+                                Application.Current.Dispatcher.Invoke(() => { Skt21_104.Parts.Add(part); });
+                                break;
+                            case Machines.HuyndaiSkt21_105:
+                                Application.Current.Dispatcher.Invoke(() => { Skt21_105.Parts.Add(part); });
+                                break;
+                            case Machines.HuyndaiL230A:
+                                Application.Current.Dispatcher.Invoke(() => { L230.Parts.Add(part); });
+                                break;
+                            case Machines.MazakQts200Ml:
+                                Application.Current.Dispatcher.Invoke(() => { QTS200.Parts.Add(part); });
+                                break;
+                            case Machines.GoodwayGs1500:
+                                Application.Current.Dispatcher.Invoke(() => { GS1500.Parts.Add(part); });
+                                break;
+                            case Machines.MazakQts350:
+                                Application.Current.Dispatcher.Invoke(() => { QTS350.Parts.Add(part); });
+                                break;
+                            case Machines.MazakNexus5000:
+                                Application.Current.Dispatcher.Invoke(() => { N5000.Parts.Add(part); });
+                                break;
+                            case Machines.HuyndaiXH6300:
+                                Application.Current.Dispatcher.Invoke(() => { XH6300.Parts.Add(part); });
+                                break;
+                            case Machines.VictorA110:
+                                Application.Current.Dispatcher.Invoke(() => { A110.Parts.Add(part); });
+                                break;
+                            case Machines.QuaserMv134:
+                                Application.Current.Dispatcher.Invoke(() => { MV134.Parts.Add(part); });
+                                break;
+                            case Machines.MazakIntegrexI200:
+                                Application.Current.Dispatcher.Invoke(() => { i200.Parts.Add(part); });
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    Application.Current.Dispatcher.Invoke(() => {
+                        Parts.Add(Skt21_104);
+                        Parts.Add(Skt21_105);
+                        Parts.Add(L230);
+                        Parts.Add(QTS200);
+                        Parts.Add(GS1500);
+                        Parts.Add(QTS350);
+                        Parts.Add(N5000);
+                        Parts.Add(XH6300);
+                        Parts.Add(A110);
+                        Parts.Add(MV134);
+                        Parts.Add(i200);
+                    });
+                }
+                catch (SqlException sqlEx)
+                {
+                    var (_, message) = sqlEx.Number switch
+                    {
+                        -1 => (DbResult.Error, StatusTips.NoConnectionToDb),
+                        18456 => (DbResult.AuthError, StatusTips.AuthFailedToDb),
+                        _ => (DbResult.Error, $"Ошибка БД №{sqlEx.Number}"),
+                    };
+                    MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                Status = "";
+                ProgressBarVisibility = Visibility.Collapsed;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            
-            Status = "";
-            ProgressBarVisibility = Visibility.Collapsed;
         });
     }
-
-    private void UpdateParts()
-    {
-        
-    } 
 
     private void BackgroundWorker()
     {

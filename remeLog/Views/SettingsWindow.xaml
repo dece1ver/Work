@@ -52,6 +52,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition />
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
@@ -102,7 +103,10 @@
                 <Button Content="Проверить" Command="{Binding CheckConnectionStringCommand}"/>
             </DockPanel>
 
-            <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" 
+            <CheckBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding InstantUpdateOnMainWindow}" 
+                      Content="Мнгновенное обновление информации на главной странице" Margin="4 6"/>
+
+            <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" 
                         Orientation="Horizontal" FlowDirection="RightToLeft">
                 <Button Content="Ok" Width="100" Margin="0 0 5 0" 
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:SettingsWindow}}">

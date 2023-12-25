@@ -1,12 +1,8 @@
-﻿using DocumentFormat.OpenXml.VariantTypes;
-using libeLog.Extensions;
-using remeLog.Models;
+﻿using remeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+
 
 namespace remeLog.Infrastructure.Extensions
 {
@@ -48,25 +44,25 @@ namespace remeLog.Infrastructure.Extensions
             return factSum == 0 ? 0 : planSum / factSum;
         }
 
-        public static double SpecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate)
+        public static double SpecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift) 
         {
             double sum = 0;
             foreach (var part in parts)
             {
                 sum += part.SetupDowntimes + part.MachiningDowntimes;
             }
-            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * 1290;
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
             return sum / totalWorkMinutes;
         }
 
-        public static double UnspecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate)
+        public static double UnspecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
         {
             double sum = 0;
             foreach (var part in parts)
             {
                 sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
             }
-            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * 1290;
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
             return (totalWorkMinutes - sum) / totalWorkMinutes;
         }
     }

@@ -37,6 +37,7 @@ internal class SettingsWindowViewModel : ViewModel
         _ReportsPath = new SettingsItem(AppSettings.Instance.ReportsPath ?? "");
         _DailyReportsDir = new SettingsItem(AppSettings.Instance.DailyReportsDir ?? "");
         _ConnectionString = new SettingsItem(AppSettings.Instance.ConnectionString ?? "");
+        _InstantUpdateOnMainWindow = AppSettings.Instance.InstantUpdateOnMainWindow;
 
         _ = CheckSourceAsync();
         _ = CheckReportsAsync();
@@ -132,6 +133,16 @@ internal class SettingsWindowViewModel : ViewModel
         get => _ConnectionString;
         set => Set(ref _ConnectionString, value);
     }
+
+
+    private bool _InstantUpdateOnMainWindow;
+    /// <summary> Описание </summary>
+    public bool InstantUpdateOnMainWindow
+    {
+        get => _InstantUpdateOnMainWindow;
+        set => Set(ref _InstantUpdateOnMainWindow, value);
+    }
+
 
     #endregion
 
