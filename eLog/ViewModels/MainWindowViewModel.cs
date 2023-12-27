@@ -310,7 +310,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             Status = string.Empty;
             if (AppSettings.Instance.DebugMode) WriteLog($"Добавление в список.\n\tДеталь: {part.Name}");
             Parts.Insert(0, part);
-            Debug.Print($"Set partial for [{part.Name}]: {Util.SetPartialState(ref part)}");
+            _ = SetPartialState(ref part);
             if (AppSettings.Instance.DebugMode) WriteLog($"Добавлено.\n\tВсего деталей: {Parts.Count}");
             OnPropertyChanged(nameof(WorkIsNotInProgress));
             OnPropertyChanged(nameof(CanEditShiftAndParams));
@@ -408,8 +408,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             {
                 case EndSetupResult.Success:
                     part.StartMachiningTime = DateTime.Now.Rounded();
-                    var partialRes = SetPartialState(ref part);
-                    Debug.Print($"Set partial for [{part.Name}]: {partialRes}");
+                    _ = SetPartialState(ref part);
                     Parts.RemoveAt(index);
                     Parts.Insert(index, part);
                     break;
@@ -421,6 +420,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                     part.StartMachiningTime = now;
                     part.EndMachiningTime = now;
                     part.FinishedCount = 0;
+                    _ = SetPartialState(ref part);
 
 
                     //if (part.Id != -1)
@@ -472,9 +472,9 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             {
                 OnPropertyChanged(nameof(part.Title));
                 Status = string.Empty;
-                Parts[index] = part;
                 //Parts.RemoveAt(index);
                 //Parts.Insert(index, part);
+                Parts[index] = part;
                 var resPartial = SetPartialState(ref part);
                 Debug.Print($"Set partial for [{part.Name}]: {resPartial}");
                 if (part.StartMachiningTime == DateTime.MinValue) part.DownTimes = new DeepObservableCollection<DownTime>(part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
