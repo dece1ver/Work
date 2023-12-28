@@ -342,12 +342,18 @@ public class Part : INotifyPropertyChanged
             double downTimesMinutes = 0;
             foreach (var downTime in DownTimes.Where(x => x.Relation is DownTime.Relations.Setup))
             {
-                var partialBreaks = DateTimes.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
-                downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                //var partialBreaks = DateTimes.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
+                //downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                downTimesMinutes += downTime.Time.TotalMinutes;
             }
-            return FullSetupTimeFact
-                   - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)
-                   - TimeSpan.FromMinutes(downTimesMinutes);
+            var breaks = DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime);
+            var downTimes = TimeSpan.FromMinutes(downTimesMinutes);
+            var result = FullSetupTimeFact;
+            result -= breaks;
+            result -= downTimes;
+            return FullSetupTimeFact 
+                - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime) 
+                - TimeSpan.FromMinutes(downTimesMinutes);
         }
     }
 
@@ -384,8 +390,9 @@ public class Part : INotifyPropertyChanged
             double downTimesMinutes = 0;
             foreach (var downTime in DownTimes.Where(x => x.Relation is DownTime.Relations.Machining))
             {
-                var partialBreaks = DateTimes.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
-                downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                //var partialBreaks = DateTimes.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
+                //downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+                downTimesMinutes += downTime.Time.TotalMinutes;
             }
             return FullProductionTimeFact - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)
                                           - TimeSpan.FromMinutes(downTimesMinutes);
