@@ -76,32 +76,32 @@ public static class DateTimes
             endTime = endTime.AddDays(1);
         }
 
-        if (dayShiftFirstBreak >= startTime && dayShiftFirstBreak <= endTime)
+        if (dayShiftFirstBreak > startTime && dayShiftFirstBreak <= endTime)
         {
             breaks += TimeSpan.FromMinutes(15);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(15);
         }
-        if (dayShiftSecondBreak >= startTime && dayShiftSecondBreak <= endTime)
+        if (dayShiftSecondBreak > startTime && dayShiftSecondBreak <= endTime)
         {
             breaks += TimeSpan.FromMinutes(30);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(30);
         }
-        if (dayShiftThirdBreak >= startTime && dayShiftThirdBreak <= endTime)
+        if (dayShiftThirdBreak > startTime && dayShiftThirdBreak <= endTime)
         {
             breaks += TimeSpan.FromMinutes(15);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(15);
         }
-        if (nightShiftFirstBreak >= startTime && nightShiftFirstBreak <= endTime)
+        if (nightShiftFirstBreak > startTime && nightShiftFirstBreak <= endTime)
         {
             breaks += TimeSpan.FromMinutes(30);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(30);
         }
-        if (nightShiftSecondBreak >= startTime && nightShiftSecondBreak <= endTime)
+        if (nightShiftSecondBreak > startTime && nightShiftSecondBreak <= endTime)
         {
             breaks += TimeSpan.FromMinutes(30);
             if (!calcOnEnd) endTime += TimeSpan.FromMinutes(30);
         }
-        if (nightShiftThirdBreak >= startTime && nightShiftThirdBreak <= endTime)
+        if (nightShiftThirdBreak > startTime && nightShiftThirdBreak <= endTime)
         {
             breaks += TimeSpan.FromMinutes(30);
         }
@@ -171,7 +171,6 @@ public static class DateTimes
         {
             result = (endBreakTime - breakTime).TotalMinutes;
         }
-
         return result;
     }
 }

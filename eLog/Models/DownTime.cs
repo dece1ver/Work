@@ -177,6 +177,9 @@ public class DownTime : INotifyPropertyChanged, IDataErrorInfo
         }
     }
 
+    /// <summary>
+    /// Время простоя с учетом перерывов
+    /// </summary>
     [JsonIgnore] public TimeSpan Time => EndTime - StartTime - DateTimes.GetBreaksBetween(StartTime, EndTime);
     [JsonIgnore] public bool InProgress => EndTime < StartTime;
 

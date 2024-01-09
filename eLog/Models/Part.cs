@@ -275,10 +275,10 @@ public class Part : INotifyPropertyChanged
                     result += " (Неполная наладка)";
                     break;
                 case State.Finished:
-                    result += productivity;
+                    result += productivity + downTimesInfo;
                     break;
             }
-            return $"{result}{(breaks.Ticks > 0 && SetupTimeFact.Ticks > 0 && IsFinished is State.InProgress && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup) ? breaksInfo : string.Empty)}";
+            return $"{result}{(breaks.Ticks > 0 && SetupTimeFact.Ticks > 0 && IsFinished is not State.PartialSetup && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup) ? breaksInfo : string.Empty)}";
         }
     }
 
@@ -289,6 +289,14 @@ public class Part : INotifyPropertyChanged
         get
         {
             if (EndMachiningTime == DateTime.MinValue && SingleProductionTimePlan == 0) return "-";
+            var downTimes = DownTimes.Where(d => d.Relation == DownTime.Relations.Machining);
+            double downTimesMinutes = 0;
+            foreach (var downTime in downTimes)
+            {
+                var partialBreaks = DateTimes.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
+
+                if (downTime.Time.TotalMinutes > 0) downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
+            }
             var totalCount = TotalCount > 1 ? TotalCount - 1 : TotalCount;
             var startMachiningTime = SetupIsFinished
                 ? StartMachiningTime
@@ -301,10 +309,14 @@ public class Part : INotifyPropertyChanged
                 : startMachiningTime
                     .AddMinutes(totalCount * SingleProductionTimePlan)
                     .Add(DateTimes.GetBreaksBetween(startMachiningTime, startMachiningTime.AddMinutes(totalCount * SingleProductionTimePlan), false));
+
             var result = endMachiningTime >= startMachiningTime && EndSetupInfo != "-" ? endMachiningTime.ToString(Constants.DateTimeFormat) : "-";
             if (result == "-") return result;
             var breaks = DateTimes.GetBreaksBetween(startMachiningTime, endMachiningTime);
             var breaksInfo = breaks.Ticks > 0 ? $" + перерывы: {breaks.TotalMinutes} мин" : string.Empty;
+            var downTimesInfo = downTimesMinutes > 0
+                ? $" + простои: {downTimesMinutes} мин"
+                : string.Empty;
             var planInfo = SingleProductionTimePlan > 0
                 ? $" (Плановое: {totalCount} шт по {SingleProductionTimePlan} мин{breaksInfo})"
                 : string.Empty;
@@ -316,13 +328,16 @@ public class Part : INotifyPropertyChanged
             switch (IsFinished)
             {
                 case not State.InProgress when FinishedCount > 0:
-                    result += productivityInfo;
+                    result += productivityInfo + downTimesInfo;
                     break;
                 case State.InProgress:
                     result += planInfo;
                     break;
                 case State.PartialSetup when FinishedCount == 0:
                     result = "Без изготовления";
+                    break;
+                case State.Finished:
+                    result += productivity + downTimesInfo;
                     break;
             }
             return $"{result}{(breaks.Ticks > 0 && ProductionTimeFact.Ticks > 0 && IsFinished is not State.InProgress ? breaksInfo : string.Empty)}";
@@ -342,15 +357,10 @@ public class Part : INotifyPropertyChanged
             double downTimesMinutes = 0;
             foreach (var downTime in DownTimes.Where(x => x.Relation is DownTime.Relations.Setup))
             {
-                //var partialBreaks = DateTimes.GetPartialBreakBetween(downTime.StartTime, downTime.EndTime);
-                //downTimesMinutes += downTime.Time.TotalMinutes - partialBreaks;
                 downTimesMinutes += downTime.Time.TotalMinutes;
             }
             var breaks = DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime);
             var downTimes = TimeSpan.FromMinutes(downTimesMinutes);
-            var result = FullSetupTimeFact;
-            result -= breaks;
-            result -= downTimes;
             return FullSetupTimeFact 
                 - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime) 
                 - TimeSpan.FromMinutes(downTimesMinutes);
