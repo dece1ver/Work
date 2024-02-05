@@ -54,6 +54,14 @@ public class Machine
                 Name = "Victor A110";
                 SafeName = "Victor A110";
                 break;
+            case 11:
+                Name = "Deed HTC550MY";
+                SafeName = "Deed HTC550MY";
+                break;
+            case 12:
+                Name = "Deed HTC650M";
+                SafeName = "Deed HTC650M";
+                break;
             default:
                 Name = "-//-";
                 SafeName = "---";

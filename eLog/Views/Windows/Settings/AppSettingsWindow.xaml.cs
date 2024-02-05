@@ -81,7 +81,7 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
 
     public AppSettingsWindow()
     {
-        Machines = Enumerable.Range(0, 11).Select(i => new Machine(i)).ToList();
+        Machines = Enumerable.Range(0, 13).Select(i => new Machine(i)).ToList();
         StorageTypes = new List<StorageType>() 
         {
             new StorageType(StorageType.Types.Excel),
