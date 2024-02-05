@@ -298,8 +298,12 @@ internal static class Util
                     if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
                     // норматив наладки для отчета
                     xlRow.Cell(44).Value = partSetupTimePlanReport;
+                    // норматив наладки для исправления
+                    xlRow.Cell(45).Value = part.SetupTimePlan;
+                    // норматив изготовления для исправления
+                    xlRow.Cell(46).Value = part.SingleProductionTimePlan;
 
-                    for (var i = 1; i <= 44; i++)
+                    for (var i = 1; i <= 46; i++)
                     {
                         xlRow.Cell(i).Style = prevRow.Cell(i).Style;
                     }
@@ -431,6 +435,8 @@ internal static class Util
                     var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
                     if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
                     xlRow.Cell(44).Value = partSetupTimePlanReport;
+                    xlRow.Cell(45).Value = part.SetupTimePlan;
+                    xlRow.Cell(46).Value = part.SingleProductionTimePlan;
                     result = WriteResult.Ok;
                     if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл..."); }
                     Debug.Print("Rewrite");
