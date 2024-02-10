@@ -314,6 +314,12 @@ internal static class Util
                 wb.Save(true);
                 if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
                 Debug.Print("Ok");
+                if (!ValidXl())
+                {
+                    TryRestoreXl();
+                    part.Id = -1;
+                    return -1;
+                }
             }
 
         }
@@ -443,6 +449,11 @@ internal static class Util
                     wb.Save(true);
                     Debug.Print("Ok");
                     if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
+                    if (!ValidXl())
+                    {
+                        TryRestoreXl();
+                        return WriteResult.Error;
+                    }
                     break;
                 }
                 if (AppSettings.Instance.DebugMode && result is WriteResult.NotFinded) { WriteLog($"Деталь не найдена."); }
