@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace libeLog.Models
+namespace neLog.Models
 {
-    public enum DbResult
+    class Part
     {
-        Ok, AuthError, Error, NoConnection
     }
 }

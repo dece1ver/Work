@@ -2,13 +2,12 @@
 using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
-using libeLog.Infrastructure;
 using libeLog.Interfaces;
 using libeLog.Models;
 using Microsoft.Win32;
-using remeLog.Infrastructure;
-using remeLog.Infrastructure.Types;
-using remeLog.Models;
+using neLog.Infrastructure;
+using libeLog.Infrastructure;
+using neLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,36 +21,44 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
-namespace remeLog.ViewModels;
+namespace neLog.ViewModels;
 
 internal class SettingsWindowViewModel : ViewModel
 {
     public SettingsWindowViewModel()
     {
-        SetSourceTableCommand = new LambdaCommand(OnSetSourceTableCommandExecuted, CanSetSourceTableCommandExecute);
-        SetReportsTableCommand = new LambdaCommand(OnSetReportsTableCommandExecuted, CanSetReportsTableCommandExecute);
-        SetDailyReportsDirCommand = new LambdaCommand(OnSetDailyReportsDirCommandExecuted, CanSetDailyReportsDirCommandExecute);
+        SetStorageTableCommand = new LambdaCommand(OnSetStorageTableCommandExecuted, CanSetStorageTableCommandExecute);
+        SetOrdersTableCommand = new LambdaCommand(OnSetOrdersTableCommandExecuted, CanSetOrdersTableCommandExecute);
         CheckConnectionStringCommand = new LambdaCommand(OnCheckConnectionStringCommandExecuted, CanCheckConnectionStringCommandExecute);
 
-        _DataSource = AppSettings.Instance.DataSource;
-        _SourcePath = new SettingsItem(AppSettings.Instance.SourcePath ?? "");
-        _ReportsPath = new SettingsItem(AppSettings.Instance.ReportsPath ?? "");
-        _DailyReportsDir = new SettingsItem(AppSettings.Instance.DailyReportsDir ?? "");
+        _StorageTablePath = new SettingsItem(AppSettings.Instance.StorageTablePath ?? "");
+        _OrdersTablePath = new SettingsItem(AppSettings.Instance.OrdersTablePath ?? "");
         _ConnectionString = new SettingsItem(AppSettings.Instance.ConnectionString ?? "");
-        _InstantUpdateOnMainWindow = AppSettings.Instance.InstantUpdateOnMainWindow;
 
-        _ = CheckSourceAsync();
-        _ = CheckReportsAsync();
-        _ = CheckDailyReportsDirAsync();
+        _ = CheckStorageTableAsync();
+        _ = CheckOrdersTableAsync();
         _ = CheckConnectionStringAsync();
     }
 
+
+
     #region Свойства
 
-    public List<DataSource> DataSourceTypes { get; set; } = new() {
-        new DataSource(DataSource.Types.Database),
-        new DataSource(DataSource.Types.Excel),
+    public List<StorageType> StorageTypes { get; set; } = new() {
+        new StorageType(StorageType.Types.Database),
+        new StorageType(StorageType.Types.Excel),
+        new StorageType(StorageType.Types.All),
     };
+
+
+    private StorageType _StorageType;
+    /// <summary> Описание </summary>
+    public StorageType StorageType
+    {
+        get => _StorageType;
+        set => Set(ref _StorageType, value);
+    }
+
 
     private string _StatusText = string.Empty;
     /// <summary> Текст статусбара </summary>
@@ -93,30 +100,20 @@ internal class SettingsWindowViewModel : ViewModel
         set => Set(ref _ProgressBarVisibility, value);
     }
 
-
-    private DataSource _DataSource;
-    /// <summary> Описание </summary>
-    public DataSource DataSource
-    {
-        get => _DataSource;
-        set => Set(ref _DataSource, value);
-    }
-
-
-    private SettingsItem _SourcePath;
+    private SettingsItem _StorageTablePath;
     /// <summary> Путь к таблице </summary>
-    public SettingsItem SourcePath
+    public SettingsItem StorageTablePath
     {
-        get => _SourcePath;
-        set => Set(ref _SourcePath, value);
+        get => _StorageTablePath;
+        set => Set(ref _StorageTablePath, value);
     }
 
-    private SettingsItem _ReportsPath;
+    private SettingsItem _OrdersTablePath;
     /// <summary> Путь к файлу с отчетами </summary>
-    public SettingsItem ReportsPath
+    public SettingsItem OrdersTablePath
     {
-        get => _ReportsPath;
-        set => Set(ref _ReportsPath, value);
+        get => _OrdersTablePath;
+        set => Set(ref _OrdersTablePath, value);
     }
 
     private SettingsItem _DailyReportsDir;
@@ -136,22 +133,13 @@ internal class SettingsWindowViewModel : ViewModel
     }
 
 
-    private bool _InstantUpdateOnMainWindow;
-    /// <summary> Описание </summary>
-    public bool InstantUpdateOnMainWindow
-    {
-        get => _InstantUpdateOnMainWindow;
-        set => Set(ref _InstantUpdateOnMainWindow, value);
-    }
-
-
     #endregion
 
     #region Команды
 
-    #region SetSourceTable
-    public ICommand SetSourceTableCommand { get; }
-    private void OnSetSourceTableCommandExecuted(object p)
+    #region SetStorageTable
+    public ICommand SetStorageTableCommand { get; }
+    private void OnSetStorageTableCommandExecuted(object p)
     {
         OpenFileDialog dlg = new()
         {
@@ -159,15 +147,15 @@ internal class SettingsWindowViewModel : ViewModel
             DefaultExt = "xlsm"
         };
         if (dlg.ShowDialog() != true) return;
-        SourcePath.Value = dlg.FileName;
-        _ = CheckSourceAsync();
+        StorageTablePath.Value = dlg.FileName;
+        _ = CheckStorageTableAsync();
     }
-    private static bool CanSetSourceTableCommandExecute(object p) => true;
+    private static bool CanSetStorageTableCommandExecute(object p) => true;
     #endregion
 
-    #region SetReportsTable
-    public ICommand SetReportsTableCommand { get; }
-    private void OnSetReportsTableCommandExecuted(object p)
+    #region SetOrdersTable
+    public ICommand SetOrdersTableCommand { get; }
+    private void OnSetOrdersTableCommandExecuted(object p)
     {
         OpenFileDialog dlg = new()
         {
@@ -175,10 +163,10 @@ internal class SettingsWindowViewModel : ViewModel
             DefaultExt = "xlsm"
         };
         if (dlg.ShowDialog() != true) return;
-        ReportsPath.Value = dlg.FileName;
-        _ = CheckReportsAsync();
+        OrdersTablePath.Value = dlg.FileName;
+        _ = CheckOrdersTableAsync();
     }
-    private static bool CanSetReportsTableCommandExecute(object p) => true;
+    private static bool CanSetOrdersTableCommandExecute(object p) => true;
     #endregion
 
     #region SetDailyReportsDir
@@ -206,37 +194,37 @@ internal class SettingsWindowViewModel : ViewModel
 
     #endregion
 
-    private async Task CheckSourceAsync()
+    private async Task CheckStorageTableAsync()
     {
         await Task.Run(() =>
         {
-            SourcePath.Status = Status.Sync;
-            SourcePath.Tip = Constants.StatusTips.Checking;
-            if (File.Exists(SourcePath.Value))
+            StorageTablePath.Status = Status.Sync;
+            StorageTablePath.Tip = Constants.StatusTips.Checking;
+            if (File.Exists(StorageTablePath.Value))
             {
-                SourcePath.Status = Status.Ok;
-                SourcePath.Tip = Constants.StatusTips.Ok;
+                StorageTablePath.Status = Status.Ok;
+                StorageTablePath.Tip = Constants.StatusTips.Ok;
                 return;
             }
-            SourcePath.Status = Status.Error;
-            SourcePath.Tip = Constants.StatusTips.NoFile;
+            StorageTablePath.Status = Status.Error;
+            StorageTablePath.Tip = Constants.StatusTips.NoFile;
         });
     }
 
-    private async Task CheckReportsAsync()
+    private async Task CheckOrdersTableAsync()
     {
         await Task.Run(() =>
         {
-            ReportsPath.Status = Status.Sync;
-            ReportsPath.Tip = Constants.StatusTips.Checking;
-            if (File.Exists(ReportsPath.Value))
+            OrdersTablePath.Status = Status.Sync;
+            OrdersTablePath.Tip = Constants.StatusTips.Checking;
+            if (File.Exists(OrdersTablePath.Value))
             {
-                ReportsPath.Status = Status.Ok;
-                ReportsPath.Tip = Constants.StatusTips.Ok;
+                OrdersTablePath.Status = Status.Ok;
+                OrdersTablePath.Tip = Constants.StatusTips.Ok;
                 return;
             }
-            ReportsPath.Status = Status.Error;
-            ReportsPath.Tip = Constants.StatusTips.NoFile;
+            OrdersTablePath.Status = Status.Error;
+            OrdersTablePath.Tip = Constants.StatusTips.NoFile;
         });
     }
 

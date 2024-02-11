@@ -34,7 +34,7 @@ internal static class Util
     {
         try
         {
-            var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
+            using var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
             return (from xlRow in wb.Worksheet(1).Rows()
                     where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
                     select new Part()
@@ -103,7 +103,7 @@ internal static class Util
     {
         try
         {
-            _ = new XLWorkbook(AppSettings.Instance.XlPath);
+            using var wb = new XLWorkbook(AppSettings.Instance.XlPath);
             return true;
         }
         catch
@@ -314,14 +314,7 @@ internal static class Util
                 wb.Save(true);
                 if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
                 Debug.Print("Ok");
-                if (!ValidXl())
-                {
-                    TryRestoreXl();
-                    part.Id = -1;
-                    return -1;
-                }
             }
-
         }
         catch (IOException ioEx)
         {
@@ -349,6 +342,13 @@ internal static class Util
         catch (Exception e)
         {
             WriteLog(e, $"Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
+        }
+        if (!ValidXl())
+        {
+            WriteLog("Файл невалидный, требуется восстановление.");
+            TryRestoreXl();
+            part.Id = -1;
+            return -1;
         }
         return id;
     }
@@ -449,16 +449,12 @@ internal static class Util
                     wb.Save(true);
                     Debug.Print("Ok");
                     if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
-                    if (!ValidXl())
-                    {
-                        TryRestoreXl();
-                        return WriteResult.Error;
-                    }
                     break;
                 }
                 if (AppSettings.Instance.DebugMode && result is WriteResult.NotFinded) { WriteLog($"Деталь не найдена."); }
             }
         }
+
         catch (IOException ioEx)
         {
             if (AppSettings.Instance.DebugMode) { WriteLog(ioEx); }
@@ -482,6 +478,12 @@ internal static class Util
         {
             Debug.Print("Необработанное исключение");
             WriteLog(e, $"Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+            TryRestoreXl();
+            return WriteResult.Error;
+        }
+        if (!ValidXl())
+        {
+            WriteLog("Файл невалидный, требуется восстановление.");
             TryRestoreXl();
             return WriteResult.Error;
         }
@@ -515,15 +517,15 @@ internal static class Util
         try
         {
             Debug.Print("Restore");
-            WriteLog("Попытка восстановления XL файла после ошибки...");
+            WriteLog("Попытка восстановления XL файла...");
             File.Copy(AppSettings.XlReservedPath, AppSettings.Instance.XlPath, true);
             WriteLog("Успешно.");
             Debug.Print("Ok");
         }
-        catch
+        catch (Exception ex)
         {
             Debug.Print("Failed");
-            WriteLog("Неудачно.");
+            WriteLog(ex, "Неудачно.");
         }
     }
 
@@ -547,7 +549,7 @@ internal static class Util
     /// <param name="exception"></param>
     /// <param name="additionMessage"></param>
     public static void WriteLog(Exception exception, string additionMessage = "") 
-        => Logs.Write(AppSettings.LogFile, exception, additionMessage, GetCopyDir());
+        => _ = Logs.Write(AppSettings.LogFile, exception, additionMessage, GetCopyDir());
 
 
     /// <summary>
@@ -555,7 +557,7 @@ internal static class Util
     /// </summary>
     /// <param name="message"></param>
     public static void WriteLog(string message)
-        => Logs.Write(AppSettings.LogFile, message, GetCopyDir());
+        => _ = Logs.Write(AppSettings.LogFile, message, GetCopyDir());
 
 
     /// <summary>
@@ -570,7 +572,7 @@ internal static class Util
                     $"Деталь №{part.Id}: {part.Name} | {part.Setup} уст.\n\t" +
                     $"М/Л: {part.Order} | {part.TotalCountInfo}\n\t" +
                     $"GUID: {part.Guid}\n\n";
-        Logs.Write(AppSettings.LogFile, content, GetCopyDir());
+        _ = Logs.Write(AppSettings.LogFile, content, GetCopyDir());
     }
 
 

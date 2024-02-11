@@ -11,6 +11,8 @@ namespace libeLog.Infrastructure
 {
     public static class Logs
     {
+        private static SemaphoreSlim semaphore = new SemaphoreSlim(1);
+
         /// <summary>
         /// Проверяет размер файла логов, если размер превышает допустимый, то он уходит в бэкап.
         /// </summary>
@@ -30,19 +32,21 @@ namespace libeLog.Infrastructure
         /// </summary>
         /// <param name="exception"></param>
         /// <param name="additionMessage"></param>
-        public static void Write(string path, Exception exception, string additionMessage = "", string copyDir = "")
+        public static async Task Write(string path, Exception exception, string additionMessage = "", string copyDir = "")
         {
             for (int i = 0; i < 3; i++)
             {
                 try
                 {
+                    await semaphore.WaitAsync();
                     if (File.Exists(path)) CheckLogSize(path);
-                    File.AppendAllText(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: " +
+                    await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: " +
                                                             $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
                                                             $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
                                                             $"{exception.GetType()}\n" +
                                                             $"{exception.StackTrace}\n\n");
-                    if (!string.IsNullOrWhiteSpace(copyDir)) TryCopyLog(path, copyDir);
+                    if (!string.IsNullOrWhiteSpace(copyDir)) await Task.Run(() => TryCopyLog(path, copyDir));
+                    semaphore.Release();
                     return;
                 }
                 catch (Exception e)
@@ -50,9 +54,10 @@ namespace libeLog.Infrastructure
                     if (i == 2)
                     {
                         MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                        semaphore.Release();
                         return;
                     }
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000);
                 }
             }
         }
@@ -61,16 +66,19 @@ namespace libeLog.Infrastructure
         /// <summary>
         /// Записывает сообщение в лог.
         /// </summary>
-        /// <param name="message"></param>
-        public static void Write(string path, string message, string copyDir = "")
+        /// <param name="message">Сообщение</param>
+        /// <param name="copyDir">Папка для копирования логов</param>
+        public static async Task Write(string path, string message, string copyDir = "")
         {
             for (int i = 0; i < 3; i++)
             {
                 try
                 {
+                    await semaphore.WaitAsync();
                     if (File.Exists(path)) CheckLogSize(path);
-                    File.AppendAllText(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: {message}\n\n");
-                    if (!string.IsNullOrWhiteSpace(copyDir)) TryCopyLog(path, copyDir);
+                    await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: {message}\n\n");
+                    if (!string.IsNullOrWhiteSpace(copyDir)) await Task.Run(() => TryCopyLog(path, copyDir));
+                    semaphore.Release();
                     return;
                 }
                 catch (Exception e)
@@ -78,6 +86,7 @@ namespace libeLog.Infrastructure
                     if (i == 2)
                     {
                         MessageBox.Show($"Покажи этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+                        semaphore.Release();
                         return;
                     }
                     Thread.Sleep(1000);

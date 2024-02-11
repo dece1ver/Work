@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\elog.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Settings.png" />
+    <None Remove="Views\elog.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\elog.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.102.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libeLog\libeLog.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\elog.ico" />
+    <Resource Include="Resources\Settings.png" />
+  </ItemGroup>
+
+</Project>

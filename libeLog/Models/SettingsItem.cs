@@ -1,12 +1,12 @@
 ﻿using libeLog.Base;
-using remeLog.Infrastructure.Types;
+using libeLog.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace remeLog.Models
+namespace libeLog.Models
 {
     public class SettingsItem : ViewModel
     {
@@ -23,9 +23,9 @@ namespace remeLog.Models
             set => Set(ref _Value, value);
         }
 
-        private CheckStatus _Status = CheckStatus.Sync;
+        private Status _Status = Status.Sync;
         /// <summary> Статус </summary>
-        public CheckStatus Status
+        public Status Status
         {
             get => _Status;
             set => Set(ref _Status, value);
@@ -39,6 +39,5 @@ namespace remeLog.Models
             get => _Tip;
             set => Set(ref _Tip, value);
         }
-
     }
 }

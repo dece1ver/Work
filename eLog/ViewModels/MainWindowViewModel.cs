@@ -562,6 +562,9 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                                 case DbResult.AuthError:
                                     Status = $"Ошибка авторизации в БД";
                                     break;
+                                case DbResult.NoConnection:
+                                    Status = $"БД недоступна";
+                                    break;
                                 case DbResult.Error:
                                     Status = $"Ошибка записи в БД";
                                     break;
@@ -668,11 +671,11 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                 case Util.WriteResult.Error:
                     Status = "Ошибка записи.";
                     ProgressBarVisibility = Visibility.Hidden;
-                    Thread.Sleep(30000);
+                    Thread.Sleep(10000);
                     break;
                 case Util.WriteResult.DontNeed:
                     ProgressBarVisibility = Visibility.Hidden;
-                    Thread.Sleep(30000);
+                    Thread.Sleep(10000);
                     break;
                 case Util.WriteResult.NotFinded:
                     part.Id = part.WriteToXl();

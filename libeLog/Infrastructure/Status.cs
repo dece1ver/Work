@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace libeLog.Models
+namespace libeLog.Infrastructure
 {
-    public enum DbResult
+    public enum Status
     {
-        Ok, AuthError, Error, NoConnection
+        Ok,
+        Warning,
+        Error,
+        Sync
     }
 }

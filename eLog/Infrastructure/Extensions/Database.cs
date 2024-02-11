@@ -152,11 +152,14 @@ namespace eLog.Infrastructure.Extensions
             {
                 switch (sqlEx.Number)
                 {
+                    case -1:
+                        Util.WriteLog("База данных недоступна.");
+                        return DbResult.NoConnection;
                     case 2601 or 2627:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
                         return UpdatePart(part);
                     case 18456:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
                         Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
@@ -275,8 +278,11 @@ namespace eLog.Infrastructure.Extensions
             {
                 switch (sqlEx.Number)
                 {
+                    case -1:
+                        Util.WriteLog("База данных недоступна.");
+                        return DbResult.NoConnection;
                     case 18456:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
                         Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
