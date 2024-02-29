@@ -8,6 +8,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/libeLog;component/Icons.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/libeLog;component/StyleDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <cnv:StatusVisibilityConverter x:Key="StatusVisibilityConverter"/>
             <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>

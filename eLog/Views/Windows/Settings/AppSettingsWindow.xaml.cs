@@ -88,18 +88,19 @@ public partial class AppSettingsWindow : Window, INotifyPropertyChanged
             new StorageType(StorageType.Types.Database),
             new StorageType (StorageType.Types.All) 
         };
+        _StorageType = AppSettings.Instance.StorageType;
         _XlPath = AppSettings.Instance.XlPath;
         _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
         _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
         _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
-        if (AppSettings.Instance.StorageType is null)
-        {
-            _StorageType = new StorageType(StorageType.Types.Excel);
-        } 
-        else
-        {
-            _StorageType = StorageTypes.First(x => x.Type == AppSettings.Instance.StorageType.Type);
-        }
+        //if (AppSettings.Instance.StorageType is null)
+        //{
+        //    _StorageType = new StorageType(StorageType.Types.Excel);
+        //} 
+        //else
+        //{
+        //    _StorageType = StorageTypes.First(x => x.Type == AppSettings.Instance.StorageType.Type);
+        //}
         _ConnectionString = AppSettings.Instance.ConnetctionString ?? "";
         _DebugMode = AppSettings.Instance.DebugMode;
         InitializeComponent();

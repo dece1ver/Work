@@ -7,7 +7,7 @@
         xmlns:cmd="clr-namespace:neLog.Infrastructure.Commands"
         xmlns:vm="clr-namespace:neLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:SettingsWindowViewModel}"
         mc:Ignorable="d"
-        Title="Параметры" Height="450" Width="800" ResizeMode="NoResize" Icon="/Resources/Settings.png">
+        Title="Параметры" Height="450" Width="800" ResizeMode="NoResize" Icon="/Resources/Settings.png" WindowStartupLocation="CenterOwner">
     <Window.DataContext>
         <vm:SettingsWindowViewModel />
     </Window.DataContext>
@@ -53,6 +53,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition />
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
@@ -74,7 +75,7 @@
             </DockPanel>
 
             <TextBlock Grid.Row="2" Grid.Column="0" 
-                   Text="Выгрузка заказов" Style="{StaticResource settingLabel}" />
+                   Text="Заказы" Style="{StaticResource settingLabel}" />
             <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding OrdersTablePath.Value}" 
                  d:Text="C:\ProgramData\dece1ver\remeLog\reports.xlsx"/>
             <DockPanel Grid.Row="2" Grid.Column="2">
@@ -83,20 +84,30 @@
                 <Button Content="Обзор..." Command="{Binding SetOrdersTableCommand}"/>
             </DockPanel>
 
-            <TextBlock x:Name="ConnectionStringTextBlock" Grid.Row="4" Grid.Column="0" 
-                   Text="Строка подключения" Style="{StaticResource settingLabel}" PreviewMouseLeftButtonUp="ConnectionStringTextBlock_PreviewMouseLeftButtonUp" />
-            <TextBox x:Name="ConnectionStringTextBox" Grid.Row="4" Grid.Column="1" Text="{Binding ConnectionString.Value}" IsReadOnly="False" IsEnabled="False"
-                 d:Text="Data Source=..."/>
-            <DockPanel Grid.Row="4" Grid.Column="2">
+            <TextBlock Grid.Row="3" Grid.Column="0" 
+                       Text="Работники" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding WorkersTablePath.Value}" 
+                       d:Text="C:\ProgramData\dece1ver\remeLog\reports.xlsx"/>
+            <DockPanel Grid.Row="3" Grid.Column="2">
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding WorkersTablePath.Tip, UpdateSourceTrigger=PropertyChanged}"
+                       Content="{Binding WorkersTablePath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Обзор..." Command="{Binding SetWorkersTableCommand}"/>
+            </DockPanel>
+
+            <TextBlock x:Name="ConnectionStringTextBlock" Grid.Row="5" Grid.Column="0" 
+                       Text="Строка подключения" Style="{StaticResource settingLabel}" PreviewMouseLeftButtonUp="ConnectionStringTextBlock_PreviewMouseLeftButtonUp" />
+            <TextBox x:Name="ConnectionStringTextBox" Grid.Row="5" Grid.Column="1" Text="{Binding ConnectionString.Value}" IsReadOnly="False" IsEnabled="False"
+                     d:Text="Data Source=..."/>
+            <DockPanel Grid.Row="5" Grid.Column="2">
                 <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding ConnectionString.Tip, UpdateSourceTrigger=PropertyChanged}"
-                   Content="{Binding ConnectionString.Status, Converter={StaticResource StatusVisibilityConverter}}" />
+                       Content="{Binding ConnectionString.Status, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Проверить" Command="{Binding CheckConnectionStringCommand}"/>
             </DockPanel>
 
-            <CheckBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding InstantUpdateOnMainWindow}" 
+            <CheckBox Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding DebugMode}" 
                       Content="Режим отладки" Margin="4 6"/>
 
-            <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" 
+            <StackPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" 
                     Orientation="Horizontal" FlowDirection="RightToLeft">
                 <Button Content="Ok" Width="100" Margin="0 0 5 0" 
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:SettingsWindow}}">

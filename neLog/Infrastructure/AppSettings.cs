@@ -46,8 +46,11 @@ public class AppSettings
     /// <summary> Путь к файлу занесения </summary>
     public string? StorageTablePath { get; set; }
 
-    /// <summary> Путь к файлу отчетов </summary>
+    /// <summary> Путь к файлу со списком заказов </summary>
     public string? OrdersTablePath { get; set; }
+
+    /// <summary> Путь к файлу со списком рабочих </summary>
+    public string? WorkersTablePath { get; set; }
 
     /// <summary> Путь к директории с суточными отчетами </summary>
     public string? ConnectionString { get; set; }
@@ -64,6 +67,7 @@ public class AppSettings
         StorageType = new StorageType(StorageType.Types.Excel);
         StorageTablePath = "";
         OrdersTablePath = "";
+        WorkersTablePath = "";
         ConnectionString = "";
         Save();
     }

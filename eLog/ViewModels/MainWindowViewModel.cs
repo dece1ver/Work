@@ -544,8 +544,9 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                     // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
                     var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
 
-                    if (AppSettings.Instance.StorageType == null ) { AppSettings.Instance.StorageType = new StorageType(StorageType.Types.Excel); }
 
+
+#pragma warning disable CA1416 // Проверка совместимости платформы
                     switch (AppSettings.Instance.StorageType.Type)
                     {
                         case StorageType.Types.Database:
@@ -586,6 +587,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
                         default:
                             break;
                     }
+#pragma warning restore CA1416 // Проверка совместимости платформы
                     ProgressBarVisibility = Visibility.Hidden;
                     OnPropertyChanged(nameof(part.Title));
                     //Application.Current.Dispatcher.Invoke(delegate

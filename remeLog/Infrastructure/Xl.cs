@@ -26,8 +26,8 @@ namespace remeLog.Infrastructure
                     parts.Add(new Part(
                         Guid.Parse(xlRow.Cell(36).Value.GetText()),
                         xlRow.Cell(7).Value.GetText(),
-                        xlRow.Cell(6).Value.GetDateTime(),
-                        xlRow.Cell(8).Value.GetText(),
+                        xlRow.Cell(6).Value.GetText(),
+                        xlRow.Cell(8).Value.GetDateTime(),
                         xlRow.Cell(9).Value.GetText(),
                         xlRow.Cell(10).Value.GetText(),
                         xlRow.Cell(11).Value.GetText(),

@@ -1,6 +1,6 @@
 ﻿namespace libeLog.Models
 {
-    public class StorageType
+    public struct StorageType
     {
         public enum Types
         {

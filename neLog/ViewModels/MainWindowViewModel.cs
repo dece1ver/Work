@@ -109,9 +109,12 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             SettingsWindow settingsWindow = new SettingsWindow() { Owner = Application.Current.MainWindow };
             if (settingsWindow.ShowDialog() == true && settingsWindow.DataContext is SettingsWindowViewModel settings)
             {
+                AppSettings.Instance.StorageType = settings.StorageType; 
                 AppSettings.Instance.StorageTablePath = settings.StorageTablePath.Value; 
                 AppSettings.Instance.OrdersTablePath = settings.OrdersTablePath.Value; 
+                AppSettings.Instance.WorkersTablePath = settings.WorkersTablePath.Value; 
                 AppSettings.Instance.ConnectionString = settings.ConnectionString.Value;
+                AppSettings.Instance.DebugMode = settings.DebugMode;
                 AppSettings.Save();
                 Status = "Параметры сохранены";
             }

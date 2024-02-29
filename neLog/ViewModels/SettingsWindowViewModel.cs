@@ -29,14 +29,19 @@ internal class SettingsWindowViewModel : ViewModel
     {
         SetStorageTableCommand = new LambdaCommand(OnSetStorageTableCommandExecuted, CanSetStorageTableCommandExecute);
         SetOrdersTableCommand = new LambdaCommand(OnSetOrdersTableCommandExecuted, CanSetOrdersTableCommandExecute);
+        SetWorkersTableCommand = new LambdaCommand(OnSetWorkersTableCommandExecuted, CanSetWorkersTableCommandExecute);
         CheckConnectionStringCommand = new LambdaCommand(OnCheckConnectionStringCommandExecuted, CanCheckConnectionStringCommandExecute);
 
+        _StorageType = AppSettings.Instance.StorageType;
         _StorageTablePath = new SettingsItem(AppSettings.Instance.StorageTablePath ?? "");
         _OrdersTablePath = new SettingsItem(AppSettings.Instance.OrdersTablePath ?? "");
+        _WorkersTablePath = new SettingsItem(AppSettings.Instance.WorkersTablePath ?? "");
         _ConnectionString = new SettingsItem(AppSettings.Instance.ConnectionString ?? "");
+        _DebugMode = AppSettings.Instance.DebugMode;
 
         _ = CheckStorageTableAsync();
         _ = CheckOrdersTableAsync();
+        _ = CheckWorkersTableAsync();
         _ = CheckConnectionStringAsync();
     }
 
@@ -116,12 +121,12 @@ internal class SettingsWindowViewModel : ViewModel
         set => Set(ref _OrdersTablePath, value);
     }
 
-    private SettingsItem _DailyReportsDir;
-    /// <summary> Путь к директирии с суточными отчетами </summary>
-    public SettingsItem DailyReportsDir
+    private SettingsItem _WorkersTablePath;
+    /// <summary> Путь к файлу с отчетами </summary>
+    public SettingsItem WorkersTablePath
     {
-        get => _DailyReportsDir;
-        set => Set(ref _DailyReportsDir, value);
+        get => _WorkersTablePath;
+        set => Set(ref _WorkersTablePath, value);
     }
 
     private SettingsItem _ConnectionString;
@@ -130,6 +135,14 @@ internal class SettingsWindowViewModel : ViewModel
     {
         get => _ConnectionString;
         set => Set(ref _ConnectionString, value);
+    }
+
+    private bool _DebugMode;
+    /// <summary> Строка подключения к БД </summary>
+    public bool DebugMode
+    {
+        get => _DebugMode;
+        set => Set(ref _DebugMode, value);
     }
 
 
@@ -159,8 +172,8 @@ internal class SettingsWindowViewModel : ViewModel
     {
         OpenFileDialog dlg = new()
         {
-            Filter = "Excel книга с макросами (*.xlsm)|*.xlsm",
-            DefaultExt = "xlsm"
+            Filter = "Excel книга (*.xlsx)|*.xlsx",
+            DefaultExt = "xlsx"
         };
         if (dlg.ShowDialog() != true) return;
         OrdersTablePath.Value = dlg.FileName;
@@ -169,17 +182,20 @@ internal class SettingsWindowViewModel : ViewModel
     private static bool CanSetOrdersTableCommandExecute(object p) => true;
     #endregion
 
-    #region SetDailyReportsDir
-    public ICommand SetDailyReportsDirCommand { get; }
-    private void OnSetDailyReportsDirCommandExecuted(object p)
+    #region SetWorkersTable
+    public ICommand SetWorkersTableCommand { get; }
+    private void OnSetWorkersTableCommandExecuted(object p)
     {
-        FolderBrowserDialog dlg = new()
-            ;
-        if (dlg.ShowDialog() != DialogResult.OK) return;
-        DailyReportsDir.Value = dlg.SelectedPath;
-        _ = CheckDailyReportsDirAsync();
+        OpenFileDialog dlg = new()
+        {
+            Filter = "Excel книга (*.xlsx)|*.xlsx",
+            DefaultExt = "xlsx"
+        };
+        if (dlg.ShowDialog() != true) return;
+        WorkersTablePath.Value = dlg.FileName;
+        _ = CheckWorkersTableAsync();
     }
-    private static bool CanSetDailyReportsDirCommandExecute(object p) => true;
+    private static bool CanSetWorkersTableCommandExecute(object p) => true;
     #endregion
 
     #region CheckConnectionString
@@ -190,7 +206,6 @@ internal class SettingsWindowViewModel : ViewModel
     }
     private static bool CanCheckConnectionStringCommandExecute(object p) => true;
     #endregion
-
 
     #endregion
 
@@ -228,31 +243,20 @@ internal class SettingsWindowViewModel : ViewModel
         });
     }
 
-    private async Task CheckDailyReportsDirAsync()
+    private async Task CheckWorkersTableAsync()
     {
         await Task.Run(() =>
         {
-            DailyReportsDir.Status = Status.Sync;
-            DailyReportsDir.Tip = Constants.StatusTips.Checking;
-            switch (DailyReportsDir.Value.CheckDirectoryRights(FileSystemRights.WriteData))
+            WorkersTablePath.Status = Status.Sync;
+            WorkersTablePath.Tip = Constants.StatusTips.Checking;
+            if (File.Exists(WorkersTablePath.Value))
             {
-                case CheckDirectoryRightsResult.HasAccess:
-                    DailyReportsDir.Status = Status.Ok;
-                    DailyReportsDir.Tip = Constants.StatusTips.Ok;
-                    break;
-                case CheckDirectoryRightsResult.NoAccess:
-                    DailyReportsDir.Status = Status.Warning;
-                    DailyReportsDir.Tip = Constants.StatusTips.NoWriteAccess;
-                    break;
-                case CheckDirectoryRightsResult.NotExists:
-                    DailyReportsDir.Status = Status.Error;
-                    DailyReportsDir.Tip = Constants.StatusTips.NoAccessToDirectory;
-                    break;
-                case CheckDirectoryRightsResult.Error:
-                    DailyReportsDir.Status = Status.Error;
-                    DailyReportsDir.Tip = Constants.StatusTips.AccessError;
-                    break;
+                WorkersTablePath.Status = Status.Ok;
+                WorkersTablePath.Tip = Constants.StatusTips.Ok;
+                return;
             }
+            WorkersTablePath.Status = Status.Error;
+            WorkersTablePath.Tip = Constants.StatusTips.NoFile;
         });
     }
 

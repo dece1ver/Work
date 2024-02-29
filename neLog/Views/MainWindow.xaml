@@ -68,7 +68,14 @@
                 </StatusBarItem>
             </StatusBar>
             <DockPanel>
+                <DockPanel DockPanel.Dock="Top" LastChildFill="True">
+                    <Button Content="Авторизация" Width="300" Height="40" Style="{StaticResource GeneralButton}" DockPanel.Dock="Right"/>
+                    <Grid/>
+                </DockPanel>
                 
+                <DockPanel>
+                    
+                </DockPanel>
             </DockPanel>
         </DockPanel>
         <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"

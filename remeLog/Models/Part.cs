@@ -12,8 +12,8 @@ namespace remeLog.Models
         public Part(
             Guid guid,
             string machine,
-            DateTime shiftDate,
             string shift,
+            DateTime shiftDate,
             string @operator,
             string partName,
             string order,
@@ -47,8 +47,8 @@ namespace remeLog.Models
         {
             _Guid = guid;
             _Machine = machine;
-            _ShiftDate = shiftDate;
             _Shift = shift;
+            _ShiftDate = shiftDate;
             _Operator = @operator;
             _PartName = partName;
             _Order = order;
@@ -606,6 +606,33 @@ namespace remeLog.Models
         }
 
 
+        private double _FixedSetupTimePlan;
+        /// <summary> Исправленный норматив наладки </summary>
+        public double FixedSetupTimePlan
+        {
+            get => _FixedSetupTimePlan;
+            set
+            {
+                NeedUpdate = true;
+                Set(ref _FixedSetupTimePlan, value);
+            }
+        }
+
+
+        private double _FixedProductionTimePlan;
+        /// <summary> Исправленный норматив на изготовление </summary>
+        public double FixedProductionTimePlan
+        {
+            get => _FixedProductionTimePlan;
+            set
+            {
+                NeedUpdate = true;
+                Set(ref _FixedProductionTimePlan, value);
+            }
+        }
+
+
+
         private string _EngineerComment;
         /// <summary> Комментарий техотдела </summary>
         public string EngineerComment
@@ -639,6 +666,11 @@ namespace remeLog.Models
             }
         }
 
+        public double SigleProductionTime { get 
+            {
+                var partsCount = StartSetupTime != StartMachiningTime && FinishedCount > 1 ? FinishedCount - 1 : FinishedCount;
+                return ProductionTimeFact / partsCount;
+            } }
         public double SetupRatio => SetupTimePlan / SetupTimeFact;
         public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : $"{SetupRatio:0%}";
         public double ProductionRatio => FinishedCountFact * SingleProductionTimePlan / ProductionTimeFact;

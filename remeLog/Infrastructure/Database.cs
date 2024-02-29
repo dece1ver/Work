@@ -115,6 +115,8 @@ namespace remeLog.Infrastructure
                         "SpecifiedDowntimesComment = @SpecifiedDowntimesComment, " +
                         "UnspecifiedDowntimeComment = @UnspecifiedDowntimeComment, " +
                         "MasterComment = @MasterComment, " +
+                        "FixedSetupTimePlan = @FixedSetupTimePlan, " +
+                        "FixedProductionTimePlan = @FixedProductionTimePlan, " +
                         "EngineerComment = @EngineerComment " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
@@ -153,6 +155,8 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@SpecifiedDowntimesComment", part.SpecifiedDowntimesComment);
                         cmd.Parameters.AddWithValue("@UnspecifiedDowntimeComment", part.UnspecifiedDowntimesComment);
                         cmd.Parameters.AddWithValue("@MasterComment", part.MasterComment);
+                        cmd.Parameters.AddWithValue("@FixedSetupTimePlan", part.MasterComment);
+                        cmd.Parameters.AddWithValue("@FixedProductionTimePlan", part.MasterComment);
                         cmd.Parameters.AddWithValue("@EngineerComment", part.EngineerComment);
 
                         var execureResult = cmd.ExecuteNonQuery();
@@ -189,8 +193,8 @@ namespace remeLog.Infrastructure
                     Part part = new Part(
                         reader.GetGuid(0),
                         reader.GetString(1),                        // станок
-                        reader.GetDateTime(2),                      // дата смены
-                        reader.GetString(3),                        // смена
+                        reader.GetString(2),                        // смена
+                        reader.GetDateTime(3),                      // дата смены
                         reader.GetString(4),                        // оператор
                         reader.GetString(5),                        // деталь
                         reader.GetString(6),                        // м/л
