@@ -288,7 +288,7 @@ internal class MainWindowViewModel : ViewModel, IOverlay
             partsInfo.FromDate = FromDate; 
             partsInfo.ToDate = ToDate;
             var partsInfoWindow = new PartsInfoWindow(partsInfo) { Owner = Application.Current.MainWindow };
-            partsInfoWindow.ShowDialog();
+            partsInfoWindow.Show();
         }
     }
     private static bool CanShowPartsInfoCommandExecute(object p) => true;

@@ -2,6 +2,7 @@
 using libeLog.Extensions;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
+using remeLog.Infrastructure.Extensions;
 using remeLog.Models;
 using System;
 using System.Collections;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Part = remeLog.Models.Part;
 
 namespace remeLog.Infrastructure
 {
@@ -155,8 +157,8 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@SpecifiedDowntimesComment", part.SpecifiedDowntimesComment);
                         cmd.Parameters.AddWithValue("@UnspecifiedDowntimeComment", part.UnspecifiedDowntimesComment);
                         cmd.Parameters.AddWithValue("@MasterComment", part.MasterComment);
-                        cmd.Parameters.AddWithValue("@FixedSetupTimePlan", part.MasterComment);
-                        cmd.Parameters.AddWithValue("@FixedProductionTimePlan", part.MasterComment);
+                        cmd.Parameters.AddWithValue("@FixedSetupTimePlan", part.FixedSetupTimePlan);
+                        cmd.Parameters.AddWithValue("@FixedProductionTimePlan", part.FixedProductionTimePlan);
                         cmd.Parameters.AddWithValue("@EngineerComment", part.EngineerComment);
 
                         var execureResult = cmd.ExecuteNonQuery();
@@ -190,43 +192,82 @@ namespace remeLog.Infrastructure
             {
                 while (reader.Read())
                 {
+                    var guid = reader.GetGuid(0);
+                    var machine = reader.GetString(1);                  
+                    var shift = reader.GetString(2);                  
+                    var shiftDate = reader.GetDateTime(3);                
+                    var @operator = reader.GetString(4);                  
+                    var partName = reader.GetString(5);                  
+                    var order = reader.GetString(6);                  
+                    var setup = reader.GetInt32(7);                   
+                    var finishedCount = reader.GetInt32(8);
+                    var totalCount = reader.GetInt32(9);                   
+                    var startSetupTime = reader.GetDateTime(10);               
+                    var startMachiningTime = reader.GetDateTime(11);
+                    var setupTimeFact = reader.GetDouble(12);                 
+                    var endMachiningTime = reader.GetDateTime(13);               
+                    var setupTimePlan = reader.GetDouble(14);                 
+                    var setupTimePlanForReport = reader.GetDouble(15);                 
+                    var singleProductionTimePlan = reader.GetDouble(16);                 
+                    var productionTimeFact = reader.GetDouble(17);                 
+                    var machininhTime = reader.GetTimeSpan(18);               
+                    var setupDowntimes = reader.GetDouble(19);                 
+                    var machiningDowntimes = reader.GetDouble(20);                 
+                    var partialSetupTime = reader.GetDouble(21);                 
+                    var maintenanceTime = reader.GetDouble(22);                 
+                    var toolSearchingTime = reader.GetDouble(23);                 
+                    var mentoringTime = reader.GetDouble(24);                 
+                    var contactiongDepartmentsTime = reader.GetDouble(25);                 
+                    var fixtureMakingTime = reader.GetDouble(26);                 
+                    var hardwareFailureTime = reader.GetDouble(27);                 
+                    var operatorComment = reader.GetString(28);                 
+                    var masterSetupComment = reader.GetValue(29).ToString() ?? ""; 
+                    var masterMachiningComment = reader.GetValue(30).ToString() ?? ""; 
+                    var specifiedDowntimesComment = reader.GetValue(31).ToString() ?? ""; 
+                    var unspecifiedDowntimesComment = reader.GetValue(32).ToString() ?? ""; 
+                    var masterComment = reader.GetValue(33).ToString() ?? ""; 
+                    var fixedSetupComment = reader.GetValue(34).GetDouble();      
+                    var fixedProductionComment = reader.GetValue(35).GetDouble();     
+                    var engineerComment = reader.GetValue(36).ToString() ?? "";
+
                     Part part = new Part(
-                        reader.GetGuid(0),
-                        reader.GetString(1),                        // станок
-                        reader.GetString(2),                        // смена
-                        reader.GetDateTime(3),                      // дата смены
-                        reader.GetString(4),                        // оператор
-                        reader.GetString(5),                        // деталь
-                        reader.GetString(6),                        // м/л
-                        reader.GetInt32(7),                         // установка
-                        reader.GetInt32(8),                         // выполнено деталей
-                        reader.GetInt32(9),                         // всего деталей
-                        reader.GetDateTime(10),                     // начало наладки
-                        reader.GetDateTime(11),                     // начало изготовления
-                        reader.GetDouble(12),                       // фактическая наладка
-                        reader.GetDateTime(13),                     // конец изготовления
-                        reader.GetDouble(14),                       // норматив наладки
-                        reader.GetDouble(15),                       // норматив наладки для отчета
-                        reader.GetDouble(16),                       // норматив штучный
-                        reader.GetDouble(17),                       // фактическое изготовление
-                        reader.GetTimeSpan(18),                     // машинное время
-                        reader.GetDouble(19),                       // простои в наладке
-                        reader.GetDouble(20),                       // простои в изготовлении
-                        reader.GetDouble(21),                       // частичная наладка
-                        reader.GetDouble(22),                       // обслуживание
-                        reader.GetDouble(23),                       // поиск инструмента
-                        reader.GetDouble(24),                       // обучение
-                        reader.GetDouble(25),                       // организацонные вопросы
-                        reader.GetDouble(26),                       // изготовление оснастки
-                        reader.GetDouble(27),                       // отказ оборудования
-                        reader.GetString(28),                       // комментарий оператора
-                        reader.GetValue(29).ToString() ?? "",       // причина невыполнения норматива наладки
-                        reader.GetValue(30).ToString() ?? "",       // причина невыполнения норматива изготовления
-                        reader.GetValue(31).ToString() ?? "",       // причина отмеченных простоев
-                        reader.GetValue(32).ToString() ?? "",       // причина неотмеченных простоев
-                        reader.GetValue(33).ToString() ?? "",       // комментарий техотдела
-                        reader.GetValue(34).ToString() ?? ""        // комментарий техотдела
-                        );
+                        guid,
+                        machine,                   
+                        shift,
+                        shiftDate, 
+                        @operator, 
+                        partName, 
+                        order, 
+                        setup, 
+                        finishedCount, 
+                        totalCount, 
+                        startSetupTime, 
+                        startMachiningTime, 
+                        setupTimeFact, 
+                        endMachiningTime, 
+                        setupTimePlan, 
+                        setupTimePlanForReport, 
+                        singleProductionTimePlan, 
+                        productionTimeFact, 
+                        machininhTime,
+                        setupDowntimes, 
+                        machiningDowntimes, 
+                        partialSetupTime, 
+                        maintenanceTime, 
+                        toolSearchingTime, 
+                        mentoringTime, 
+                        contactiongDepartmentsTime,
+                        fixtureMakingTime,
+                        hardwareFailureTime, 
+                        operatorComment,
+                        masterSetupComment, 
+                        masterMachiningComment, 
+                        specifiedDowntimesComment, 
+                        unspecifiedDowntimesComment,
+                        masterComment, 
+                        fixedSetupComment, 
+                        fixedProductionComment, 
+                        engineerComment);
                     parts.Add(part);
                 }
             }

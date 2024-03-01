@@ -43,6 +43,8 @@ namespace remeLog.Models
             string specifiedDowntimesComment = "",
             string unspecifiedDowntimesComment = "",
             string masterComment = "",
+            double fixedSetupTimePlan = 0,
+            double fixedMachineTimePlan = 0,
             string engineerComment = "")
         {
             _Guid = guid;
@@ -79,6 +81,8 @@ namespace remeLog.Models
             _SpecifiedDowntimesComment = specifiedDowntimesComment;
             _UnspecifiedDowntimesComment = unspecifiedDowntimesComment;
             _MasterComment = masterComment;
+            _FixedSetupTimePlan = fixedSetupTimePlan;
+            _FixedProductionTimePlan = fixedMachineTimePlan;
             _EngineerComment = engineerComment;
             NeedUpdate = false;
         }

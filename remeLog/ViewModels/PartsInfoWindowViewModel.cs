@@ -159,6 +159,24 @@ namespace remeLog.ViewModels
         public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter);
         public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter);
 
+
+        private DateTime _EndDateForCalc;
+        /// <summary> Конечная дата для расчета </summary>
+        public DateTime EndDateForCalc
+        {
+            get => _EndDateForCalc;
+            set => Set(ref _EndDateForCalc, value);
+        }
+
+        private DateTime _StartDateForCalc;
+        /// <summary> Начальная дата для расчета </summary>
+        public DateTime StartDateForCalc
+        {
+            get => _StartDateForCalc;
+            set => Set(ref _StartDateForCalc, value);
+        }
+
+
         #region IncreaseDateCommand
         public ICommand IncreaseDateCommand { get; }
         private void OnIncreaseDateCommandExecuted(object p)
