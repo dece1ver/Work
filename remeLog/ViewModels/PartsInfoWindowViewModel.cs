@@ -1,5 +1,6 @@
 ﻿using libeLog;
 using libeLog.Base;
+using libeLog.Extensions;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
@@ -160,21 +161,76 @@ namespace remeLog.ViewModels
         public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter);
 
 
-        private DateTime _EndDateForCalc;
+        private TimeOnly _EndDateForCalc;
         /// <summary> Конечная дата для расчета </summary>
-        public DateTime EndDateForCalc
+        public TimeOnly EndDateForCalc
         {
             get => _EndDateForCalc;
-            set => Set(ref _EndDateForCalc, value);
+            set
+            {
+                if (Set(ref _EndDateForCalc, value))
+                {
+                    OnPropertyChanged(nameof(CalculatedTimeDifference));
+                    OnPropertyChanged(nameof(CalculatedTimeDifferenceMinutes));
+                }
+            }
         }
 
-        private DateTime _StartDateForCalc;
+        private TimeOnly _StartDateForCalc;
         /// <summary> Начальная дата для расчета </summary>
-        public DateTime StartDateForCalc
+        public TimeOnly StartDateForCalc
         {
             get => _StartDateForCalc;
-            set => Set(ref _StartDateForCalc, value);
+            set {
+                if (Set(ref _StartDateForCalc, value)) 
+                {
+                    OnPropertyChanged(nameof(CalculatedTimeDifference));
+                    OnPropertyChanged(nameof(CalculatedTimeDifferenceMinutes));
+                }
+            }
         }
+
+        public TimeSpan CalculatedTimeDifference { get 
+            {
+                var breakfasts = DescreaseTimes ? TimeOnlys.GetBreaksBetween(StartDateForCalc, EndDateForCalc) : TimeSpan.Zero;
+                return EndDateForCalc - StartDateForCalc - breakfasts - new TimeSpan(0, AdditionalDescreaseValue ?? 0, 0);
+            } }
+
+        public double CalculatedTimeDifferenceMinutes 
+            => CalculatedTimeDifference.TotalMinutes;
+
+
+        private bool _DescreaseTimes;
+        /// <summary> Описание </summary>
+        public bool DescreaseTimes
+        {
+            get => _DescreaseTimes;
+            set
+            {
+                if (Set(ref _DescreaseTimes, value))
+                {
+                    OnPropertyChanged(nameof(CalculatedTimeDifference));
+                    OnPropertyChanged(nameof(CalculatedTimeDifferenceMinutes));
+                }
+            }
+        }
+
+
+        private int? _AdditionalDescreaseValue = null;
+        /// <summary> Описание </summary>
+        public int? AdditionalDescreaseValue
+        {
+            get => _AdditionalDescreaseValue;
+            set
+            {
+                if (Set(ref _AdditionalDescreaseValue, value))
+                {
+                    OnPropertyChanged(nameof(CalculatedTimeDifference));
+                    OnPropertyChanged(nameof(CalculatedTimeDifferenceMinutes));
+                }
+            }
+        }
+
 
 
         #region IncreaseDateCommand

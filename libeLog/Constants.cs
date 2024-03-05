@@ -10,6 +10,8 @@ public static class Constants
     public const long MaxLogSize = 8388608;
 
     public const string DateTimeFormat = "dd.MM.yyyy HH:mm";
+    public const string HHmmFormat = "HH:mm";
+    public const string HHmmssFormat = "HH:mm:ss";
     public const string DateTimeWithSecsFormat = "dd.MM.yyyy HH:mm:ss";
     public const string TimeSpanFormat = @"hh\:mm\:ss";
 

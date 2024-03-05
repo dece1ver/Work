@@ -11,7 +11,7 @@
         <Style TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        <Style TargetType="TextBox">
+        <Style TargetType="TextBox" x:Key="ClearableTextBox">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -70,6 +70,7 @@
                         <ColumnDefinition Width="1"/>
                         <ColumnDefinition Width="80"/>
                         <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
 
 
                     </Grid.ColumnDefinitions>
@@ -95,12 +96,20 @@
 
                     <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="6" BorderThickness="1" BorderBrush="LightGray" Margin="0 0 0 0"/>
 
-                    <TextBox Grid.Row="0" Grid.Column="7" Margin="5 0 5 0" Height="17"/>
-                    <TextBox Grid.Row="1" Grid.Column="7" Margin="5 -1 5 0" Height="17"/>
+                    <TextBox Grid.Row="0" Grid.Column="7" Margin="5 0 5 0" Height="17" Style="{StaticResource ClearableTextBox}"
+                             Text="{Binding StartDateForCalc, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource TimeConverter}}"/>
+                    <TextBox Grid.Row="1" Grid.Column="7" Margin="5 -1 5 0" Height="17" Style="{StaticResource ClearableTextBox}"
+                             Text="{Binding EndDateForCalc, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource TimeConverter}}"/>
 
-                    <TextBox Grid.Row="0" Grid.Column="8" Margin="5 0 5 0" Height="17" IsReadOnly="True"/>
-                    <TextBox Grid.Row="1" Grid.Column="8" Margin="5 -1 5 0" Height="17" IsReadOnly="True"/>
+                    <TextBox Grid.Row="0" Grid.Column="8" Margin="5 0 5 0" Height="17" IsReadOnly="True"
+                             Text="{Binding CalculatedTimeDifference, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox Grid.Row="1" Grid.Column="8" Margin="5 -1 5 0" Height="17" IsReadOnly="True"
+                             Text="{Binding CalculatedTimeDifferenceMinutes, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"/>
 
+                    <CheckBox Grid.Row="0" Grid.Column="9" Margin="-1 0" Content="Вычесть перерывы" IsChecked="{Binding DescreaseTimes}"/>
+                    <TextBox Grid.Row="1" Grid.Column="9" Margin="0 -1 5 0" Height="17" Width="80" HorizontalAlignment="Left"
+                             Text="{Binding AdditionalDescreaseValue, UpdateSourceTrigger=PropertyChanged, FallbackValue=null}"/>
+                    
                 </Grid>
             </GroupBox>
             
@@ -123,15 +132,15 @@
                     <RowDefinition Height="22"/>
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Оператор"/>
-                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding OperatorFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding OperatorFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Смена"/>
                 <ComboBox Grid.Row="1" Grid.Column="1" Text="Оператор" 
                           ItemsSource="{Binding ShiftFilterItems}" DisplayMemberPath="Name" SelectedItem="{Binding ShiftFilter}"/>
 
                 <TextBlock Grid.Row="0" Grid.Column="2" Text="Деталь" Margin="25 0 0 0"/>
-                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}"/>
+                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
                 <TextBlock Grid.Row="1" Grid.Column="2" Text="Заказ" Margin="25 0 0 0"/>
-                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding OrderFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}"/>
+                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding OrderFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
 
                 <TextBlock  Grid.Row="0" Grid.Column="5" Text="От" FontSize="16" VerticalAlignment="Center" TextAlignment="Right" Width="30"/>
                 <DatePicker Grid.Row="0" Grid.Column="6" SelectedDate="{Binding FromDate}"/>
