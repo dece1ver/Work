@@ -296,6 +296,11 @@ internal static class Util
                     // если текущая деталь уже записывалась, то норматив наладки 0, чтобы они не суммировались при подсчете выработки
                     var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
                     if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
+                    if (partSetupTimePlanReport == 0 && part.SetupTimePlan == 0)
+                    {
+                        var partialTime = part.DownTimes.Where(x => x.Type == DownTime.Types.PartialSetup).TotalMinutes();
+                        if (partialTime > 0) partSetupTimePlanReport = partialTime;
+                    }
                     // норматив наладки для отчета
                     xlRow.Cell(44).Value = partSetupTimePlanReport;
                     // норматив наладки для исправления
@@ -440,6 +445,11 @@ internal static class Util
                     xlRow.Cell(43).Value = Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.HardwareFailure }).TotalMinutes(), 0);
                     var partSetupTimePlanReport = prevPart != null && prevPart.Order == part.Order && prevPart.Setup == part.Setup ? 0 : part.SetupTimePlan;
                     if (partSetupTimePlanReport == 0 && part.SetupTimeFact.TotalMinutes > 0) partSetupTimePlanReport = part.SetupTimeFact.TotalMinutes;
+                    if (partSetupTimePlanReport == 0 && part.SetupTimePlan == 0)
+                    {
+                        var partialTime = part.DownTimes.Where(x => x.Type == DownTime.Types.PartialSetup).TotalMinutes();
+                        if (partialTime > 0) partSetupTimePlanReport = partialTime;
+                    }
                     xlRow.Cell(44).Value = partSetupTimePlanReport;
                     xlRow.Cell(45).Value = part.SetupTimePlan;
                     xlRow.Cell(46).Value = part.SingleProductionTimePlan;
