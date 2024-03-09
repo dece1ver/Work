@@ -15,6 +15,7 @@
             <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
             <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <cnv:TimeConverter x:Key="TimeConverter"/>
+            <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

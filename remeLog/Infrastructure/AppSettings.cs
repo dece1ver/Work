@@ -43,6 +43,7 @@ public class AppSettings
     public static readonly string[] ShiftTypes = new string[] { "День", "Ночь" };
 
     [JsonIgnore] public static readonly string[] SetupReasons = new string[] {
+        "", 
         "Освоение", 
         "Работа ученика", 
         "Неопытный оператор", 
@@ -54,6 +55,7 @@ public class AppSettings
 
     [JsonIgnore]
     public static readonly string[] ProductionReasons = new string[] {
+        "",
         "Работа ученика",
         "Неопытный оператор",
         "Особенности изготовления",
@@ -65,6 +67,7 @@ public class AppSettings
         "Другое" };
     [JsonIgnore]
     public static readonly string[] UnspecifiedDowntimesReasons = new string[] {
+        "",
         "Ремонт оборудования",
         "Отсутствие оператора",
         "Отсутствие электричества",

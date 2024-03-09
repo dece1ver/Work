@@ -12,11 +12,11 @@ namespace remeLog.Infrastructure
 {
     public static class Util
     {
-        public static void WriteLog(string message)
-            => Logs.Write(AppSettings.LogFile, message, GetCopyDir());
+        public static async void WriteLog(string message)
+            => await Logs.Write(AppSettings.LogFile, message, GetCopyDir());
 
-        public static void WriteLog(Exception exception, string additionalMessage = "")
-            => Logs.Write(AppSettings.LogFile, exception, additionalMessage, GetCopyDir());
+        public static async void WriteLog(Exception exception, string additionalMessage = "")
+            => await Logs.Write(AppSettings.LogFile, exception, additionalMessage, GetCopyDir());
 
         /// <summary>
         /// Получает директорию для копирования логов, которой является директория таблицы.

@@ -1,4 +1,6 @@
-﻿using remeLog.Models;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using remeLog.Infrastructure.Types;
+using remeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,10 +46,51 @@ namespace remeLog.Infrastructure.Extensions
             return factSum == 0 ? 0 : planSum / factSum;
         }
 
+        /// <summary>
+        /// Соотношение отмеченных простоев к общему времени смены
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double SpecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
+        {
+            double sum = 0;
+            var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
+            foreach (var part in filteredParts)
+            {
+                sum += part.SetupDowntimes + part.MachiningDowntimes;
+            }
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
+            return sum;
+        }
+
+        public static double SpecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        {
+            double sum = 0;
+            var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
+            foreach (var part in filteredParts)
+            {
+                sum += part.SetupDowntimes + part.MachiningDowntimes;
+            }
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
+            return sum;
+        }
+
+        /// <summary>
+        /// Соотношение отмеченных простоев к общему времени смены
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
         public static double SpecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift) 
         {
             double sum = 0;
-            foreach (var part in parts)
+            var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
+            foreach (var part in filteredParts)
             {
                 sum += part.SetupDowntimes + part.MachiningDowntimes;
             }
@@ -55,14 +98,103 @@ namespace remeLog.Infrastructure.Extensions
             return sum / totalWorkMinutes;
         }
 
-        public static double UnspecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
+        /// <summary>
+        /// Соотношение отмеченных простоев к общему времени смены
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double SpecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
             double sum = 0;
-            foreach (var part in parts)
+            var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
+            foreach (var part in filteredParts)
+            {
+                sum += part.SetupDowntimes + part.MachiningDowntimes;
+            }
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
+            return sum / totalWorkMinutes;
+        }
+
+        /// <summary>
+        /// Неотмеченные простои в минутах
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double UnspecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
+        {
+            double sum = 0;
+            var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
+            foreach (var part in filteredParts)
             {
                 sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
             }
             var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
+            return totalWorkMinutes - sum;
+        }
+
+        /// <summary>
+        /// Неотмеченные простои в минутах
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double UnspecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        {
+            double sum = 0;
+            var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
+            foreach (var part in filteredParts)
+            {
+                sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
+            }
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
+            return totalWorkMinutes - sum;
+        }
+
+        /// <summary>
+        /// Соотношение неотмеченных простоев к общему времени смены
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double UnspecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
+        {
+            double sum = 0;
+            var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
+            foreach (var part in filteredParts)
+            {
+                sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
+            }
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
+            return (totalWorkMinutes - sum) / totalWorkMinutes;
+        }
+
+        /// <summary>
+        /// Соотношение неотмеченных простоев к общему времени смены
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double UnspecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        {
+            double sum = 0;
+            var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
+            foreach (var part in filteredParts)
+            {
+                sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
+            }
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
             return (totalWorkMinutes - sum) / totalWorkMinutes;
         }
     }

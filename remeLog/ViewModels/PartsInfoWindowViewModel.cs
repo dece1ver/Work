@@ -1,10 +1,12 @@
 ﻿using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
+using libeLog.Models;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
+using remeLog.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -26,7 +28,10 @@ namespace remeLog.ViewModels
             DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
             SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
             SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
+            SetAllDateCommand = new LambdaCommand(OnSetAllDateCommandExecuted, CanSetAllDateCommandExecute);
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
+            RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
+            OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
 
             PartsInfo = parts;
             ShiftFilterItems = new Shift[3] { new Shift(ShiftType.All), new Shift(ShiftType.Day), new Shift(ShiftType.Night) };
@@ -47,7 +52,7 @@ namespace remeLog.ViewModels
         public ObservableCollection<Part> Parts
         {
             get => _Parts;
-            set 
+            set
             {
                 Set(ref _Parts, value);
                 OnPropertyChanged(nameof(SetupTimeRatio));
@@ -65,7 +70,7 @@ namespace remeLog.ViewModels
         public DateTime FromDate
         {
             get => _FromDate;
-            set 
+            set
             {
                 Set(ref _FromDate, value);
                 _ = LoadPartsAsync();
@@ -96,7 +101,7 @@ namespace remeLog.ViewModels
             }
         }
 
-        
+
         private string _OperatorFilter;
         /// <summary> Фильтр оператора </summary>
         public string OperatorFilter
@@ -153,6 +158,14 @@ namespace remeLog.ViewModels
             set => Set(ref _Status, value);
         }
 
+        private Overlay _Overlay = new(false);
+
+        public Overlay Overlay
+        {
+            get => _Overlay;
+            set => Set(ref _Overlay, value);
+        }
+
         public double AverageSetupRatio => Parts.AverageSetupRatio();
         public double AverageProductionRatio => Parts.AverageProductionRatio();
         public double SetupTimeRatio => Parts.SetupRatio();
@@ -181,8 +194,9 @@ namespace remeLog.ViewModels
         public TimeOnly StartDateForCalc
         {
             get => _StartDateForCalc;
-            set {
-                if (Set(ref _StartDateForCalc, value)) 
+            set
+            {
+                if (Set(ref _StartDateForCalc, value))
                 {
                     OnPropertyChanged(nameof(CalculatedTimeDifference));
                     OnPropertyChanged(nameof(CalculatedTimeDifferenceMinutes));
@@ -190,13 +204,16 @@ namespace remeLog.ViewModels
             }
         }
 
-        public TimeSpan CalculatedTimeDifference { get 
+        public TimeSpan CalculatedTimeDifference
+        {
+            get
             {
                 var breakfasts = DescreaseTimes ? TimeOnlys.GetBreaksBetween(StartDateForCalc, EndDateForCalc) : TimeSpan.Zero;
                 return EndDateForCalc - StartDateForCalc - breakfasts - new TimeSpan(0, AdditionalDescreaseValue ?? 0, 0);
-            } }
+            }
+        }
 
-        public double CalculatedTimeDifferenceMinutes 
+        public double CalculatedTimeDifferenceMinutes
             => CalculatedTimeDifference.TotalMinutes;
 
 
@@ -230,8 +247,6 @@ namespace remeLog.ViewModels
                 }
             }
         }
-
-
 
         #region IncreaseDateCommand
         public ICommand IncreaseDateCommand { get; }
@@ -270,10 +285,19 @@ namespace remeLog.ViewModels
         public ICommand SetWeekDateCommand { get; }
         private void OnSetWeekDateCommandExecuted(object p)
         {
-
             FromDate = ToDate.AddDays(-7);
         }
         private bool CanSetWeekDateCommandExecute(object p) => true;
+        #endregion
+
+        #region SetAllDateCommand
+        public ICommand SetAllDateCommand { get; }
+        private void OnSetAllDateCommandExecuted(object p)
+        {
+            FromDate = new DateTime(2023, 01, 01, 00, 00, 00);
+            ToDate = DateTime.Today;
+        }
+        private bool CanSetAllDateCommandExecute(object p) => true;
         #endregion
 
         #region ClearContent
@@ -292,17 +316,18 @@ namespace remeLog.ViewModels
         public ICommand UpdatePartsCommand { get; }
         private void OnUpdatePartsCommandExecuted(object p)
         {
+            if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) return;
             foreach (var part in Parts.Where(p => p.NeedUpdate))
             {
                 switch (part.UpdatePart())
                 {
-                    case libeLog.Models.DbResult.Ok:
+                    case DbResult.Ok:
                         part.NeedUpdate = false;
                         break;
-                    case libeLog.Models.DbResult.AuthError:
+                    case DbResult.AuthError:
                         MessageBox.Show("Ошибка авторизации");
                         break;
-                    case libeLog.Models.DbResult.Error:
+                    case DbResult.Error:
                         MessageBox.Show("Ошибка");
                         break;
                 }
@@ -312,9 +337,35 @@ namespace remeLog.ViewModels
         private static bool CanUpdatePartsCommandExecute(object p) => true;
         #endregion
 
+        #region RefreshParts
+        public ICommand RefreshPartsCommand { get; }
+        private void OnRefreshPartsCommandExecuted(object p) => _ = LoadPartsAsync();
+        private static bool CanRefreshPartsCommandExecute(object p) => true;
+        #endregion
+
+        #region OpenDailyReportWindow
+        public ICommand OpenDailyReportWindowCommand { get; }
+        private void OnOpenDailyReportWindowCommandExecuted(object p) 
+        {
+            if (FromDate != ToDate) 
+            {
+                MessageBox.Show("Для составления суточного отчета должны быть выбраны одинаковые даты!", "Разные даты", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            // TODO: сделать овнером текущее окно, которому принадлежит этот датаконтект 
+            using (Overlay = new())
+            {
+                var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, PartsInfo.Machine)) { Owner = Application.Current.MainWindow };
+                dailyInfoWindow.ShowDialog();
+            }
+        }
+        private static bool CanOpenDailyReportWindowCommandExecute(object p) => true;
+        #endregion
+
         private async Task LoadPartsAsync()
         {
-            await Task.Run(() => {
+            await Task.Run(() =>
+            {
                 try
                 {
                     InProgress = true;
@@ -325,7 +376,7 @@ namespace remeLog.ViewModels
                     $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
                     $"");
                 }
-                catch (Exception ex) 
+                catch (Exception ex)
                 {
                     MessageBox.Show($"{ex.Message}");
                 }
