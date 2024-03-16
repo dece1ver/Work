@@ -305,5 +305,50 @@ namespace eLog.Infrastructure.Extensions
                 return DbResult.Error;
             }
         }
+
+        public static async Task<DbResult> SendHardwareFailureMessage()
+        {
+            if (AppSettings.Instance.DebugMode) Util.WriteLog("Добавление информации об изготовлении в БД.");
+            try
+            {
+                await Task.Run(() =>
+                {
+                    using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
+                    {
+                        connection.Open();
+                        var query = "INSERT INTO maintenance_log (machine, creation_date, rq_status) VALUES (@Machine, @Date, @Status);";
+                        using (SqlCommand cmd = new SqlCommand(query, connection))
+                        {
+                            cmd.Parameters.AddWithValue("Machine", AppSettings.Instance.Machine.Name);
+                            cmd.Parameters.AddWithValue("Date", DateTime.Now);
+                            cmd.Parameters.AddWithValue("Status", "Открыто");
+                            var execureResult = cmd.ExecuteNonQuery();
+                        }
+                        
+                    }
+                });
+                return DbResult.Ok;
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case -1:
+                        Util.WriteLog("База данных недоступна.");
+                        return DbResult.NoConnection;
+                    case 18456:
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
+        }
     }
 }

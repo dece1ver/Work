@@ -3,31 +3,32 @@ using System.Windows;
 using System.Windows.Controls;
 
 
-namespace eLog.Views.Controls;
-
-/// <summary>
-/// Логика взаимодействия для TabTipButton.xaml
-/// </summary>
-public partial class TabTipButton : UserControl
+namespace eLog.Views.Controls
 {
-    private bool _TabTipStatus;
-
-    public TabTipButton()
+    /// <summary>
+    /// Логика взаимодействия для TabTipButton.xaml
+    /// </summary>
+    public partial class TabTipButton : UserControl
     {
-        InitializeComponent();
-    }
+        private bool _TabTipStatus;
 
-    private void TabTipBtn_Click(object sender, RoutedEventArgs e)
-    {
-        if (_TabTipStatus)
+        public TabTipButton()
         {
-            Keyboard.KillTabTip(0);
-            _TabTipStatus = false;
+            InitializeComponent();
         }
-        else
+
+        private void TabTipBtn_Click(object sender, RoutedEventArgs e)
         {
-            Keyboard.RunTabTip();
-            _TabTipStatus = true;
+            if (_TabTipStatus)
+            {
+                Keyboard.KillTabTip(0);
+                _TabTipStatus = false;
+            }
+            else
+            {
+                Keyboard.RunTabTip();
+                _TabTipStatus = true;
+            }
         }
     }
 }

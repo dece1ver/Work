@@ -5,21 +5,22 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace eLog.Infrastructure.Converters;
-
-internal class TimeSpanConverter : IValueConverter
+namespace eLog.Infrastructure.Converters
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    internal class TimeSpanConverter : IValueConverter
     {
-        if (value is TimeSpan timeSpan)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return timeSpan == TimeSpan.Zero ? string.Empty : timeSpan.ToString(Constants.TimeSpanFormat);
+            if (value is TimeSpan timeSpan)
+            {
+                return timeSpan == TimeSpan.Zero ? string.Empty : timeSpan.ToString(Constants.TimeSpanFormat);
+            }
+            return value;
         }
-        return value;
-    }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return (value.ToString() ?? string.Empty).TimeParse(out var dateTime) ? dateTime : DependencyProperty.UnsetValue;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (value.ToString() ?? string.Empty).TimeParse(out var dateTime) ? dateTime : DependencyProperty.UnsetValue;
+        }
     }
 }

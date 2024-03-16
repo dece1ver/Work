@@ -1,14 +1,15 @@
 ﻿using eLog.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace eLog.Services;
-
-internal static class Registrator
+namespace eLog.Services
 {
-    public static IServiceCollection RegisterServices(this IServiceCollection services)
+    internal static class Registrator
     {
-        services.AddTransient<IUserDialogService, WindowsUserDialogService>();
+        public static IServiceCollection RegisterServices(this IServiceCollection services)
+        {
+            services.AddTransient<IUserDialogService, WindowsUserDialogService>();
 
-        return services;
+            return services;
+        }
     }
 }

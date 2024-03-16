@@ -2,26 +2,27 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace eLog.Infrastructure.Converters;
-
-public class DownTimesValidationConverter : IMultiValueConverter
+namespace eLog.Infrastructure.Converters
 {
-    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    public class DownTimesValidationConverter : IMultiValueConverter
     {
-        bool hasErrors = false;
-        foreach (object value in values)
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if ((bool)value == true)
+            bool hasErrors = false;
+            foreach (object value in values)
             {
-                hasErrors = true;
-                break;
+                if ((bool)value == true)
+                {
+                    hasErrors = true;
+                    break;
+                }
             }
+            return !hasErrors;
         }
-        return !hasErrors;
-    }
 
-    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

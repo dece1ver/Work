@@ -1,6 +1,7 @@
-﻿namespace eLog.Infrastructure;
-
-public enum EndSetupResult
+﻿namespace eLog.Infrastructure
 {
-    Success, Cancel, Stop, PartialComplete
+    public enum EndSetupResult
+    {
+        Success, Cancel, Stop, PartialComplete
+    }
 }

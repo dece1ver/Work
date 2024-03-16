@@ -1,14 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using remeLog.ViewModels;
 
-namespace remeLog.Infrastructure;
-
-internal static class Registrator
+namespace remeLog.Infrastructure
 {
-    public static IServiceCollection RegisterViewModels(this IServiceCollection services)
+    internal static class Registrator
     {
-        services.AddSingleton<MainWindowViewModel>();
+        public static IServiceCollection RegisterViewModels(this IServiceCollection services)
+        {
+            services.AddSingleton<MainWindowViewModel>();
 
-        return services;
+            return services;
+        }
     }
 }

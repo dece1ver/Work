@@ -26,13 +26,22 @@ namespace remeLog.ViewModels
             _DayMasterComment = string.Empty;
             _NightMasterComment = string.Empty;
             _CurrentMaster = string.Empty;
-            Database.ReadMasters(out _Masters);
+            _Masters = new List<string>();
+            if (_Masters.ReadMasters() is not libeLog.Models.DbResult.Ok)
+            {
+                MessageBox.Show("Не удалось получить список мастеров.");
+            }
+            
+            _Title = $"Суточный отчет за {_ShiftDate:dd.MM.yyyy} по станку {_Machine} (новый)";
 
             var readDayDbResult = Database.ReadShiftInfo(new ShiftInfo(ShiftDate, ShiftType.Day, _Machine), out var dbDayShfts);
             switch (readDayDbResult)
             {
                 case not libeLog.Models.DbResult.Ok:
-                    MessageBox.Show("Не удалось получить доступ к дневным сменам в базе данных, внесение новой информации может привести к потере изначальных данных.", "Сообщите разработчику.", MessageBoxButton.OK, MessageBoxImage.Warning); ;
+                    MessageBox.Show("Не удалось получить доступ к дневным сменам в базе данных, внесение новой информации может привести к потере изначальных данных.", 
+                        "Сообщите разработчику.", 
+                        MessageBoxButton.OK, 
+                        MessageBoxImage.Warning); ;
                     break;
             }
             if (dbDayShfts is { Count: 1})
@@ -42,12 +51,25 @@ namespace remeLog.ViewModels
                 _CurrentMaster = shift.Master;
                 _DayDowntimesReason = shift.DowntimesComment;
                 _DayMasterComment = shift.CommonComment;
+                if (UnspecifiedDayDowntimes != shift.UnspecifiedDowntimes)
+                {
+                    MessageBox.Show("Время неотмеченных простоев изменилось с момента последнего сохранения отчета!\n\nПодробная информация будет добавлена в комментарий мастера.", 
+                        "Внимание.",
+                        MessageBoxButton.OK, 
+                        MessageBoxImage.Warning);
+                    _DayMasterComment += "\n\n===\n" +
+                        $"Прошлое значение: {shift.UnspecifiedDowntimes:0.##}";
+                }
+                Title = Title.Replace("(новый)","(редактирование)");
             }
             var readNightDbResult = Database.ReadShiftInfo(new ShiftInfo(ShiftDate, ShiftType.Night, _Machine), out var dbNightShfts);
             switch (readNightDbResult)
             {
                 case not libeLog.Models.DbResult.Ok:
-                    MessageBox.Show("Не удалось получить доступ к ночным сменам в базе данных, внесение новой информации может привести к потере изначальных данных.", "Сообщите разработчику.", MessageBoxButton.OK, MessageBoxImage.Warning); ;
+                    MessageBox.Show("Не удалось получить доступ к ночным сменам в базе данных, внесение новой информации может привести к потере изначальных данных.", 
+                        "Сообщите разработчику.", 
+                        MessageBoxButton.OK, 
+                        MessageBoxImage.Warning); ;
                     break;
             }
             if (dbNightShfts is { Count: 1 })
@@ -57,6 +79,14 @@ namespace remeLog.ViewModels
                 _CurrentMaster = shift.Master;
                 _NightDowntimesReason = shift.DowntimesComment;
                 _NightMasterComment = shift.CommonComment;
+                if (UnspecifiedNightDowntimes != shift.UnspecifiedDowntimes)
+                {
+                    MessageBox.Show("Время неотмеченных простоев изменилось с момента последнего сохранения отчета!\n\nПрошлое значение будет добавлено в комментарий мастера.",
+                        "Внимание.",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    _NightMasterComment += "\n\n===\n" +
+                        $"Прошлое значение: {shift.UnspecifiedDowntimes:0.##}";
+                }
             }
 
             UpdateShiftInfoCommand = new LambdaCommand(OnUpdateShiftInfoCommandExecuted, CanUpdateShiftInfoCommandExecute);
@@ -147,8 +177,19 @@ namespace remeLog.ViewModels
             set => Set(ref _NightMasterComment, value);
         }
 
-        public bool DayDowntimesNeedAttention => UnspecifiedDayDowntimesRatio is > 0.1 or < -0.1;
-        public bool NightDowntimesNeedAttention => UnspecifiedNightDowntimesRatio is > 0.1 or < -0.1;
+        private string _Title;
+        /// <summary> Описание </summary>
+        public string Title
+        {
+            get => _Title;
+            set => Set(ref _Title, value);
+        }
+
+        public bool UnspecifiedDayDowntimesNeedAttention => UnspecifiedDayDowntimesRatio is > 0.1 or < -0.1;
+        public bool UnspecifiedNightDowntimesNeedAttention => UnspecifiedNightDowntimesRatio is > 0.1 or < -0.1;
+
+        public bool SpecifiedDayDowntimesNeedAttention => SpecifiedDayDowntimesRatio is > 0.1 or < -0.1;
+        public bool SpecifiedNightDowntimesNeedAttention => SpecifiedNightDowntimesRatio is > 0.1 or < -0.1;
 
         public List<Part> DayParts => Parts.Where(p => p.Shift == "День").ToList();
         public List<Part> NightParts => Parts.Where(p => p.Shift == "Ночь").ToList();

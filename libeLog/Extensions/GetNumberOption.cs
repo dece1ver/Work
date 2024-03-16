@@ -1,7 +1,8 @@
-﻿namespace libeLog.Extensions;
-
-public enum GetNumberOption
+﻿namespace libeLog.Extensions
 {
-    Any,
-    OnlyPositive
+    public enum GetNumberOption
+    {
+        Any,
+        OnlyPositive
+    }
 }

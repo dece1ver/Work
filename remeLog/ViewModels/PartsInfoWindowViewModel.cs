@@ -8,6 +8,7 @@ using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using remeLog.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ namespace remeLog.ViewModels
             SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
             SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
             SetAllDateCommand = new LambdaCommand(OnSetAllDateCommandExecuted, CanSetAllDateCommandExecute);
+            IncreaseSetupCommand = new LambdaCommand(OnIncreaseSetupCommandExecuted, CanIncreaseSetupCommandExecute);
+            DecreaseSetupCommand = new LambdaCommand(OnDecreaseSetupCommandExecuted, CanDecreaseSetupCommandExecute);
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
             RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
@@ -42,6 +45,12 @@ namespace remeLog.ViewModels
             _PartNameFilter = "";
             _FromDate = PartsInfo.FromDate;
             _ToDate = PartsInfo.ToDate;
+            _FilterMachines = new();
+            _FilterMachines.ReadMachines();
+            foreach (var machineFilter in FilterMachines)
+            {
+                if (machineFilter.Machine == parts.Machine) machineFilter.Filter = true;
+            }
         }
 
 
@@ -134,6 +143,31 @@ namespace remeLog.ViewModels
             set
             {
                 Set(ref _OrderFilter, value);
+                _ = LoadPartsAsync();
+            }
+        }
+
+
+        private int? _SetupFilter;
+        /// <summary> Описание </summary>
+        public int? SetupFilter
+        {
+            get => _SetupFilter;
+            set 
+            {
+                Set(ref _SetupFilter, value);
+                _ = LoadPartsAsync();
+            }
+        }
+
+        private DeepObservableCollection<MachineFilter> _FilterMachines;
+        /// <summary> Список станков с необходимостью фильтрации </summary>
+        public DeepObservableCollection<MachineFilter> FilterMachines
+        {
+            get => _FilterMachines;
+            set
+            {
+                Set(ref _FilterMachines, value);
                 _ = LoadPartsAsync();
             }
         }
@@ -300,6 +334,41 @@ namespace remeLog.ViewModels
         private bool CanSetAllDateCommandExecute(object p) => true;
         #endregion
 
+        #region IncreaseSetupCommand
+        public ICommand IncreaseSetupCommand { get; }
+        private void OnIncreaseSetupCommandExecuted(object p)
+        {
+            if (SetupFilter is null)
+            {
+                SetupFilter = 1;
+            }
+            else if (SetupFilter is int i && i < int.MaxValue)
+            {
+                SetupFilter++;
+            }
+        }
+        private bool CanIncreaseSetupCommandExecute(object p) => true;
+        #endregion
+
+        #region DecreaseSetupCommand
+        public ICommand DecreaseSetupCommand { get; }
+        private void OnDecreaseSetupCommandExecuted(object p)
+        {
+            if (SetupFilter is int i && i > 0)
+            {
+                if (SetupFilter == 1)
+                {
+                    SetupFilter = null;
+                }
+                else 
+                {
+                    SetupFilter--;
+                }
+            }
+        }
+        private bool CanDecreaseSetupCommandExecute(object p) => true;
+        #endregion
+
         #region ClearContent
         public ICommand ClearContentCommand { get; }
         private void OnClearContentCommandExecuted(object p)
@@ -345,9 +414,9 @@ namespace remeLog.ViewModels
 
         #region OpenDailyReportWindow
         public ICommand OpenDailyReportWindowCommand { get; }
-        private void OnOpenDailyReportWindowCommandExecuted(object p) 
+        private void OnOpenDailyReportWindowCommandExecuted(object p)
         {
-            if (FromDate != ToDate) 
+            if (FromDate != ToDate)
             {
                 MessageBox.Show("Для составления суточного отчета должны быть выбраны одинаковые даты!", "Разные даты", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -374,6 +443,7 @@ namespace remeLog.ViewModels
                     $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
                     $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
                     $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
+                    $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")}" +
                     $"");
                 }
                 catch (Exception ex)

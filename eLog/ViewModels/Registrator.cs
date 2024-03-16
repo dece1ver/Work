@@ -1,13 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace eLog.ViewModels;
-
-internal static class Registrator
+namespace eLog.ViewModels
 {
-    public static IServiceCollection RegisterViewModels(this IServiceCollection services)
+    internal static class Registrator
     {
-        services.AddSingleton<MainWindowViewModel>();
+        public static IServiceCollection RegisterViewModels(this IServiceCollection services)
+        {
+            services.AddSingleton<MainWindowViewModel>();
 
-        return services;
+            return services;
+        }
     }
 }

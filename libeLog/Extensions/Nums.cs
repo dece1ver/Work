@@ -1,6 +1,7 @@
-﻿namespace libeLog.Extensions;
-
-public static class Nums
+﻿namespace libeLog.Extensions
 {
+    public static class Nums
+    {
 
+    }
 }

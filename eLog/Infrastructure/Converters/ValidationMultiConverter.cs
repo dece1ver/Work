@@ -4,17 +4,18 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Data;
 
-namespace eLog.Infrastructure.Converters;
-
-public class ValidationMultiConverter : IMultiValueConverter
+namespace eLog.Infrastructure.Converters
 {
-    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    public class ValidationMultiConverter : IMultiValueConverter
     {
-        return values != null! && values.All(validationResult => validationResult is not ValidationResult { IsValid: false });
-    }
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            return values != null! && values.All(validationResult => validationResult is not ValidationResult { IsValid: false });
+        }
 
-    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

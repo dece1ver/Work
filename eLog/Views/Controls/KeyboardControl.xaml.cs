@@ -1,33 +1,34 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace eLog.Views.Controls;
-
-/// <summary>
-/// Логика взаимодействия для KeyboardControl.xaml
-/// </summary>
-public partial class KeyboardControl : UserControl
+namespace eLog.Views.Controls
 {
-    private bool _CyrillicVisibility;
-
-    public KeyboardControl()
+    /// <summary>
+    /// Логика взаимодействия для KeyboardControl.xaml
+    /// </summary>
+    public partial class KeyboardControl : UserControl
     {
-        InitializeComponent();
-        _CyrillicVisibility = true;
-        SetVisibility();
-        Visibility = Visibility.Collapsed;
-    }
+        private bool _CyrillicVisibility;
 
-    private void LangButton_Click(object sender, RoutedEventArgs e)
-    {
-        _CyrillicVisibility = !_CyrillicVisibility;
-        SetVisibility();
-    }
+        public KeyboardControl()
+        {
+            InitializeComponent();
+            _CyrillicVisibility = true;
+            SetVisibility();
+            Visibility = Visibility.Collapsed;
+        }
 
-    private void SetVisibility()
-    {
-        LangButton.Content = _CyrillicVisibility ? "RU" : "EN";
-        CyrillicKeyboard.Visibility = _CyrillicVisibility ? Visibility.Visible : Visibility.Collapsed;
-        LatinKeyboard.Visibility = _CyrillicVisibility ? Visibility.Collapsed : Visibility.Visible;
+        private void LangButton_Click(object sender, RoutedEventArgs e)
+        {
+            _CyrillicVisibility = !_CyrillicVisibility;
+            SetVisibility();
+        }
+
+        private void SetVisibility()
+        {
+            LangButton.Content = _CyrillicVisibility ? "RU" : "EN";
+            CyrillicKeyboard.Visibility = _CyrillicVisibility ? Visibility.Visible : Visibility.Collapsed;
+            LatinKeyboard.Visibility = _CyrillicVisibility ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
 }

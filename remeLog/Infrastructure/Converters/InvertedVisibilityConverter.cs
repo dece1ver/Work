@@ -3,17 +3,18 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace remeLog.Infrastructure.Converters;
-
-class InvertedVisibilityConverter : IValueConverter
+namespace remeLog.Infrastructure.Converters
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    class InvertedVisibilityConverter : IValueConverter
     {
-        return (bool)value ? Visibility.Collapsed : Visibility.Visible;
-    }
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (bool)value ? Visibility.Collapsed : Visibility.Visible;
+        }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return DependencyProperty.UnsetValue;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return DependencyProperty.UnsetValue;
+        }
     }
 }

@@ -135,7 +135,8 @@
                             <ColumnDefinition Width="60"/>
                             <ColumnDefinition Width="200"/>
                             <ColumnDefinition Width="75"/>
-                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="250"/>
+                            <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="110"/>
@@ -151,41 +152,79 @@
                         <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding OperatorFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Смена"/>
                         <ComboBox Grid.Row="1" Grid.Column="1" Text="Оператор" 
-              ItemsSource="{Binding ShiftFilterItems}" DisplayMemberPath="Name" SelectedItem="{Binding ShiftFilter}"/>
+                                  ItemsSource="{Binding ShiftFilterItems}" DisplayMemberPath="Name" SelectedItem="{Binding ShiftFilter}"/>
 
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="Деталь" Margin="25 0 0 0"/>
                         <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
                         <TextBlock Grid.Row="1" Grid.Column="2" Text="Заказ" Margin="25 0 0 0"/>
-                        <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding OrderFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
+                        <Grid Grid.Row="1" Grid.Column="3" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="20"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <TextBox Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="{Binding OrderFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
+                            <TextBlock Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Text="Уст." Margin="25 0 5 0"/>
+                            <TextBox Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Text="{Binding SetupFilter, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Static sys:String.Empty}}"
+                                     Style="{StaticResource ClearableTextBox}"/>
+                            <Button Grid.Row="0" Grid.Column="3" Content="^" Padding="-2"
+                                    Command="{Binding IncreaseSetupCommand}"/>
+                            <Button Grid.Row="1" Grid.Column="3" Padding="-2"
+                                    Command="{Binding DecreaseSetupCommand}">
+                                <TextBlock Text="^" RenderTransformOrigin="0.5 0.46">
+                                    <TextBlock.RenderTransform>
+                                        <ScaleTransform ScaleY="-1"/>
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                            </Button>
+                        </Grid>
 
-                        <TextBlock  Grid.Row="0" Grid.Column="5" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
-                        <DatePicker Grid.Row="0" Grid.Column="6" SelectedDate="{Binding FromDate}" HorizontalAlignment="Right"/>
+                        <ComboBox Grid.Column="4" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
+                                  ItemsSource="{Binding FilterMachines}" Margin="25 0" Width="200"
+                                  HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
+                                  >
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="-1" Focusable="False">
+                                        <CheckBox Content="{Binding Machine}" IsChecked="{Binding Filter}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
 
-                        <TextBlock  Grid.Row="1" Grid.Column="5" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
-                        <DatePicker Grid.Row="1" Grid.Column="6" SelectedDate="{Binding ToDate}" HorizontalAlignment="Right"/>
+                        <TextBlock  Grid.Row="0" Grid.Column="6" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
+                        <DatePicker Grid.Row="0" Grid.Column="7" SelectedDate="{Binding FromDate}" HorizontalAlignment="Right"/>
 
-                        <Button Grid.Row="0" Grid.Column="7" Content="+ сутки" 
-            Margin="0"
-            Command="{Binding IncreaseDateCommand}"/>
-                        <Button Grid.Row="1" Grid.Column="7" Content="- сутки" 
-            Margin="0"
-            Command="{Binding DecreaseDateCommand}"/>
-                        <Button Grid.Row="0" Grid.Column="8" Content="Вчера" 
-            Margin="0"
-            Command="{Binding SetYesterdayDateCommand}"/>
-                        <Button Grid.Row="1" Grid.Column="8" Content="Неделя" 
-            Margin="0"
-            Command="{Binding SetWeekDateCommand}"/>
-                        <Button Grid.Row="0" Grid.Column="9" Grid.RowSpan="2" Content="*"
-            Margin="0" 
-            Command="{Binding SetAllDateCommand}"/>
+                        <TextBlock  Grid.Row="1" Grid.Column="6" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
+                        <DatePicker Grid.Row="1" Grid.Column="7" SelectedDate="{Binding ToDate}" HorizontalAlignment="Right"/>
+
+                        <Button Grid.Row="0" Grid.Column="8" Content="+ сутки" 
+                                Margin="0"
+                                Command="{Binding IncreaseDateCommand}"/>
+                        <Button Grid.Row="1" Grid.Column="8" Content="- сутки" 
+                                Margin="0"
+                                Command="{Binding DecreaseDateCommand}"/>
+                        <Button Grid.Row="0" Grid.Column="9" Content="Вчера" 
+                                Margin="0"
+                                Command="{Binding SetYesterdayDateCommand}"/>
+                        <Button Grid.Row="1" Grid.Column="9" Content="Неделя" 
+                                Margin="0"
+                                Command="{Binding SetWeekDateCommand}"/>
+                        <Button Grid.Row="0" Grid.Column="10" Grid.RowSpan="2" Content="*"
+                                Margin="0" 
+                                Command="{Binding SetAllDateCommand}"/> 
 
                     </Grid>
                 </GroupBox>
 
             </DockPanel>
-            <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="Gray"
-                  ColumnWidth="SizeToCells" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
+            <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
+                  ColumnWidth="SizeToCells" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" AlternatingRowBackground="#01D3D3D3">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <Style.Triggers>
@@ -268,7 +307,7 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yyyy}">
+                    <DataGridTextColumn Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy}" Width="50">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                         </DataGridTextColumn.ElementStyle>
@@ -276,7 +315,7 @@
                             <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
                         </DataGridTextColumn.EditingElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTemplateColumn Header="Смена" Width="60">
+                    <DataGridTemplateColumn Header="Смена" Width="40">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Shift}" Style="{StaticResource TableTextBlock}"/>
@@ -409,7 +448,7 @@
                             <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
                         </DataGridTextColumn.EditingElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="270">
+                    <DataGridTextColumn Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="270" FontFamily="Calibri">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
                         </DataGridTextColumn.ElementStyle>

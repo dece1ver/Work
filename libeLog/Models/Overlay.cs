@@ -2,25 +2,26 @@
 using System;
 using System.ComponentModel;
 
-namespace libeLog.Models;
-
-public class Overlay : ViewModel, IDisposable, INotifyPropertyChanged
+namespace libeLog.Models
 {
-    private bool _State;
-
-    public Overlay(bool state = true)
+    public class Overlay : ViewModel, IDisposable, INotifyPropertyChanged
     {
-        _State = state;
-    }
+        private bool _State;
 
-    public bool State
-    {
-        get => _State;
-        set => Set(ref _State, value);
-    }
+        public Overlay(bool state = true)
+        {
+            _State = state;
+        }
 
-    public void Dispose()
-    {
-        State = false;
+        public bool State
+        {
+            get => _State;
+            set => Set(ref _State, value);
+        }
+
+        public void Dispose()
+        {
+            State = false;
+        }
     }
 }

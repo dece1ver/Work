@@ -1,17 +1,18 @@
 ﻿using libeLog.Base;
 using System.Windows;
 
-namespace neLog.Infrastructure.Commands;
-
-internal class CloseWindowCommand : Command
+namespace neLog.Infrastructure.Commands
 {
-    public override bool CanExecute(object? parameter) => parameter is Window;
-
-    public override void Execute(object? parameter)
+    internal class CloseWindowCommand : Command
     {
-        if (!CanExecute(parameter)) return;
+        public override bool CanExecute(object? parameter) => parameter is Window;
 
-        var window = (Window)parameter!;
-        window.Close();
+        public override void Execute(object? parameter)
+        {
+            if (!CanExecute(parameter)) return;
+
+            var window = (Window)parameter!;
+            window.Close();
+        }
     }
 }

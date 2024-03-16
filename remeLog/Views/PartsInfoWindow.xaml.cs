@@ -28,5 +28,13 @@ namespace remeLog.Views
             InitializeComponent();
             DataContext = new PartsInfoWindowViewModel(parts);
         }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(sender is ComboBox cb)
+            {
+                cb.Text = "Фильтр по станку";
+            }
+        }
     }
 }

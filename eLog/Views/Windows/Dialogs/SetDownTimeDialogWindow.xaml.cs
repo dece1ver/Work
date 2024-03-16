@@ -2,16 +2,17 @@
 using libeLog.Models;
 using System.Windows;
 
-namespace eLog.Views.Windows.Dialogs;
-
-/// <summary>
-/// Логика взаимодействия для SetDownTimeDialogWindow.xaml
-/// </summary>
-public partial class SetDownTimeDialogWindow : Window
+namespace eLog.Views.Windows.Dialogs
 {
-    public DownTime.Types? Type { get; set; } = null;
-    public SetDownTimeDialogWindow()
+    /// <summary>
+    /// Логика взаимодействия для SetDownTimeDialogWindow.xaml
+    /// </summary>
+    public partial class SetDownTimeDialogWindow : Window
     {
-        InitializeComponent();
+        public DownTime.Types? Type { get; set; } = null;
+        public SetDownTimeDialogWindow()
+        {
+            InitializeComponent();
+        }
     }
 }

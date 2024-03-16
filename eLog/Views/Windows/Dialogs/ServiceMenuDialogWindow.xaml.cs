@@ -1,22 +1,23 @@
 ﻿using System.Windows;
 
-namespace eLog.Views.Windows.Dialogs;
-
-/// <summary>
-/// Логика взаимодействия для ServiceMenuDialogWindow.xaml
-/// </summary>
-public partial class ServiceMenuDialogWindow : Window
+namespace eLog.Views.Windows.Dialogs
 {
-    public ServiceMenuDialogWindow()
+    /// <summary>
+    /// Логика взаимодействия для ServiceMenuDialogWindow.xaml
+    /// </summary>
+    public partial class ServiceMenuDialogWindow : Window
     {
-        InitializeComponent();
-    }
-    public bool UnsyncAllParts { get; set; }
-    public bool ClearParts { get; set; }
-    public bool ClearLogs { get; set; }
+        public ServiceMenuDialogWindow()
+        {
+            InitializeComponent();
+        }
+        public bool UnsyncAllParts { get; set; }
+        public bool ClearParts { get; set; }
+        public bool ClearLogs { get; set; }
 
-    private void Button_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }

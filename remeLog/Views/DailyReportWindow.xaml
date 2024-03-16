@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:remeLog.Views" d:DataContext="{d:DesignInstance Type=vm:DailyReportWindowViewModel}"
         xmlns:inf="clr-namespace:remeLog.Infrastructure"
         mc:Ignorable="d" xmlns:vm="clr-namespace:remeLog.ViewModels"
-        Title="{Binding ShiftDate, StringFormat={}Суточный отчет за {0:dd.MM.yyyy}}" Height="450" Width="800">
+        Title="{Binding Title}" d:Title="Суточный отчет за 01.01.2024 по станку Goodway GS-1500" Height="450" Width="800">
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
@@ -29,15 +29,15 @@
                 <TextBlock Text="Мастер " Grid.Column="0" Grid.Row="0" VerticalAlignment="Center"/>
                 <ComboBox Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Masters}" SelectedItem="{Binding CurrentMaster}"/>
             </Grid>
-            <StackPanel DockPanel.Dock="Bottom">
-                <Button Content="Записать" HorizontalAlignment="Right" Width="100" Height="30" Margin="0 0 1 1" Command="{Binding UpdateShiftInfoCommand}">
+            <DockPanel DockPanel.Dock="Bottom">
+                <Button DockPanel.Dock="Right" Content="Записать" HorizontalAlignment="Right" Width="100" Height="30" Margin="0 0 1 1" Command="{Binding UpdateShiftInfoCommand}">
                     <Button.Resources>
                         <Style TargetType="Border">
                             <Setter Property="CornerRadius" Value="2"/>
                         </Style>
                     </Button.Resources>
                 </Button>
-            </StackPanel>
+            </DockPanel>
             <UniformGrid Rows="2">
                 <GroupBox BorderBrush="Gray">
                     <GroupBox.Header>
@@ -77,8 +77,9 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding DayDowntimesNeedAttention}" Value="True">
-                                                <Setter Property="Foreground" Value="Red" />
+                                            <DataTrigger Binding="{Binding SpecifiedDayDowntimesNeedAttention}" Value="True">
+                                                <Setter Property="Foreground" Value="DarkOrange" />
+                                                <Setter Property="FontWeight" Value="Bold" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -94,8 +95,9 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding DayDowntimesNeedAttention}" Value="True">
+                                            <DataTrigger Binding="{Binding UnspecifiedDayDowntimesNeedAttention}" Value="True">
                                                 <Setter Property="Foreground" Value="Red" />
+                                                <Setter Property="FontWeight" Value="Bold" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -151,8 +153,9 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding NightDowntimesNeedAttention}" Value="True">
-                                                <Setter Property="Foreground" Value="Red" />
+                                            <DataTrigger Binding="{Binding SpecifiedNightDowntimesNeedAttention}" Value="True">
+                                                <Setter Property="Foreground" Value="DarkOrange" />
+                                                <Setter Property="FontWeight" Value="Bold" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -168,8 +171,9 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding NightDowntimesNeedAttention}" Value="True">
+                                            <DataTrigger Binding="{Binding UnspecifiedNightDowntimesNeedAttention}" Value="True">
                                                 <Setter Property="Foreground" Value="Red" />
+                                                <Setter Property="FontWeight" Value="Bold" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>

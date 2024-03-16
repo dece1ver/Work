@@ -13,112 +13,113 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Overlay = libeLog.Models.Overlay;
 
-namespace eLog.Views.Windows.Dialogs;
-
-/// <summary>
-/// Логика взаимодействия для AboutWindow.xaml
-/// </summary>
-public partial class AboutWindow : Window, IOverlay, INotifyPropertyChanged
+namespace eLog.Views.Windows.Dialogs
 {
-    public AboutWindow()
+    /// <summary>
+    /// Логика взаимодействия для AboutWindow.xaml
+    /// </summary>
+    public partial class AboutWindow : Window, IOverlay, INotifyPropertyChanged
     {
-        InitializeComponent();
-    }
-    private int _secretMenuCounter = 0;
-    public (bool UnSyncAll, bool ClearParts, bool ClearLogs) ServiceResult;
-
-    public static string About
-    {
-        get
+        public AboutWindow()
         {
-            var exe = Environment.ProcessPath;
-            var date = exe is null ? string.Empty : $" от {File.GetLastWriteTime(exe).ToString(Constants.DateTimeFormat)}";
-            var ver = Assembly.GetExecutingAssembly().GetName().Version!;
-            return $"v{ver.Major}.{ver.Minor}.{ver.Build}{date}";
+            InitializeComponent();
         }
-    }
+        private int _secretMenuCounter = 0;
+        public (bool UnSyncAll, bool ClearParts, bool ClearLogs) ServiceResult;
 
-    private Overlay _Overlay = new() { State = false };
-    public Overlay Overlay
-    {
-        get => _Overlay;
-        set => Set(ref _Overlay, value);
-    }
-
-    private void Button_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    private void TextBlock_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-    {
-        _secretMenuCounter++;
-        if (_secretMenuCounter >= 5)
+        public static string About
         {
-            using (Overlay = new())
+            get
             {
-                Util.WriteLog("Попытка входа в сервисное меню.");
-                ServiceResult.UnSyncAll = false;
-                ServiceResult.ClearLogs = false;
+                var exe = Environment.ProcessPath;
+                var date = exe is null ? string.Empty : $" от {File.GetLastWriteTime(exe).ToString(Constants.DateTimeFormat)}";
+                var ver = Assembly.GetExecutingAssembly().GetName().Version!;
+                return $"v{ver.Major}.{ver.Minor}.{ver.Build}{date}";
+            }
+        }
 
-                var passWindow = new GetPasswordDialogWindow() { Owner = this };
+        private Overlay _Overlay = new() { State = false };
+        public Overlay Overlay
+        {
+            get => _Overlay;
+            set => Set(ref _Overlay, value);
+        }
 
-                _secretMenuCounter = 0;
-                if ((bool)passWindow.ShowDialog()! && passWindow.Password == Encoding.UTF8.GetString(new byte[] { 97, 54, 54, 54, 114 }))
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void TextBlock_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            _secretMenuCounter++;
+            if (_secretMenuCounter >= 5)
+            {
+                using (Overlay = new())
                 {
-                    Util.WriteLog("Успешный вход.");
-                    var serviceWindow = new ServiceMenuDialogWindow() { Owner = this };
-                    if ((bool)serviceWindow.ShowDialog()!)
+                    Util.WriteLog("Попытка входа в сервисное меню.");
+                    ServiceResult.UnSyncAll = false;
+                    ServiceResult.ClearLogs = false;
+
+                    var passWindow = new GetPasswordDialogWindow() { Owner = this };
+
+                    _secretMenuCounter = 0;
+                    if ((bool)passWindow.ShowDialog()! && passWindow.Password == Encoding.UTF8.GetString(new byte[] { 97, 54, 54, 54, 114 }))
                     {
-                        ServiceResult.UnSyncAll = serviceWindow.UnsyncAllParts;
-                        ServiceResult.ClearParts = serviceWindow.ClearParts;
-                        ServiceResult.ClearLogs = serviceWindow.ClearLogs;
+                        Util.WriteLog("Успешный вход.");
+                        var serviceWindow = new ServiceMenuDialogWindow() { Owner = this };
+                        if ((bool)serviceWindow.ShowDialog()!)
+                        {
+                            ServiceResult.UnSyncAll = serviceWindow.UnsyncAllParts;
+                            ServiceResult.ClearParts = serviceWindow.ClearParts;
+                            ServiceResult.ClearLogs = serviceWindow.ClearLogs;
+                        }
                     }
+                    Util.WriteLog($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
+                    Util.WriteLog($"serviceResult.ClearParts = {ServiceResult.ClearParts}");
+                    Util.WriteLog($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
+                    Debug.Print($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
+                    Debug.Print($"serviceResult.ClearParts = {ServiceResult.ClearParts}");
+                    Debug.Print($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
                 }
-                Util.WriteLog($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
-                Util.WriteLog($"serviceResult.ClearParts = {ServiceResult.ClearParts}");
-                Util.WriteLog($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
-                Debug.Print($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
-                Debug.Print($"serviceResult.ClearParts = {ServiceResult.ClearParts}");
-                Debug.Print($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
             }
         }
-    }
 
 
-    #region PropertyChanged
+        #region PropertyChanged
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
-    {
-        var handlers = PropertyChanged;
-        if (handlers is null) return;
-
-        var invokationList = handlers.GetInvocationList();
-        var args = new PropertyChangedEventArgs(PropertyName);
-
-        foreach (var action in invokationList)
+        protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null!)
         {
-            if (action.Target is DispatcherObject dispatcherObject)
+            var handlers = PropertyChanged;
+            if (handlers is null) return;
+
+            var invokationList = handlers.GetInvocationList();
+            var args = new PropertyChangedEventArgs(PropertyName);
+
+            foreach (var action in invokationList)
             {
-                dispatcherObject.Dispatcher.Invoke(action, this, args);
-            }
-            else
-            {
-                action.DynamicInvoke(this, args);
+                if (action.Target is DispatcherObject dispatcherObject)
+                {
+                    dispatcherObject.Dispatcher.Invoke(action, this, args);
+                }
+                else
+                {
+                    action.DynamicInvoke(this, args);
+                }
             }
         }
+
+        protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(PropertyName);
+            return true;
+        }
+
+        #endregion
+
     }
-
-    protected virtual bool Set<T>(ref T field, T value, [CallerMemberName] string PropertyName = null!)
-    {
-        if (Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(PropertyName);
-        return true;
-    }
-
-    #endregion
-
 }

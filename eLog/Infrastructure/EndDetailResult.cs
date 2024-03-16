@@ -1,6 +1,7 @@
-﻿namespace eLog.Infrastructure;
-
-public enum EndDetailResult
+﻿namespace eLog.Infrastructure
 {
-    Finish, FinishAndNext, Cancel
+    public enum EndDetailResult
+    {
+        Finish, FinishAndNext, Cancel
+    }
 }

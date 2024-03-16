@@ -1,25 +1,26 @@
 ﻿using libeLog.WinApi.Windows;
 using System;
 
-namespace libeLog.Extensions;
-
-public static class Chars
+namespace libeLog.Extensions
 {
-    public static Keys DKeyFromChar(this char ch)
+    public static class Chars
     {
-        return ch switch
+        public static Keys DKeyFromChar(this char ch)
         {
-            '0' => Keys.D0,
-            '1' => Keys.D1,
-            '2' => Keys.D2,
-            '3' => Keys.D3,
-            '4' => Keys.D4,
-            '5' => Keys.D5,
-            '6' => Keys.D6,
-            '7' => Keys.D7,
-            '8' => Keys.D8,
-            '9' => Keys.D9,
-            _ => throw new ArgumentException("Переданный символ не является арабской цифрой."),
-        };
+            return ch switch
+            {
+                '0' => Keys.D0,
+                '1' => Keys.D1,
+                '2' => Keys.D2,
+                '3' => Keys.D3,
+                '4' => Keys.D4,
+                '5' => Keys.D5,
+                '6' => Keys.D6,
+                '7' => Keys.D7,
+                '8' => Keys.D8,
+                '9' => Keys.D9,
+                _ => throw new ArgumentException("Переданный символ не является арабской цифрой."),
+            };
+        }
     }
 }
