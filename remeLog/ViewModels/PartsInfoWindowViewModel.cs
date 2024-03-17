@@ -8,8 +8,9 @@ using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using remeLog.Views;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,14 +46,32 @@ namespace remeLog.ViewModels
             _PartNameFilter = "";
             _FromDate = PartsInfo.FromDate;
             _ToDate = PartsInfo.ToDate;
-            _FilterMachines = new();
-            _FilterMachines.ReadMachines();
-            foreach (var machineFilter in FilterMachines)
+            _MachineFilters = new();
+            _MachineFilters.CollectionChanged += MachineFiltersSource_CollectionChanged;
+
+            _MachineFilters.ReadMachines();
+            foreach (var machineFilter in MachineFilters)
             {
                 if (machineFilter.Machine == parts.Machine) machineFilter.Filter = true;
             }
         }
 
+        void MachineFiltersSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach (MachineFilter item in e.NewItems)
+                    item.PropertyChanged += MachineFilters_PropertyChanged;
+
+            if (e.OldItems != null)
+                foreach (MachineFilter item in e.OldItems)
+                    item.PropertyChanged -= MachineFilters_PropertyChanged;
+        }
+
+        void MachineFilters_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Filter")
+                _ = LoadPartsAsync();
+        }
 
         public Shift[] ShiftFilterItems { get; set; }
 
@@ -153,21 +172,21 @@ namespace remeLog.ViewModels
         public int? SetupFilter
         {
             get => _SetupFilter;
-            set 
+            set
             {
                 Set(ref _SetupFilter, value);
                 _ = LoadPartsAsync();
             }
         }
 
-        private DeepObservableCollection<MachineFilter> _FilterMachines;
+        private ObservableCollection<MachineFilter> _MachineFilters;
         /// <summary> Список станков с необходимостью фильтрации </summary>
-        public DeepObservableCollection<MachineFilter> FilterMachines
+        public ObservableCollection<MachineFilter> MachineFilters
         {
-            get => _FilterMachines;
+            get => _MachineFilters;
             set
             {
-                Set(ref _FilterMachines, value);
+                Set(ref _MachineFilters, value);
                 _ = LoadPartsAsync();
             }
         }
@@ -200,12 +219,30 @@ namespace remeLog.ViewModels
             set => Set(ref _Overlay, value);
         }
 
-        public double AverageSetupRatio => Parts.AverageSetupRatio();
-        public double AverageProductionRatio => Parts.AverageProductionRatio();
-        public double SetupTimeRatio => Parts.SetupRatio();
-        public double ProductionTimeRatio => Parts.ProductionRatio();
-        public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter);
-        public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter);
+        public double AverageSetupRatio => 
+            MachineFilters.Count(f => f.Filter) == 1
+            ? Parts.AverageSetupRatio() 
+            : double.NaN;
+        public double AverageProductionRatio =>
+            MachineFilters.Count(f => f.Filter) == 1 
+            ? Parts.AverageProductionRatio() 
+            : double.NaN;
+        public double SetupTimeRatio => 
+            MachineFilters.Count(f => f.Filter) == 1 
+            ? Parts.SetupRatio() 
+            : double.NaN;
+        public double ProductionTimeRatio => 
+            MachineFilters.Count(f => f.Filter) == 1 
+            ? Parts.ProductionRatio() 
+            : double.NaN;
+        public double SpecifiedDowntimesRatio => 
+            MachineFilters.Count(f => f.Filter) == 1 
+            ? Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter) 
+            : double.NaN;
+        public double UnspecifiedDowntimesRatio => 
+            MachineFilters.Count(f => f.Filter) == 1 
+            ? Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter) 
+            : double.NaN; 
 
 
         private TimeOnly _EndDateForCalc;
@@ -360,7 +397,7 @@ namespace remeLog.ViewModels
                 {
                     SetupFilter = null;
                 }
-                else 
+                else
                 {
                     SetupFilter--;
                 }
@@ -421,10 +458,20 @@ namespace remeLog.ViewModels
                 MessageBox.Show("Для составления суточного отчета должны быть выбраны одинаковые даты!", "Разные даты", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+            if (MachineFilters.Count(f => f.Filter) > 1)
+            {
+                MessageBox.Show("Для составления суточного отчета в фильтре должен быть только один станок!", "Выбрано слишком много станков.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            else if (!MachineFilters.Any(f => f.Filter))
+            {
+                MessageBox.Show("Для составления суточного отчета в фильтре должен быть как минимум один станок!", "Выбрано слишком мало станков.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             // TODO: сделать овнером текущее окно, которому принадлежит этот датаконтект 
             using (Overlay = new())
             {
-                var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, PartsInfo.Machine)) { Owner = Application.Current.MainWindow };
+                var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, PartsInfo.Machine)) { Owner = p as PartsInfoWindow};
                 dailyInfoWindow.ShowDialog();
             }
         }
@@ -438,13 +485,19 @@ namespace remeLog.ViewModels
                 try
                 {
                     InProgress = true;
-                    Parts = Database.ReadPartsWithConditions($"Machine = '{PartsInfo.Machine}' AND ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
-                    $"{(ShiftFilter is { Type: ShiftType.All } ? "" : $"AND Shift = '{ShiftFilter.FilterText}'")}" +
-                    $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
-                    $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
-                    $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
-                    $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")}" +
-                    $"");
+                    var conditions = $"ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
+                        $"{(ShiftFilter is { Type: ShiftType.All } ? "" : $"AND Shift = '{ShiftFilter.FilterText}'")}" +
+                        $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
+                        $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
+                        $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
+                        $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")}";
+
+                    foreach (var machineFilter in MachineFilters)
+                    {
+                        if (!machineFilter.Filter) conditions += $"AND NOT Machine = '{machineFilter.Machine}'";
+                    }
+
+                    Parts = Database.ReadPartsWithConditions(conditions);
                 }
                 catch (Exception ex)
                 {

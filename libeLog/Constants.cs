@@ -61,22 +61,22 @@ namespace libeLog
 
             public static readonly string[] MachinesArray =
             {
-            GoodwayGs1500,
-            HuyndaiSkt21_104,
-            HuyndaiSkt21_105,
-            HuyndaiL230A,
-            HuyndaiXH6300,
-            MazakQts200Ml,
-            MazakQts350,
-            MazakNexus5000,
-            MazakIntegrexI200,
-            QuaserMv134,
-            VictorA110,
-            RontekHTC550MY,
-            RontekHTC650M,
-            RontekVMC40C,
-            RontekHB1316
-        };
+                GoodwayGs1500,
+                HuyndaiSkt21_104,
+                HuyndaiSkt21_105,
+                HuyndaiL230A,
+                HuyndaiXH6300,
+                MazakQts200Ml,
+                MazakQts350,
+                MazakNexus5000,
+                MazakIntegrexI200,
+                QuaserMv134,
+                VictorA110,
+                RontekHTC550MY,
+                RontekHTC650M,
+                RontekVMC40C,
+                RontekHB1316
+            };
         }
     }
 }

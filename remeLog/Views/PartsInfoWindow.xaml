@@ -54,7 +54,7 @@
                  Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}}" Height="2" />
             <DockPanel DockPanel.Dock="Bottom">
                 <Button DockPanel.Dock="Right" Margin="1 10 0 1" Width="100" 
-                Command="{Binding OpenDailyReportWindowCommand}">
+                Command="{Binding OpenDailyReportWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
                     <Button.Content>
                         <TextBlock Text="Сформировать отчет за смену" TextWrapping="Wrap"/>
                     </Button.Content>
@@ -185,7 +185,7 @@
                         </Grid>
 
                         <ComboBox Grid.Column="4" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
-                                  ItemsSource="{Binding FilterMachines}" Margin="25 0" Width="200"
+                                  ItemsSource="{Binding MachineFilters}" Margin="25 0" Width="200"
                                   HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
                                   >
                             <ComboBox.ItemTemplate>

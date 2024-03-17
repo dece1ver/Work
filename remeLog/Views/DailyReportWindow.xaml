@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views" d:DataContext="{d:DesignInstance Type=vm:DailyReportWindowViewModel}"
-        xmlns:inf="clr-namespace:remeLog.Infrastructure"
+        xmlns:inf="clr-namespace:remeLog.Infrastructure" WindowStartupLocation="CenterOwner"
         mc:Ignorable="d" xmlns:vm="clr-namespace:remeLog.ViewModels"
         Title="{Binding Title}" d:Title="Суточный отчет за 01.01.2024 по станку Goodway GS-1500" Height="450" Width="800">
     <DockPanel>

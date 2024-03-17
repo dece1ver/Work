@@ -81,7 +81,7 @@ namespace eLog.Views.Windows.Settings
 
         public AppSettingsWindow()
         {
-            Machines = Enumerable.Range(0, 13).Select(i => new Machine(i)).ToList();
+            Machines = Enumerable.Range(0, 16).Select(i => new Machine(i)).ToList();
             StorageTypes = new List<StorageType>()
         {
             new StorageType(StorageType.Types.Excel),
@@ -154,13 +154,8 @@ namespace eLog.Views.Windows.Settings
 
                     if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
                     {
-                        saveDir = dlg.FileName;
-                        // Do something with selected folder string
+                        saveDir = dlg.FileName!;
                     }
-                    //SaveFileDialog saveFileDialog = new SaveFileDialog()
-                    //{
-                    //    Filter = "Данные JSON (*.json)|*.json",
-                    //};
                     if (string.IsNullOrEmpty(saveDir)) return;
 
                 }
