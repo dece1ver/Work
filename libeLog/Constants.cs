@@ -31,6 +31,12 @@ namespace libeLog
 
         }
 
+        public struct SqlErrorCode
+        {
+            public const int NoConnection = -1;
+            public const int AuthError = 18456;
+        }
+
         public static class WorkTime
         {
             public static readonly DateTime DayShiftFirstBreak = new(1, 1, 1, 9, 0, 0);

@@ -87,6 +87,48 @@ namespace remeLog.Models
             NeedUpdate = false;
         }
 
+        public Part(Part part)
+        {
+            _Guid = part.Guid;
+            _Machine = part.Machine;
+            _Shift = part.Shift;
+            _ShiftDate = part.ShiftDate;
+            _Operator = part.Operator;
+            _PartName = part.PartName;
+            _Order = part.Order;
+            _Setup = part.Setup;
+            _FinishedCount = part.FinishedCount;
+            _TotalCount = part.TotalCount;
+            _StartSetupTime = part.StartSetupTime;
+            _StartMachiningTime = part.StartMachiningTime;
+            _SetupTimeFact = part.SetupTimeFact;
+            _EndMachiningTime = part.EndMachiningTime;
+            _SetupTimePlan = part.SetupTimePlan;
+            _SetupTimePlanForReport = part.SetupTimePlanForReport;
+            _SingleProductionTimePlan = part.SingleProductionTimePlan;
+            _ProductionTimeFact = part.ProductionTimeFact;
+            _MachiningTime = part.MachiningTime;
+            _SetupDowntimes = part.SetupDowntimes;
+            _MachiningDowntimes = part.MachiningDowntimes;
+            _PartialSetupTime = part.PartialSetupTime;
+            _MaintenanceTime = part.MaintenanceTime;
+            _ToolSearchingTime = part.ToolSearchingTime;
+            _MentoringTime = part.MentoringTime;
+            _ContactingDepartmentsTime = part.ContactingDepartmentsTime;
+            _FixtureMakingTime = part.FixtureMakingTime;
+            _HardwareFailureTime = part.HardwareFailureTime;
+            _OperatorComment = part.OperatorComment;
+            _MasterSetupComment = part.MasterSetupComment;
+            _MasterMachiningComment = part.MasterMachiningComment;
+            _SpecifiedDowntimesComment = part.SpecifiedDowntimesComment;
+            _UnspecifiedDowntimesComment = part.UnspecifiedDowntimesComment;
+            _MasterComment = part.MasterComment;
+            _FixedSetupTimePlan = part.FixedSetupTimePlan;
+            _FixedProductionTimePlan = part.FixedProductionTimePlan;
+            _EngineerComment = part.EngineerComment;
+            NeedUpdate = false;
+        }
+
         private Guid _Guid;
         /// <summary> GUID </summary>
         public Guid Guid

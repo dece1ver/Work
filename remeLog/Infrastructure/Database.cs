@@ -19,15 +19,9 @@ namespace remeLog.Infrastructure
 {
     public static class Database
     {
-        public static ICollection<Part> ReadParts()
-        {
-            var parts = new List<Part>();
-            throw new NotImplementedException();
-        }
-
         public static ObservableCollection<Part> ReadPartsWithConditions(string conditions)
         {
-            var parts = new ObservableCollection<Part>();
+            ObservableCollection<Part> parts = new ObservableCollection<Part>();
             using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
             {
                 connection.Open();
@@ -38,42 +32,26 @@ namespace remeLog.Infrastructure
                 }
             }
             return parts;
+
         }
 
-        public static ObservableCollection<Part> ReadPartByMachineAndShiftDate(string machine, DateTime shiftDate)
+        public static ObservableCollection<Part> ReadPartsByShiftDateAndMachine(DateTime fromDate, DateTime toDate, string machine)
         {
-            var parts = new ObservableCollection<Part>();
+            ObservableCollection<Part> parts = new();
             using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
             {
                 connection.Open();
 
-                string query = $"SELECT * FROM Parts WHERE Machine = '{machine}' AND ShiftDate = '{shiftDate}' ORDER BY StartSetupTime ASC;";
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    parts.FillParts(command);
-                }
-            }
-
-            return parts;
-        }
-
-        public static ObservableCollection<Part> ReadPartsByShiftDate(DateTime fromDate, DateTime toDate)
-        {
-            var parts = new ObservableCollection<Part>();
-            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
-            {
-                connection.Open();
-
-                string query = "SELECT * FROM Parts WHERE ShiftDate BETWEEN @FromDate AND @ToDate ORDER BY StartSetupTime ASC;";
+                string query = "SELECT * FROM Parts WHERE ShiftDate BETWEEN @FromDate AND @ToDate AND Machine = @Machine ORDER BY StartSetupTime ASC;";
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@FromDate", fromDate);
                     command.Parameters.AddWithValue("@ToDate", toDate);
+                    command.Parameters.AddWithValue("@Machine", machine);
 
                     parts.FillParts(command);
                 }
             }
-
             return parts;
         }
 
@@ -316,6 +294,7 @@ namespace remeLog.Infrastructure
 
         public static DbResult ReadMachines(this ICollection<string> machines)
         {
+            machines.Clear();
             try
             {
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))

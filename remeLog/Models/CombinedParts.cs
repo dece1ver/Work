@@ -1,6 +1,8 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
+using libeLog.Base;
 using remeLog.Infrastructure.Extensions;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -9,17 +11,78 @@ using System.Threading.Tasks;
 
 namespace remeLog.Models
 {
-    public class CombinedParts
+    public class CombinedParts : ViewModel
     {
         public CombinedParts(string machine)
         {
-            Machine = machine;
+            _Machine = machine;
         }
 
-        public string Machine { get; set; }
-        public DateTime FromDate { get; set; }
-        public DateTime ToDate { get; set; }
-        public ObservableCollection<Part> Parts { get; set; } = new();
+        public CombinedParts(string machine, DateTime fromDate, DateTime toDate)
+        {
+            _Machine = machine;
+            _FromDate = fromDate;
+            _ToDate = toDate;
+        }
+
+        public CombinedParts(CombinedParts cp)
+        {
+            _Machine = cp.Machine;
+            _FromDate = cp.FromDate;
+            _ToDate = cp.ToDate;
+            _ToDate = cp.ToDate;
+            _Parts = new();
+            foreach (var part in cp.Parts)
+            {
+                _Parts.Add(new Part(part));
+            }
+        }
+
+
+        private string _Machine;
+        public string Machine
+        {
+            get => _Machine;
+            set => Set(ref _Machine, value);
+        }
+
+
+
+        private DateTime _FromDate;
+        public DateTime FromDate
+        {
+            get => _FromDate;
+            set => Set(ref _FromDate, value);
+        }
+
+        private DateTime _ToDate;
+        public DateTime ToDate
+        {
+            get => _ToDate;
+            set => Set(ref _ToDate, value);
+        }
+
+
+        private ObservableCollection<Part> _Parts = new();
+        public ObservableCollection<Part> Parts
+        {
+            get => _Parts;
+            set 
+            {
+                if (Set(ref _Parts, value))
+                {
+                    OnPropertyChanged(nameof(TotalShifts));
+                    OnPropertyChanged(nameof(WorkedShifts));
+                    OnPropertyChanged(nameof(AverageSetupRatio));
+                    OnPropertyChanged(nameof(AverageProductionRatio));
+                    OnPropertyChanged(nameof(SetupTimeRatio));
+                    OnPropertyChanged(nameof(ProductionTimeRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(UnspecifiedDowntimesRatio));
+                }
+            }
+        }
+
         public int TotalShifts => (int)(ToDate.AddDays(1) - FromDate).TotalDays * 2;
         public int WorkedShifts
         {

@@ -130,7 +130,7 @@
                         </Grid>
                     </DockPanel>
                 </GroupBox>
-                <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" IsManipulationEnabled="True" FontSize="16" DockPanel.Dock="Top" Focusable="False" 
+                <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" IsManipulationEnabled="True" FontSize="14" DockPanel.Dock="Top" Focusable="False" 
                           BorderBrush="Transparent" Margin="-4 0" ItemContainerStyle="{StaticResource ListViewItemsStyle}"
                           ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListView.ItemTemplate>
@@ -139,7 +139,7 @@
                                 <GroupBox BorderBrush="DarkGray">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock FontSize="18" Text="{Binding Machine}" FontWeight="Regular"/>
+                                            <TextBlock FontSize="16" Text="{Binding Machine}" FontWeight="SemiBold"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <Grid>
@@ -149,15 +149,14 @@
                                         </Grid.ColumnDefinitions>
                                         <Grid Grid.Column="0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="140"/>
-                                                <ColumnDefinition Width="40"/>
-                                                <ColumnDefinition Width="136"/>
-                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="130"/>
+                                                <ColumnDefinition Width="30"/>
+                                                <ColumnDefinition Width="126"/>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="170"/>
+                                                <ColumnDefinition Width="50"/>
                                                 <ColumnDefinition Width="180"/>
-                                                <ColumnDefinition Width="60"/>
-                                                <ColumnDefinition Width="190"/>
-                                                <ColumnDefinition Width="60"/>
-
+                                                <ColumnDefinition Width="50"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition/>
