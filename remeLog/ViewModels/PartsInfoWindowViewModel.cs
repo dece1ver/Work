@@ -47,7 +47,7 @@ namespace remeLog.ViewModels
             _FromDate = PartsInfo.FromDate;
             _ToDate = PartsInfo.ToDate;
             _MachineFilters = new();
-            _MachineFilters.CollectionChanged += MachineFiltersSource_CollectionChanged;
+            _MachineFilters.CollectionChanged += MachineFiltersSource_CollectionChanged!;
 
             _MachineFilters.ReadMachines();
             foreach (var machineFilter in MachineFilters)
@@ -56,18 +56,18 @@ namespace remeLog.ViewModels
             }
         }
 
-        void MachineFiltersSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void MachineFiltersSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
                 foreach (MachineFilter item in e.NewItems)
-                    item.PropertyChanged += MachineFilters_PropertyChanged;
+                    item.PropertyChanged += MachineFilters_PropertyChanged!;
 
             if (e.OldItems != null)
                 foreach (MachineFilter item in e.OldItems)
-                    item.PropertyChanged -= MachineFilters_PropertyChanged;
+                    item.PropertyChanged -= MachineFilters_PropertyChanged!;
         }
 
-        void MachineFilters_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void MachineFilters_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "Filter")
                 _ = LoadPartsAsync();
