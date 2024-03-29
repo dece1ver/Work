@@ -372,6 +372,7 @@ namespace eLog.ViewModels
                 {
                     var now = DateTime.Now;
                     var endTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
+                    if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Завершен простой [{part.LastDownTime.Name}]"); }
                     Parts.RemoveAt(index);
                     if (part.LastDownTime.StartTime == endTime)
                     {
@@ -389,7 +390,7 @@ namespace eLog.ViewModels
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
-                    if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Завершен простой [{part.LastDownTime.Name}]"); }
+                    
                 }
             }
         }

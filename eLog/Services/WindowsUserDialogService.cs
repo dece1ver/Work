@@ -8,6 +8,7 @@ using libeLog;
 using libeLog.Models;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using static eLog.Infrastructure.Extensions.Text;
 using static eLog.Infrastructure.Extensions.Util;
@@ -184,9 +185,33 @@ namespace eLog.Services
             _ = dlg.ShowDialog();
             if (dlg.Type == DownTime.Types.HardwareFailure)
             {
-                _ = Database.SendHardwareFailureMessage();
+                _ = TrySendHardwareFailureMessageAsync();
             }
             return dlg.Type;
+        }
+
+        public static async Task TrySendHardwareFailureMessageAsync()
+        {
+            await Task.Run(() => {
+                var res = Database.SendHardwareFailureMessage();
+                string msg = "";
+                switch (res.Result)
+                {
+                    case DbResult.Ok:
+                        msg = "Сигнал успешно отправлен.";
+                        break;
+                    case DbResult.AuthError:
+                        msg = "Сигнал не отправлен из-за неудачной авторизации.";
+                        break;
+                    case DbResult.Error:
+                        msg = "Сигнал не отправлен из-за ошибки.";
+                        break;
+                    case DbResult.NoConnection:
+                        msg = "Сигнал не отправлен из-за отсутствия подключения к БД.";
+                        break;
+                }
+                if (AppSettings.Instance.DebugMode) WriteLog(msg);
+            });
         }
     }
 }

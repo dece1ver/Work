@@ -13,8 +13,8 @@
     <ApplicationIcon>Resources\eLog.ico</ApplicationIcon>
     <Version>$(VersionPrefix)</Version>
 	  <Deterministic>false</Deterministic>
-	  <AssemblyVersion>1.1.5</AssemblyVersion>
-	  <FileVersion>1.1.5</FileVersion>
+	  <AssemblyVersion>1.1.7</AssemblyVersion>
+	  <FileVersion>1.1.7</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
