@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using remeLog.Models;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -43,29 +44,9 @@ namespace remeLog.Infrastructure
         public static readonly string[] ShiftTypes = new string[] { "День", "Ночь" };
 
         [JsonIgnore]
-        public static readonly string[] SetupReasons = new string[] {
-        "",
-        "Освоение",
-        "Работа ученика",
-        "Неопытный оператор",
-        "Некорректное занесение",
-        "Некорректные нормативы",
-        "Отсутствие нормативов",
-        "Небрежное отношение к работе",
-        "Другое" };
-
+        public List<string> SetupReasons { get; set; } = new();
         [JsonIgnore]
-        public static readonly string[] ProductionReasons = new string[] {
-        "",
-        "Работа ученика",
-        "Неопытный оператор",
-        "Особенности изготовления",
-        "Штучная/длительная работа",
-        "Некорректное занесение",
-        "Некорректные нормативы",
-        "Отсутствие нормативов",
-        "Небрежное отношение к работе",
-        "Другое" };
+        public List<string> MachiningReasons { get; set; } = new();
         [JsonIgnore]
         public static readonly string[] UnspecifiedDowntimesReasons = new string[] {
         "",

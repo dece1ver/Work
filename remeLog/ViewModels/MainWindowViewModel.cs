@@ -274,15 +274,42 @@ namespace remeLog.ViewModels
                     switch (Machines.ReadMachines())
                     {
                         case DbResult.AuthError:
-                            MessageBox.Show("Не удалось получить спискок станков из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show("Не удалось получить список станков из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                             break;
                         case DbResult.Error:
-                            MessageBox.Show("Не удалось получить спискок станков из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show("Не удалось получить список станков из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                             break;
                         case DbResult.NoConnection:
                             MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                             break;
                     }
+
+                    switch (AppSettings.Instance.SetupReasons.ReadReasons(DeviationReasonType.Setup))
+                    {
+                        case DbResult.AuthError:
+                            MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                        case DbResult.Error:
+                            MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                        case DbResult.NoConnection:
+                            MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                    }
+
+                    switch (AppSettings.Instance.MachiningReasons.ReadReasons(DeviationReasonType.Machining))
+                    {
+                        case DbResult.AuthError:
+                            MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                        case DbResult.Error:
+                            MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                        case DbResult.NoConnection:
+                            MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                    }
+
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         Parts.Clear();

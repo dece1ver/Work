@@ -36,5 +36,18 @@ namespace remeLog.Views
                 cb.Text = "Фильтр по станку";
             }
         }
+
+        private void ValidationTextBlock_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not TextBlock { Parent: Grid grid }) return;
+            foreach (UIElement gridChild in grid.Children)
+            {
+                if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBlock textBlock } 
+                && Validation.GetErrors(textBlock) is ICollection<ValidationError> { Count: > 0 } errors)
+                {
+                    MessageBox.Show(errors.First().ErrorContent.ToString(), "Некорректный ввод", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
     }
 }

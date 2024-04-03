@@ -373,6 +373,52 @@ namespace remeLog.Infrastructure
             }
         }
 
+        public static DbResult ReadReasons(this ICollection<string> masters, DeviationReasonType type)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    var typeCondition = type switch
+                    {
+                        DeviationReasonType.Setup => "Type = 'Setup'",
+                        DeviationReasonType.Machining => "Type = 'Machining'",
+                        _ => throw new ArgumentException("Неверный аргумент в типе причин."),
+                    };
+                    connection.Open();
+                    string query = $"SELECT Reason FROM cnc_deviation_reasons WHERE Type IS NULL OR {typeCondition} ORDER BY Reason ASC";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                masters.Add(reader.GetString(0));
+                            }
+                        }
+                    }
+                }
+                return DbResult.Ok;
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
+        }
+
         public static DbResult WriteShiftInfo(ShiftInfo shiftInfo)
         {
             try

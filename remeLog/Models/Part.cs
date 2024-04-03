@@ -1,13 +1,15 @@
 ﻿using libeLog.Base;
+using libeLog.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace remeLog.Models
 {
-    public class Part : ViewModel
+    public class Part : ViewModel, IDataErrorInfo
     {
         public Part(
             Guid guid,
@@ -59,12 +61,12 @@ namespace remeLog.Models
             _TotalCount = totalCount;
             _StartSetupTime = startSetupTime;
             _StartMachiningTime = startMachiningTime;
-            _SetupTimeFact = setupTimeFact;
+            //_SetupTimeFact = setupTimeFact;
             _EndMachiningTime = endMachiningTime;
             _SetupTimePlan = setupTimePlan;
             _SetupTimePlanForReport = setupTimePlanForReport;
             _SingleProductionTimePlan = singleProductionTimePlan;
-            _ProductionTimeFact = productionTimeFact;
+            //_ProductionTimeFact = productionTimeFact;
             _MachiningTime = machiningTime;
             _SetupDowntimes = setupDowntimes;
             _MachiningDowntimes = machiningDowntimes;
@@ -101,12 +103,12 @@ namespace remeLog.Models
             _TotalCount = part.TotalCount;
             _StartSetupTime = part.StartSetupTime;
             _StartMachiningTime = part.StartMachiningTime;
-            _SetupTimeFact = part.SetupTimeFact;
+            //_SetupTimeFact = part.SetupTimeFact;
             _EndMachiningTime = part.EndMachiningTime;
             _SetupTimePlan = part.SetupTimePlan;
             _SetupTimePlanForReport = part.SetupTimePlanForReport;
             _SingleProductionTimePlan = part.SingleProductionTimePlan;
-            _ProductionTimeFact = part.ProductionTimeFact;
+            //_ProductionTimeFact = part.ProductionTimeFact;
             _MachiningTime = part.MachiningTime;
             _SetupDowntimes = part.SetupDowntimes;
             _MachiningDowntimes = part.MachiningDowntimes;
@@ -295,9 +297,18 @@ namespace remeLog.Models
         {
             get => _StartSetupTime;
             set {
-                if (Set(ref _StartSetupTime, value))
+                if (Set(ref _StartSetupTime, FixedDate(value)))
                 {
                     NeedUpdate = true;
+                    //SetupTimeFact = (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -309,31 +320,48 @@ namespace remeLog.Models
         {
             get => _StartMachiningTime;
             set {
-                if (Set(ref _StartMachiningTime, value))
+                if (Set(ref _StartMachiningTime, FixedDate(value)))
                 {
                     NeedUpdate = true;
+                    //SetupTimeFact = (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes;
+                    //ProductionTimeFact = (EndMachiningTime - StartMachiningTime - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)).TotalMinutes;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
 
-        private double _SetupTimeFact;
-        /// <summary> Фактическое время наладки </summary>
-        public double SetupTimeFact
-        {
-            get => _SetupTimeFact;
-            set
-            {
-                if (Set(ref _SetupTimeFact, value))
-                {
-                    NeedUpdate = true;
-                    OnPropertyChanged(nameof(NeedUpdate));
-                    OnPropertyChanged(nameof(SetupRatio));
-                    OnPropertyChanged(nameof(SetupRatioTitle));
-                }
-                
-            }
-        }
+        //private double _SetupTimeFact;
+        ///// <summary> Фактическое время наладки </summary>
+        //public double SetupTimeFact
+        //{
+        //    get => _SetupTimeFact;
+        //    set
+        //    {
+        //        if (Set(ref _SetupTimeFact, value))
+        //        {
+        //            NeedUpdate = true;
+        //            OnPropertyChanged(nameof(SetupRatio));
+        //            OnPropertyChanged(nameof(SetupRatioTitle));
+        //            OnPropertyChanged(nameof(ProductionRatio));
+        //            OnPropertyChanged(nameof(ProductionRatioTitle));
+        //            OnPropertyChanged(nameof(SigleProductionTime));
+        //            OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+        //            OnPropertyChanged(nameof(NeedUpdate));
+        //        }
+
+        //    }
+        //}
+
+        public double SetupTimeFact => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes - SetupDowntimes;
+        public double ProductionTimeFact => (EndMachiningTime - StartMachiningTime - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)).TotalMinutes - MachiningDowntimes;
 
         private DateTime _EndMachiningTime;
         /// <summary> Завершение изготовления </summary>
@@ -341,9 +369,18 @@ namespace remeLog.Models
         {
             get => _EndMachiningTime;
             set {
-                if (Set(ref _EndMachiningTime, value))
+                if (Set(ref _EndMachiningTime, FixedDate(value)))
                 {
                     NeedUpdate = true;
+                    //ProductionTimeFact = (EndMachiningTime - StartMachiningTime - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)).TotalMinutes;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -359,9 +396,15 @@ namespace remeLog.Models
                 if(Set(ref _SetupTimePlan, value))
                 {
                     NeedUpdate = true;
-                    OnPropertyChanged(nameof(NeedUpdate));
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
                     OnPropertyChanged(nameof(SetupRatio));
                     OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
@@ -391,25 +434,39 @@ namespace remeLog.Models
                 if (Set(ref _SingleProductionTimePlan, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
         }
 
 
-        private double _ProductionTimeFact;
-        /// <summary> Фасктическое время изготовления </summary>
-        public double ProductionTimeFact
-        {
-            get => _ProductionTimeFact;
-            set {
-                if (Set(ref _ProductionTimeFact, value))
-                {
-                    NeedUpdate = true;
-                    OnPropertyChanged(nameof(NeedUpdate));
-                }
-            }
-        }
+        //private double _ProductionTimeFact;
+        ///// <summary> Фасктическое время изготовления </summary>
+        //public double ProductionTimeFact
+        //{
+        //    get => _ProductionTimeFact;
+        //    set {
+        //        if (Set(ref _ProductionTimeFact, value))
+        //        {
+        //            NeedUpdate = true;
+        //            OnPropertyChanged(nameof(SetupRatio));
+        //            OnPropertyChanged(nameof(SetupRatioTitle));
+        //            OnPropertyChanged(nameof(ProductionRatio));
+        //            OnPropertyChanged(nameof(ProductionRatioTitle));
+        //            OnPropertyChanged(nameof(SigleProductionTime));
+        //            OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+        //            OnPropertyChanged(nameof(NeedUpdate));
+        //        }
+        //    }
+        //}
 
 
         private TimeSpan _MachiningTime;
@@ -436,6 +493,14 @@ namespace remeLog.Models
                 if (Set(ref _SetupDowntimes, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -451,6 +516,14 @@ namespace remeLog.Models
                 if (Set(ref _MachiningDowntimes, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -466,6 +539,14 @@ namespace remeLog.Models
                 if (Set(ref _PartialSetupTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -481,6 +562,14 @@ namespace remeLog.Models
                 if (Set(ref _MaintenanceTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -496,6 +585,14 @@ namespace remeLog.Models
                 if (Set(ref _ToolSearchingTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -511,6 +608,14 @@ namespace remeLog.Models
                 if (Set(ref _MentoringTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -526,6 +631,14 @@ namespace remeLog.Models
                 if (Set(ref _ContactingDepartmentsTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -541,6 +654,14 @@ namespace remeLog.Models
                 if (Set(ref _FixtureMakingTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -556,6 +677,14 @@ namespace remeLog.Models
                 if (Set(ref _HardwareFailureTime, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -702,10 +831,13 @@ namespace remeLog.Models
             set { 
                 if (Set(ref _NeedUpdate, value))
                 {
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
                     OnPropertyChanged(nameof(SetupRatio));
                     OnPropertyChanged(nameof(SetupRatioTitle));
                     OnPropertyChanged(nameof(ProductionRatio));
                     OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SigleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
@@ -723,5 +855,39 @@ namespace remeLog.Models
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;
 
+        private DateTime FixedDate(DateTime dateTime)
+        {
+            var year = ShiftDate.Year;
+            var month = ShiftDate.Month;
+            var day = ShiftDate.Day;
+            var hour = dateTime.Hour;
+            var minute = dateTime.Minute;
+            var second = dateTime.Second;
+            if ((dateTime - DateTime.Today.AddHours(7)).TotalMinutes <= 0) day++;
+            return new DateTime(year, month, day, hour, minute, 0);
+        }
+
+        public string Error => null!;
+
+        public string this[string columnName]
+        {
+            get
+            {
+                switch (columnName)
+                {
+                    case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && SetupRatio == 0 && SetupTimeFact > 0:
+                        return "Необходимо указать причину отсутствия номатива наладки.";
+                    case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && SetupRatio is < 0.7 or > 1.2 && SetupTimeFact > 0:
+                        return "Необходимо указать причину невыполнения номатива наладки.";
+                    case nameof(MasterMachiningComment) when string.IsNullOrWhiteSpace(MasterMachiningComment) && ProductionRatio == 0:
+                        return "Необходимо указать причину отсутствия номатива изготовления.";
+                    case nameof(MasterMachiningComment) when string.IsNullOrWhiteSpace(MasterMachiningComment) && ProductionRatio is < 0.7 or > 1.2:
+                        return "Необходимо указать причину невыполнения номатива изготовления.";
+
+                    default:
+                        return null!;
+                }
+            }
+        }
     }
 }

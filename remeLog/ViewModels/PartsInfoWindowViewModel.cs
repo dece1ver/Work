@@ -8,6 +8,7 @@ using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using remeLog.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -23,6 +24,7 @@ namespace remeLog.ViewModels
 
     public class PartsInfoWindowViewModel : ViewModel
     {
+        
         public PartsInfoWindowViewModel(CombinedParts parts)
         {
             ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
@@ -218,6 +220,9 @@ namespace remeLog.ViewModels
             get => _Overlay;
             set => Set(ref _Overlay, value);
         }
+
+        public List<string> SetupReasons { get; set; } = AppSettings.Instance.SetupReasons;
+        public List<string> MachiningReasons { get; set; } = AppSettings.Instance.MachiningReasons;
 
         public double AverageSetupRatio => 
             MachineFilters.Count(f => f.Filter) == 1
