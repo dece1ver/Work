@@ -13,6 +13,11 @@ namespace remeLog.Models
 {
     public class CombinedParts : ViewModel
     {
+        public enum ReportState
+        {
+            Exist, NotExist, Partial
+        }
+
         public CombinedParts(string machine)
         {
             _Machine = machine;
@@ -62,6 +67,13 @@ namespace remeLog.Models
             set => Set(ref _ToDate, value);
         }
 
+        private ReportState _IsReportExist = ReportState.NotExist;
+        /// <summary> Существует ли отчет за смену </summary>
+        public ReportState IsReportExist
+        {
+            get => _IsReportExist;
+            set => Set(ref _IsReportExist, value);
+        }
 
         private ObservableCollection<Part> _Parts = new();
         public ObservableCollection<Part> Parts
@@ -94,6 +106,8 @@ namespace remeLog.Models
                 return partsByDates.Count();
             }
         }
+
+        public bool IsSingleShift => FromDate == ToDate;
         public double AverageSetupRatio => Parts.AverageSetupRatio();
         public double AverageProductionRatio => Parts.AverageProductionRatio();
         public double SetupTimeRatio => Parts.SetupRatio();

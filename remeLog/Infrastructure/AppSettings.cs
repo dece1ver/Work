@@ -48,12 +48,7 @@ namespace remeLog.Infrastructure
         [JsonIgnore]
         public List<string> MachiningReasons { get; set; } = new();
         [JsonIgnore]
-        public static readonly string[] UnspecifiedDowntimesReasons = new string[] {
-        "",
-        "Ремонт оборудования",
-        "Отсутствие оператора",
-        "Отсутствие электричества",
-        "Другое" };
+        public List<string> UnspecifiedDowntimesReasons = new();
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode { get; set; }

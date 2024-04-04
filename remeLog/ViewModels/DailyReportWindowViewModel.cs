@@ -184,6 +184,7 @@ namespace remeLog.ViewModels
             get => _Title;
             set => Set(ref _Title, value);
         }
+        public List<string> DowntimeReasons => AppSettings.Instance.UnspecifiedDowntimesReasons;
 
         public bool UnspecifiedDayDowntimesNeedAttention => UnspecifiedDayDowntimesRatio is > 0.1 or < -0.1;
         public bool UnspecifiedNightDowntimesNeedAttention => UnspecifiedNightDowntimesRatio is > 0.1 or < -0.1;

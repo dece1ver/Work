@@ -106,7 +106,7 @@
                             <TextBlock Text="{Binding UnspecifiedDayDowntimes, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
                         </StackPanel>
                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Причина простоя:"/>
-                        <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{x:Static inf:AppSettings.UnspecifiedDowntimesReasons}" SelectedItem="{Binding DayDowntimesReason}"
+                        <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{Binding DataContext.DowntimeReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" SelectedItem="{Binding DayDowntimesReason}"
                                   VerticalContentAlignment="Center"/>
 
                         <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="6" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
@@ -182,12 +182,12 @@
                             <TextBlock Text="{Binding UnspecifiedNightDowntimes, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
                         </StackPanel>
                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Причина простоя:"/>
-                        <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{x:Static inf:AppSettings.UnspecifiedDowntimesReasons}" SelectedItem="{Binding NightDowntimesReason}"
-              VerticalContentAlignment="Center"/>
+                        <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{Binding DataContext.DowntimeReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" SelectedItem="{Binding NightDowntimesReason}"
+                                  VerticalContentAlignment="Center"/>
 
                         <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="6" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Комментарий мастера по дневной смене:"/>
+                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Комментарий мастера по ночной смене:"/>
                         <TextBox Grid.Row="1" Grid.Column="4" Grid.RowSpan="5" Text="{Binding NightMasterComment}"/>
                     </Grid>
                 </GroupBox>

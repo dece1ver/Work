@@ -13,7 +13,9 @@
             <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
             <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
             <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
+            <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
             <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <cnv:ReportStateVisibility x:Key="ReportStateVisibility"/>
             <cnv:TimeConverter x:Key="TimeConverter"/>
             <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
         </ResourceDictionary>

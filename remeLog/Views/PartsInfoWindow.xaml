@@ -247,9 +247,9 @@
                             <DataTrigger Binding="{Binding NeedUpdate, UpdateSourceTrigger=PropertyChanged}" Value="True">
                                 <Setter Property="Foreground" Value="Blue"/>
                             </DataTrigger>
-                            <!--<Trigger Property="IsEditing" Value="True">
+                            <Trigger Property="IsEditing" Value="True">
                                 <Setter Property="Foreground" Value="DarkRed"/>
-                            </Trigger>-->
+                            </Trigger>
                         </Style.Triggers>
                     </Style>
                 </DataGrid.RowStyle>
@@ -568,11 +568,13 @@
                             <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
                         </DataGridTextColumn.EditingElementStyle>
                     </DataGridTextColumn>
+                    
                     <DataGridTextColumn Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="36" IsReadOnly="True">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
+                    
                     <DataGridTemplateColumn Header="Невыполнение норматива наладки" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -610,6 +612,23 @@
                                           Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch" 
                                           >
                                 </ComboBox>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Комментарий мастера" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding MasterComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                                           Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}">
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding MasterComment, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource TableLargeTextBox}">
+                                </TextBox>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>

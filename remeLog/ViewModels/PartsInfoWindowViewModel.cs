@@ -24,7 +24,7 @@ namespace remeLog.ViewModels
 
     public class PartsInfoWindowViewModel : ViewModel
     {
-        
+        private readonly object lockObject = new();
         public PartsInfoWindowViewModel(CombinedParts parts)
         {
             ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
@@ -221,33 +221,33 @@ namespace remeLog.ViewModels
             set => Set(ref _Overlay, value);
         }
 
-        public List<string> SetupReasons { get; set; } = AppSettings.Instance.SetupReasons;
-        public List<string> MachiningReasons { get; set; } = AppSettings.Instance.MachiningReasons;
+        public List<string> SetupReasons => AppSettings.Instance.SetupReasons;
+        public List<string> MachiningReasons => AppSettings.Instance.MachiningReasons;
 
-        public double AverageSetupRatio => 
+        public double AverageSetupRatio =>
             MachineFilters.Count(f => f.Filter) == 1
-            ? Parts.AverageSetupRatio() 
+            ? Parts.AverageSetupRatio()
             : double.NaN;
         public double AverageProductionRatio =>
-            MachineFilters.Count(f => f.Filter) == 1 
-            ? Parts.AverageProductionRatio() 
+            MachineFilters.Count(f => f.Filter) == 1
+            ? Parts.AverageProductionRatio()
             : double.NaN;
-        public double SetupTimeRatio => 
-            MachineFilters.Count(f => f.Filter) == 1 
-            ? Parts.SetupRatio() 
+        public double SetupTimeRatio =>
+            MachineFilters.Count(f => f.Filter) == 1
+            ? Parts.SetupRatio()
             : double.NaN;
-        public double ProductionTimeRatio => 
-            MachineFilters.Count(f => f.Filter) == 1 
-            ? Parts.ProductionRatio() 
+        public double ProductionTimeRatio =>
+            MachineFilters.Count(f => f.Filter) == 1
+            ? Parts.ProductionRatio()
             : double.NaN;
-        public double SpecifiedDowntimesRatio => 
-            MachineFilters.Count(f => f.Filter) == 1 
-            ? Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter) 
+        public double SpecifiedDowntimesRatio =>
+            MachineFilters.Count(f => f.Filter) == 1
+            ? Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter)
             : double.NaN;
-        public double UnspecifiedDowntimesRatio => 
-            MachineFilters.Count(f => f.Filter) == 1 
-            ? Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter) 
-            : double.NaN; 
+        public double UnspecifiedDowntimesRatio =>
+            MachineFilters.Count(f => f.Filter) == 1
+            ? Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter)
+            : double.NaN;
 
 
         private TimeOnly _EndDateForCalc;
@@ -456,7 +456,7 @@ namespace remeLog.ViewModels
 
         #region OpenDailyReportWindow
         public ICommand OpenDailyReportWindowCommand { get; }
-        private void OnOpenDailyReportWindowCommandExecuted(object p)
+        private async void OnOpenDailyReportWindowCommandExecuted(object p)
         {
             if (FromDate != ToDate)
             {
@@ -473,45 +473,59 @@ namespace remeLog.ViewModels
                 MessageBox.Show("Для составления суточного отчета в фильтре должен быть как минимум один станок!", "Выбрано слишком мало станков.", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            // TODO: сделать овнером текущее окно, которому принадлежит этот датаконтект 
+            if (Parts.Any(x => !string.IsNullOrEmpty(x.Error))
+                && MessageBox.Show("Не всё заполнено корректно, все равно создать отчёт за смену?", "Подтверждение.",
+                MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel) return;
+            // TODO сделать флажок?
+            ShiftFilter = new(ShiftType.All);
             using (Overlay = new())
             {
-                var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, PartsInfo.Machine)) { Owner = p as PartsInfoWindow};
+                var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, PartsInfo.Machine)) { Owner = p as PartsInfoWindow };
                 dailyInfoWindow.ShowDialog();
             }
         }
         private static bool CanOpenDailyReportWindowCommandExecute(object p) => true;
         #endregion
 
-        private async Task LoadPartsAsync()
+        private async Task<bool> LoadPartsAsync()
         {
-            await Task.Run(() =>
+            return await Task.Run(() =>
             {
+                if (Parts.Any(x => x.NeedUpdate)
+                && MessageBox.Show("Есть незаписанные изменения. При продолжении они будут утеряны.", "Обновить список деталей?",
+                MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel) return false;
                 try
                 {
-                    InProgress = true;
-                    var conditions = $"ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
-                        $"{(ShiftFilter is { Type: ShiftType.All } ? "" : $"AND Shift = '{ShiftFilter.FilterText}'")}" +
-                        $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
-                        $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
-                        $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
-                        $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")}";
-
-                    foreach (var machineFilter in MachineFilters)
+                    lock (lockObject)
                     {
-                        if (!machineFilter.Filter) conditions += $"AND NOT Machine = '{machineFilter.Machine}'";
-                    }
+                        InProgress = true;
+                        var conditions = $"ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
+                            $"{(ShiftFilter is { Type: ShiftType.All } ? "" : $"AND Shift = '{ShiftFilter.FilterText}'")}" +
+                            $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
+                            $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
+                            $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
+                            $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")}";
 
-                    Parts = Database.ReadPartsWithConditions(conditions);
+                        foreach (var machineFilter in MachineFilters)
+                        {
+                            if (!machineFilter.Filter) conditions += $"AND NOT Machine = '{machineFilter.Machine}'";
+                        }
+
+                        Parts = Database.ReadPartsWithConditions(conditions);
+
+                    }
+                    return true;
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"{ex.Message}");
+                    return false;
                 }
                 finally
                 {
                     InProgress = false;
                 }
+
             });
         }
     }

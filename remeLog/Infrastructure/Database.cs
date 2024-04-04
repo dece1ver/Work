@@ -373,7 +373,7 @@ namespace remeLog.Infrastructure
             }
         }
 
-        public static DbResult ReadReasons(this ICollection<string> masters, DeviationReasonType type)
+        public static DbResult ReadDeviationReasons(this ICollection<string> masters, DeviationReasonType type)
         {
             try
             {
@@ -387,6 +387,46 @@ namespace remeLog.Infrastructure
                     };
                     connection.Open();
                     string query = $"SELECT Reason FROM cnc_deviation_reasons WHERE Type IS NULL OR {typeCondition} ORDER BY Reason ASC";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                masters.Add(reader.GetString(0));
+                            }
+                        }
+                    }
+                }
+                return DbResult.Ok;
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
+        }
+
+        public static DbResult ReadDowntimeReasons(this ICollection<string> masters)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    connection.Open();
+                    string query = $"SELECT Reason FROM cnc_downtime_reasons ORDER BY Reason ASC";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())

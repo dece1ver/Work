@@ -139,7 +139,15 @@
                                 <GroupBox BorderBrush="DarkGray">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock FontSize="16" Text="{Binding Machine}" FontWeight="SemiBold"/>
+                                            <Grid Grid.Row="0" Grid.Column="8" Grid.RowSpan="2" Visibility="{Binding IsSingleShift, Converter={StaticResource VisibilityConverter}}">
+                                                <Label Content="{StaticResource StatusOkIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility }, ConverterParameter=Exist}"
+                                                       ToolTip="Есть отчет за смену"/>
+                                                <Label Content="{StaticResource StatusWarningIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility }, ConverterParameter=Partial}"
+                                                       ToolTip="Отчет за смену неполный"/>
+                                                <Label Content="{StaticResource StatusErrorIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility}, ConverterParameter=NotExist}"
+                                                       ToolTip="Нет отчета за смену"/>
+                                            </Grid>
+                                            <TextBlock FontSize="16" Text="{Binding Machine}" FontWeight="SemiBold" Margin="0 1 0 0"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <Grid>
@@ -185,7 +193,6 @@
                                             <TextBlock Grid.Row="1" Grid.Column="6" Text="Неотмеченные простои:"/>
                                             <TextBlock Grid.Row="0" Grid.Column="7" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}"/>
                                             <TextBlock Grid.Row="1" Grid.Column="7" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}"/>
-
                                         </Grid>
                                         <Button Margin="0 -6 0 0" Width="120" HorizontalAlignment="Right"
                                             CommandParameter="{Binding}" 

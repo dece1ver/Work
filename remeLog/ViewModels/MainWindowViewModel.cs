@@ -6,6 +6,7 @@ using libeLog.Interfaces;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using remeLog.Infrastructure;
+using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using remeLog.Views;
 using System;
@@ -15,6 +16,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -24,6 +26,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using static libeLog.Constants;
+using static remeLog.Models.CombinedParts;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -284,7 +287,20 @@ namespace remeLog.ViewModels
                             break;
                     }
 
-                    switch (AppSettings.Instance.SetupReasons.ReadReasons(DeviationReasonType.Setup))
+                    switch (AppSettings.Instance.UnspecifiedDowntimesReasons.ReadDowntimeReasons())
+                    {
+                        case DbResult.AuthError:
+                            MessageBox.Show("Не удалось получить список причин простоев из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                        case DbResult.Error:
+                            MessageBox.Show("Не удалось получить список причин простоев из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                        case DbResult.NoConnection:
+                            MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                            break;
+                    }
+
+                    switch (AppSettings.Instance.SetupReasons.ReadDeviationReasons(DeviationReasonType.Setup))
                     {
                         case DbResult.AuthError:
                             MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -297,7 +313,7 @@ namespace remeLog.ViewModels
                             break;
                     }
 
-                    switch (AppSettings.Instance.MachiningReasons.ReadReasons(DeviationReasonType.Machining))
+                    switch (AppSettings.Instance.MachiningReasons.ReadDeviationReasons(DeviationReasonType.Machining))
                     {
                         case DbResult.AuthError:
                             MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -315,7 +331,31 @@ namespace remeLog.ViewModels
                         Parts.Clear();
                         foreach (var machine in Machines)
                         {
-                            Parts.Add(new CombinedParts(machine, FromDate, ToDate));
+                            CombinedParts.ReportState state = ReportState.NotExist;
+                            bool dayExist = false;
+                            bool nightExist = false;
+                            if (FromDate == ToDate)
+                            {
+                                if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Day, machine), out var dbDayShifts) is DbResult.Ok && dbDayShifts.Count > 0)
+                                {
+                                    dayExist = true;
+                                }
+
+                                if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0)
+                                {
+                                    nightExist = true;
+                                }
+
+                                if (dayExist && nightExist)
+                                {
+                                    state = ReportState.Exist;
+                                }
+                                else if (dayExist || nightExist)
+                                {
+                                    state = ReportState.Partial;
+                                }
+                            }
+                            Parts.Add(new CombinedParts(machine, FromDate, ToDate) { IsReportExist = state});
                         }
                         return true;
                     });
