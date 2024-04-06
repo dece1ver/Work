@@ -37,6 +37,7 @@ namespace remeLog.ViewModels
             DecreaseSetupCommand = new LambdaCommand(OnDecreaseSetupCommandExecuted, CanDecreaseSetupCommandExecute);
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
             RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
+            ChangeCompactViewCommand = new LambdaCommand(OnChangeCompactViewCommandExecuted, CanChangeCompactViewCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
 
             PartsInfo = parts;
@@ -212,6 +213,16 @@ namespace remeLog.ViewModels
             get => _Status;
             set => Set(ref _Status, value);
         }
+
+
+        private bool _CompactView = true;
+        /// <summary> Описание </summary>
+        public bool CompactView
+        {
+            get => _CompactView;
+            set => Set(ref _CompactView, value);
+        }
+
 
         private Overlay _Overlay = new(false);
 
@@ -452,6 +463,12 @@ namespace remeLog.ViewModels
         public ICommand RefreshPartsCommand { get; }
         private void OnRefreshPartsCommandExecuted(object p) => _ = LoadPartsAsync();
         private static bool CanRefreshPartsCommandExecute(object p) => true;
+        #endregion
+
+        #region ChangeCompactView
+        public ICommand ChangeCompactViewCommand { get; }
+        private void OnChangeCompactViewCommandExecuted(object p) => CompactView = !CompactView;
+        private static bool CanChangeCompactViewCommandExecute(object p) => true;
         #endregion
 
         #region OpenDailyReportWindow

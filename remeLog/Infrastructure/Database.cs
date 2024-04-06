@@ -373,10 +373,11 @@ namespace remeLog.Infrastructure
             }
         }
 
-        public static DbResult ReadDeviationReasons(this ICollection<string> masters, DeviationReasonType type)
+        public static DbResult ReadDeviationReasons(this ICollection<string> reasons, DeviationReasonType type)
         {
             try
             {
+                reasons.Clear();
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     var typeCondition = type switch
@@ -393,7 +394,7 @@ namespace remeLog.Infrastructure
                         {
                             while (reader.Read())
                             {
-                                masters.Add(reader.GetString(0));
+                                reasons.Add(reader.GetString(0));
                             }
                         }
                     }
@@ -419,10 +420,11 @@ namespace remeLog.Infrastructure
             }
         }
 
-        public static DbResult ReadDowntimeReasons(this ICollection<string> masters)
+        public static DbResult ReadDowntimeReasons(this ICollection<string> reasons)
         {
             try
             {
+                reasons.Clear();
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
@@ -433,7 +435,7 @@ namespace remeLog.Infrastructure
                         {
                             while (reader.Read())
                             {
-                                masters.Add(reader.GetString(0));
+                                reasons.Add(reader.GetString(0));
                             }
                         }
                     }
