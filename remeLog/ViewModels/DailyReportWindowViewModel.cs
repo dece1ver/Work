@@ -10,10 +10,11 @@ using System.Linq;
 using System.Windows.Input;
 using System.Windows;
 using Part = remeLog.Models.Part;
+using System.ComponentModel;
 
 namespace remeLog.ViewModels
 {
-    public class DailyReportWindowViewModel : ViewModel
+    public class DailyReportWindowViewModel : ViewModel, IDataErrorInfo
     {
         public DailyReportWindowViewModel((ICollection<Part> parts, DateTime date, string machine) shiftInfo)
         {
@@ -188,7 +189,8 @@ namespace remeLog.ViewModels
 
         public bool UnspecifiedDayDowntimesNeedAttention => UnspecifiedDayDowntimesRatio is > 0.1 or < -0.1;
         public bool UnspecifiedNightDowntimesNeedAttention => UnspecifiedNightDowntimesRatio is > 0.1 or < -0.1;
-
+        public bool DayPartialSetupNeedAttention => DayPartialSetupRatio is > 0.3;
+        public bool NightPartialSetupNeedAttention => NightPartialSetupRatio is > 0.3;
         public bool SpecifiedDayDowntimesNeedAttention => SpecifiedDayDowntimesRatio is > 0.1 or < -0.1;
         public bool SpecifiedNightDowntimesNeedAttention => SpecifiedNightDowntimesRatio is > 0.1 or < -0.1;
 
@@ -213,14 +215,42 @@ namespace remeLog.ViewModels
         public double UnspecifiedDayDowntimesRatio => Parts.UnspecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Day);
         public double UnspecifiedNightDowntimesRatio => Parts.UnspecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Night);
         public double SpecifiedDayDowntimesRatio => Parts.SpecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Day);
+        public double DayPartialSetup => Parts.PartialSetup(ShiftDate, ShiftDate, ShiftType.Day);
+        public double NightPartialSetup => Parts.PartialSetup(ShiftDate, ShiftDate, ShiftType.Night);
+        public double DayPartialSetupRatio => Parts.PartialSetupRatio(ShiftDate, ShiftDate, ShiftType.Day);
+        public double NightPartialSetupRatio => Parts.PartialSetupRatio(ShiftDate, ShiftDate, ShiftType.Night);
+
         public double SpecifiedNightDowntimesRatio => Parts.SpecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Night);
         public double TotalWorkedDayTime => (int)ShiftType.Day - Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Day);
         public double TotalWorkedNightTime => (int)ShiftType.Night - Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Night);
 
         #region UpdateShiftInfo
         public ICommand UpdateShiftInfoCommand { get; }
+
+        public string Error => throw new NotImplementedException();
+
+        public string this[string columnName] { get
+            {
+                switch (columnName)
+                {
+                    case nameof(CurrentMaster) when string.IsNullOrWhiteSpace(CurrentMaster):
+                        return "Не выбран мастер";
+                    case nameof(DayDowntimesReason) when UnspecifiedDayDowntimesNeedAttention && string.IsNullOrEmpty(DayDowntimesReason):
+                        return "Не указана причина дневных простоев";
+                    case nameof(NightDowntimesReason) when UnspecifiedNightDowntimesNeedAttention && string.IsNullOrEmpty(NightDowntimesReason):
+                        return "Не указана причина ночных простоев";
+                    default:
+                        return null!;
+                }
+            } }
+
         private void OnUpdateShiftInfoCommandExecuted(object p)
         {
+            if (Parts.Any(x => !string.IsNullOrEmpty(x.Error)))
+            {
+                MessageBox.Show("Некорректное заполнение.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) 
                 return;
             var dayShift = new ShiftInfo(null, ShiftDate, ShiftType.Day, Machine, CurrentMaster, UnspecifiedDayDowntimes, DayDowntimesReason, DayMasterComment);

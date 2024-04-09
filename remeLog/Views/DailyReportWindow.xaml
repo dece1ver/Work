@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:remeLog.Views" d:DataContext="{d:DesignInstance Type=vm:DailyReportWindowViewModel}"
         xmlns:inf="clr-namespace:remeLog.Infrastructure" WindowStartupLocation="CenterOwner"
         mc:Ignorable="d" xmlns:vm="clr-namespace:remeLog.ViewModels"
-        Title="{Binding Title}" d:Title="Суточный отчет за 01.01.2024 по станку Goodway GS-1500" Height="450" Width="800">
+        Title="{Binding Title}" d:Title="Суточный отчет за 01.01.2024 по станку Goodway GS-1500" Height="520" Width="800">
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
@@ -14,7 +14,7 @@
             </StatusBarItem>
         </StatusBar>
         <DockPanel LastChildFill="True">
-            <Grid DockPanel.Dock="Top" Margin="6 0 0 0">
+            <Grid DockPanel.Dock="Top" Margin="6 1 0 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="65"/>
                     <ColumnDefinition Width="250"/>
@@ -27,7 +27,9 @@
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="Мастер " Grid.Column="0" Grid.Row="0" VerticalAlignment="Center"/>
-                <ComboBox Grid.Column="1" Grid.Row="0" ItemsSource="{Binding Masters}" SelectedItem="{Binding CurrentMaster}"/>
+                <ComboBox Grid.Column="1" Grid.Row="0" 
+                          ItemsSource="{Binding Masters}" 
+                          SelectedItem="{Binding CurrentMaster, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"/>
             </Grid>
             <DockPanel DockPanel.Dock="Bottom">
                 <Button DockPanel.Dock="Right" Content="Записать" HorizontalAlignment="Right" Width="100" Height="30" Margin="0 0 1 1" Command="{Binding UpdateShiftInfoCommand}">
@@ -62,6 +64,7 @@
                             <RowDefinition/>
                             <RowDefinition/>
                             <RowDefinition/>
+                            <RowDefinition/>
                         </Grid.RowDefinitions>
                         
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Оператор:"/>
@@ -70,8 +73,26 @@
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalWorkedDayTime, StringFormat={}{0} / 660 мин.}" d:Text="613 / 660 мин."/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DayWorkInfo}" d:Text="М/Л: 5, Деталей: 85"/>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Отмеченные простои:"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Частичная наладка:"/>
                         <StackPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock Text="{Binding DayPartialSetupRatio, StringFormat=0.##%}" d:Text="4%">
+                                <TextBlock.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DayPartialSetupNeedAttention}" Value="True">
+                                                <Setter Property="Foreground" Value="DarkOrange" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Resources>
+                            </TextBlock>
+                            <TextBlock Text="{Binding DayPartialSetup, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Отмеченные простои:"/>
+                        <StackPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
                             <TextBlock Text="{Binding SpecifiedDayDowntimesRatio, StringFormat=0.##%}" d:Text="3%">
                                 <TextBlock.Resources>
                                     <Style TargetType="TextBlock">
@@ -88,8 +109,8 @@
                             <TextBlock Text="{Binding SpecifiedDayDowntimes, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
                         </StackPanel>
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Неотмеченный простой:"/>
-                        <StackPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Неотмеченный простой:"/>
+                        <StackPanel Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
                             <TextBlock Text="{Binding UnspecifiedDayDowntimesRatio, StringFormat=0.##%}" d:Text="3%">
                                 <TextBlock.Resources>
                                     <Style TargetType="TextBlock">
@@ -105,16 +126,18 @@
                             </TextBlock>
                             <TextBlock Text="{Binding UnspecifiedDayDowntimes, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Причина простоя:"/>
-                        <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{Binding DataContext.DowntimeReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" SelectedItem="{Binding DayDowntimesReason}"
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Причина простоя:"/>
+                        <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding DataContext.DowntimeReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
+                                  SelectedItem="{Binding DayDowntimesReason, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
                                   VerticalContentAlignment="Center"/>
 
-                        <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="6" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
+                        <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
                         <TextBlock Grid.Row="0" Grid.Column="4" Text="Комментарий мастера по дневной смене:" TextWrapping="Wrap"/>
-                        <TextBox Grid.Row="1" Grid.Column="4" Grid.RowSpan="5" Text="{Binding DayMasterComment}"/>
+                        <TextBox Grid.Row="1" Grid.Column="4" Grid.RowSpan="6" Text="{Binding DayMasterComment}"/>
                     </Grid>
                 </GroupBox>
+                
                 <GroupBox BorderBrush="Gray">
                     <GroupBox.Header>
                         <TextBlock Text=" Ночь " FontWeight="SemiBold"/>
@@ -138,16 +161,35 @@
                             <RowDefinition/>
                             <RowDefinition/>
                             <RowDefinition/>
+                            <RowDefinition/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Оператор:"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding NightOperator}" d:Text="Бабохин Кирилл Георгиевич"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Отмечена работа:"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalWorkedNightTime, StringFormat={}{0} / 630 мин.}" d:Text="613 / 660 мин."/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalWorkedNightTime, StringFormat={}{0} / 630 мин.}" d:Text="613 / 630 мин."/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding NightWorkInfo}" d:Text="М/Л: 5, Деталей: 85"/>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Отмеченные простои:"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Частичная наладка:"/>
                         <StackPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock Text="{Binding NightPartialSetupRatio, StringFormat=0.##%}" d:Text="4%">
+                                <TextBlock.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NightPartialSetupNeedAttention}" Value="True">
+                                                <Setter Property="Foreground" Value="DarkOrange" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Resources>
+                            </TextBlock>
+                            <TextBlock Text="{Binding NightPartialSetup, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Отмеченные простои:"/>
+                        <StackPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
                             <TextBlock Text="{Binding SpecifiedNightDowntimesRatio, StringFormat=0.##%}" d:Text="3%">
                                 <TextBlock.Resources>
                                     <Style TargetType="TextBlock">
@@ -164,8 +206,8 @@
                             <TextBlock Text="{Binding SpecifiedNightDowntimes, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
                         </StackPanel>
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Неотмеченный простой:"/>
-                        <StackPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Неотмеченный простой:"/>
+                        <StackPanel Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal">
                             <TextBlock Text="{Binding UnspecifiedNightDowntimesRatio, StringFormat=0.##%}" d:Text="3%">
                                 <TextBlock.Resources>
                                     <Style TargetType="TextBlock">
@@ -181,14 +223,15 @@
                             </TextBlock>
                             <TextBlock Text="{Binding UnspecifiedNightDowntimes, StringFormat={}({0} мин.)}" Margin="10 0 0 0"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Причина простоя:"/>
-                        <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{Binding DataContext.DowntimeReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" SelectedItem="{Binding NightDowntimesReason}"
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Причина простоя:"/>
+                        <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding DataContext.DowntimeReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
+                                  SelectedItem="{Binding NightDowntimesReason, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
                                   VerticalContentAlignment="Center"/>
 
-                        <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="6" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
+                        <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
                         <TextBlock Grid.Row="0" Grid.Column="4" Text="Комментарий мастера по ночной смене:" TextWrapping="Wrap"/>
-                        <TextBox Grid.Row="1" Grid.Column="4" Grid.RowSpan="5" Text="{Binding NightMasterComment}"/>
+                        <TextBox Grid.Row="1" Grid.Column="4" Grid.RowSpan="6" Text="{Binding NightMasterComment}"/>
                     </Grid>
                 </GroupBox>
             </UniformGrid>

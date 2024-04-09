@@ -119,6 +119,35 @@ namespace remeLog.Infrastructure.Extensions
         }
 
         /// <summary>
+        /// Соотношение частичных наладок к общему времени смены
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double PartialSetupRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        {
+            var sum = parts.Where(p => shiftType == ShiftType.All || p.Shift == new Shift(shiftType).Name)
+                 .Sum(p => p.PartialSetupTime);
+            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
+            return sum / totalWorkMinutes;
+        }
+
+        /// <summary>
+        /// Время частичных наладок в минутах
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="shift">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double PartialSetup(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType) 
+            => parts
+            .Where(p => shiftType == ShiftType.All || p.Shift == new Shift(shiftType).Name)
+            .Sum(p => p.PartialSetupTime);
+
+        /// <summary>
         /// Неотмеченные простои в минутах
         /// </summary>
         /// <param name="parts">Список изготовлений</param>

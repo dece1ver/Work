@@ -1,4 +1,4 @@
-﻿<Window x:Class="remeLog.Views.PartsInfoWindow"
+﻿<Window x:Class="remeLog.Views.PartsInfoWindow" x:Name="partsInfoWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -43,6 +43,43 @@
         <Style TargetType="ComboBox">
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
+        <Style TargetType="TextBlock" x:Key="TableTextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="TableLargeTextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="TableTextBox">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="TableLargeTextBox">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="AcceptsReturn" Value="True"/>
+        </Style>
+        <Style TargetType="ComboBox" x:Key="TableComboBox">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
         <ControlTemplate x:Key="ValidationTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -58,6 +95,390 @@
                 <AdornedElementPlaceholder/>
             </Border>
         </ControlTemplate>
+        <!--#region Columns -->
+        <DataGridTextColumn x:Key="ShiftDateColumn" Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy}" Width="50">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTemplateColumn x:Key="ShiftColumn" Header="Смена" Width="40">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Shift}" Style="{StaticResource TableTextBlock}"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <ComboBox ItemsSource="{x:Static inf:AppSettings.ShiftTypes}" 
+              SelectedItem="{Binding Shift}" Style="{StaticResource TableComboBox}"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+        </DataGridTemplateColumn>
+
+        <DataGridTextColumn x:Key="OperatorColumn" Header="Оператор" Binding="{Binding Operator}" Width="95">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="PartNameColumn" Header="Деталь" Binding="{Binding PartName}" Width="130">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="OrderColumn" Header="М/Л" Binding="{Binding Order}" Width="100">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="TotalCountColumn" Header="Всего по М/Л" Binding="{Binding TotalCount}" Width="30">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="FinishedCountColumn" Header="Выполнено" Binding="{Binding FinishedCount}" Width="30">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SetupColumn" Header="Установка" Binding="{Binding Setup}" Width="20">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="StartSetupTimeColumn" Header="Начало наладки" Binding="{Binding StartSetupTime, StringFormat=HH:mm}" Width="40">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="StartMachiningTimeColumn" Header="Начало изготовления" Binding="{Binding StartMachiningTime, StringFormat=HH:mm}" Width="40">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="EndMachiningTimeColumn" Header="Конец изготовления" Binding="{Binding EndMachiningTime, StringFormat=HH:mm}" Width="40">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SetupTimePlanColumn" Header="Норматив наладки" Binding="{Binding SetupTimePlan}" Width="36">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SetupTimeFactColumn" Header="Фактическая наладка" Binding="{Binding SetupTimeFact}"
+                    Width="36" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SingleProductionTimePlanColumn" Header="Норматив штучный" Binding="{Binding SingleProductionTimePlan}" Width="36">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="MachiningTimeColumn" Header="Машинное время" Binding="{Binding MachiningTime}" Width="50">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SingleProductionTimeColumn" Header="Штучное фактическое" Binding="{Binding SingleProductionTime, StringFormat=F2, Mode=OneWay}" 
+                    Width="36" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="ProductionTimeFactColumn" Header="Фактическое изготовление" Binding="{Binding ProductionTimeFact}" 
+                    Width="36" IsReadOnly="True" 
+                    Visibility="{Binding DataContext.CompactView, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="OperatorCommentColumn" Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="270" FontFamily="Calibri">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SetupDowntimesColumn" Header="Простои в наладке" Binding="{Binding SetupDowntimes}" Width="36">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="MachiningDowntimesColumn" Header="Простои в изготовлении" Binding="{Binding MachiningDowntimes}" Width="36">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="PartialSetupTimeColumn" Header="Частичная наладка" Binding="{Binding PartialSetupTime}" Width="36">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="MaintenanceTimeColumn" Header="Обслуживание" Binding="{Binding MaintenanceTime}" Width="36"
+                    Visibility="{Binding DataContext.CompactView, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="ToolSearchingTimeColumn" Header="Поиск инструмента" Binding="{Binding ToolSearchingTime}" Width="36"
+                            Visibility="{Binding DataContext.CompactView, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="MentoringTimeColumn" Header="Обучение" Binding="{Binding MentoringTime}" Width="36"
+                    Visibility="{Binding DataContext.CompactView, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="ContactingDepartmentsTimeColumn" Header="Другие службы" Binding="{Binding ContactingDepartmentsTime}" Width="36"
+                    Visibility="{Binding DataContext.CompactView, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="FixtureMakingTimeColumn" Header="Изготовление оснастки" Binding="{Binding FixtureMakingTime}" Width="36"
+                    Visibility="{Binding DataContext.CompactView, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="HardwareFailureTimeColumn" Header="Отказ оборудования" Binding="{Binding HardwareFailureTime}" Width="36"
+                    Visibility="{Binding DataContext.CompactView, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SpecifiedDowntimesRatioColumn" Header="Отмеченные простои" Binding="{Binding SpecifiedDowntimesRatio, UpdateSourceTrigger=PropertyChanged, StringFormat=0%}" 
+                    Width="36" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SpecifiedDowntimesCommentColumn" Header="Комментарий к простоям" Binding="{Binding SpecifiedDowntimesComment}" Width="120">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="SetupRatioTitleColumn" Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="36" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTemplateColumn x:Key="MasterSetupCommentColumn" Header="Невыполнение норматива наладки" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                       Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <ComboBox ItemsSource="{Binding DataContext.SetupReasons, Source={x:Reference partsInfoWindow}}" 
+                      SelectedItem="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                      Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"
+                      />
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+        </DataGridTemplateColumn>
+
+        <DataGridTextColumn x:Key="ProductionRatioTitleColumn" Header="Изготовление" Binding="{Binding ProductionRatioTitle}" Width="36" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTemplateColumn x:Key="MasterMachiningCommentColumn" Header="Невыполнение норматива изготовления" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                       Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}">
+                    </TextBlock>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <ComboBox ItemsSource="{Binding DataContext.MachiningReasons, Source={x:Reference partsInfoWindow}}" 
+                      SelectedItem="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                      Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch" 
+                      >
+                    </ComboBox>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+        </DataGridTemplateColumn>
+
+        <DataGridTemplateColumn x:Key="MasterCommentColumn" Header="Комментарий мастера" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding MasterComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                       Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}">
+                    </TextBlock>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding MasterComment, UpdateSourceTrigger=PropertyChanged}" 
+                     Style="{StaticResource TableLargeTextBox}">
+                    </TextBox>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+        </DataGridTemplateColumn>
+
+        <DataGridTextColumn x:Key="FixedSetupTimePlanColumn" Header="Норматив наладки (И)" Binding="{Binding FixedSetupTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0.00}" Width="36">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="FixedProductionTimePlanColumn" Header="Норматив изготовления (И)" Binding="{Binding FixedProductionTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0.00}" Width="36">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="EngineerCommentColumn" Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="140">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+        <!--#endregion-->
     </Window.Resources>
     <Grid>
         <DockPanel>
@@ -288,427 +709,49 @@
                                 </DataTemplate>
                             </Setter.Value>
                         </Setter>
-
                     </Style>
 
-                    <Style TargetType="TextBlock" x:Key="TableTextBlock">
-                        <Setter Property="TextWrapping" Value="Wrap" />
-                        <Setter Property="VerticalAlignment" Value="Center" />
-                        <Setter Property="TextAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="Padding" Value="0"/>
-                    </Style>
-                    <Style TargetType="TextBlock" x:Key="TableLargeTextBlock">
-                        <Setter Property="TextWrapping" Value="Wrap" />
-                        <Setter Property="VerticalAlignment" Value="Center" />
-                        <Setter Property="TextAlignment" Value="Left"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="Padding" Value="0"/>
-                    </Style>
-
-                    <Style TargetType="TextBox" x:Key="TableTextBox">
-                        <Setter Property="TextWrapping" Value="Wrap" />
-                        <Setter Property="TextAlignment" Value="Center"/>
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="Padding" Value="0"/>
-                    </Style>
-
-                    <Style TargetType="TextBox" x:Key="TableLargeTextBox">
-                        <Setter Property="TextWrapping" Value="Wrap" />
-                        <Setter Property="VerticalAlignment" Value="Center" />
-                        <Setter Property="TextAlignment" Value="Left"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="AcceptsReturn" Value="True"/>
-                    </Style>
-                    <Style TargetType="ComboBox" x:Key="TableComboBox">
-                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                        <Setter Property="VerticalAlignment" Value="Stretch"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                    </Style>
+                    
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy}" Width="50">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTemplateColumn Header="Смена" Width="40">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Shift}" Style="{StaticResource TableTextBlock}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <ComboBox ItemsSource="{x:Static inf:AppSettings.ShiftTypes}" 
-                                  SelectedItem="{Binding Shift}" Style="{StaticResource TableComboBox}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
-                    </DataGridTemplateColumn>
-                    
-                    <DataGridTextColumn Header="Оператор" Binding="{Binding Operator}" Width="95">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Деталь" Binding="{Binding PartName}" Width="130">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="М/Л" Binding="{Binding Order}" Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Всего по М/Л" Binding="{Binding TotalCount}" Width="30">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Выполнено" Binding="{Binding FinishedCount}" Width="30">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Установка" Binding="{Binding Setup}" Width="20">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Начало наладки" Binding="{Binding StartSetupTime, StringFormat=HH:mm}" Width="40">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Начало изготовления" Binding="{Binding StartMachiningTime, StringFormat=HH:mm}" Width="40">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Конец изготовления" Binding="{Binding EndMachiningTime, StringFormat=HH:mm}" Width="40">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Норматив наладки" Binding="{Binding SetupTimePlan}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Фактическая наладка" Binding="{Binding SetupTimeFact}"
-                                        Width="36" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Норматив штучный" Binding="{Binding SingleProductionTimePlan}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Машинное время" Binding="{Binding MachiningTime}" Width="50">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Штучное фактическое" Binding="{Binding SigleProductionTime, StringFormat=F2, Mode=OneWay}" 
-                                        Width="36" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Фактическое изготовление" Binding="{Binding ProductionTimeFact}" 
-                                        Width="36" IsReadOnly="True" 
-                                        Visibility="{Binding DataContext.CompactView, 
-                                        RelativeSource={RelativeSource AncestorType={x:Type Window}}, 
-                                        Converter={StaticResource InvertedVisibilityConverter}}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="270" FontFamily="Calibri">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Простои в наладке" Binding="{Binding SetupDowntimes}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Простои в изготовлении" Binding="{Binding MachiningDowntimes}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Частичная наладка" Binding="{Binding PartialSetupTime}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Обслуживание" Binding="{Binding MaintenanceTime}" Width="36"
-                                        Visibility="{Binding DataContext.CompactView, 
-                                        RelativeSource={RelativeSource AncestorType={x:Type Window}}, 
-                                        Converter={StaticResource InvertedVisibilityConverter}}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Поиск инструмента" Binding="{Binding ToolSearchingTime}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Обучение" Binding="{Binding MentoringTime}" Width="36"
-                                        Visibility="{Binding DataContext.CompactView, 
-                                        RelativeSource={RelativeSource AncestorType={x:Type Window}}, 
-                                        Converter={StaticResource InvertedVisibilityConverter}}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Другие службы" Binding="{Binding ContactingDepartmentsTime}" Width="36"
-                                        Visibility="{Binding DataContext.CompactView, 
-                                        RelativeSource={RelativeSource AncestorType={x:Type Window}}, 
-                                        Converter={StaticResource InvertedVisibilityConverter}}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Изготовление оснастки" Binding="{Binding FixtureMakingTime}" Width="36"
-                                        Visibility="{Binding DataContext.CompactView, 
-                                        RelativeSource={RelativeSource AncestorType={x:Type Window}}, 
-                                        Converter={StaticResource InvertedVisibilityConverter}}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Отказ оборудования" Binding="{Binding HardwareFailureTime}" Width="36"
-                                        Visibility="{Binding DataContext.CompactView, 
-                                        RelativeSource={RelativeSource AncestorType={x:Type Window}}, 
-                                        Converter={StaticResource InvertedVisibilityConverter}}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Отмеченные простои" Binding="{Binding SpecifiedDowntimesRatio, UpdateSourceTrigger=PropertyChanged, StringFormat=0%}" 
-                                        Width="36" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Комментарий к простоям" Binding="{Binding SpecifiedDowntimesComment}" Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTextColumn Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="36" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTemplateColumn Header="Невыполнение норматива наладки" Width="120">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                                           Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <ComboBox ItemsSource="{Binding DataContext.SetupReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
-                                          SelectedItem="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                                          Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"
-                                          />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Изготовление" Binding="{Binding ProductionRatioTitle}" Width="36" IsReadOnly="True">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    
-                    <DataGridTemplateColumn Header="Невыполнение норматива изготовления" Width="120">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                                           Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}">
-                                </TextBlock>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <ComboBox ItemsSource="{Binding DataContext.MachiningReasons, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" 
-                                          SelectedItem="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                                          Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch" 
-                                          >
-                                </ComboBox>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
-                    </DataGridTemplateColumn>
-
-                    <DataGridTemplateColumn Header="Комментарий мастера" Width="120">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding MasterComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                                           Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}">
-                                </TextBlock>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                        <DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <TextBox Text="{Binding MasterComment, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource TableLargeTextBox}">
-                                </TextBox>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>
-                    </DataGridTemplateColumn>
-
-                    <DataGridTextColumn Header="Норматив наладки (И)" Binding="{Binding FixedSetupTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0.00}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-
-                    <DataGridTextColumn Header="Норматив изготовления (И)" Binding="{Binding FixedProductionTimePlan, UpdateSourceTrigger=PropertyChanged, StringFormat=0.00}" Width="36">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
-
-                    <DataGridTextColumn Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="140">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-                        </DataGridTextColumn.ElementStyle>
-                        <DataGridTextColumn.EditingElementStyle>
-                            <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
-                        </DataGridTextColumn.EditingElementStyle>
-                    </DataGridTextColumn>
+                    <StaticResource ResourceKey="ShiftDateColumn"/>
+                    <StaticResource ResourceKey="ShiftColumn"/>
+                    <StaticResource ResourceKey="OperatorColumn"/>
+                    <StaticResource ResourceKey="PartNameColumn"/>
+                    <StaticResource ResourceKey="OrderColumn"/>
+                    <StaticResource ResourceKey="TotalCountColumn"/>
+                    <StaticResource ResourceKey="FinishedCountColumn"/>
+                    <StaticResource ResourceKey="SetupColumn"/>
+                    <StaticResource ResourceKey="StartSetupTimeColumn"/>
+                    <StaticResource ResourceKey="StartMachiningTimeColumn"/>
+                    <StaticResource ResourceKey="EndMachiningTimeColumn"/>
+                    <StaticResource ResourceKey="SetupTimePlanColumn"/>
+                    <StaticResource ResourceKey="SetupTimeFactColumn"/>
+                    <StaticResource ResourceKey="SingleProductionTimePlanColumn"/>
+                    <StaticResource ResourceKey="MachiningTimeColumn"/>
+                    <StaticResource ResourceKey="SingleProductionTimeColumn"/>
+                    <StaticResource ResourceKey="ProductionTimeFactColumn"/>
+                    <StaticResource ResourceKey="OperatorCommentColumn"/>
+                    <StaticResource ResourceKey="SetupDowntimesColumn"/>
+                    <StaticResource ResourceKey="MachiningDowntimesColumn"/>
+                    <StaticResource ResourceKey="PartialSetupTimeColumn"/>
+                    <StaticResource ResourceKey="MaintenanceTimeColumn"/>
+                    <StaticResource ResourceKey="ToolSearchingTimeColumn"/>
+                    <StaticResource ResourceKey="MentoringTimeColumn"/>
+                    <StaticResource ResourceKey="ContactingDepartmentsTimeColumn"/>
+                    <StaticResource ResourceKey="FixtureMakingTimeColumn"/>
+                    <StaticResource ResourceKey="HardwareFailureTimeColumn"/>
+                    <StaticResource ResourceKey="SpecifiedDowntimesRatioColumn"/>
+                    <StaticResource ResourceKey="SpecifiedDowntimesCommentColumn"/>
+                    <StaticResource ResourceKey="SetupRatioTitleColumn"/>
+                    <StaticResource ResourceKey="MasterSetupCommentColumn"/>
+                    <StaticResource ResourceKey="ProductionRatioTitleColumn"/>
+                    <StaticResource ResourceKey="MasterMachiningCommentColumn"/>
+                    <StaticResource ResourceKey="MasterCommentColumn"/>
+                    <StaticResource ResourceKey="FixedSetupTimePlanColumn"/>
+                    <StaticResource ResourceKey="FixedProductionTimePlanColumn"/>
+                    <StaticResource ResourceKey="EngineerCommentColumn"/>
                 </DataGrid.Columns>
             </DataGrid>
         </DockPanel>
