@@ -139,7 +139,8 @@
                                 <GroupBox BorderBrush="DarkGray">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
-                                            <Grid Grid.Row="0" Grid.Column="8" Grid.RowSpan="2" Visibility="{Binding IsSingleShift, Converter={StaticResource VisibilityConverter}}">
+                                            <Grid Grid.Row="0" Grid.Column="8" Grid.RowSpan="2" Visibility="{Binding IsSingleShift, Converter={StaticResource VisibilityConverter}}"
+                                                  Margin="-2 0 0 -4">
                                                 <Label Content="{StaticResource StatusOkIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility }, ConverterParameter=Exist}"
                                                        ToolTip="Есть отчет за смену"/>
                                                 <Label Content="{StaticResource StatusWarningIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility }, ConverterParameter=Partial}"
@@ -155,44 +156,99 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Grid Grid.Column="0">
+                                        <!--Одни сутки-->
+                                        <Grid Grid.Column="0" Visibility="{Binding IsSingleShift, Converter={StaticResource VisibilityConverter}}">
+                                            <Grid.Resources>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Setter Property="TextAlignment" Value="Center"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </Grid.Resources>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="30"/>
-                                                <ColumnDefinition Width="126"/>
-                                                <ColumnDefinition Width="50"/>
-                                                <ColumnDefinition Width="170"/>
-                                                <ColumnDefinition Width="50"/>
-                                                <ColumnDefinition Width="180"/>
-                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="200"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="250"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="150"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Column="0" Margin="0 0 15 0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="Отработано смен: {0}/{1}">
+                                                        <Binding Path="WorkedShifts"/>
+                                                        <Binding Path="TotalShifts"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                            <StackPanel Grid.Column="1">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Наладка: "/>
+                                                    <TextBlock Text="{Binding AverageSetupRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Изготовление: "/>
+                                                    <TextBlock Text="{Binding AverageProductionRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Отмеченные простои: "/>
+                                                    <TextBlock Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Неотмеченные простои: "/>
+                                                    <TextBlock Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                        <!--Много суток-->
+                                        <Grid Grid.Column="0" Visibility="{Binding IsSingleShift, Converter={StaticResource InvertedVisibilityConverter}}">
+                                            <Grid.Resources>
+                                                <Style TargetType="{x:Type TextBlock}">
+                                                    <Setter Property="TextAlignment" Value="Center"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </Grid.Resources>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="200"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="250"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="150"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition/>
-                                                <RowDefinition/>
                                             </Grid.RowDefinitions>
-
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Смен всего:"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Смен отработано:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TotalShifts}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding WorkedShifts}"/>
-
-                                            <!--<TextBlock Grid.Row="0" Grid.Column="0" Text="Запусков:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Parts.Count}"/>-->
-
-                                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Наладка общая:"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Наладка средняя:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding SetupTimeRatio, StringFormat=0%}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageSetupRatio, StringFormat=0%}"/>
-
-                                            <TextBlock Grid.Row="0" Grid.Column="4" Text="Изготовление общее:"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="4" Text="Изготовление среднее:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding ProductionTimeRatio, StringFormat=0%}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding AverageProductionRatio, StringFormat=0%}"/>
-
-                                            <TextBlock Grid.Row="0" Grid.Column="6" Text="Отмеченные простои:"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="6" Text="Неотмеченные простои:"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="7" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="7" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}"/>
+                                            <TextBlock Grid.Column="0" Margin="0 0 15 0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="Отработано смен: {0}/{1}">
+                                                        <Binding Path="WorkedShifts"/>
+                                                        <Binding Path="TotalShifts"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                            <StackPanel Grid.Column="1" >
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <TextBlock Text="Наладка: "/>
+                                                    <TextBlock Text="{Binding SetupTimeRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Изготовление: "/>
+                                                    <TextBlock Text="{Binding ProductionTimeRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Отмеченные простои: "/>
+                                                    <TextBlock Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Неотмеченные простои: "/>
+                                                    <TextBlock Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}"/>
+                                                </StackPanel>
+                                            </StackPanel>
                                         </Grid>
                                         <Button Margin="0 -6 0 0" Width="120" HorizontalAlignment="Right"
                                             CommandParameter="{Binding}" 

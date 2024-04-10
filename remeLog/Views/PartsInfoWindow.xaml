@@ -666,14 +666,15 @@
                 </GroupBox>
 
             </DockPanel>
-            <ToolBar DockPanel.Dock="Top" Background="LightGray" ToolBarTray.IsLocked="True" ToolBar.OverflowMode="Never">
+            <ToolBar DockPanel.Dock="Top" Background="LightGray" ToolBarTray.IsLocked="True" ToolBar.OverflowMode="Never" Margin="-1 0 0 0">
                 <Button Content="{StaticResource SyncIcon}" Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД"/>
                 <Separator/>
                 <Button Content="{StaticResource AddOrRemoveColumnIcon}" Command="{Binding ChangeCompactViewCommand}" ToolTip="Компактный режим вкл/выкл"/>
             </ToolBar>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
                   ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False"
-                      IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown"
+                      IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0"
+                      AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown"
                       >
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
@@ -700,9 +701,17 @@
                 </DataGrid.CellStyle>
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#01D3D3D3"/>
+                        <Setter Property="BorderBrush" Value="LightGray"/>
+                        <Setter Property="BorderThickness" Value="0 1 1 1"/>
+                        <Setter Property="Foreground" Value="Black"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Padding" Value="3"/>
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
                         <Setter Property="VerticalContentAlignment" Value="Center" />
                         <Setter Property="SnapsToDevicePixels" Value="True"/>
+                        <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
+                        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
                         <Setter Property="ContentTemplate" >
                             <Setter.Value>
                                 <DataTemplate>
