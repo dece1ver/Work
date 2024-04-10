@@ -112,6 +112,7 @@ namespace remeLog.ViewModels
             {
                 if (Set(ref _FromDate, value) && AppSettings.Instance.InstantUpdateOnMainWindow)
                 {
+                    OnPropertyChanged(nameof(IsSingleShift));
                     _ = LoadPartsAsync();
                 }
             }
@@ -125,6 +126,7 @@ namespace remeLog.ViewModels
             {
                 if (Set(ref _ToDate, value) && AppSettings.Instance.InstantUpdateOnMainWindow)
                 {
+                    OnPropertyChanged(nameof(IsSingleShift));
                     _ = LoadPartsAsync();
                 }
             }
@@ -139,7 +141,6 @@ namespace remeLog.ViewModels
         }
 
 
-
         private List<string> _Machines;
         /// <summary> Описание </summary>
         public List<string> Machines
@@ -147,6 +148,9 @@ namespace remeLog.ViewModels
             get => _Machines;
             set => Set(ref _Machines, value);
         }
+
+
+        private bool IsSingleShift => FromDate == ToDate;
 
 
         #region Команды
@@ -214,9 +218,11 @@ namespace remeLog.ViewModels
                 partsInfo.FromDate = FromDate;
                 partsInfo.ToDate = ToDate;
                 var partsInfoWindow = new PartsInfoWindow(partsInfo) { Owner = Application.Current.MainWindow };
+                partsInfoWindow.Closed += (_, _) => _ = LoadPartsAsync();
                 partsInfoWindow.Show();
             }
         }
+
         private static bool CanShowPartsInfoCommandExecute(object p) => true;
         #endregion
 

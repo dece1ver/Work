@@ -488,7 +488,7 @@
                 </StatusBarItem>
             </StatusBar>
             <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="True"
-                 Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}}" Height="2" />
+                 Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}, ConverterParameter=h}" Height="2" />
             <DockPanel DockPanel.Dock="Bottom">
                 <Button DockPanel.Dock="Right" Margin="1 10 0 1" Width="100" 
                 Command="{Binding OpenDailyReportWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
@@ -576,7 +576,7 @@
                             <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="30"/>
-                            <ColumnDefinition Width="110"/>
+                            <ColumnDefinition Width="135"/>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="100"/>
                             <ColumnDefinition Width="20"/>
@@ -609,7 +609,8 @@
                             <TextBlock Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Text="Уст." Margin="25 0 5 0"/>
                             <TextBox Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Text="{Binding SetupFilter, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Static sys:String.Empty}}"
                                      Style="{StaticResource ClearableTextBox}"/>
-                            <Button Grid.Row="0" Grid.Column="3" Content="^" Padding="-2"
+                            <controls:IncDecControl Grid.Row="0" Grid.Column="3" Grid.RowSpan="2" Value="{Binding SetupFilter, Mode=TwoWay}"/>
+                            <!--<Button Grid.Row="0" Grid.Column="3" Content="^" Padding="-2"
                                     Command="{Binding IncreaseSetupCommand}"/>
                             <Button Grid.Row="1" Grid.Column="3" Padding="-2"
                                     Command="{Binding DecreaseSetupCommand}">
@@ -618,7 +619,7 @@
                                         <ScaleTransform ScaleY="-1"/>
                                     </TextBlock.RenderTransform>
                                 </TextBlock>
-                            </Button>
+                            </Button>-->
                         </Grid>
 
                         <ComboBox Grid.Column="4" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
@@ -634,11 +635,17 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
-                        <TextBlock  Grid.Row="0" Grid.Column="6" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
-                        <DatePicker Grid.Row="0" Grid.Column="7" SelectedDate="{Binding FromDate}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Row="0" Grid.Column="6" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
+                        <StackPanel Grid.Row="0" Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <DatePicker SelectedDate="{Binding FromDate}" />
+                            <controls:IncDecControl Value="{Binding FromDate, Mode=TwoWay}" Width="23" Margin="0 0 2 0"/>
+                        </StackPanel>
 
-                        <TextBlock  Grid.Row="1" Grid.Column="6" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
-                        <DatePicker Grid.Row="1" Grid.Column="7" SelectedDate="{Binding ToDate}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Row="1" Grid.Column="6" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
+                        <StackPanel Grid.Row="1" Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <DatePicker SelectedDate="{Binding ToDate}" />
+                            <controls:IncDecControl Value="{Binding ToDate, Mode=TwoWay}" Width="23" Margin="0 0 2 0"/>
+                        </StackPanel>
 
                         <Button Grid.Row="0" Grid.Column="8" Content="+ сутки" 
                                 Margin="0"
@@ -665,7 +672,9 @@
                 <Button Content="{StaticResource AddOrRemoveColumnIcon}" Command="{Binding ChangeCompactViewCommand}" ToolTip="Компактный режим вкл/выкл"/>
             </ToolBar>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
-                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="CellOrRowHeader" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" AlternatingRowBackground="#01D3D3D3">
+                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False"
+                      IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown"
+                      >
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <Style.Triggers>

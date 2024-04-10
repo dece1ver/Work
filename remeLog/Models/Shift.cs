@@ -14,6 +14,17 @@ namespace remeLog.Models
             Type = type;
         }
 
+        public Shift(string name)
+        {
+            Type = name.ToLower() switch
+            {
+                "день" => ShiftType.Day,
+                "ночь" => ShiftType.Night,
+                "все смены" => ShiftType.All,
+                _ => throw new ArgumentException("Некорректный тип смены."),
+            };
+        }
+
         public ShiftType Type { get; set; }
 
         public readonly string Name => Type switch

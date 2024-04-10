@@ -103,8 +103,11 @@ namespace remeLog.ViewModels
             get => _FromDate;
             set
             {
-                Set(ref _FromDate, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _FromDate, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -115,8 +118,11 @@ namespace remeLog.ViewModels
             get => _ToDate;
             set
             {
-                Set(ref _ToDate, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _ToDate, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -127,8 +133,11 @@ namespace remeLog.ViewModels
             get => _ShiftFilter;
             set
             {
-                Set(ref _ShiftFilter, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _ShiftFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -140,8 +149,11 @@ namespace remeLog.ViewModels
             get => _OperatorFilter;
             set
             {
-                Set(ref _OperatorFilter, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _OperatorFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -152,8 +164,11 @@ namespace remeLog.ViewModels
             get => _PartNameFilter;
             set
             {
-                Set(ref _PartNameFilter, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _PartNameFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -164,8 +179,11 @@ namespace remeLog.ViewModels
             get => _OrderFilter;
             set
             {
-                Set(ref _OrderFilter, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _OrderFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -177,8 +195,11 @@ namespace remeLog.ViewModels
             get => _SetupFilter;
             set
             {
-                Set(ref _SetupFilter, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _SetupFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -189,8 +210,11 @@ namespace remeLog.ViewModels
             get => _MachineFilters;
             set
             {
-                Set(ref _MachineFilters, value);
-                _ = LoadPartsAsync();
+                if (!CanBeChanged()) return;
+                if (Set(ref _MachineFilters, value))
+                {
+                    _ = LoadPartsAsync();
+                }
             }
         }
 
@@ -508,9 +532,6 @@ namespace remeLog.ViewModels
         {
             return await Task.Run(() =>
             {
-                if (Parts.Any(x => x.NeedUpdate)
-                && MessageBox.Show("Есть незаписанные изменения. При продолжении они будут утеряны.", "Обновить список деталей?",
-                MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel) return false;
                 try
                 {
                     lock (lockObject)
@@ -542,8 +563,20 @@ namespace remeLog.ViewModels
                 {
                     InProgress = false;
                 }
-
             });
+        }
+
+        /// <summary>
+        /// Подтверждение изменения свойства, которое повлечет изменение списка.
+        /// Сразу возвращает true, если нет незаписанных позиций, либо спрашивает подтверждения.
+        /// </summary>
+        /// <returns></returns>
+        private bool CanBeChanged()
+        {
+            if (Parts.Any(x => x.NeedUpdate)
+                && MessageBox.Show("Есть незаписанные изменения. При продолжении они будут утеряны.", "Обновить список деталей?",
+                MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel) return false;
+            return true;
         }
     }
 }
