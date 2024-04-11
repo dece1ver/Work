@@ -4,6 +4,8 @@ using remeLog.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +25,11 @@ namespace remeLog.Views
     /// </summary>
     public partial class PartsInfoWindow : Window
     {
+        enum DataType
+        {
+            None, Numeric, TimeSpan
+        }
+
         public PartsInfoWindow(CombinedParts parts)
         {
             InitializeComponent();
@@ -101,6 +108,86 @@ namespace remeLog.Views
                 parent = VisualTreeHelper.GetParent(parent);
             }
             return parent as T;
+        }
+
+        private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is DataGrid dataGrid && DataContext is PartsInfoWindowViewModel d)
+            {
+                var selectedCells = dataGrid.SelectedCells;
+                if (selectedCells.Count == 0) return;
+                double sum = 0;
+                int cnt = 0;
+                foreach (DataGridCellInfo cell in selectedCells)
+                {
+                    if (cell.IsValid && cell.Item.GetType().GetProperty(cell.Column.Header.ToString()!) is { } item && item.GetValue(cell.Item, null) is { } value && value is int or double or float)
+                    {
+                        sum += (double)value;
+                        cnt++;
+                    }
+                }
+                d.Status = $"Элементов: {cnt:0.#} | Сумма: {sum:0.#} | Среднее: {sum/cnt:0.#}";
+            }
+        }
+
+        private void DataGrid_SelectionChanged(object sender, SelectedCellsChangedEventArgs e)
+        {
+            if (sender is DataGrid dataGrid && DataContext is PartsInfoWindowViewModel d)
+            {
+                var selectedCells = dataGrid.SelectedCells;
+                if (selectedCells.Count <= 1)
+                {
+                    d.Status = string.Empty;
+                    return;
+                }
+                string percent = "";
+                double sum = 0;
+                TimeSpan timeSpan = TimeSpan.Zero;
+                int cnt = 0;
+                int cntWithioutZeroes = 0;
+                foreach (DataGridCellInfo cell in selectedCells.Where(c => c.IsValid))
+                {
+                    if (cell.Column.DisplayIndex is 8 or 9 or 10)
+                    {
+                        d.Status = string.Empty;
+                        return;
+                    }
+                    var content = cell.Column.GetCellContent(cell.Item);
+                    if (content is TextBlock textBlock)
+                    {
+                        var value = textBlock.Text;
+                        if (value.EndsWith("%"))
+                        {
+                            percent = "%";
+                            value = value.Replace("%", "");
+                        }
+                        if (double.TryParse(value, out double num))
+                        {
+                            sum += num;
+                            if (num > 0) cntWithioutZeroes++;
+                            cnt++;
+                        }
+                        else if (TimeSpan.TryParse(textBlock.Text, out TimeSpan span))
+                        {
+                            timeSpan += span;
+                            if (timeSpan.Ticks > 0) cntWithioutZeroes++;
+                            cnt++;
+                        }
+                    }
+                }
+                if (sum > 0 && cnt > 0 && timeSpan == TimeSpan.Zero)
+                {
+                    d.Status = $"Среднее: {sum / cnt:0.#}{percent} ({sum / cntWithioutZeroes:0.#}{percent})     Количество: {cnt:0.#}     Сумма: {sum}{percent}";
+                }
+                else if (timeSpan.Ticks > 0 && cnt > 0 && sum == 0)
+                {
+                    d.Status = $"Среднее: {TimeSpan.FromTicks(timeSpan.Ticks / cnt):hh\\:mm\\:ss} ({TimeSpan.FromTicks(timeSpan.Ticks / cntWithioutZeroes):hh\\:mm\\:ss})     Количество: {cnt}     Сумма: {timeSpan:hh\\:mm\\:ss}";
+                }
+                else
+                {
+                    d.Status = string.Empty;
+                }
+            }
         }
     }
 }

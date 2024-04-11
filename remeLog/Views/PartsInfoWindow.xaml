@@ -49,6 +49,7 @@
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontFamily" Value="Calibri"/>
         </Style>
         <Style TargetType="TextBlock" x:Key="TableLargeTextBlock">
             <Setter Property="TextWrapping" Value="Wrap" />
@@ -56,6 +57,7 @@
             <Setter Property="TextAlignment" Value="Left"/>
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontFamily" Value="Calibri"/>
         </Style>
 
         <Style TargetType="TextBox" x:Key="TableTextBox">
@@ -105,7 +107,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTemplateColumn x:Key="ShiftColumn" Header="Смена" Width="40">
+        <DataGridTemplateColumn x:Key="ShiftColumn" Header="Смена" Width="35">
             <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Shift}" Style="{StaticResource TableTextBlock}"/>
@@ -200,7 +202,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="SetupTimePlanColumn" Header="Норматив наладки" Binding="{Binding SetupTimePlan}" Width="36">
+        <DataGridTextColumn x:Key="SetupTimePlanColumn" Header="Норматив наладки" Binding="{Binding SetupTimePlan}" Width="35">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -210,7 +212,7 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="SetupTimeFactColumn" Header="Фактическая наладка" Binding="{Binding SetupTimeFact}"
-                    Width="36" IsReadOnly="True">
+                    Width="35" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -219,7 +221,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="SingleProductionTimePlanColumn" Header="Норматив штучный" Binding="{Binding SingleProductionTimePlan}" Width="36">
+        <DataGridTextColumn x:Key="SingleProductionTimePlanColumn" Header="Норматив штучный" Binding="{Binding SingleProductionTimePlan}" Width="35">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -237,8 +239,8 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="SingleProductionTimeColumn" Header="Штучное фактическое" Binding="{Binding SingleProductionTime, StringFormat=F2, Mode=OneWay}" 
-                    Width="36" IsReadOnly="True">
+        <DataGridTextColumn x:Key="SingleProductionTimeColumn" Header="Штучное фактическое" Binding="{Binding SingleProductionTime, StringFormat=0.#, Mode=OneWay}" 
+                    Width="35" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -248,7 +250,7 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="ProductionTimeFactColumn" Header="Фактическое изготовление" Binding="{Binding ProductionTimeFact}" 
-                    Width="36" IsReadOnly="True" 
+                    Width="35" IsReadOnly="True" 
                     Visibility="{Binding DataContext.CompactView, 
                     Source={x:Reference partsInfoWindow}, 
                     Converter={StaticResource InvertedVisibilityConverter}}">
@@ -260,7 +262,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="OperatorCommentColumn" Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="270" FontFamily="Calibri">
+        <DataGridTextColumn x:Key="OperatorCommentColumn" Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="230" FontFamily="Calibri">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -269,7 +271,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="SetupDowntimesColumn" Header="Простои в наладке" Binding="{Binding SetupDowntimes}" Width="36">
+        <DataGridTextColumn x:Key="SetupDowntimesColumn" Header="Простои в наладке" Binding="{Binding SetupDowntimes}" Width="33">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -278,7 +280,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="MachiningDowntimesColumn" Header="Простои в изготовлении" Binding="{Binding MachiningDowntimes}" Width="36">
+        <DataGridTextColumn x:Key="MachiningDowntimesColumn" Header="Простои в изготовлении" Binding="{Binding MachiningDowntimes}" Width="33">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -287,7 +289,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="PartialSetupTimeColumn" Header="Частичная наладка" Binding="{Binding PartialSetupTime}" Width="36">
+        <DataGridTextColumn x:Key="PartialSetupTimeColumn" Header="Частичная наладка" Binding="{Binding PartialSetupTime}" Width="33">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -296,7 +298,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="MaintenanceTimeColumn" Header="Обслуживание" Binding="{Binding MaintenanceTime}" Width="36"
+        <DataGridTextColumn x:Key="MaintenanceTimeColumn" Header="Обслуживание" Binding="{Binding MaintenanceTime}" Width="33"
                     Visibility="{Binding DataContext.CompactView, 
                     Source={x:Reference partsInfoWindow}, 
                     Converter={StaticResource InvertedVisibilityConverter}}">
@@ -308,7 +310,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="ToolSearchingTimeColumn" Header="Поиск инструмента" Binding="{Binding ToolSearchingTime}" Width="36"
+        <DataGridTextColumn x:Key="ToolSearchingTimeColumn" Header="Поиск инструмента" Binding="{Binding ToolSearchingTime}" Width="33"
                             Visibility="{Binding DataContext.CompactView, 
                             Source={x:Reference partsInfoWindow}, 
                             Converter={StaticResource InvertedVisibilityConverter}}">
@@ -320,7 +322,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="MentoringTimeColumn" Header="Обучение" Binding="{Binding MentoringTime}" Width="36"
+        <DataGridTextColumn x:Key="MentoringTimeColumn" Header="Обучение" Binding="{Binding MentoringTime}" Width="33"
                     Visibility="{Binding DataContext.CompactView, 
                     Source={x:Reference partsInfoWindow}, 
                     Converter={StaticResource InvertedVisibilityConverter}}">
@@ -332,7 +334,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="ContactingDepartmentsTimeColumn" Header="Другие службы" Binding="{Binding ContactingDepartmentsTime}" Width="36"
+        <DataGridTextColumn x:Key="ContactingDepartmentsTimeColumn" Header="Другие службы" Binding="{Binding ContactingDepartmentsTime}" Width="33"
                     Visibility="{Binding DataContext.CompactView, 
                     Source={x:Reference partsInfoWindow}, 
                     Converter={StaticResource InvertedVisibilityConverter}}">
@@ -344,7 +346,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="FixtureMakingTimeColumn" Header="Изготовление оснастки" Binding="{Binding FixtureMakingTime}" Width="36"
+        <DataGridTextColumn x:Key="FixtureMakingTimeColumn" Header="Изготовление оснастки" Binding="{Binding FixtureMakingTime}" Width="33"
                     Visibility="{Binding DataContext.CompactView, 
                     Source={x:Reference partsInfoWindow}, 
                     Converter={StaticResource InvertedVisibilityConverter}}">
@@ -356,7 +358,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="HardwareFailureTimeColumn" Header="Отказ оборудования" Binding="{Binding HardwareFailureTime}" Width="36"
+        <DataGridTextColumn x:Key="HardwareFailureTimeColumn" Header="Отказ оборудования" Binding="{Binding HardwareFailureTime}" Width="33"
                     Visibility="{Binding DataContext.CompactView, 
                     Source={x:Reference partsInfoWindow}, 
                     Converter={StaticResource InvertedVisibilityConverter}}">
@@ -369,7 +371,7 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="SpecifiedDowntimesRatioColumn" Header="Отмеченные простои" Binding="{Binding SpecifiedDowntimesRatio, UpdateSourceTrigger=PropertyChanged, StringFormat=0%}" 
-                    Width="36" IsReadOnly="True">
+                    Width="33" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -393,7 +395,7 @@
             </DataGridTextColumn.ElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTemplateColumn x:Key="MasterSetupCommentColumn" Header="Невыполнение норматива наладки" Width="120">
+        <DataGridTemplateColumn x:Key="MasterSetupCommentColumn" Header="Невыполнение норматива наладки" Width="110">
             <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
@@ -416,7 +418,7 @@
             </DataGridTextColumn.ElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTemplateColumn x:Key="MasterMachiningCommentColumn" Header="Невыполнение норматива изготовления" Width="120">
+        <DataGridTemplateColumn x:Key="MasterMachiningCommentColumn" Header="Невыполнение норматива изготовления" Width="110">
             <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
@@ -435,7 +437,7 @@
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
 
-        <DataGridTemplateColumn x:Key="MasterCommentColumn" Header="Комментарий мастера" Width="120">
+        <DataGridTemplateColumn x:Key="MasterCommentColumn" Header="Комментарий мастера" Width="125">
             <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding MasterComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
@@ -470,7 +472,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="EngineerCommentColumn" Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="140">
+        <DataGridTextColumn x:Key="EngineerCommentColumn" Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="125">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -508,64 +510,74 @@
                         </Style>
                     </Button.Resources>
                 </Button>
-                <GroupBox Header="Итог по выборке">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="60"/>
-                            <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="60"/>
-                            <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="60"/>
-                            <ColumnDefinition Width="1"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="*"/>
+                <StackPanel Orientation="Horizontal">
+                    <GroupBox Header="{Binding Parts.Count, StringFormat={}Итог по выборке (элементов: {0} записей) }" d:Header="Итог по выборке (элементов: 0)">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="145"/>
+                                <ColumnDefinition Width="40"/>
+
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}" d:Text="100%" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}" d:Text="100%"/>
+
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
+                            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}" d:Text="100%" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
+                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}" d:Text="100%"/>
+
+                            <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
+                            <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}" d:Text="8%"/>
+                            <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
+                            <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}" d:Text="3%"/>
+
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Header="Инструмнеты">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
 
 
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}" d:Text="100%" FontWeight="SemiBold"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}" d:Text="100%"/>
+                            <TextBox Grid.Row="0" Grid.Column="0" Margin="1 0 2 0" Height="17" Style="{StaticResource ClearableTextBox}"
+                                     Text="{Binding StartDateForCalc, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource TimeConverter}}"/>
+                            <TextBox Grid.Row="1" Grid.Column="0" Margin="1 -1 2 0" Height="17" Style="{StaticResource ClearableTextBox}"
+                                     Text="{Binding EndDateForCalc, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource TimeConverter}}"/>
 
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}" d:Text="100%" FontWeight="SemiBold"/>
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="Изготовление среднее:"/>
-                        <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding AverageProductionRatio, StringFormat=0%}" d:Text="100%"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Margin="3 0 2 0" Height="17" IsReadOnly="True"
+                                     Text="{Binding CalculatedTimeDifference, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Margin="3 -1 2 0" Height="17" IsReadOnly="True"
+                                     Text="{Binding CalculatedTimeDifferenceMinutes, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"/>
 
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Отмеченные простои:"/>
-                        <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SpecifiedDowntimesRatio, StringFormat=0%}" d:Text="8%"/>
-                        <TextBlock Grid.Row="1" Grid.Column="4" Text="Неотмеченные простои:"/>
-                        <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding UnspecifiedDowntimesRatio, StringFormat=0%}" d:Text="3%"/>
+                            <CheckBox Grid.Row="0" Grid.Column="2" Margin="2 -1 0 0" Content="Вычесть перерывы" IsChecked="{Binding DescreaseTimes}"/>
+                            <TextBox Grid.Row="1" Grid.Column="2" Margin="3 -1 5 0" Height="17" Width="80" HorizontalAlignment="Left" Style="{StaticResource ClearableTextBox}"
+                                     Text="{Binding AdditionalDescreaseValue, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Static sys:String.Empty}}"/>
 
-                        <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="6" BorderThickness="1" BorderBrush="LightGray" Margin="0 0 0 0"/>
-
-                        <TextBox Grid.Row="0" Grid.Column="7" Margin="5 0 2 0" Height="17" Style="{StaticResource ClearableTextBox}"
-                         Text="{Binding StartDateForCalc, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource TimeConverter}}"/>
-                        <TextBox Grid.Row="1" Grid.Column="7" Margin="5 -1 2 0" Height="17" Style="{StaticResource ClearableTextBox}"
-                         Text="{Binding EndDateForCalc, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource TimeConverter}}"/>
-
-                        <TextBox Grid.Row="0" Grid.Column="8" Margin="3 0 2 0" Height="17" IsReadOnly="True"
-                         Text="{Binding CalculatedTimeDifference, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBox Grid.Row="1" Grid.Column="8" Margin="3 -1 2 0" Height="17" IsReadOnly="True"
-                         Text="{Binding CalculatedTimeDifferenceMinutes, Mode=OneWay, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"/>
-
-                        <CheckBox Grid.Row="0" Grid.Column="9" Margin="2 -1 0 0" Content="Вычесть перерывы" IsChecked="{Binding DescreaseTimes}"/>
-                        <TextBox Grid.Row="1" Grid.Column="9" Margin="3 -1 5 0" Height="17" Width="80" HorizontalAlignment="Left" Style="{StaticResource ClearableTextBox}"
-                         Text="{Binding AdditionalDescreaseValue, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Static sys:String.Empty}}"/>
-
-                    </Grid>
-                </GroupBox>
+                        </Grid>
+                    </GroupBox>
+                </StackPanel>
             </DockPanel>
 
             <DockPanel DockPanel.Dock="Top" >
-
                 <GroupBox Header="Фильтры">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -670,11 +682,15 @@
                 <Button Content="{StaticResource SyncIcon}" Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД"/>
                 <Separator/>
                 <Button Content="{StaticResource AddOrRemoveColumnIcon}" Command="{Binding ChangeCompactViewCommand}" ToolTip="Компактный режим вкл/выкл"/>
+                <Separator/>
+                <Button Content="{StaticResource InfoIcon}"/>
+                <Separator/>
+                <Button Content="{StaticResource ExcelWorksheetIcon}"/>
             </ToolBar>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
-                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False"
+                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" CanUserReorderColumns="False"
                       IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0"
-                      AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown"
+                      AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectionChanged="DataGrid_SelectionChanged" SelectedCellsChanged="DataGrid_SelectionChanged"
                       >
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
@@ -728,8 +744,6 @@
                             </Setter.Value>
                         </Setter>
                     </Style>
-
-                    
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>

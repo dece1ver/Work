@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using libeLog.Base;
 using remeLog.Infrastructure.Extensions;
+using remeLog.Infrastructure.Types;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -91,6 +92,16 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionTimeRatio));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
                     OnPropertyChanged(nameof(UnspecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatioNeedAttention));
+                    OnPropertyChanged(nameof(UnspecifiedDowntimesRatioNeedAttention));
+                    OnPropertyChanged(nameof(AverageSetupRatioNeedAttention));
+                    OnPropertyChanged(nameof(SetupTimeRatioNeedAttention));
+                    OnPropertyChanged(nameof(AverageProductionRatioNeedAttention));
+                    OnPropertyChanged(nameof(ProductionTimeRatioNeedAttention));
+                    OnPropertyChanged(nameof(FinishedCount));
+                    OnPropertyChanged(nameof(AllFinishedCount));
+                    OnPropertyChanged(nameof(Orders));
+                    OnPropertyChanged(nameof(ShiftsInfo));
                 }
             }
         }
@@ -108,11 +119,41 @@ namespace remeLog.Models
         }
 
         public bool IsSingleShift => FromDate == ToDate;
+        public int Orders => Parts.GroupBy(p => p.Order).Count();
+        public int AllFinishedCount => Parts.Sum(p => p.FinishedCount);
+        public int FinishedCount => Parts.Where(p => p.Setup == 1).Sum(p => p.FinishedCount);
         public double AverageSetupRatio => Parts.AverageSetupRatio();
         public double AverageProductionRatio => Parts.AverageProductionRatio();
         public double SetupTimeRatio => Parts.SetupRatio();
         public double ProductionTimeRatio => Parts.ProductionRatio();
-        public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(FromDate, ToDate, new Shift(Infrastructure.Types.ShiftType.All));
-        public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, new Shift(Infrastructure.Types.ShiftType.All));
+        public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(FromDate, ToDate, new Shift(ShiftType.All));
+        public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, new Shift(ShiftType.All));
+
+        public bool SpecifiedDowntimesRatioNeedAttention => SpecifiedDowntimesRatio is > 0.1 or < -0.1;
+        public bool UnspecifiedDowntimesRatioNeedAttention => UnspecifiedDowntimesRatio is > 0.1 or < -0.1;
+
+        public bool AverageSetupRatioNeedAttention => AverageSetupRatio is < 0.695 or > 1.2;
+        public bool SetupTimeRatioNeedAttention => SetupTimeRatio is < 0.695 or > 1.2;
+        public bool AverageProductionRatioNeedAttention => AverageProductionRatio is < 0.695 or > 1.2;
+        public bool ProductionTimeRatioNeedAttention => ProductionTimeRatio is < 0.695 or > 1.2;
+
+        public string ShiftsInfo { get
+            {
+                if (!IsSingleShift) return "";
+                var d = Parts.Any(p => p.ShiftDate == ToDate && p.Shift == "День");
+                var n = Parts.Any(p => p.ShiftDate == ToDate && p.Shift == "Ночь");
+                switch ((d, n))
+                {
+                    case (true, true):
+                        return "Работал день и ночь";
+                    case (true, false):
+                        return "Работал только день";
+                    case (false, true):
+                        return "Работал только ночь";
+                    case (false, false):
+                        return "Не работал";
+                }
+            }
+        }
     }
 }
