@@ -227,7 +227,22 @@ namespace remeLog.ViewModels
         #region UpdateShiftInfo
         public ICommand UpdateShiftInfoCommand { get; }
 
-        public string Error => throw new NotImplementedException();
+        public string Error
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(this[nameof(CurrentMaster)]) &&
+                    string.IsNullOrWhiteSpace(this[nameof(DayDowntimesReason)]) &&
+                    string.IsNullOrWhiteSpace(this[nameof(NightDowntimesReason)]))
+                {
+                    return null!;
+                }
+                else
+                {
+                    return "Некорректное заполнение.";
+                }
+            }
+        }
 
         public string this[string columnName] { get
             {
@@ -246,7 +261,7 @@ namespace remeLog.ViewModels
 
         private void OnUpdateShiftInfoCommandExecuted(object p)
         {
-            if (Parts.Any(x => !string.IsNullOrEmpty(x.Error)))
+            if (!string.IsNullOrEmpty(Error))
             {
                 MessageBox.Show("Некорректное заполнение.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

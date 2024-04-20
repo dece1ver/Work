@@ -306,7 +306,7 @@ namespace eLog.Infrastructure.Extensions
             }
         }
 
-        public static async Task<DbResult> SendHardwareFailureMessage()
+        public static async Task<DbResult> SendHardwareFailureMessage(string message)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog("Добавление информации об изготовлении в БД.");
             try

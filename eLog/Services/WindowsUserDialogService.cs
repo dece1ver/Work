@@ -185,15 +185,20 @@ namespace eLog.Services
             _ = dlg.ShowDialog();
             if (dlg.Type == DownTime.Types.HardwareFailure)
             {
-                _ = TrySendHardwareFailureMessageAsync();
+                var failureDlg = new UserInputDialogWindow("Опишите неисправность оборудования.") { 
+                    Title = DownTimes.HardwareFailure, 
+                    Owner = owner ?? Application.Current.MainWindow };
+                if (failureDlg.ShowDialog() != true) return null;
+                var message = failureDlg.UserInput ?? "Без комментария.";
+                _ = TrySendHardwareFailureMessageAsync(message);
             }
             return dlg.Type;
         }
 
-        public static async Task TrySendHardwareFailureMessageAsync()
+        public static async Task TrySendHardwareFailureMessageAsync(string message)
         {
             await Task.Run(() => {
-                var res = Database.SendHardwareFailureMessage();
+                var res = Database.SendHardwareFailureMessage(message);
                 string msg = "";
                 switch (res.Result)
                 {

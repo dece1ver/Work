@@ -497,21 +497,46 @@ namespace remeLog.ViewModels
 
         #region OpenDailyReportWindow
         public ICommand OpenDailyReportWindowCommand { get; }
-        private async void OnOpenDailyReportWindowCommandExecuted(object p)
+        private void OnOpenDailyReportWindowCommandExecuted(object p)
         {
             if (FromDate != ToDate)
             {
-                MessageBox.Show("Для составления суточного отчета должны быть выбраны одинаковые даты!", "Разные даты", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Для составления суточного отчета должны быть выбраны одинаковые даты.", "Разные даты", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (MachineFilters.Count(f => f.Filter) > 1)
             {
-                MessageBox.Show("Для составления суточного отчета в фильтре должен быть только один станок!", "Выбрано слишком много станков.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Для составления суточного отчета в фильтре должен быть только один станок.", "Выбрано слишком много станков.", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             else if (!MachineFilters.Any(f => f.Filter))
             {
-                MessageBox.Show("Для составления суточного отчета в фильтре должен быть как минимум один станок!", "Выбрано слишком мало станков.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Для составления суточного отчета в фильтре должен быть как минимум один станок.", "Выбрано слишком мало станков.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (ShiftFilter.Type != ShiftType.All)
+            {
+                MessageBox.Show("Для составления суточного отчета не должно быть фильтра по смене.", "Лишние фильтры.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!string.IsNullOrEmpty(OperatorFilter))
+            {
+                MessageBox.Show("Для составления суточного отчета не должно быть фильтра по оператору.", "Лишние фильтры.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!string.IsNullOrEmpty(PartNameFilter))
+            {
+                MessageBox.Show("Для составления суточного отчета не должно быть фильтра по детали.", "Лишние фильтры.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!string.IsNullOrEmpty(OrderFilter))
+            {
+                MessageBox.Show("Для составления суточного отчета не должно быть фильтра по маршрутному листу.", "Лишние фильтры.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (SetupFilter != null)
+            {
+                MessageBox.Show("Для составления суточного отчета не должно быть фильтра по установке.", "Лишние фильтры.", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (Parts.Any(x => !string.IsNullOrEmpty(x.Error))

@@ -249,6 +249,19 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
+        <DataGridTextColumn x:Key="PartReplacementTimeColumn" Header="Время замены" Binding="{Binding PartReplacementTime, StringFormat=0.#}" 
+            Width="35" IsReadOnly="True" 
+            Visibility="{Binding DataContext.CompactView, 
+            Source={x:Reference partsInfoWindow}, 
+            Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
         <DataGridTextColumn x:Key="ProductionTimeFactColumn" Header="Фактическое изготовление" Binding="{Binding ProductionTimeFact}" 
                     Width="35" IsReadOnly="True" 
                     Visibility="{Binding DataContext.CompactView, 
@@ -511,7 +524,7 @@
                     </Button.Resources>
                 </Button>
                 <StackPanel Orientation="Horizontal">
-                    <GroupBox Header="{Binding Parts.Count, StringFormat={}Итог по выборке (элементов: {0} записей) }" d:Header="Итог по выборке (элементов: 0)">
+                    <GroupBox Header="{Binding Parts.Count}" HeaderStringFormat="Итог по выборке (элементов: {0})" d:Header="Итог по выборке (элементов: 0)">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="110"/>
@@ -544,7 +557,7 @@
 
                         </Grid>
                     </GroupBox>
-                    <GroupBox Header="Инструмнеты">
+                    <GroupBox Header="Инструменты">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="80"/>
@@ -688,7 +701,7 @@
                 <Button Content="{StaticResource ExcelWorksheetIcon}"/>
             </ToolBar>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
-                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" CanUserReorderColumns="False"
+                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" CanUserReorderColumns="False" 
                       IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0"
                       AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectionChanged="DataGrid_SelectionChanged" SelectedCellsChanged="DataGrid_SelectionChanged"
                       >
@@ -763,6 +776,7 @@
                     <StaticResource ResourceKey="SingleProductionTimePlanColumn"/>
                     <StaticResource ResourceKey="MachiningTimeColumn"/>
                     <StaticResource ResourceKey="SingleProductionTimeColumn"/>
+                    <StaticResource ResourceKey="PartReplacementTimeColumn"/>
                     <StaticResource ResourceKey="ProductionTimeFactColumn"/>
                     <StaticResource ResourceKey="OperatorCommentColumn"/>
                     <StaticResource ResourceKey="SetupDowntimesColumn"/>

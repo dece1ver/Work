@@ -770,6 +770,18 @@ namespace remeLog.Models
                 if (Set(ref _MasterSetupComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SingleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(MasterSetupComment));
+                    OnPropertyChanged(nameof(MasterMachiningComment));
+                    OnPropertyChanged(nameof(MasterComment));
+                    OnPropertyChanged(nameof(Error));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -785,6 +797,18 @@ namespace remeLog.Models
                 if (Set(ref _MasterMachiningComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SingleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(MasterSetupComment));
+                    OnPropertyChanged(nameof(MasterMachiningComment));
+                    OnPropertyChanged(nameof(MasterComment));
+                    OnPropertyChanged(nameof(Error));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -800,6 +824,18 @@ namespace remeLog.Models
                 if (Set(ref _SpecifiedDowntimesComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SingleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(MasterSetupComment));
+                    OnPropertyChanged(nameof(MasterMachiningComment));
+                    OnPropertyChanged(nameof(MasterComment));
+                    OnPropertyChanged(nameof(Error));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -815,6 +851,18 @@ namespace remeLog.Models
                 if (Set(ref _UnspecifiedDowntimesComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SingleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(MasterSetupComment));
+                    OnPropertyChanged(nameof(MasterMachiningComment));
+                    OnPropertyChanged(nameof(MasterComment));
+                    OnPropertyChanged(nameof(Error));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -830,6 +878,18 @@ namespace remeLog.Models
                 if (Set(ref _MasterComment, value))
                 {
                     NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SingleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(MasterSetupComment));
+                    OnPropertyChanged(nameof(MasterMachiningComment));
+                    OnPropertyChanged(nameof(MasterComment));
+                    OnPropertyChanged(nameof(Error));
                     OnPropertyChanged(nameof(NeedUpdate));
                 }
             }
@@ -913,6 +973,7 @@ namespace remeLog.Models
         public double ProductionRatio => FinishedCountFact * SingleProductionTimePlan / ProductionTimeFact;
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;
+        public double PartReplacementTime => SingleProductionTime - MachiningTime.TotalMinutes;
 
         private DateTime FixedDate(DateTime dateTime)
         {
@@ -921,9 +982,10 @@ namespace remeLog.Models
             var day = ShiftDate.Day;
             var hour = dateTime.Hour;
             var minute = dateTime.Minute;
-            var second = dateTime.Second;
-            if ((dateTime - DateTime.Today.AddHours(7)).TotalMinutes <= 0) day++;
-            return new DateTime(year, month, day, hour, minute, 0);
+            var fixedDateTime = new DateTime(year, month, day, hour, minute, 0);
+            var diff = (fixedDateTime - ShiftDate.AddHours(8)).TotalMinutes;
+            if (diff <= 0 && Shift == "Ночь") fixedDateTime.AddDays(1);
+            return fixedDateTime;
         }
 
         public string Error
