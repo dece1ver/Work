@@ -633,5 +633,39 @@ namespace remeLog.Infrastructure
                 return DbResult.Error;
             }
         }
+
+        public static DbResult DeletePart(this Part part)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    connection.Open();
+                    string query = $"DELETE FROM parts WHERE GUID = @Guid";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("Guid", part.Guid);
+                    }
+                }
+                return DbResult.Ok;
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
+        }
     }
 }

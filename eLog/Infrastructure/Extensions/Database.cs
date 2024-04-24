@@ -316,12 +316,13 @@ namespace eLog.Infrastructure.Extensions
                     using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
                     {
                         connection.Open();
-                        var query = "INSERT INTO maintenance_log (machine, creation_date, rq_status) VALUES (@Machine, @Date, @Status);";
+                        var query = "INSERT INTO maintenance_log (machine, creation_date, rq_status, comments) VALUES (@Machine, @Date, @Status, @Comment);";
                         using (SqlCommand cmd = new SqlCommand(query, connection))
                         {
                             cmd.Parameters.AddWithValue("Machine", AppSettings.Instance.Machine.Name);
                             cmd.Parameters.AddWithValue("Date", DateTime.Now);
                             cmd.Parameters.AddWithValue("Status", "Открыто");
+                            cmd.Parameters.AddWithValue("Comment", message);
                             var execureResult = cmd.ExecuteNonQuery();
                         }
                         

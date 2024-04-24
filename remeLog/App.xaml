@@ -18,6 +18,8 @@
             <cnv:ReportStateVisibility x:Key="ReportStateVisibility"/>
             <cnv:TimeConverter x:Key="TimeConverter"/>
             <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
+            <cnv:ExpressionToDoubleConverter x:Key="ExpressionToDoubleConverter"/>
+            <cnv:ExpressionToIntConverter x:Key="ExpressionToIntConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

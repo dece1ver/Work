@@ -39,6 +39,10 @@ namespace remeLog.ViewModels
             RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
             ChangeCompactViewCommand = new LambdaCommand(OnChangeCompactViewCommandExecuted, CanChangeCompactViewCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
+            ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
+            ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
+            DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
+            DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
 
             PartsInfo = parts;
             ShiftFilterItems = new Shift[3] { new Shift(ShiftType.All), new Shift(ShiftType.Day), new Shift(ShiftType.Night) };
@@ -456,6 +460,46 @@ namespace remeLog.ViewModels
             }
         }
         private static bool CanClearContentCommandExecute(object p) => true;
+        #endregion
+
+        #region ShowInfo
+        public ICommand ShowInfoCommand { get; }
+        private void OnShowInfoCommandExecuted(object p)
+        {
+            MessageBox.Show("Тут будет информация по выборке","Заглушка", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        private static bool CanShowInfoCommandExecute(object p) => true;
+        #endregion
+
+        #region ExportToExcel
+        public ICommand ExportToExcelCommand { get; }
+        private void OnExportToExcelCommandExecuted(object p)
+        {
+            MessageBox.Show("Тут будет экспорт в Excel", "Заглушка", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        private static bool CanExportToExcelCommandExecute(object p) => true;
+        #endregion
+
+        #region DeleteFilter
+        public ICommand DeleteFilterCommand { get; }
+        private void OnDeleteFilterCommandExecuted(object p)
+        {
+            ShiftFilter = new(ShiftType.All);
+            OperatorFilter = string.Empty;
+            PartNameFilter = string.Empty;
+            OrderFilter = string.Empty;
+            SetupFilter = null;
+        }
+        private static bool CanDeleteFilterCommandExecute(object p) => true;
+        #endregion
+
+        #region DeletePart
+        public ICommand DeletePartCommand { get; }
+        private void OnDeletePartCommandExecuted(object p)
+        {
+            MessageBox.Show("Удалить деталь", "Удаление информации", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        private static bool CanDeletePartCommandExecute(object p) => true;
         #endregion
 
         #region UpdateParts
