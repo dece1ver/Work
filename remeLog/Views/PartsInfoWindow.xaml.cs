@@ -1,4 +1,8 @@
-﻿using libeLog.Extensions;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Vml;
+using DocumentFormat.OpenXml.Wordprocessing;
+using libeLog.Extensions;
+using Microsoft.IdentityModel.Tokens;
 using remeLog.Models;
 using remeLog.ViewModels;
 using System;
@@ -93,6 +97,32 @@ namespace remeLog.Views
                             case 7:
                                 d.SetupFilter = d.SetupFilter == p.Setup ? null : p.Setup;
                                 break;
+                            case 37:
+                                switch (p.EngineerComment)
+                                {
+                                    case "":
+                                        p.EngineerComment = "Исправлено";
+                                        break;
+                                    case "Исправлено":
+                                        p.EngineerComment = "Исправлено ранее";
+                                        break;
+                                    case "Исправлено ранее":
+                                        p.EngineerComment = "Корректировка не требуется";
+                                        break;
+                                    case "Корректировка не требуется":
+                                        p.EngineerComment = "Ожидание полного изготовления";
+                                        break;
+                                    case "Ожидание полного изготовления":
+                                        p.EngineerComment = "Ожидание решения технолога";
+                                        break;
+                                    case "Ожидание решения технолога":
+                                        p.EngineerComment = "Изменение технологии";
+                                        break;
+                                    case "Изменение технологии":
+                                        p.EngineerComment = "";
+                                        break;
+                                }
+                                break;
                         }
                     }
                     
@@ -110,27 +140,8 @@ namespace remeLog.Views
             return parent as T;
         }
 
-        private void DataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is DataGrid dataGrid && DataContext is PartsInfoWindowViewModel d)
-            {
-                var selectedCells = dataGrid.SelectedCells;
-                if (selectedCells.Count == 0) return;
-                double sum = 0;
-                int cnt = 0;
-                foreach (DataGridCellInfo cell in selectedCells)
-                {
-                    if (cell.IsValid && cell.Item.GetType().GetProperty(cell.Column.Header.ToString()!) is { } item && item.GetValue(cell.Item, null) is { } value && value is int or double or float)
-                    {
-                        sum += (double)value;
-                        cnt++;
-                    }
-                }
-                d.Status = $"Элементов: {cnt:0.#} | Сумма: {sum:0.#} | Среднее: {sum/cnt:0.#}";
-            }
-        }
 
-        private void DataGrid_SelectionChanged(object sender, SelectedCellsChangedEventArgs e)
+        private void DataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
             if (sender is DataGrid dataGrid && DataContext is PartsInfoWindowViewModel d)
             {
@@ -186,6 +197,79 @@ namespace remeLog.Views
                 else
                 {
                     d.Status = string.Empty;
+                }
+            }
+        }
+
+        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (sender is DataGrid dataGrid && DataContext is PartsInfoWindowViewModel d)
+            {
+                if (Keyboard.Modifiers == ModifierKeys.Shift)
+                {
+                    switch (e.Key)
+                    {
+                        case Key.D:
+                            var infoCell = dataGrid.SelectedCells.FirstOrDefault();
+                            var colIndex = infoCell.Column.DisplayIndex;
+                            var infoCellContent = infoCell.Column.GetCellContent(infoCell.Item);
+                            var info = infoCellContent is TextBlock tb ? tb.Text : "null";
+                            info = $"Выбрано ячеек: {dataGrid.SelectedCells.Count}\n\n" +
+                                $"Информация о первой выделенной:\n" +
+                                $"Индекс столбца: {colIndex}\n" +
+                                $"Тип: {infoCellContent}\n" +
+                                $"Содержимое: {info}\n\n" +
+                                $"Деталь: {d.SelectedPart?.PartName}";
+                            MessageBox.Show(info);
+                            e.Handled = true;
+                            break;
+                        case Key.F:
+                            var baseCell = dataGrid.SelectedCells.FirstOrDefault();
+                            if (!baseCell.IsValid) return;
+                            var content = baseCell.Column.GetCellContent(baseCell.Item);
+                            if (content is TextBlock textBlock)
+                            {
+                                var value = textBlock.Text;
+                                foreach (var cell in dataGrid.SelectedCells.Skip(1))
+                                {
+                                    var cellContent = cell.Column.GetCellContent(cell.Item);
+                                    if (cellContent is TextBlock textBlockToUpdate)
+                                    {
+                                        textBlockToUpdate.Text = value;
+                                    }
+                                }
+                            }
+                            //else if (content is ContentPresenter contentPresenter && contentPresenter.Content is TextBlock cpTextBlock)
+                            //{
+                            //    var value = cpTextBlock.Text;
+                            //    foreach (var cell in dataGrid.SelectedCells.Skip(1))
+                            //    {
+                            //        var cellContent = cell.Column.GetCellContent(cell.Item);
+                            //        if (content is ContentPresenter contentPresenterToUpdaTe && contentPresenterToUpdaTe.Content is TextBlock cpTextBlockToUpdate)
+                            //        {
+                            //            cpTextBlockToUpdate.Text = value;
+                            //        }
+                            //    }
+                            //}
+
+
+
+                            
+                            e.Handled = true;
+                            break;
+
+                        case Key.Delete:
+                            if (d.SelectedPart is Part p)
+                            {
+                                d.DeletePartCommand.Execute(p);
+                                e.Handled = true;
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                    
                 }
             }
         }

@@ -19,15 +19,23 @@ namespace remeLog.Infrastructure.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is string s && new Expression(s.Replace(",",".")).Evaluate() is { } v) 
+            try
             {
-                return v switch
+                if (value is string s && new Expression(s.Replace(",", ".")).Evaluate() is { } v)
                 {
-                    double => v,
-                    _ => System.Convert.ToDouble(v),
-                };
+                    return v switch
+                    {
+                        double => v,
+                        _ => System.Convert.ToDouble(v),
+                    };
+                }
+                return value;
+
             }
-            return value;
+            catch
+            {
+                return value;
+            }
         }
     }
 }

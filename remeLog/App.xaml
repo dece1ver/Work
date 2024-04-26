@@ -20,6 +20,7 @@
             <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
             <cnv:ExpressionToDoubleConverter x:Key="ExpressionToDoubleConverter"/>
             <cnv:ExpressionToIntConverter x:Key="ExpressionToIntConverter"/>
+            <cnv:ShortDateConverter x:Key="ShortDateConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -645,6 +645,7 @@ namespace remeLog.Infrastructure
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("Guid", part.Guid);
+                        command.ExecuteNonQuery();
                     }
                 }
                 return DbResult.Ok;

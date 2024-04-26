@@ -22,9 +22,13 @@
                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="0">
                                 <Grid>
                                     <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
-                                    <Button x:Name="ClearButton" Content="✗" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
+                                    <Button x:Name="ClearButton" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
                                             VerticalAlignment="Center" Width="20" Height="20" Margin="0 0 0 0"
-                                            Command="{Binding ClearContentCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type TextBox}}}"/>
+                                            Command="{Binding ClearContentCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType={x:Type TextBox}}}">
+                                        <Button.Content>
+                                            <StaticResource ResourceKey="CleanData"/>
+                                        </Button.Content>
+                                    </Button>
                                 </Grid>
                             </Border>
                         </Grid>
@@ -98,7 +102,7 @@
             </Border>
         </ControlTemplate>
         <!--#region Columns -->
-        <DataGridTextColumn x:Key="ShiftDateColumn" Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy}" Width="50">
+        <DataGridTextColumn x:Key="ShiftDateColumn" Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy, Converter={StaticResource ShortDateConverter}}" Width="50">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -511,7 +515,7 @@
             <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="True"
                  Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}, ConverterParameter=h}" Height="2" />
             <DockPanel DockPanel.Dock="Bottom">
-                <Button DockPanel.Dock="Right" Margin="1 10 0 1" Width="100" 
+                <Button DockPanel.Dock="Right" Margin="1 10 1 1" Width="100" 
                 Command="{Binding OpenDailyReportWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
                     <Button.Content>
                         <TextBlock Text="Сформировать отчет за смену" TextWrapping="Wrap"/>
@@ -609,8 +613,9 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="135"/>
-                            <ColumnDefinition Width="100"/>
-                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="60"/>
+                            <ColumnDefinition Width="60"/>
+                            <ColumnDefinition Width="60"/>
                             <ColumnDefinition Width="20"/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -642,20 +647,10 @@
                             <TextBox Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Text="{Binding SetupFilter, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Static sys:String.Empty}}"
                                      Style="{StaticResource ClearableTextBox}"/>
                             <controls:IncDecControl Grid.Row="0" Grid.Column="3" Grid.RowSpan="2" Value="{Binding SetupFilter, Mode=TwoWay}"/>
-                            <!--<Button Grid.Row="0" Grid.Column="3" Content="^" Padding="-2"
-                                    Command="{Binding IncreaseSetupCommand}"/>
-                            <Button Grid.Row="1" Grid.Column="3" Padding="-2"
-                                    Command="{Binding DecreaseSetupCommand}">
-                                <TextBlock Text="^" RenderTransformOrigin="0.5 0.46">
-                                    <TextBlock.RenderTransform>
-                                        <ScaleTransform ScaleY="-1"/>
-                                    </TextBlock.RenderTransform>
-                                </TextBlock>
-                            </Button>-->
                         </Grid>
 
                         <ComboBox Grid.Column="4" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
-                                  ItemsSource="{Binding MachineFilters}" Margin="25 0" Width="200"
+                                  ItemsSource="{Binding MachineFilters}" Margin="25 0" Width="180"
                                   HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
                                   >
                             <ComboBox.ItemTemplate>
@@ -666,6 +661,16 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
+
+                        <Button Grid.Column="4" Grid.Row="1" Margin="25 0" Command="{Binding DeleteFilterCommand}" 
+                                Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Left">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal" Margin="0 2 0 0">
+                                    <StaticResource ResourceKey="DeleteFilter"/>
+                                    <TextBlock Text="Очистить фильтры" Margin="5 0"/>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
 
                         <TextBlock Grid.Row="0" Grid.Column="6" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
                         <StackPanel Grid.Row="0" Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -691,7 +696,13 @@
                         <Button Grid.Row="1" Grid.Column="9" Content="Неделя" 
                                 Margin="0"
                                 Command="{Binding SetWeekDateCommand}"/>
-                        <Button Grid.Row="0" Grid.Column="10" Grid.RowSpan="2" Content="*"
+                        <Button Grid.Row="0" Grid.Column="10" Content="Месяц" 
+                                Margin="0"
+                                Command="{Binding SetMonthDateCommand}"/>
+                        <Button Grid.Row="1" Grid.Column="10" Content="Год" 
+                                Margin="0"
+                                Command="{Binding SetYearDateCommand}"/>
+                        <Button Grid.Row="0" Grid.Column="11" Grid.RowSpan="2" Content="*"
                                 Margin="0" 
                                 Command="{Binding SetAllDateCommand}"/>
                     </Grid>
@@ -700,21 +711,22 @@
             </DockPanel>
             <ToolBar DockPanel.Dock="Top" Background="LightGray" ToolBarTray.IsLocked="True" ToolBar.OverflowMode="Never" Margin="-1 0 0 0">
                 <Button Content="{StaticResource SyncIcon}" Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД"/>
+                <Button Content="{StaticResource AddOrRemoveColumnIcon}" Command="{Binding ChangeCompactViewCommand}" 
+                        ToolTip="Компактный режим вкл/выкл"/>
                 <Separator/>
-                <Button Content="{StaticResource AddOrRemoveColumnIcon}" Command="{Binding ChangeCompactViewCommand}" ToolTip="Компактный режим вкл/выкл"/>
+                <Button Content="{StaticResource InfoIcon}" Command="{Binding ShowInfoCommand}"
+                        ToolTip="Показать расширенную информацию по выборке"/>
+
+                <Button Content="{StaticResource ExcelWorksheetIcon}" Command="{Binding ExportToExcelCommand}"
+                        ToolTip="Экспорт выбранного в Excel"/>
                 <Separator/>
-                <Button Content="{StaticResource InfoIcon}" Command="{Binding ShowInfoCommand}"/>
-                <Separator/>
-                <Button Content="{StaticResource ExcelWorksheetIcon}" Command="{Binding ExportToExcelCommand}"/>
-                <Separator/>
-                <Button Content="{StaticResource DeleteFilter}" Command="{Binding DeleteFilterCommand}"/>
-                <Separator/>
-                <Button Content="{StaticResource DeleteCell}" Command="{Binding DeletePartCommand}" Visibility="Collapsed"/>
+                <Button Content="{StaticResource DeleteCell}" Command="{Binding DeletePartCommand}" CommandParameter="{Binding SelectedPart}"
+                        ToolTip="Удалить выбранную деталь"/>
             </ToolBar>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
-                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="Cell" CanUserReorderColumns="False" 
-                      IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0"
-                      AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectionChanged="DataGrid_SelectionChanged" SelectedCellsChanged="DataGrid_SelectionChanged"
+                  ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False" SelectionMode="Extended"
+                      IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0" SelectedItem="{Binding SelectedPart, UpdateSourceTrigger=PropertyChanged}"
+                      AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectedCellsChanged="DataGrid_SelectedCellsChanged" PreviewKeyDown="DataGrid_PreviewKeyDown"
                       >
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">

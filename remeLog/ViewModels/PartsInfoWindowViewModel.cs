@@ -32,6 +32,8 @@ namespace remeLog.ViewModels
             DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
             SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
             SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
+            SetMonthDateCommand = new LambdaCommand(OnSetMonthDateCommandExecuted, CanSetMonthDateCommandExecute);
+            SetYearDateCommand = new LambdaCommand(OnSetYearDateCommandExecuted, CanSetYearDateCommandExecute);
             SetAllDateCommand = new LambdaCommand(OnSetAllDateCommandExecuted, CanSetAllDateCommandExecute);
             IncreaseSetupCommand = new LambdaCommand(OnIncreaseSetupCommandExecuted, CanIncreaseSetupCommandExecute);
             DecreaseSetupCommand = new LambdaCommand(OnDecreaseSetupCommandExecuted, CanDecreaseSetupCommandExecute);
@@ -223,6 +225,16 @@ namespace remeLog.ViewModels
         }
 
 
+        private Part? _SelectedPart;
+        /// <summary> Описание </summary>
+        public Part? SelectedPart
+        {
+            get => _SelectedPart;
+            set => Set(ref _SelectedPart, value);
+        }
+
+
+
         public CombinedParts PartsInfo { get; set; }
 
 
@@ -405,6 +417,33 @@ namespace remeLog.ViewModels
         private bool CanSetWeekDateCommandExecute(object p) => true;
         #endregion
 
+        #region SetMonthDateCommand
+        public ICommand SetMonthDateCommand { get; }
+        private void OnSetMonthDateCommandExecuted(object p)
+        {
+            if (FromDate == ToDate.AddDays(-30))
+            {
+                FromDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                ToDate = DateTime.Today.AddDays(-1);
+            }
+            else
+            {
+                FromDate = ToDate.AddDays(-30);
+            }
+        }
+        private bool CanSetMonthDateCommandExecute(object p) => true;
+        #endregion
+
+        #region SetYearDateCommand
+        public ICommand SetYearDateCommand { get; }
+        private void OnSetYearDateCommandExecuted(object p)
+        {
+            FromDate = new DateTime(2024, 01, 01);
+            ToDate = DateTime.Today;
+        }
+        private bool CanSetYearDateCommandExecute(object p) => true;
+        #endregion
+
         #region SetAllDateCommand
         public ICommand SetAllDateCommand { get; }
         private void OnSetAllDateCommandExecuted(object p)
@@ -489,6 +528,8 @@ namespace remeLog.ViewModels
             PartNameFilter = string.Empty;
             OrderFilter = string.Empty;
             SetupFilter = null;
+            ToDate = PartsInfo.ToDate;
+            FromDate = PartsInfo.FromDate;
         }
         private static bool CanDeleteFilterCommandExecute(object p) => true;
         #endregion
@@ -497,7 +538,26 @@ namespace remeLog.ViewModels
         public ICommand DeletePartCommand { get; }
         private void OnDeletePartCommandExecuted(object p)
         {
-            MessageBox.Show("Удалить деталь", "Удаление информации", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (p is Part part && part == SelectedPart 
+                && MessageBox.Show($"Удалить деталь: {part.PartName}?\nДанное действие невозможно отменить.", "Удаление информации", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes) 
+            {
+                switch (Database.DeletePart(part))
+                {
+                    case DbResult.Ok:
+                        _ = LoadPartsAsync();
+                        Status = $"Деталь {SelectedPart.PartName} удалена из БД";
+                        break;
+                    case DbResult.AuthError:
+                        Status = "Ошибка авторизации";
+                        break;
+                    case DbResult.Error:
+                        Status = "Ошибка";
+                        break;
+                    case DbResult.NoConnection:
+                        Status = "Нет соединения с БД";
+                        break;
+                }
+            };
         }
         private static bool CanDeletePartCommandExecute(object p) => true;
         #endregion
@@ -586,8 +646,7 @@ namespace remeLog.ViewModels
             if (Parts.Any(x => !string.IsNullOrEmpty(x.Error))
                 && MessageBox.Show("Не всё заполнено корректно, все равно создать отчёт за смену?", "Подтверждение.",
                 MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel) return;
-            // TODO сделать флажок?
-            ShiftFilter = new(ShiftType.All);
+
             using (Overlay = new())
             {
                 var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, PartsInfo.Machine)) { Owner = p as PartsInfoWindow };

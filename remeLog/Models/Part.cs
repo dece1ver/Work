@@ -1013,7 +1013,7 @@ namespace remeLog.Models
                 {
                     case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && SetupRatio == 0 && SetupTimeFact > 0:
                         return "Необходимо указать причину отсутствия номатива наладки.";
-                    case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && SetupRatio is < 0.695 or > 1.2 && SetupTimeFact > 0:
+                    case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && SetupRatio is < 0.695 or > 2 && SetupTimeFact > 0:
                         return "Необходимо указать причину невыполнения номатива наладки.";
 
                     case nameof(MasterMachiningComment) when string.IsNullOrWhiteSpace(MasterMachiningComment) && ProductionRatio == 0:
