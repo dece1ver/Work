@@ -40,6 +40,7 @@ namespace remeLog.ViewModels
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
             RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
             ChangeCompactViewCommand = new LambdaCommand(OnChangeCompactViewCommandExecuted, CanChangeCompactViewCommandExecute);
+            ChangeCalcFixedCommand = new LambdaCommand(OnChangeCalcFixedCommandExecuted, CanChangeCalcFixedCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
@@ -209,6 +210,23 @@ namespace remeLog.ViewModels
             }
         }
 
+
+        private int? _FinishedCountFilter;
+        /// <summary> Описание </summary>
+        public int? FinishedCountFilter
+        {
+            get => _FinishedCountFilter;
+            set
+            {
+                if (!CanBeChanged()) return;
+                if (Set(ref _FinishedCountFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
+            }
+        }
+
+
         private ObservableCollection<MachineFilter> _MachineFilters;
         /// <summary> Список станков с необходимостью фильтрации </summary>
         public ObservableCollection<MachineFilter> MachineFilters
@@ -223,7 +241,6 @@ namespace remeLog.ViewModels
                 }
             }
         }
-
 
         private Part? _SelectedPart;
         /// <summary> Описание </summary>
@@ -276,27 +293,27 @@ namespace remeLog.ViewModels
         public List<string> MachiningReasons => AppSettings.Instance.MachiningReasons;
 
         public double AverageSetupRatio =>
-            MachineFilters.Count(f => f.Filter) == 1
+            MachineFilters.Count(f => f.Filter) > 0
             ? Parts.AverageSetupRatio()
             : double.NaN;
         public double AverageProductionRatio =>
-            MachineFilters.Count(f => f.Filter) == 1
+            MachineFilters.Count(f => f.Filter) > 0
             ? Parts.AverageProductionRatio()
             : double.NaN;
         public double SetupTimeRatio =>
-            MachineFilters.Count(f => f.Filter) == 1
+            MachineFilters.Count(f => f.Filter) > 0
             ? Parts.SetupRatio()
             : double.NaN;
         public double ProductionTimeRatio =>
-            MachineFilters.Count(f => f.Filter) == 1
+            MachineFilters.Count(f => f.Filter) > 0 
             ? Parts.ProductionRatio()
             : double.NaN;
         public double SpecifiedDowntimesRatio =>
-            MachineFilters.Count(f => f.Filter) == 1
+            MachineFilters.Count(f => f.Filter) > 0
             ? Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter)
             : double.NaN;
         public double UnspecifiedDowntimesRatio =>
-            MachineFilters.Count(f => f.Filter) == 1
+            MachineFilters.Count(f => f.Filter) > 0
             ? Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter)
             : double.NaN;
 
@@ -514,7 +531,14 @@ namespace remeLog.ViewModels
         public ICommand ExportToExcelCommand { get; }
         private void OnExportToExcelCommandExecuted(object p)
         {
-            MessageBox.Show("Тут будет экспорт в Excel", "Заглушка", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                Status = Xl.ExportDataset(Parts, FromDate, ToDate);;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         private static bool CanExportToExcelCommandExecute(object p) => true;
         #endregion
@@ -528,6 +552,7 @@ namespace remeLog.ViewModels
             PartNameFilter = string.Empty;
             OrderFilter = string.Empty;
             SetupFilter = null;
+            FinishedCountFilter = null;
             ToDate = PartsInfo.ToDate;
             FromDate = PartsInfo.FromDate;
         }
@@ -597,6 +622,15 @@ namespace remeLog.ViewModels
         public ICommand ChangeCompactViewCommand { get; }
         private void OnChangeCompactViewCommandExecuted(object p) => CompactView = !CompactView;
         private static bool CanChangeCompactViewCommandExecute(object p) => true;
+        #endregion
+
+        #region ChangeCalcFixed
+        public ICommand ChangeCalcFixedCommand { get; }
+        private static void OnChangeCalcFixedCommandExecuted(object p)
+        {
+            Part.CalcFixed = !Part.CalcFixed;
+        }
+        private static bool CanChangeCalcFixedCommandExecute(object p) => true;
         #endregion
 
         #region OpenDailyReportWindow
@@ -670,6 +704,7 @@ namespace remeLog.ViewModels
                             $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
                             $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
                             $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
+                            $"{(FinishedCountFilter == null ? "" : $"AND FinishedCount >= {FinishedCountFilter}")}" +
                             $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")}";
 
                         foreach (var machineFilter in MachineFilters)

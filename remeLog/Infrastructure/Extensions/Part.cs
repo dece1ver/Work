@@ -10,6 +10,11 @@ namespace remeLog.Infrastructure.Extensions
 {
     public static class Part
     {
+        public static double AverageReplacementTimeRatio(this ICollection<Models.Part> parts)
+        {
+            var validReplacementTimesRatios = parts.Where(p => p.PartReplacementTime != 0 && !double.IsNaN(p.PartReplacementTime) && !double.IsPositiveInfinity(p.PartReplacementTime)).Select(p => p.PartReplacementTime);
+            return validReplacementTimesRatios.Any() ? validReplacementTimesRatios.Average() : 0.0;
+        }
         public static double AverageSetupRatio(this ICollection<Models.Part> parts)
         {
             var validSetupRatios = parts.Where(p => p.SetupRatio > 0 && !double.IsNaN(p.SetupRatio) && !double.IsPositiveInfinity(p.SetupRatio)).Select(p => p.SetupRatio);
@@ -25,6 +30,7 @@ namespace remeLog.Infrastructure.Extensions
                 factSum += part.SetupTimeFact + part.PartialSetupTime;
                 planSum += part.SetupTimePlanForReport;
             }
+            var shlyapa = SetupTimePlanForReport(parts);
             return factSum == 0 ? 0 : planSum / factSum;
         }
 
@@ -47,7 +53,7 @@ namespace remeLog.Infrastructure.Extensions
         }
 
         /// <summary>
-        /// Соотношение отмеченных простоев к общему времени смены
+        /// Отмеченные простои за период
         /// </summary>
         /// <param name="parts">Список изготовлений</param>
         /// <param name="fromDate">Начальная дата</param>
@@ -225,6 +231,30 @@ namespace remeLog.Infrastructure.Extensions
             }
             var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
             return (totalWorkMinutes - sum) / totalWorkMinutes;
+        }
+
+        /// <summary>
+        /// Получение времени наладки для отчета один раз на партию, пока не работает нормально на граничных значениях, как вариант надо дергать из БД всю партию и по ней уже смотреть.
+        /// </summary>
+        /// <param name="parts"></param>
+        /// <returns></returns>
+        public static double SetupTimePlanForReport(this ICollection<Models.Part> parts)
+        {
+            var sum = 0.0;
+            Models.Part prevPart = null!;
+            foreach (var partsGroup in parts.GroupBy(p => p.Machine))
+            {
+                foreach (var part in partsGroup.ToList())
+                {
+                    prevPart ??= part;
+                    var setupValue = prevPart == part || (prevPart.Order == part.Order && prevPart.Setup == part.Setup) ? 0 : part.SetupTimePlanForCalc;
+                    if (setupValue == 0 && part.SetupTimeFact > 0) setupValue = part.SetupTimeFact;
+                    if (setupValue == 00 && part.SetupTimePlanForCalc == 0 && part.PartialSetupTime > 0) setupValue = part.PartialSetupTime;
+                    sum += setupValue;
+                    prevPart = part;
+                }
+            }
+            return sum;
         }
     }
 }

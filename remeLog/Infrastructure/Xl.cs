@@ -1,17 +1,24 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
+using libeLog;
+using remeLog.Infrastructure.Extensions;
 using remeLog.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using Part = remeLog.Models.Part;
 
 namespace remeLog.Infrastructure
 {
     public static class Xl
     {
-        public static ICollection<Part> ReadParts()
+        public static ICollection<Models.Part> ReadParts()
         {
             List<Part> parts = new List<Part>();
             if (!Directory.Exists(AppSettings.Instance.SourcePath)) { return parts; }
@@ -58,6 +65,87 @@ namespace remeLog.Infrastructure
             }
 
             return parts;
+        }
+
+
+        public static string ExportDataset(ICollection<Part> parts, DateTime fromDate, DateTime toDate)
+        {
+            var path = Util.GetXlsxPath();
+            if (string.IsNullOrEmpty(path)) return "Выбор файла отменен";
+            var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Отчет по операторам");
+
+            var operatorColInd = 1;
+            var machineColInd = 2;
+            var setupColInd = 3;
+            var prodColInd = 4;
+            var avrReplTimeColInd = 5;
+            var maintenanceTimeColInd = 6;
+            var toolSrchTimeColInd = 7;
+            var mentoringTimeColInd = 8;
+            var contactingDepartsTimeColInd = 9;
+            var fixtMakingTimeColInd = 10;
+            var hardwFailTimeColInd = 11;
+            var specDowntimesColInd = 12;
+            ws.Cell(2, operatorColInd).Value = "Оператор";
+            ws.Cell(2, machineColInd).Value = "Станок";
+            ws.Cell(2, setupColInd).Value = "Наладка";
+            ws.Cell(2, prodColInd).Value = "Изготовление";
+            ws.Cell(2, avrReplTimeColInd).Value = "Среднее время замены";
+            ws.Cell(2, maintenanceTimeColInd).Value = "Обслуживание";
+            ws.Cell(2, toolSrchTimeColInd).Value = "Инструмент";
+            ws.Cell(2, mentoringTimeColInd).Value = "Обучение";
+            ws.Cell(2, contactingDepartsTimeColInd).Value = "Другие службы";
+            ws.Cell(2, fixtMakingTimeColInd).Value = "Оснастка";
+            ws.Cell(2, hardwFailTimeColInd).Value = "Отказ оборудования";
+            ws.Cell(2, specDowntimesColInd).Value = "Простои";
+            var lastCol = specDowntimesColInd;
+            var headerRange = ws.Range(2, operatorColInd, 2, lastCol);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Range(2, setupColInd, 2, lastCol).Style.Alignment.TextRotation = 90;
+            var row = 3;
+            foreach (var partGroup in parts.GroupBy(p => p.Operator))
+            {
+                parts = partGroup.ToList();
+                ws.Cell(row, operatorColInd).Value = partGroup.Key;
+                ws.Cell(row, machineColInd).Value = parts.First().Machine;
+                ws.Cell(row, setupColInd).Value = parts.SetupRatio();
+                ws.Cell(row, setupColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, prodColInd).Value = parts.ProductionRatio();
+                ws.Cell(row, prodColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, avrReplTimeColInd).Value = parts.AverageReplacementTimeRatio();
+                ws.Cell(row, avrReplTimeColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+                ws.Cell(row, maintenanceTimeColInd).Value = parts.Sum(p => p.MaintenanceTime);
+                ws.Cell(row, maintenanceTimeColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                ws.Cell(row, toolSrchTimeColInd).Value = parts.Sum(p => p.ToolSearchingTime);
+                ws.Cell(row, toolSrchTimeColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                ws.Cell(row, mentoringTimeColInd).Value = parts.Sum(p => p.MentoringTime);
+                ws.Cell(row, mentoringTimeColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                ws.Cell(row, contactingDepartsTimeColInd).Value = parts.Sum(p => p.ContactingDepartmentsTime);
+                ws.Cell(row, contactingDepartsTimeColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                ws.Cell(row, fixtMakingTimeColInd).Value = parts.Sum(p => p.FixtureMakingTime);
+                ws.Cell(row, fixtMakingTimeColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                ws.Cell(row, hardwFailTimeColInd).Value = parts.Sum(p => p.HardwareFailureTime);
+                ws.Cell(row, hardwFailTimeColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+                ws.Cell(row, specDowntimesColInd).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, Types.ShiftType.All);
+                ws.Cell(row, specDowntimesColInd).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                row++;
+            }
+            ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.RangeUsed().SetAutoFilter(true);
+            ws.Columns().AdjustToContents();
+            ws.Columns(5, 11).Group(true);
+            ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
+            ws.Range(1, operatorColInd, 1, lastCol).Merge();
+            ws.Range(1, operatorColInd, 1, 1).Style.Font.FontSize = 16;
+            ws.Columns(3, lastCol).Width = 8;
+            wb.SaveAs(path);
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) 
+                == MessageBoxResult.Yes) Process.Start( new ProcessStartInfo() { UseShellExecute = true, FileName = path});
+            return $"Файл сохранен в \"{path}\"";
         }
     }
 }

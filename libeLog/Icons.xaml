@@ -409,7 +409,7 @@
         </Rectangle>
     </Viewbox>
 
-    <Viewbox x:Key="InfoIcon" Width="16 " Height="16">
+    <Viewbox x:Key="InfoIcon" Width="16" Height="16" x:Shared="False" >
         <Rectangle Width="11 " Height="11">
             <Rectangle.Resources>
                 <SolidColorBrush x:Key="canvas" Opacity="0" />
@@ -435,7 +435,7 @@
         </Rectangle>
     </Viewbox>
 
-    <Viewbox x:Key="HelpIcon" Width="16 " Height="16">
+    <Viewbox x:Key="HelpIcon" Width="16 " Height="16" x:Shared="False" >
         <Rectangle Width="16 " Height="16">
             <Rectangle.Resources>
                 <SolidColorBrush x:Key="canvas" Opacity="0" />
@@ -469,7 +469,7 @@
         </Rectangle>
     </Viewbox>
 
-    <Viewbox x:Key="ExportDataIcon" Width="16 " Height="16">
+    <Viewbox x:Key="ExportDataIcon" Width="16" Height="16" x:Shared="False" >
         <Rectangle Width="16 " Height="16">
             <Rectangle.Resources>
                 <SolidColorBrush x:Key="canvas" Opacity="0" />
@@ -496,7 +496,7 @@
         </Rectangle>
     </Viewbox>
 
-    <Viewbox x:Key="ExcelWorksheetIcon" Width="16 " Height="16">
+    <Viewbox x:Key="ExcelWorksheetIcon" Width="16 " Height="16" x:Shared="False" >
         <Rectangle Width="16 " Height="16">
             <Rectangle.Resources>
                 <SolidColorBrush x:Key="canvas" Opacity="0" />
@@ -526,7 +526,7 @@
         </Rectangle>
     </Viewbox>
 
-    <Viewbox x:Key="DeleteCell" Width="16 " Height="16">
+    <Viewbox x:Key="DeleteCell" Width="16 " Height="16" x:Shared="False" >
         <Rectangle Width="16 " Height="16">
             <Rectangle.Resources>
                 <SolidColorBrush x:Key="canvas" Opacity="0" />

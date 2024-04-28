@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace remeLog.Infrastructure
 {
@@ -31,7 +32,18 @@ namespace remeLog.Infrastructure
             return "";
         }
 
-        
+        public static string GetXlsxPath()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog() {
+                Filter = "Книга Excel (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx"
+            };
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                return saveFileDialog.FileName;
+            }
+            return "";
+        }
 
         
     }

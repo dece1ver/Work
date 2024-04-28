@@ -922,6 +922,21 @@ namespace remeLog.Models
         }
 
 
+        private static bool _CalcFixed;
+        /// <summary> Описание </summary>
+        public static bool CalcFixed
+        {
+            get => _CalcFixed;
+            set 
+            {
+                _CalcFixed = value;
+            }
+        }
+
+
+        public double SetupTimePlanForCalc => FixedSetupTimePlan > 0 && CalcFixed ? FixedSetupTimePlan : SetupTimePlan;
+
+        public double ProductionTimePlanForCalc => FixedProductionTimePlan > 0 && CalcFixed ? FixedProductionTimePlan : SingleProductionTimePlan;
 
         private string _EngineerComment;
         /// <summary> Комментарий техотдела </summary>
@@ -968,13 +983,12 @@ namespace remeLog.Models
                 var partsCount = StartSetupTime != StartMachiningTime && FinishedCount > 1 ? FinishedCount - 1 : FinishedCount;
                 return ProductionTimeFact / partsCount;
             } }
-        public double SetupRatio => SetupTimePlan / SetupTimeFact;
+        public double SetupRatio => SetupTimePlanForCalc / SetupTimeFact;
         public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : $"{SetupRatio:0%}";
         public double ProductionRatio => FinishedCountFact * SingleProductionTimePlan / ProductionTimeFact;
-        public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity ? "б/и" : $"{ProductionRatio:0%}";
+        public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity or double.NegativeInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;
         public double PartReplacementTime => SingleProductionTime - MachiningTime.TotalMinutes;
-
         private DateTime FixedDate(DateTime dateTime)
         {
             var year = ShiftDate.Year;
@@ -984,7 +998,7 @@ namespace remeLog.Models
             var minute = dateTime.Minute;
             var fixedDateTime = new DateTime(year, month, day, hour, minute, 0);
             var diff = (fixedDateTime - ShiftDate.AddHours(8)).TotalMinutes;
-            if (diff <= 0 && Shift == "Ночь") fixedDateTime.AddDays(1);
+            if (diff <= 0 && Shift == "Ночь") fixedDateTime = fixedDateTime.AddDays(1);
             return fixedDateTime;
         }
 
