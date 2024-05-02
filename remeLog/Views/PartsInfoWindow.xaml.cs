@@ -116,6 +116,9 @@ namespace remeLog.Views
                                         p.EngineerComment = "Ожидание решения технолога";
                                         break;
                                     case "Ожидание решения технолога":
+                                        p.EngineerComment = "Ожидание решения производства";
+                                        break;
+                                    case "Ожидание решения производства":
                                         p.EngineerComment = "Изменение технологии";
                                         break;
                                     case "Изменение технологии":

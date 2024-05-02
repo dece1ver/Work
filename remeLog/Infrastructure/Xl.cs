@@ -68,7 +68,7 @@ namespace remeLog.Infrastructure
         }
 
 
-        public static string ExportDataset(ICollection<Part> parts, DateTime fromDate, DateTime toDate)
+        public static string ExportOperatorReport(ICollection<Part> parts, DateTime fromDate, DateTime toDate)
         {
             var path = Util.GetXlsxPath();
             if (string.IsNullOrEmpty(path)) return "Выбор файла отменен";
@@ -145,6 +145,78 @@ namespace remeLog.Infrastructure
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) 
                 == MessageBoxResult.Yes) Process.Start( new ProcessStartInfo() { UseShellExecute = true, FileName = path});
+            return $"Файл сохранен в \"{path}\"";
+        }
+
+        public static string ExportDataset(ICollection<Part> parts, DateTime fromDate, DateTime toDate)
+        {
+            var path = Util.GetXlsxPath();
+            if (string.IsNullOrEmpty(path)) return "Выбор файла отменен";
+            var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Экспорт");
+
+            
+            ws.Cell(2, 1).Value = "Дата";
+            ws.Cell(2, 2).Value = "Смена";
+            ws.Cell(2, 3).Value = "Оператор";
+            ws.Cell(2, 4).Value = "Деталь";
+            ws.Cell(2, 5).Value = "М/Л";
+            ws.Cell(2, 6).Value = "Всего по М/Л";
+            ws.Cell(2, 7).Value = "Выполнено";
+            ws.Cell(2, 8).Value = "Установка";
+            ws.Cell(2, 9).Value = "Начало наладки";
+            ws.Cell(2, 10).Value = "Начало изготовления";
+            ws.Cell(2, 11).Value = "Конец изготовления";
+            ws.Cell(2, 12).Value = "Норматив наладки";
+            ws.Cell(2, 13).Value = "Фактическая наладка";
+            ws.Cell(2, 14).Value = "Норматив штучный";
+            ws.Cell(2, 15).Value = "Машинное время";
+            ws.Cell(2, 16).Value = "Штучное фактическое";
+            ws.Cell(2, 17).Value = "Время замены";
+            ws.Cell(2, 18).Value = "Фактическое изготовление";
+            ws.Cell(2, 19).Value = "Норматив на партию";
+            ws.Cell(2, 20).Value = "Комментарий оператора";
+            ws.Cell(2, 21).Value = "Простои в наладке";
+            ws.Cell(2, 22).Value = "Простои в изготовлении";
+            ws.Cell(2, 23).Value = "Частичная наладка";
+            ws.Cell(2, 24).Value = "Обслуживание";
+            ws.Cell(2, 25).Value = "Поиск инструмента";
+            ws.Cell(2, 26).Value = "Обучение";
+            ws.Cell(2, 27).Value = "Другие службы";
+            ws.Cell(2, 28).Value = "Изготовление оснастки";
+            ws.Cell(2, 29).Value = "Отказ оборудования";
+            ws.Cell(2, 30).Value = "Отмеченные простои";
+            ws.Cell(2, 31).Value = "Комментарий к простоям";
+            ws.Cell(2, 32).Value = "Наладка";
+            ws.Cell(2, 33).Value = "Невыполнение норматива наладки";
+            ws.Cell(2, 34).Value = "Изготовление";
+            ws.Cell(2, 35).Value = "Невыполнение норматива изготовления";
+            ws.Cell(2, 36).Value = "Комментарий мастера";
+            ws.Cell(2, 37).Value = "Норматив наладки (И)";
+            ws.Cell(2, 38).Value = "Норматив изготовления (И)";
+            ws.Cell(2, 39).Value = "Комментарий техотдела";
+            var headerRange = ws.Range(2, 1, 2, 39);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Range(2, 1, 2, 34).Style.Alignment.TextRotation = 90;
+            var row = 3;
+            foreach (var part in parts)
+            {
+                row++;
+            }
+            ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.RangeUsed().SetAutoFilter(true);
+            ws.Columns().AdjustToContents();
+            ws.Columns(5, 11).Group(true);
+            ws.Cell(1, 1).Value = $"Экспорт за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
+            ws.Range(1, 1, 1, 34).Merge();
+            ws.Range(1, 1, 1, 1).Style.Font.FontSize = 16;
+            ws.Columns(3, 34).Width = 8;
+            wb.SaveAs(path);
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
             return $"Файл сохранен в \"{path}\"";
         }
     }

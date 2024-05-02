@@ -44,9 +44,11 @@ namespace remeLog.ViewModels
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
+            OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
 
+            CalcFixed = Part.CalcFixed;
             PartsInfo = parts;
             ShiftFilterItems = new Shift[3] { new Shift(ShiftType.All), new Shift(ShiftType.Day), new Shift(ShiftType.Night) };
             _ShiftFilter = ShiftFilterItems.FirstOrDefault();
@@ -361,6 +363,15 @@ namespace remeLog.ViewModels
             => CalculatedTimeDifference.TotalMinutes;
 
 
+        private bool _CalcFixed;
+        /// <summary> Описание </summary>
+        public bool CalcFixed
+        {
+            get => _CalcFixed;
+            set => Set(ref _CalcFixed, value);
+        }
+
+
         private bool _DescreaseTimes;
         /// <summary> Описание </summary>
         public bool DescreaseTimes
@@ -527,18 +538,28 @@ namespace remeLog.ViewModels
         private static bool CanShowInfoCommandExecute(object p) => true;
         #endregion
 
-        #region ExportToExcel
-        public ICommand ExportToExcelCommand { get; }
-        private void OnExportToExcelCommandExecuted(object p)
+        #region OperatorReportToExcel
+        public ICommand OperatorReportToExcelCommand { get; }
+        private void OnOperatorReportToExcelCommandExecuted(object p)
         {
             try
             {
-                Status = Xl.ExportDataset(Parts, FromDate, ToDate);;
+                Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate); ;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+        private static bool CanOperatorReportToExcelCommandExecute(object p) => true;
+        #endregion
+
+        #region ExportToExcel
+        public ICommand ExportToExcelCommand { get; }
+        private void OnExportToExcelCommandExecuted(object p)
+        {
+            MessageBox.Show("Экспорт");
+            
         }
         private static bool CanExportToExcelCommandExecute(object p) => true;
         #endregion
@@ -626,9 +647,10 @@ namespace remeLog.ViewModels
 
         #region ChangeCalcFixed
         public ICommand ChangeCalcFixedCommand { get; }
-        private static void OnChangeCalcFixedCommandExecuted(object p)
+        private void OnChangeCalcFixedCommandExecuted(object p)
         {
             Part.CalcFixed = !Part.CalcFixed;
+            CalcFixed = Part.CalcFixed;
         }
         private static bool CanChangeCalcFixedCommandExecute(object p) => true;
         #endregion

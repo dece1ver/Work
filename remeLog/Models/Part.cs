@@ -989,6 +989,10 @@ namespace remeLog.Models
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity or double.NegativeInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;
         public double PartReplacementTime => SingleProductionTime - MachiningTime.TotalMinutes;
+        public double PlanForBatch { get {
+                var partsCount = StartSetupTime != StartMachiningTime && FinishedCount > 1 ? FinishedCount - 1 : FinishedCount;
+                return partsCount * ProductionTimePlanForCalc;
+            } }
         private DateTime FixedDate(DateTime dateTime)
         {
             var year = ShiftDate.Year;

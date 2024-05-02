@@ -31,7 +31,7 @@ namespace remeLog.Infrastructure.Extensions
                 planSum += part.SetupTimePlanForReport;
             }
             var shlyapa = SetupTimePlanForReport(parts);
-            return factSum == 0 ? 0 : planSum / factSum;
+            return factSum == 0 ? 0 : shlyapa / factSum;
         }
 
         public static double AverageProductionRatio(this ICollection<Models.Part> parts)
@@ -44,10 +44,10 @@ namespace remeLog.Infrastructure.Extensions
         {
             double planSum = 0;
             double factSum = 0;
-            foreach (var part in parts)
+            foreach (var part in parts.Where(p => p.ProductionTimePlanForCalc > 0))
             {
                 factSum += part.ProductionTimeFact;
-                planSum += part.FinishedCountFact * part.SingleProductionTimePlan;
+                planSum += part.FinishedCountFact * part.ProductionTimePlanForCalc;
             }
             return factSum == 0 ? 0 : planSum / factSum;
         }
@@ -246,10 +246,15 @@ namespace remeLog.Infrastructure.Extensions
             {
                 foreach (var part in partsGroup.ToList())
                 {
-                    prevPart ??= part;
-                    var setupValue = prevPart == part || (prevPart.Order == part.Order && prevPart.Setup == part.Setup) ? 0 : part.SetupTimePlanForCalc;
-                    if (setupValue == 0 && part.SetupTimeFact > 0) setupValue = part.SetupTimeFact;
-                    if (setupValue == 00 && part.SetupTimePlanForCalc == 0 && part.PartialSetupTime > 0) setupValue = part.PartialSetupTime;
+                    var setupValue = prevPart != null ?
+                                    (prevPart.Setup == part.Setup && prevPart.Order == part.Order && prevPart.PartName == part.PartName && part.PartialSetupTime == 0 && part.SetupTimeFact == 0 ? 0 : part.SetupTimePlanForCalc) :
+                                    (part.PartialSetupTime == 0 && part.SetupTimeFact == 0 ? 0 : part.SetupTimePlanForCalc);
+
+                    if (setupValue == 0)
+                    {
+                        setupValue = part.SetupTimeFact + part.PartialSetupTime;
+                    }
+
                     sum += setupValue;
                     prevPart = part;
                 }

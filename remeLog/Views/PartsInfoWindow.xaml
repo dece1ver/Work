@@ -284,6 +284,19 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
+        <DataGridTextColumn x:Key="PlanForBatchColumn" Header="Норматив на партию" Binding="{Binding PlanForBatch, StringFormat=0.#}" 
+                            Width="35" IsReadOnly="True" 
+                            Visibility="{Binding DataContext.CompactView, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
         <DataGridTextColumn x:Key="OperatorCommentColumn" Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="230" FontFamily="Calibri">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
@@ -733,50 +746,93 @@
                 </GroupBox>
 
             </DockPanel>
-            <ToolBar DockPanel.Dock="Top" Background="LightGray" ToolBarTray.IsLocked="True" ToolBar.OverflowMode="Never">
-                <Button Content="{StaticResource SyncIcon}" Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД"/>
-                <Button Content="{StaticResource DeleteCell}" Command="{Binding DeletePartCommand}" CommandParameter="{Binding SelectedPart}"
-                        ToolTip="Удалить выбранную деталь"/>
-                <Button Command="{Binding ChangeCalcFixedCommand}" Margin="0 -5" Padding="5 0">
-                    <Button.Content>
-                        <TextBlock Text="F" FontSize="18" >
-            <!--<TextBlock.Resources>
-                <Style TargetType="TextBlock">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{x:Static md:Part.CalcFixed}" Value="True">
-                            <Setter Property="FontWeight" Value="DemiBold" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBlock.Resources>-->
-                        </TextBlock>
-                    </Button.Content>
-                </Button>
-                <Button Command="{Binding ChangeCompactViewCommand}"
-                        ToolTip="Компактный режим вкл/выкл">
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <StaticResource ResourceKey="AddOrRemoveColumnIcon"/>
-                            <!--<TextBlock Text="Компактный">
-                <TextBlock.Resources>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding CompactView}" Value="True">
-                                <Setter Property="FontWeight" Value="DemiBold" />
-                            </DataTrigger>
-                        </Style.Triggers>
+            <Menu DockPanel.Dock="Top" Focusable="False">
+                <Menu.Resources>
+                    <Style TargetType="{x:Type Button}">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Focusable" Value="False"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                     </Style>
-                </TextBlock.Resources>
-            </TextBlock>-->
-                        </StackPanel>
-                    </Button.Content>
-                </Button>
-                <Button Content="{StaticResource InfoIcon}" Command="{Binding ShowInfoCommand}"
-                        ToolTip="Показать расширенную информацию по выборке"/>
-
-                <Button Content="{StaticResource ExcelWorksheetIcon}" Command="{Binding ExportToExcelCommand}"
-                        ToolTip="Экспорт выбранного в Excel"/>
-            </ToolBar>
+                </Menu.Resources>
+                <MenuItem>
+                    <MenuItem.Header>
+                        <Button Content="{StaticResource SyncIcon}" Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД"/>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem>
+                    <MenuItem.Header>
+                        <Button Content="{StaticResource DeleteCell}" Command="{Binding DeletePartCommand}" CommandParameter="{Binding SelectedPart}"
+                                ToolTip="Удалить выбранную деталь"/>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Header="Вид">
+                    <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource ConfirmIconFlex}"
+                              Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}}"
+                              ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Компактный">
+                                <TextBlock.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CompactView}" Value="True">
+                                                <Setter Property="FontWeight" Value="DemiBold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Resources>
+                            </TextBlock>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource CloseIconFlex}" 
+                              Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}}"
+                              ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Компактный">
+                                <TextBlock.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CompactView}" Value="True">
+                                                <Setter Property="FontWeight" Value="DemiBold" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Resources>
+                            </TextBlock>
+                        </MenuItem.Header>
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="Расчет">
+                    <MenuItem Command="{Binding ChangeCalcFixedCommand}" Icon="{StaticResource ConfirmIconFlex}"
+                              Visibility="{Binding CalcFixed, Converter={StaticResource VisibilityConverter}}"
+                              ToolTip="Расчет от исправленного вкл/выкл" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="От исправленного" FontWeight="DemiBold"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ChangeCalcFixedCommand}" Icon="{StaticResource CloseIconFlex}" 
+                              Visibility="{Binding CalcFixed, Converter={StaticResource InvertedVisibilityConverter}}"
+                              ToolTip="Расчет от исправленного вкл/выкл" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="От исправленного"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="Экспорт">
+                    <MenuItem Command="{Binding OperatorReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
+                              ToolTip="Экспорт отчёта по операторам" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Операторы"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ExportToExcelCommand}" Icon="{StaticResource ExcelWorksheetIcon}"
+                              ToolTip="Экспорт выбранного" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Экспорт выбранного в Excel"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
                       ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False" SelectionMode="Extended"
                       IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0" SelectedItem="{Binding SelectedPart, UpdateSourceTrigger=PropertyChanged}"
@@ -855,6 +911,7 @@
                     <StaticResource ResourceKey="SingleProductionTimeColumn"/>
                     <StaticResource ResourceKey="PartReplacementTimeColumn"/>
                     <StaticResource ResourceKey="ProductionTimeFactColumn"/>
+                    <StaticResource ResourceKey="PlanForBatchColumn"/>
                     <StaticResource ResourceKey="OperatorCommentColumn"/>
                     <StaticResource ResourceKey="SetupDowntimesColumn"/>
                     <StaticResource ResourceKey="MachiningDowntimesColumn"/>
@@ -872,7 +929,7 @@
                     <StaticResource ResourceKey="ProductionRatioTitleColumn"/>
                     <StaticResource ResourceKey="MasterMachiningCommentColumn"/>
                     <StaticResource ResourceKey="MasterCommentColumn"/>
-                    <StaticResource ResourceKey="SetupTimePlanForReportColumn"/>
+                    <!--<StaticResource ResourceKey="SetupTimePlanForReportColumn"/>-->
                     <StaticResource ResourceKey="FixedSetupTimePlanColumn"/>
                     <StaticResource ResourceKey="FixedProductionTimePlanColumn"/>
                     <StaticResource ResourceKey="EngineerCommentColumn"/>
