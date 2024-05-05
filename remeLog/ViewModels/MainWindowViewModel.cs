@@ -340,16 +340,20 @@ namespace remeLog.ViewModels
                             CombinedParts.ReportState state = ReportState.NotExist;
                             bool dayExist = false;
                             bool nightExist = false;
+                            bool dayChecked = false;
+                            bool nightChecked = false;
                             if (FromDate == ToDate)
                             {
                                 if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Day, machine), out var dbDayShifts) is DbResult.Ok && dbDayShifts.Count > 0)
                                 {
                                     dayExist = true;
+                                    if (dbDayShifts.Any(s => s.IsChecked)) dayChecked = true;
                                 }
 
                                 if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0)
                                 {
                                     nightExist = true;
+                                    if (dbNightShifts.Any(s => s.IsChecked)) nightChecked = true;
                                 }
 
                                 if (dayExist && nightExist)
@@ -361,7 +365,7 @@ namespace remeLog.ViewModels
                                     state = ReportState.Partial;
                                 }
                             }
-                            Parts.Add(new CombinedParts(machine, FromDate, ToDate) { IsReportExist = state});
+                            Parts.Add(new CombinedParts(machine, FromDate, ToDate) { IsReportExist = state, IsReportChecked = dayChecked && nightChecked});
                         }
                         return true;
                     });

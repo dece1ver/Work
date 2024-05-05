@@ -80,6 +80,7 @@ namespace remeLog.ViewModels
                 _CurrentMaster = shift.Master;
                 _NightDowntimesReason = shift.DowntimesComment;
                 _NightMasterComment = shift.CommonComment;
+                _IsChecked = shift.IsChecked;
                 if (UnspecifiedNightDowntimes != shift.UnspecifiedDowntimes)
                 {
                     MessageBox.Show("Время неотмеченных простоев изменилось с момента последнего сохранения отчета!\n\nПрошлое значение будет добавлено в комментарий мастера.",
@@ -185,6 +186,17 @@ namespace remeLog.ViewModels
             get => _Title;
             set => Set(ref _Title, value);
         }
+
+
+        private bool _IsChecked;
+        /// <summary> Описание </summary>
+        public bool IsChecked
+        {
+            get => _IsChecked;
+            set => Set(ref _IsChecked, value);
+        }
+
+
         public List<string> DowntimeReasons => AppSettings.Instance.UnspecifiedDowntimesReasons;
 
         public bool UnspecifiedDayDowntimesNeedAttention => UnspecifiedDayDowntimesRatio is > 0.1 or < -0.1;
@@ -193,7 +205,7 @@ namespace remeLog.ViewModels
         public bool NightPartialSetupNeedAttention => NightPartialSetupRatio is > 0.3;
         public bool SpecifiedDayDowntimesNeedAttention => SpecifiedDayDowntimesRatio is > 0.1 or < -0.1;
         public bool SpecifiedNightDowntimesNeedAttention => SpecifiedNightDowntimesRatio is > 0.1 or < -0.1;
-
+        
         public List<Part> DayParts => Parts.Where(p => p.Shift == "День").ToList();
         public List<Part> NightParts => Parts.Where(p => p.Shift == "Ночь").ToList();
         public int DayOrders => Parts.Where(p => p.Shift == new Shift(ShiftType.Day).Name).GroupBy(p => p.Order).Count();
@@ -268,8 +280,8 @@ namespace remeLog.ViewModels
             }
             if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) 
                 return;
-            var dayShift = new ShiftInfo(null, ShiftDate, ShiftType.Day, Machine, CurrentMaster, UnspecifiedDayDowntimes, DayDowntimesReason, DayMasterComment);
-            var nightShift = new ShiftInfo(null, ShiftDate, ShiftType.Night, Machine, CurrentMaster, UnspecifiedNightDowntimes, NightDowntimesReason, NightMasterComment);
+            var dayShift = new ShiftInfo(null, ShiftDate, ShiftType.Day, Machine, CurrentMaster, UnspecifiedDayDowntimes, DayDowntimesReason, DayMasterComment, IsChecked);
+            var nightShift = new ShiftInfo(null, ShiftDate, ShiftType.Night, Machine, CurrentMaster, UnspecifiedNightDowntimes, NightDowntimesReason, NightMasterComment, IsChecked);
             var dayWriteResult = Database.WriteShiftInfo(dayShift);
             switch (dayWriteResult)
             {

@@ -558,8 +558,14 @@ namespace remeLog.ViewModels
         public ICommand ExportToExcelCommand { get; }
         private void OnExportToExcelCommandExecuted(object p)
         {
-            MessageBox.Show("Экспорт");
-            
+            try
+            {
+                Status = Xl.ExportDataset(Parts); ;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         private static bool CanExportToExcelCommandExecute(object p) => true;
         #endregion

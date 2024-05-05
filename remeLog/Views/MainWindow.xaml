@@ -149,6 +149,7 @@
                                                        ToolTip="Нет отчета за смену"/>
                                             </Grid>
                                             <TextBlock FontSize="16" Text="{Binding Machine}" FontWeight="SemiBold" Margin="0 1 0 0"/>
+                                            <TextBlock FontSize="16" Text="+" FontWeight="SemiBold" Visibility="{Binding IsReportChecked, Converter={StaticResource VisibilityConverter}}"/>
                                         </StackPanel>
                                     </GroupBox.Header>
                                     <Grid>

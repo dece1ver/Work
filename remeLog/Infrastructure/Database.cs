@@ -480,8 +480,8 @@ namespace remeLog.Infrastructure
                 {
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись в БД информации о смене.");
                     connection.Open();
-                    string query = $"INSERT INTO cnc_shifts (ShiftDate, Shift, Machine, Master, UnspecifiedDowntimes, DowntimesComment, CommonComment) " +
-                        $"VALUES (@ShiftDate, @Shift, @Machine, @Master, @UnspecifiedDowntimes, @DowntimesComment, @CommonComment); SELECT SCOPE_IDENTITY()";
+                    string query = $"INSERT INTO cnc_shifts (ShiftDate, Shift, Machine, Master, UnspecifiedDowntimes, DowntimesComment, CommonComment, IsChecked) " +
+                        $"VALUES (@ShiftDate, @Shift, @Machine, @Master, @UnspecifiedDowntimes, @DowntimesComment, @CommonComment, @IsChecked); SELECT SCOPE_IDENTITY()";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("ShiftDate", shiftInfo.ShiftDate);
@@ -491,6 +491,7 @@ namespace remeLog.Infrastructure
                         command.Parameters.AddWithValue("UnspecifiedDowntimes", shiftInfo.UnspecifiedDowntimes);
                         command.Parameters.AddWithValue("DowntimesComment", shiftInfo.DowntimesComment);
                         command.Parameters.AddWithValue("CommonComment", shiftInfo.CommonComment);
+                        command.Parameters.AddWithValue("IsChecked", shiftInfo.IsChecked);
                         var result = command.ExecuteScalar();
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Смена записана и присвоен ID: {shiftInfo.Id}");
                     }
@@ -541,7 +542,7 @@ namespace remeLog.Infrastructure
                             while (reader.Read())
                             {
                                 shifts.Add(
-                                    
+
                                     new ShiftInfo(
                                         reader.GetInt32(0),         // Id
                                         reader.GetDateTime(1),      // ShiftDate
@@ -550,7 +551,8 @@ namespace remeLog.Infrastructure
                                         reader.GetString(4),        // Master
                                         reader.GetDouble(5),        // UnspecifiedDowntimes
                                         reader.GetString(6),        // DowntimesComment
-                                        reader.GetString(7))        // CommonComment
+                                        reader.GetString(7),        // CommonComment
+                                        reader.GetBoolean(8))       // IsChecked
                                     );
                             }
                         }
@@ -585,7 +587,7 @@ namespace remeLog.Infrastructure
                 {
                     connection.Open();
 
-                    string query = $"UPDATE cnc_shifts SET Master = @Master, UnspecifiedDowntimes = @UnspecifiedDowntimes, DowntimesComment = @DowntimesComment, CommonComment = @CommonComment " +
+                    string query = $"UPDATE cnc_shifts SET Master = @Master, UnspecifiedDowntimes = @UnspecifiedDowntimes, DowntimesComment = @DowntimesComment, CommonComment = @CommonComment, IsChecked = @IsChecked  " +
                         $"WHERE ShiftDate = @ShiftDate AND Shift = @Shift AND Machine = @Machine";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -596,6 +598,7 @@ namespace remeLog.Infrastructure
                         command.Parameters.AddWithValue("UnspecifiedDowntimes", shiftInfo.UnspecifiedDowntimes);
                         command.Parameters.AddWithValue("DowntimesComment", shiftInfo.DowntimesComment);
                         command.Parameters.AddWithValue("CommonComment", shiftInfo.CommonComment);
+                        command.Parameters.AddWithValue("IsChecked", shiftInfo.IsChecked);
                         int rowsAffected = command.ExecuteNonQuery();
                         if (rowsAffected == 0)
                         {

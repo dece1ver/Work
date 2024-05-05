@@ -748,22 +748,18 @@
             </DockPanel>
             <Menu DockPanel.Dock="Top" Focusable="False">
                 <Menu.Resources>
-                    <Style TargetType="{x:Type Button}">
-                        <Setter Property="Background" Value="Transparent"/>
+                    <Style TargetType="{x:Type MenuItem}">
                         <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Focusable" Value="False"/>
-                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                     </Style>
                 </Menu.Resources>
-                <MenuItem>
+                <MenuItem Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД">
                     <MenuItem.Header>
-                        <Button Content="{StaticResource SyncIcon}" Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД"/>
+                        <StaticResource ResourceKey="SyncIcon"/>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem>
+                <MenuItem Command="{Binding DeletePartCommand}" CommandParameter="{Binding SelectedPart}" ToolTip="Удалить выбранную деталь">
                     <MenuItem.Header>
-                        <Button Content="{StaticResource DeleteCell}" Command="{Binding DeletePartCommand}" CommandParameter="{Binding SelectedPart}"
-                                ToolTip="Удалить выбранную деталь"/>
+                        <StaticResource ResourceKey="DeleteCell"/>
                     </MenuItem.Header>
                 </MenuItem>
                 <MenuItem Header="Вид">

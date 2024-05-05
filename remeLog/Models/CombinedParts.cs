@@ -76,6 +76,16 @@ namespace remeLog.Models
             set => Set(ref _IsReportExist, value);
         }
 
+
+        private bool _IsReportChecked;
+        /// <summary> Проверен ли отчет </summary>
+        public bool IsReportChecked
+        {
+            get => _IsReportChecked;
+            set => Set(ref _IsReportChecked, value);
+        }
+
+
         private ObservableCollection<Part> _Parts = new();
         public ObservableCollection<Part> Parts
         {

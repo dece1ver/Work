@@ -9,7 +9,7 @@ namespace remeLog.Models
 {
     public class ShiftInfo
     {
-        public ShiftInfo(int? id, DateTime shiftDate, ShiftType shiftType, string machine, string master, double unspecifiedDowntimes, string downtimesComment, string commonComment)
+        public ShiftInfo(int? id, DateTime shiftDate, ShiftType shiftType, string machine, string master, double unspecifiedDowntimes, string downtimesComment, string commonComment, bool isChecked)
         {
             Id = id;
             ShiftDate = shiftDate;
@@ -19,8 +19,9 @@ namespace remeLog.Models
             UnspecifiedDowntimes = unspecifiedDowntimes;
             DowntimesComment = downtimesComment;
             CommonComment = commonComment;
+            IsChecked = isChecked;
         }
-        public ShiftInfo(int? id, DateTime shiftDate, string shiftType, string machine, string master, double unspecifiedDowntimes, string downtimesComment, string commonComment)
+        public ShiftInfo(int? id, DateTime shiftDate, string shiftType, string machine, string master, double unspecifiedDowntimes, string downtimesComment, string commonComment, bool isChecked)
         {
             Id = id;
             ShiftDate = shiftDate;
@@ -30,6 +31,7 @@ namespace remeLog.Models
             UnspecifiedDowntimes = unspecifiedDowntimes;
             DowntimesComment = downtimesComment;
             CommonComment = commonComment;
+            IsChecked = isChecked;
         }
         public ShiftInfo(DateTime shiftDate, ShiftType shiftType, string machine)
         {
@@ -49,5 +51,6 @@ namespace remeLog.Models
         public double UnspecifiedDowntimes { get; set; }
         public string DowntimesComment { get; set; }
         public string CommonComment { get; set; }
+        public bool IsChecked { get; set; }
     }
 }

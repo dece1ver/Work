@@ -39,6 +39,8 @@
                         </Style>
                     </Button.Resources>
                 </Button>
+                <CheckBox DockPanel.Dock="Left" VerticalAlignment="Bottom" Content="Проверено техотделом" HorizontalAlignment="Left"
+                          IsChecked="{Binding IsChecked}"/>
             </DockPanel>
             <UniformGrid Rows="2">
                 <GroupBox BorderBrush="Gray">
