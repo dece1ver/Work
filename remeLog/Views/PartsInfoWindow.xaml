@@ -662,7 +662,7 @@
 
                         <DockPanel Grid.Row="1" Grid.Column="2">
                             <TextBlock Text="Шт." Margin="10 0 5 0"/>
-                            <TextBox Text="{Binding FinishedCountFilter, UpdateSourceTrigger=PropertyChanged, Delay=500, TargetNullValue={x:Static sys:String.Empty}}" Style="{StaticResource ClearableTextBox}"/>
+                            <TextBox Text="{Binding FinishedCountFilter, UpdateSourceTrigger=PropertyChanged, Delay=500, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" Style="{StaticResource ClearableTextBox}"/>
                         </DockPanel>
 
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="Деталь" Margin="25 0 0 0"/>
@@ -767,36 +767,33 @@
                               Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}}"
                               ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Компактный">
-                                <TextBlock.Resources>
-                                    <Style TargetType="TextBlock">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding CompactView}" Value="True">
-                                                <Setter Property="FontWeight" Value="DemiBold" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Resources>
-                            </TextBlock>
+                            <TextBlock Text="Компактный" FontWeight="DemiBold"/>
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource CloseIconFlex}" 
                               Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}}"
                               ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Компактный">
-                                <TextBlock.Resources>
-                                    <Style TargetType="TextBlock">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding CompactView}" Value="True">
-                                                <Setter Property="FontWeight" Value="DemiBold" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Resources>
-                            </TextBlock>
+                            <TextBlock Text="Компактный"/>
                         </MenuItem.Header>
                     </MenuItem>
+
+                    <MenuItem Command="{Binding ChangeShowUncheckedCommand}" Icon="{StaticResource ConfirmIconFlex}"
+                              Visibility="{Binding ViewUnchecked, Converter={StaticResource VisibilityConverter}}"
+                              ToolTip="Ожидаемые" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Ожидаемые" FontWeight="DemiBold"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ChangeShowUncheckedCommand}" Icon="{StaticResource CloseIconFlex}" 
+                              Visibility="{Binding ViewUnchecked, Converter={StaticResource InvertedVisibilityConverter}}"
+                              ToolTip="Ожидаемые" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Ожидаемые"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+
+                    <MenuItem Command="{Binding ShowAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Все станки"/>
                 </MenuItem>
                 <MenuItem Header="Расчет">
                     <MenuItem Command="{Binding ChangeCalcFixedCommand}" Icon="{StaticResource ConfirmIconFlex}"

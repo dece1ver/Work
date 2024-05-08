@@ -22,9 +22,12 @@ using Part = remeLog.Models.Part;
 namespace remeLog.ViewModels
 {
 
-    public class PartsInfoWindowViewModel : ViewModel
+    public class PartsInfoWindowViewModel : ViewModel, IDataErrorInfo
     {
         private readonly object lockObject = new();
+        private static bool lockUpdate = false;
+        private static string[] supportedComparisonOperators = { "<=", "<", ">=", "=", ">", "!=" };
+
         public PartsInfoWindowViewModel(CombinedParts parts)
         {
             ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
@@ -40,12 +43,14 @@ namespace remeLog.ViewModels
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
             RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
             ChangeCompactViewCommand = new LambdaCommand(OnChangeCompactViewCommandExecuted, CanChangeCompactViewCommandExecute);
+            ChangeShowUncheckedCommand = new LambdaCommand(OnChangeShowUncheckedCommandExecuted, CanChangeShowUncheckedCommandExecute);
             ChangeCalcFixedCommand = new LambdaCommand(OnChangeCalcFixedCommandExecuted, CanChangeCalcFixedCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
+            ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
             DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
 
             CalcFixed = Part.CalcFixed;
@@ -53,9 +58,11 @@ namespace remeLog.ViewModels
             ShiftFilterItems = new Shift[3] { new Shift(ShiftType.All), new Shift(ShiftType.Day), new Shift(ShiftType.Night) };
             _ShiftFilter = ShiftFilterItems.FirstOrDefault();
             _OperatorFilter = "";
+            _FinishedCountFilter = "";
             _Parts = PartsInfo.Parts;
             _OrderFilter = "";
             _PartNameFilter = "";
+            _EngineerCommentFilter = "";
             _FromDate = PartsInfo.FromDate;
             _ToDate = PartsInfo.ToDate;
             _MachineFilters = new();
@@ -64,7 +71,7 @@ namespace remeLog.ViewModels
             _MachineFilters.ReadMachines();
             foreach (var machineFilter in MachineFilters)
             {
-                if (machineFilter.Machine == parts.Machine) machineFilter.Filter = true;
+                machineFilter.Filter = machineFilter.Machine == PartsInfo.Machine;
             }
         }
 
@@ -213,15 +220,31 @@ namespace remeLog.ViewModels
         }
 
 
-        private int? _FinishedCountFilter;
-        /// <summary> Описание </summary>
-        public int? FinishedCountFilter
+        private string _FinishedCountFilter;
+        /// <summary> фильтр по завершенным деталям </summary>
+        public string FinishedCountFilter
         {
             get => _FinishedCountFilter;
             set
             {
                 if (!CanBeChanged()) return;
                 if (Set(ref _FinishedCountFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
+            }
+        }
+
+
+        private string _EngineerCommentFilter;
+        /// <summary> Описание </summary>
+        public string EngineerCommentFilter
+        {
+            get => _EngineerCommentFilter;
+            set
+            {
+                if (!CanBeChanged()) return;
+                if (Set(ref _EngineerCommentFilter, value))
                 {
                     _ = LoadPartsAsync();
                 }
@@ -283,6 +306,16 @@ namespace remeLog.ViewModels
         }
 
 
+        private bool _ViewUnchecked;
+        /// <summary> Описание </summary>
+        public bool ViewUnchecked
+        {
+            get => _ViewUnchecked;
+            set => Set(ref _ViewUnchecked, value);
+        }
+
+
+
         private Overlay _Overlay = new(false);
 
         public Overlay Overlay
@@ -307,7 +340,7 @@ namespace remeLog.ViewModels
             ? Parts.SetupRatio()
             : double.NaN;
         public double ProductionTimeRatio =>
-            MachineFilters.Count(f => f.Filter) > 0 
+            MachineFilters.Count(f => f.Filter) > 0
             ? Parts.ProductionRatio()
             : double.NaN;
         public double SpecifiedDowntimesRatio =>
@@ -418,9 +451,10 @@ namespace remeLog.ViewModels
         public ICommand DecreaseDateCommand { get; }
         private void OnDecreaseDateCommandExecuted(object p)
         {
-
+            LockUpdate();
             FromDate = FromDate.AddDays(-1);
             ToDate = ToDate.AddDays(-1);
+            UnlockUpdate();
         }
         private bool CanDecreaseDateCommandExecute(object p) => true;
         #endregion
@@ -429,9 +463,10 @@ namespace remeLog.ViewModels
         public ICommand SetYesterdayDateCommand { get; }
         private void OnSetYesterdayDateCommandExecuted(object p)
         {
-
+            LockUpdate();
             FromDate = DateTime.Today.AddDays(-1);
             ToDate = FromDate;
+            UnlockUpdate();
         }
         private bool CanSetYesterdayDateCommandExecute(object p) => true;
         #endregion
@@ -449,6 +484,7 @@ namespace remeLog.ViewModels
         public ICommand SetMonthDateCommand { get; }
         private void OnSetMonthDateCommandExecuted(object p)
         {
+            LockUpdate();
             if (FromDate == ToDate.AddDays(-30))
             {
                 FromDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -458,6 +494,7 @@ namespace remeLog.ViewModels
             {
                 FromDate = ToDate.AddDays(-30);
             }
+            UnlockUpdate();
         }
         private bool CanSetMonthDateCommandExecute(object p) => true;
         #endregion
@@ -466,8 +503,10 @@ namespace remeLog.ViewModels
         public ICommand SetYearDateCommand { get; }
         private void OnSetYearDateCommandExecuted(object p)
         {
+            LockUpdate();
             FromDate = new DateTime(2024, 01, 01);
             ToDate = DateTime.Today;
+            UnlockUpdate();
         }
         private bool CanSetYearDateCommandExecute(object p) => true;
         #endregion
@@ -476,8 +515,10 @@ namespace remeLog.ViewModels
         public ICommand SetAllDateCommand { get; }
         private void OnSetAllDateCommandExecuted(object p)
         {
+            LockUpdate();
             FromDate = new DateTime(2023, 01, 01, 00, 00, 00);
             ToDate = DateTime.Today;
+            UnlockUpdate();
         }
         private bool CanSetAllDateCommandExecute(object p) => true;
         #endregion
@@ -533,7 +574,7 @@ namespace remeLog.ViewModels
         public ICommand ShowInfoCommand { get; }
         private void OnShowInfoCommandExecuted(object p)
         {
-            MessageBox.Show("Тут будет информация по выборке","Заглушка", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Тут будет информация по выборке", "Заглушка", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         private static bool CanShowInfoCommandExecute(object p) => true;
         #endregion
@@ -579,19 +620,37 @@ namespace remeLog.ViewModels
             PartNameFilter = string.Empty;
             OrderFilter = string.Empty;
             SetupFilter = null;
-            FinishedCountFilter = null;
+            FinishedCountFilter = "";
             ToDate = PartsInfo.ToDate;
             FromDate = PartsInfo.FromDate;
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = MachineFilters[i].Machine == PartsInfo.Machine;
+            }
         }
         private static bool CanDeleteFilterCommandExecute(object p) => true;
+        #endregion
+
+        #region ShowAllMachines
+        public ICommand ShowAllMachinesCommand { get; }
+        private void OnShowAllMachinesCommandExecuted(object p)
+        {
+            LockUpdate();
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = true;
+            }
+            UnlockUpdate();
+        }
+        private static bool CanShowAllMachinesCommandExecute(object p) => true;
         #endregion
 
         #region DeletePart
         public ICommand DeletePartCommand { get; }
         private void OnDeletePartCommandExecuted(object p)
         {
-            if (p is Part part && part == SelectedPart 
-                && MessageBox.Show($"Удалить деталь: {part.PartName}?\nДанное действие невозможно отменить.", "Удаление информации", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes) 
+            if (p is Part part && part == SelectedPart
+                && MessageBox.Show($"Удалить деталь: {part.PartName}?\nДанное действие невозможно отменить.", "Удаление информации", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
             {
                 switch (Database.DeletePart(part))
                 {
@@ -651,6 +710,23 @@ namespace remeLog.ViewModels
         private static bool CanChangeCompactViewCommandExecute(object p) => true;
         #endregion
 
+        #region ChangeShowUnchecked
+        public ICommand ChangeShowUncheckedCommand { get; }
+        private void OnChangeShowUncheckedCommandExecuted(object p) 
+        {
+            ViewUnchecked = !ViewUnchecked;
+            if (ViewUnchecked)
+            {
+                EngineerCommentFilter = "ожидание";
+            }
+            else
+            {
+                EngineerCommentFilter = "";
+            }
+        }
+        private static bool CanChangeShowUncheckedCommandExecute(object p) => true;
+        #endregion
+
         #region ChangeCalcFixed
         public ICommand ChangeCalcFixedCommand { get; }
         private void OnChangeCalcFixedCommandExecuted(object p)
@@ -663,6 +739,23 @@ namespace remeLog.ViewModels
 
         #region OpenDailyReportWindow
         public ICommand OpenDailyReportWindowCommand { get; }
+
+        public string Error => throw new NotImplementedException();
+
+        public string this[string columnName] {
+            get
+            {
+                switch (columnName)
+                {
+                    case nameof(FinishedCountFilter) when !TryParseComparison(FinishedCountFilter, out _, out _) && !string.IsNullOrWhiteSpace(FinishedCountFilter):
+                        return "Неверно указан фильтр по количеству изготовленных деталей.";
+
+                    default:
+                        return null!;
+                }
+            }
+        }
+
         private void OnOpenDailyReportWindowCommandExecuted(object p)
         {
             if (FromDate != ToDate)
@@ -705,9 +798,12 @@ namespace remeLog.ViewModels
                 MessageBox.Show("Для составления суточного отчета не должно быть фильтра по установке.", "Лишние фильтры.", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (Parts.Any(x => !string.IsNullOrEmpty(x.Error))
-                && MessageBox.Show("Не всё заполнено корректно, все равно создать отчёт за смену?", "Подтверждение.",
-                MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel) return;
+            if (Parts.Any(x => !string.IsNullOrEmpty(x.Error)))
+            {
+                MessageBox.Show("Не всё заполнено корректно", "Подтверждение.",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             using (Overlay = new())
             {
@@ -720,6 +816,7 @@ namespace remeLog.ViewModels
 
         private async Task<bool> LoadPartsAsync()
         {
+            if (lockUpdate) return false;
             return await Task.Run(() =>
             {
                 try
@@ -727,12 +824,14 @@ namespace remeLog.ViewModels
                     lock (lockObject)
                     {
                         InProgress = true;
+                        var isValidFinishedCountFilter = TryParseComparison(FinishedCountFilter, out string finishedCountOperator, out int finishedCountValue);
                         var conditions = $"ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
                             $"{(ShiftFilter is { Type: ShiftType.All } ? "" : $"AND Shift = '{ShiftFilter.FilterText}'")}" +
                             $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '%{OperatorFilter}%'")}" +
                             $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '%{PartNameFilter}%'")}" +
                             $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '%{OrderFilter}%'")}" +
-                            $"{(FinishedCountFilter == null ? "" : $"AND FinishedCount >= {FinishedCountFilter}")}" +
+                            $"{(string.IsNullOrEmpty(EngineerCommentFilter) ? "" : $"AND EngineerComment LIKE '%{EngineerCommentFilter}%'")}" +
+                            $"{(!isValidFinishedCountFilter ? "" : $"AND FinishedCount {finishedCountOperator} {finishedCountValue}")}" +
                             $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")}";
 
                         foreach (var machineFilter in MachineFilters)
@@ -768,6 +867,47 @@ namespace remeLog.ViewModels
                 && MessageBox.Show("Есть незаписанные изменения. При продолжении они будут утеряны.", "Обновить список деталей?",
                 MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel) return false;
             return true;
+        }
+
+        public static bool TryParseComparison(string input, out string comparisonOperator, out int comparisonValue)
+        {
+            comparisonOperator = null!;
+            comparisonValue = 0;
+
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+
+            if (int.TryParse(input, out int res))
+            {
+                comparisonOperator = "=";
+                comparisonValue = res;
+                return true;
+            }
+
+            foreach (string op in supportedComparisonOperators)
+            {
+                if (input.Contains(op))
+                {
+                    comparisonOperator = op;
+                    string[] parts = input.Split(new[] { op }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length != 1)
+                        return false;
+
+                    if (!int.TryParse(parts[0].Trim(), out comparisonValue))
+                        return false;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void LockUpdate() => lockUpdate = true;
+
+        private void UnlockUpdate()
+        {
+            lockUpdate = false;
+            _ = LoadPartsAsync();
         }
     }
 }

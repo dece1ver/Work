@@ -35,6 +35,7 @@ namespace remeLog.ViewModels
     internal class MainWindowViewModel : ViewModel, IOverlay
     {
         private readonly object lockObject = new();
+        private bool lockUpdate = false;
 
         public MainWindowViewModel()
         {
@@ -230,9 +231,10 @@ namespace remeLog.ViewModels
         public ICommand IncreaseDateCommand { get; }
         private void OnIncreaseDateCommandExecuted(object p)
         {
-
+            LockUpdate();
             FromDate = FromDate.AddDays(1);
             ToDate = ToDate.AddDays(1);
+            UnlockUpdate();
         }
         private bool CanIncreaseDateCommandExecute(object p) => true;
         #endregion
@@ -241,9 +243,10 @@ namespace remeLog.ViewModels
         public ICommand DecreaseDateCommand { get; }
         private void OnDecreaseDateCommandExecuted(object p)
         {
-
+            LockUpdate();
             FromDate = FromDate.AddDays(-1);
             ToDate = ToDate.AddDays(-1);
+            UnlockUpdate();
         }
         private bool CanDecreaseDateCommandExecute(object p) => true;
         #endregion
@@ -252,9 +255,10 @@ namespace remeLog.ViewModels
         public ICommand SetYesterdayDateCommand { get; }
         private void OnSetYesterdayDateCommandExecuted(object p)
         {
-
+            LockUpdate();
             FromDate = DateTime.Today.AddDays(-1);
             ToDate = FromDate;
+            UnlockUpdate();
         }
         private bool CanSetYesterdayDateCommandExecute(object p) => true;
         #endregion
@@ -263,7 +267,6 @@ namespace remeLog.ViewModels
         public ICommand SetWeekDateCommand { get; }
         private void OnSetWeekDateCommandExecuted(object p)
         {
-
             FromDate = ToDate.AddDays(-7);
         }
         private bool CanSetWeekDateCommandExecute(object p) => true;
@@ -273,7 +276,7 @@ namespace remeLog.ViewModels
 
         private async Task LoadPartsAsync()
         {
-            
+            if (lockUpdate) return;
             await Task.Run(() =>
             {
                 lock (lockObject)
@@ -396,6 +399,14 @@ namespace remeLog.ViewModels
                     ProgressBarVisibility = Visibility.Collapsed;
                 }
             });
+        }
+
+        private void LockUpdate() => lockUpdate = true;
+
+        private void UnlockUpdate()
+        {
+            lockUpdate = false;
+            _ = LoadPartsAsync();
         }
 
         private void BackgroundWorker()
