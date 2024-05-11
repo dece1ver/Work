@@ -10,7 +10,7 @@ namespace remeLog.Infrastructure.Extensions
 {
     public static class Part
     {
-        public static double AverageReplacementTimeRatio(this ICollection<Models.Part> parts)
+        public static double AverageReplacementTimeRatio(this IEnumerable<Models.Part> parts)
         {
             var validReplacementTimesRatios = parts.Where(p => p.PartReplacementTime != 0 && !double.IsNaN(p.PartReplacementTime) && !double.IsPositiveInfinity(p.PartReplacementTime)).Select(p => p.PartReplacementTime);
             return validReplacementTimesRatios.Any() ? validReplacementTimesRatios.Average() : 0.0;
@@ -21,7 +21,7 @@ namespace remeLog.Infrastructure.Extensions
             return validSetupRatios.Any() ? validSetupRatios.Average() : 0.0;
         }
 
-        public static double SetupRatio(this ICollection<Models.Part> parts)
+        public static double SetupRatio(this IEnumerable<Models.Part> parts)
         {
             double planSum = 0;
             double factSum = 0;
@@ -34,13 +34,13 @@ namespace remeLog.Infrastructure.Extensions
             return factSum == 0 ? 0 : shlyapa / factSum;
         }
 
-        public static double AverageProductionRatio(this ICollection<Models.Part> parts)
+        public static double AverageProductionRatio(this IEnumerable<Models.Part> parts)
         {
             var validProductionRatios = parts.Where(p => p.ProductionRatio > 0 && !double.IsNaN(p.ProductionRatio) && !double.IsPositiveInfinity(p.ProductionRatio)).Select(p => p.ProductionRatio);
             return validProductionRatios.Any() ? validProductionRatios.Average() : 0.0;
         }
 
-        public static double ProductionRatio(this ICollection<Models.Part> parts)
+        public static double ProductionRatio(this IEnumerable<Models.Part> parts)
         {
             double planSum = 0;
             double factSum = 0;
@@ -60,7 +60,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double SpecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
+        public static double SpecifiedDowntimes(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
         {
             double sum = 0;
             var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
@@ -72,7 +72,7 @@ namespace remeLog.Infrastructure.Extensions
             return sum;
         }
 
-        public static double SpecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        public static double SpecifiedDowntimes(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
             double sum = 0;
             var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
@@ -92,7 +92,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double SpecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift) 
+        public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift) 
         {
             double sum = 0;
             var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
@@ -112,7 +112,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double SpecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
             double sum = 0;
             var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
@@ -132,7 +132,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double PartialSetupRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        public static double PartialSetupRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
             var sum = parts.Where(p => shiftType == ShiftType.All || p.Shift == new Shift(shiftType).Name)
                  .Sum(p => p.PartialSetupTime);
@@ -148,7 +148,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double PartialSetup(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType) 
+        public static double PartialSetup(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType) 
             => parts
             .Where(p => shiftType == ShiftType.All || p.Shift == new Shift(shiftType).Name)
             .Sum(p => p.PartialSetupTime);
@@ -161,7 +161,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double UnspecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
+        public static double UnspecifiedDowntimes(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
         {
             double sum = 0;
             var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
@@ -181,7 +181,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double UnspecifiedDowntimes(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        public static double UnspecifiedDowntimes(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
             double sum = 0;
             var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
@@ -201,7 +201,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double UnspecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
+        public static double UnspecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift)
         {
             double sum = 0;
             var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
@@ -221,7 +221,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double UnspecifiedDowntimesRatio(this ICollection<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        public static double UnspecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
             double sum = 0;
             var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
@@ -238,7 +238,7 @@ namespace remeLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="parts"></param>
         /// <returns></returns>
-        public static double SetupTimePlanForReport(this ICollection<Models.Part> parts)
+        public static double SetupTimePlanForReport(this IEnumerable<Models.Part> parts)
         {
             var sum = 0.0;
             Models.Part prevPart = null!;
@@ -247,7 +247,7 @@ namespace remeLog.Infrastructure.Extensions
                 foreach (var part in partsGroup.ToList())
                 {
                     var setupValue = prevPart != null ?
-                                    (prevPart.Setup == part.Setup && prevPart.Order == part.Order && prevPart.PartName == part.PartName && part.PartialSetupTime == 0 && part.SetupTimeFact == 0 ? 0 : part.SetupTimePlanForCalc) :
+                                    (prevPart.Setup == part.Setup && prevPart.Order == part.Order && prevPart.PartName == part.PartName ? 0 : part.SetupTimePlanForCalc) :
                                     (part.PartialSetupTime == 0 && part.SetupTimeFact == 0 ? 0 : part.SetupTimePlanForCalc);
 
                     if (setupValue == 0)

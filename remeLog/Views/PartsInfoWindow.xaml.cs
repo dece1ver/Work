@@ -208,7 +208,7 @@ namespace remeLog.Views
         {
             if (sender is DataGrid dataGrid && DataContext is PartsInfoWindowViewModel d)
             {
-                if (Keyboard.Modifiers == ModifierKeys.Shift)
+                if (Keyboard.Modifiers == ModifierKeys.Alt)
                 {
                     switch (e.Key)
                     {

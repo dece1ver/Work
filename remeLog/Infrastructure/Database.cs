@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.VariantTypes;
+﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
+using DocumentFormat.OpenXml.VariantTypes;
 using libeLog.Extensions;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
@@ -13,6 +14,7 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using static libeLog.Constants;
 using Part = remeLog.Models.Part;
 
 namespace remeLog.Infrastructure
@@ -537,6 +539,70 @@ namespace remeLog.Infrastructure
                         command.Parameters.AddWithValue("ShiftDate", shiftInfo.ShiftDate);
                         command.Parameters.AddWithValue("Shift", shiftInfo.Shift);
                         command.Parameters.AddWithValue("Machine", shiftInfo.Machine);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                shifts.Add(
+
+                                    new ShiftInfo(
+                                        reader.GetInt32(0),         // Id
+                                        reader.GetDateTime(1),      // ShiftDate
+                                        reader.GetString(2),        // Shift
+                                        reader.GetString(3),        // Machine
+                                        reader.GetString(4),        // Master
+                                        reader.GetDouble(5),        // UnspecifiedDowntimes
+                                        reader.GetString(6),        // DowntimesComment
+                                        reader.GetString(7),        // CommonComment
+                                        reader.GetBoolean(8))       // IsChecked
+                                    );
+                            }
+                        }
+                    }
+                }
+                return DbResult.Ok;
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
+        }
+
+        public static DbResult GetShiftsByPeriod(string[] machines, DateTime fromDate, DateTime toDate, out List<ShiftInfo> shifts)
+        {
+            shifts = new List<ShiftInfo>();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    connection.Open();
+                    //string machineNums = string.Join(", ", machines.Select((_, i) => $"@machine{i}"));
+                    string machinesNames = string.Join(", ", machines);
+
+                    string query = $"SELECT * FROM cnc_shifts WHERE ShiftDate BETWEEN @FromDate AND @ToDate AND Machine IN ({machinesNames})";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("FromDate", fromDate);
+                        command.Parameters.AddWithValue("ToDate", toDate);
+
+                        //for (int i = 0; i < machines.Length; i++)
+                        //{
+                        //    command.Parameters.AddWithValue($"machine{i}", machines[i]);
+                        //}
+
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
                             while (reader.Read())
