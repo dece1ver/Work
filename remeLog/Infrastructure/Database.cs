@@ -57,6 +57,23 @@ namespace remeLog.Infrastructure
             return parts;
         }
 
+        public static ObservableCollection<Part> ReadPartsByPartNameAndOrder(string[] partNames, string[] orders)
+        {
+            ObservableCollection<Part> parts = new();
+            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            {
+                connection.Open();
+
+                string query = "SELECT * FROM Parts WHERE PartName IN ('" + string.Join("','", partNames) + "') AND [Order] IN ('" + string.Join("','", orders) + "')";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    parts.FillParts(command);
+                }
+            }
+            return parts;
+        }
+
+
         public static DbResult UpdatePart(this Part part)
         {
             try

@@ -1,10 +1,12 @@
 ﻿using ClosedXML.Excel;
+using libeLog;
 using libeLog.Infrastructure;
 using remeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -45,6 +47,7 @@ namespace remeLog.Infrastructure
             return "";
         }
 
-        
+        public static int GetWorkDaysBeetween(DateTime start, DateTime end) 
+            => (int)(end - start).TotalDays + 1 - Constants.Dates.Holidays.Count(d => d >= start && d <= end);
     }
 }

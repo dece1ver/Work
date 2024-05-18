@@ -623,7 +623,7 @@
 
                             <CheckBox Grid.Row="0" Grid.Column="2" Margin="2 -1 0 0" Content="Вычесть перерывы" IsChecked="{Binding DescreaseTimes}"/>
                             <TextBox Grid.Row="1" Grid.Column="2" Margin="3 -1 5 0" Height="17" Width="80" HorizontalAlignment="Left" Style="{StaticResource ClearableTextBox}"
-                                     Text="{Binding AdditionalDescreaseValue, UpdateSourceTrigger=Default, TargetNullValue={x:Static sys:String.Empty},
+                                     Text="{Binding AdditionalDescreaseValue, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Static sys:String.Empty},
                                             Converter={StaticResource ExpressionToIntConverter}}"/>
 
                         </Grid>
@@ -820,19 +820,19 @@
                     <MenuItem Command="{Binding OperatorReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
                               ToolTip="Экспорт отчёта по операторам" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Операторы"/>
+                            <TextBlock Text="Отчёт по операторам"/>
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem Command="{Binding ExportReportToExcelCommand}" Icon="{StaticResource CalendarIcon}"
                               ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Экспорт отчёта за период"/>
+                            <TextBlock Text="Отчёт за период"/>
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem Command="{Binding ExportToExcelCommand}" Icon="{StaticResource ExcelWorksheetIcon}"
                               ToolTip="Экспорт текущей выборки" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Экспорт текущей выборки"/>
+                            <TextBlock Text="Текущая выборка"/>
                         </MenuItem.Header>
                     </MenuItem>
                 </MenuItem>

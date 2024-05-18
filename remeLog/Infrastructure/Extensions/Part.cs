@@ -15,7 +15,7 @@ namespace remeLog.Infrastructure.Extensions
             var validReplacementTimesRatios = parts.Where(p => p.PartReplacementTime != 0 && !double.IsNaN(p.PartReplacementTime) && !double.IsPositiveInfinity(p.PartReplacementTime)).Select(p => p.PartReplacementTime);
             return validReplacementTimesRatios.Any() ? validReplacementTimesRatios.Average() : 0.0;
         }
-        public static double AverageSetupRatio(this ICollection<Models.Part> parts)
+        public static double AverageSetupRatio(this IEnumerable<Models.Part> parts)
         {
             var validSetupRatios = parts.Where(p => p.SetupRatio > 0 && !double.IsNaN(p.SetupRatio) && !double.IsPositiveInfinity(p.SetupRatio)).Select(p => p.SetupRatio);
             return validSetupRatios.Any() ? validSetupRatios.Average() : 0.0;
@@ -23,15 +23,14 @@ namespace remeLog.Infrastructure.Extensions
 
         public static double SetupRatio(this IEnumerable<Models.Part> parts)
         {
-            double planSum = 0;
             double factSum = 0;
             foreach (var part in parts)
             {
-                factSum += part.SetupTimeFact + part.PartialSetupTime;
-                planSum += part.SetupTimePlanForReport;
+                // убрать условие для учета без нормативов
+                if (part.SetupTimePlanForCalc != 0) factSum += part.SetupTimeFact + part.PartialSetupTime;
             }
-            var shlyapa = SetupTimePlanForReport(parts);
-            return factSum == 0 ? 0 : shlyapa / factSum;
+            var factPlanSum = SetupTimePlanForReport(parts);
+            return factSum == 0 ? 0 : factPlanSum / factSum;
         }
 
         public static double AverageProductionRatio(this IEnumerable<Models.Part> parts)
@@ -101,7 +100,7 @@ namespace remeLog.Infrastructure.Extensions
                 sum += part.SetupDowntimes + part.MachiningDowntimes;
             }
             var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
-            return sum / totalWorkMinutes;
+            return sum / parts.FullWorkedTime().TotalMinutes;
         }
 
         /// <summary>
@@ -110,7 +109,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="parts">Список изготовлений</param>
         /// <param name="fromDate">Начальная дата</param>
         /// <param name="toDate">Конечная дата</param>
-        /// <param name="shift">Фильтр по смене</param>
+        /// <param name="shiftType">Фильтр по смене</param>
         /// <returns></returns>
         public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
@@ -121,7 +120,43 @@ namespace remeLog.Infrastructure.Extensions
                 sum += part.SetupDowntimes + part.MachiningDowntimes;
             }
             var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
-            return sum / totalWorkMinutes;
+            return sum / parts.FullWorkedTime().TotalMinutes;
+        }
+
+        /// <summary>
+        /// Соотношение отмеченных простоев к общему времени смены
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="downtimeType">Фильтр по смене</param>
+        /// <returns></returns>
+        public static double SpecifiedDowntimeRatio(this IEnumerable<Models.Part> parts, Downtime downtimeType)
+        {
+            double sum = 0;
+            foreach (var part in parts)
+            {
+                switch (downtimeType)
+                {
+                    case Downtime.Maintenance:
+                        sum += part.MaintenanceTime;
+                        break;
+                    case Downtime.ToolSearching:
+                        sum += part.ToolSearchingTime;
+                        break;
+                    case Downtime.Mentoring:
+                        sum += part.MentoringTime;
+                        break;
+                    case Downtime.ContactingDepartments:
+                        sum += part.ContactingDepartmentsTime;
+                        break;
+                    case Downtime.FixtureMaking:
+                        sum += part.FixtureMakingTime;
+                        break;
+                    case Downtime.HardwareFailure:
+                        sum += part.HardwareFailureTime;
+                        break;
+                }
+            }
+            return sum / parts.FullWorkedTime().TotalMinutes;
         }
 
         /// <summary>
@@ -130,7 +165,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="parts">Список изготовлений</param>
         /// <param name="fromDate">Начальная дата</param>
         /// <param name="toDate">Конечная дата</param>
-        /// <param name="shift">Фильтр по смене</param>
+        /// <param name="shiftType">Фильтр по смене</param>
         /// <returns></returns>
         public static double PartialSetupRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
@@ -146,7 +181,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="parts">Список изготовлений</param>
         /// <param name="fromDate">Начальная дата</param>
         /// <param name="toDate">Конечная дата</param>
-        /// <param name="shift">Фильтр по смене</param>
+        /// <param name="shiftType">Фильтр по смене</param>
         /// <returns></returns>
         public static double PartialSetup(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType) 
             => parts
@@ -250,14 +285,25 @@ namespace remeLog.Infrastructure.Extensions
                                     (prevPart.Setup == part.Setup && prevPart.Order == part.Order && prevPart.PartName == part.PartName ? 0 : part.SetupTimePlanForCalc) :
                                     (part.PartialSetupTime == 0 && part.SetupTimeFact == 0 ? 0 : part.SetupTimePlanForCalc);
 
-                    if (setupValue == 0)
-                    {
-                        setupValue = part.SetupTimeFact + part.PartialSetupTime;
-                    }
+                    // раскоментировать для учета без нормативов
+                    //if (setupValue == 0 && part.SetupTimePlanForCalc == 0)
+                    //{
+                    //    setupValue = part.SetupTimeFact + part.PartialSetupTime;
+                    //}
 
                     sum += setupValue;
                     prevPart = part;
                 }
+            }
+            return sum;
+        }
+
+        public static TimeSpan FullWorkedTime(this IEnumerable<Models.Part> parts)
+        {
+            var sum = new TimeSpan();
+            foreach (var part in parts)
+            {
+                sum += part.EndMachiningTime - part.StartSetupTime;
             }
             return sum;
         }

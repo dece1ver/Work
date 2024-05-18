@@ -85,5 +85,13 @@ namespace libeLog
                 RontekHB1316
             };
         }
+
+        public static class Dates
+        {
+            public static readonly DateTime[] Holidays =
+            {
+                new DateTime(2024, 05, 09),
+            };
+        }
     }
 }

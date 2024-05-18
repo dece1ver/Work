@@ -408,6 +408,7 @@ namespace remeLog.ViewModels
         {
             get
             {
+                if (StartDateForCalc == TimeOnly.MinValue || EndDateForCalc == TimeOnly.MaxValue) return TimeSpan.Zero;
                 var breakfasts = DescreaseTimes ? TimeOnlys.GetBreaksBetween(StartDateForCalc, EndDateForCalc) : TimeSpan.Zero;
                 return EndDateForCalc - StartDateForCalc - breakfasts - new TimeSpan(0, AdditionalDescreaseValue ?? 0, 0);
             }
@@ -616,7 +617,7 @@ namespace remeLog.ViewModels
                 await Task.Run(() =>
                 {
                     InProgress = true;
-                    Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path);
+                    Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
                 }
                 );
 
@@ -646,7 +647,7 @@ namespace remeLog.ViewModels
                 await Task.Run(() =>
                 {
                     InProgress = true;
-                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, path);
+                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
                 });
             }
             catch (Exception ex)
