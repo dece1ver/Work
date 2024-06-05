@@ -128,6 +128,8 @@ namespace remeLog.Models
             }
         }
 
+        public double ShiftsRatio => (double)WorkedShifts / TotalShifts * 100;
+
         public bool IsSingleShift => FromDate == ToDate;
         public int Orders => Parts.GroupBy(p => p.Order).Count();
         public int AllFinishedCount => Parts.Sum(p => p.FinishedCount);

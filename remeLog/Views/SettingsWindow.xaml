@@ -57,23 +57,23 @@
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" 
+            <!--<TextBlock Grid.Row="0" Grid.Column="0" 
                        Text="Источник данных" Style="{StaticResource settingLabel}" />
 
             <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="0 0 31 0" Padding="5"
-                      ItemsSource="{Binding DataSourceTypes}" SelectedItem="{Binding DataSource}" DisplayMemberPath="Name"/>
+                      ItemsSource="{Binding DataSourceTypes}" SelectedItem="{Binding DataSource}" DisplayMemberPath="Name"/>-->
 
             <TextBlock Grid.Row="1" Grid.Column="0" 
-                       Text="Таблица" Style="{StaticResource settingLabel}" />
-            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SourcePath.Value}" 
-                     d:Text="C:\ProgramData\dece1ver\remeLog\2023.xlsm"/>
+                       Text="Разряды" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding QualificationSourcePath.Value}" 
+                     d:Text="C:\ProgramData\dece1ver\remeLog\разряды.xlsm"/>
             <DockPanel Grid.Row="1" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding SourcePath.Tip, UpdateSourceTrigger=PropertyChanged}"
-                       Content="{Binding SourcePath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
-                <Button Content="Обзор..." Command="{Binding SetSourceTableCommand}"/>
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding QualificationSourcePath.Tip, UpdateSourceTrigger=PropertyChanged}"
+                       Content="{Binding QualificationSourcePath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Обзор..." Command="{Binding SetQualificationSourceTableCommand}"/>
             </DockPanel>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" 
+            <!--<TextBlock Grid.Row="2" Grid.Column="0" 
                        Text="Файл отчётов" Style="{StaticResource settingLabel}" />
             <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ReportsPath.Value}" 
                      d:Text="C:\ProgramData\dece1ver\remeLog\reports.xlsx"/>
@@ -81,7 +81,7 @@
                 <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding ReportsPath.Tip, UpdateSourceTrigger=PropertyChanged}"
                        Content="{Binding ReportsPath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Обзор..." Command="{Binding SetReportsTableCommand}"/>
-            </DockPanel>
+            </DockPanel>-->
 
             <TextBlock Grid.Row="3" Grid.Column="0" 
                        Text="Суточные отчёты" Style="{StaticResource settingLabel}" />

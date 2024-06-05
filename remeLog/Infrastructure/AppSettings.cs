@@ -55,8 +55,8 @@ namespace remeLog.Infrastructure
         /// <summary> Источник информации </summary>
         public DataSource DataSource { get; set; }
 
-        /// <summary> Путь к файлу занесения </summary>
-        public string? SourcePath { get; set; }
+        /// <summary> Путь к файлу с разрядами </summary>
+        public string? QualificationSourcePath { get; set; }
 
         /// <summary> Путь к файлу отчетов </summary>
         public string? ReportsPath { get; set; }
@@ -77,7 +77,7 @@ namespace remeLog.Infrastructure
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
             DataSource = new DataSource(DataSource.Types.Database);
             InstantUpdateOnMainWindow = false;
-            SourcePath = "";
+            QualificationSourcePath = "";
             ReportsPath = "";
             DailyReportsDir = "";
             ConnectionString = "";

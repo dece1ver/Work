@@ -150,7 +150,6 @@ namespace remeLog.ViewModels
             set => Set(ref _Machines, value);
         }
 
-
         private bool IsSingleShift => FromDate == ToDate;
 
 
@@ -175,7 +174,7 @@ namespace remeLog.ViewModels
                 if (settingsWindow.ShowDialog() == true && settingsWindow.DataContext is SettingsWindowViewModel settings)
                 {
                     AppSettings.Instance.DataSource = settings.DataSource;
-                    AppSettings.Instance.SourcePath = settings.SourcePath.Value;
+                    AppSettings.Instance.QualificationSourcePath = settings.QualificationSourcePath.Value;
                     AppSettings.Instance.ReportsPath = settings.ReportsPath.Value;
                     AppSettings.Instance.DailyReportsDir = settings.DailyReportsDir.Value;
                     AppSettings.Instance.ConnectionString = settings.ConnectionString.Value;

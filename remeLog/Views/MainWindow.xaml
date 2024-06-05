@@ -249,7 +249,7 @@
                                         <Grid Grid.Column="0" Visibility="{Binding IsSingleShift, Converter={StaticResource InvertedVisibilityConverter}}">
                                             
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="200"/>
+                                                <ColumnDefinition Width="250"/>
                                                 <ColumnDefinition Width="150"/>
                                                 <ColumnDefinition Width="250"/>
                                                 <ColumnDefinition Width="150"/>
@@ -259,14 +259,17 @@
                                                 <RowDefinition/>
                                             </Grid.RowDefinitions>
                                             <StackPanel Grid.Column="0" Margin="10 0 15 0">
-                                                <TextBlock >
-                                                    <TextBlock.Text>
-                                                        <MultiBinding StringFormat="Отработано смен: {0}/{1}">
-                                                            <Binding Path="WorkedShifts"/>
-                                                            <Binding Path="TotalShifts"/>
-                                                        </MultiBinding>
-                                                    </TextBlock.Text>
-                                                </TextBlock>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock >
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="Отработано смен: {0}/{1} ({2}%)">
+                                                                <Binding Path="WorkedShifts"/>
+                                                                <Binding Path="TotalShifts"/>
+                                                                <Binding Path="ShiftsRatio"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                </StackPanel>
                                                 <TextBlock >
                                                     <TextBlock.Text>
                                                         <MultiBinding StringFormat="М/Л: {0}. Деталей: {1}.">
@@ -275,6 +278,7 @@
                                                         </MultiBinding>
                                                     </TextBlock.Text>
                                                 </TextBlock>
+                                                
                                             </StackPanel>
                                             <StackPanel Grid.Column="1" >
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal">

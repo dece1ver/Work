@@ -28,13 +28,13 @@ namespace remeLog.ViewModels
     {
         public SettingsWindowViewModel()
         {
-            SetSourceTableCommand = new LambdaCommand(OnSetSourceTableCommandExecuted, CanSetSourceTableCommandExecute);
+            SetQualificationSourceTableCommand = new LambdaCommand(OnSetQualificationSourceTableCommandExecuted, CanSetQualificationSourceTableCommandExecute);
             SetReportsTableCommand = new LambdaCommand(OnSetReportsTableCommandExecuted, CanSetReportsTableCommandExecute);
             SetDailyReportsDirCommand = new LambdaCommand(OnSetDailyReportsDirCommandExecuted, CanSetDailyReportsDirCommandExecute);
             CheckConnectionStringCommand = new LambdaCommand(OnCheckConnectionStringCommandExecuted, CanCheckConnectionStringCommandExecute);
 
             _DataSource = AppSettings.Instance.DataSource;
-            _SourcePath = new SettingsItem(AppSettings.Instance.SourcePath ?? "");
+            _QualificationSourcePath = new SettingsItem(AppSettings.Instance.QualificationSourcePath ?? "");
             _ReportsPath = new SettingsItem(AppSettings.Instance.ReportsPath ?? "");
             _DailyReportsDir = new SettingsItem(AppSettings.Instance.DailyReportsDir ?? "");
             _ConnectionString = new SettingsItem(AppSettings.Instance.ConnectionString ?? "");
@@ -103,12 +103,12 @@ namespace remeLog.ViewModels
         }
 
 
-        private SettingsItem _SourcePath;
-        /// <summary> Путь к таблице </summary>
-        public SettingsItem SourcePath
+        private SettingsItem _QualificationSourcePath;
+        /// <summary> Путь к таблице с разрядами</summary>
+        public SettingsItem QualificationSourcePath
         {
-            get => _SourcePath;
-            set => Set(ref _SourcePath, value);
+            get => _QualificationSourcePath;
+            set => Set(ref _QualificationSourcePath, value);
         }
 
         private SettingsItem _ReportsPath;
@@ -149,20 +149,20 @@ namespace remeLog.ViewModels
 
         #region Команды
 
-        #region SetSourceTable
-        public ICommand SetSourceTableCommand { get; }
-        private void OnSetSourceTableCommandExecuted(object p)
+        #region SetQualificationSourceTable
+        public ICommand SetQualificationSourceTableCommand { get; }
+        private void OnSetQualificationSourceTableCommandExecuted(object p)
         {
             OpenFileDialog dlg = new()
             {
-                Filter = "Excel книга с макросами (*.xlsm)|*.xlsm",
-                DefaultExt = "xlsm"
+                Filter = "Книга Excel (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx"
             };
             if (dlg.ShowDialog() != true) return;
-            SourcePath.Value = dlg.FileName;
+            QualificationSourcePath.Value = dlg.FileName;
             _ = CheckSourceAsync();
         }
-        private static bool CanSetSourceTableCommandExecute(object p) => true;
+        private static bool CanSetQualificationSourceTableCommandExecute(object p) => true;
         #endregion
 
         #region SetReportsTable
@@ -210,16 +210,16 @@ namespace remeLog.ViewModels
         {
             await Task.Run(() =>
             {
-                SourcePath.Status = Status.Sync;
-                SourcePath.Tip = Constants.StatusTips.Checking;
-                if (File.Exists(SourcePath.Value))
+                QualificationSourcePath.Status = Status.Sync;
+                QualificationSourcePath.Tip = Constants.StatusTips.Checking;
+                if (File.Exists(QualificationSourcePath.Value))
                 {
-                    SourcePath.Status = Status.Ok;
-                    SourcePath.Tip = Constants.StatusTips.Ok;
+                    QualificationSourcePath.Status = Status.Ok;
+                    QualificationSourcePath.Tip = Constants.StatusTips.Ok;
                     return;
                 }
-                SourcePath.Status = Status.Error;
-                SourcePath.Tip = Constants.StatusTips.NoFile;
+                QualificationSourcePath.Status = Status.Error;
+                QualificationSourcePath.Tip = Constants.StatusTips.NoFile;
             });
         }
 

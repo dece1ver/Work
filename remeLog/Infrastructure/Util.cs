@@ -27,7 +27,7 @@ namespace remeLog.Infrastructure
         /// <returns></returns>
         private static string GetCopyDir()
         {
-            if (Directory.Exists(AppSettings.Instance.SourcePath) && Directory.GetParent(AppSettings.Instance.SourcePath) is { Parent: not null } parent)
+            if (Directory.Exists(AppSettings.Instance.QualificationSourcePath) && Directory.GetParent(AppSettings.Instance.QualificationSourcePath) is { Parent: not null } parent)
             {
                 return parent.FullName;
             }

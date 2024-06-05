@@ -15,55 +15,6 @@ namespace remeLog.Infrastructure
 {
     public static class Xl
     {
-        public static ICollection<Models.Part> ReadParts()
-        {
-            List<Part> parts = new List<Part>();
-            if (!Directory.Exists(AppSettings.Instance.SourcePath)) { return parts; }
-
-            using (var fs = new FileStream(AppSettings.Instance.SourcePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-            {
-                var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
-
-                foreach (var xlRow in wb.Worksheet(1).Rows().Skip(1))
-                {
-                    if (!xlRow.Cell(1).Value.IsNumber) break;
-                    parts.Add(new Part(
-                        Guid.Parse(xlRow.Cell(36).Value.GetText()),
-                        xlRow.Cell(7).Value.GetText(),
-                        xlRow.Cell(6).Value.GetText(),
-                        xlRow.Cell(8).Value.GetDateTime(),
-                        xlRow.Cell(9).Value.GetText(),
-                        xlRow.Cell(10).Value.GetText(),
-                        xlRow.Cell(11).Value.GetText(),
-                        (int)xlRow.Cell(13).Value.GetNumber(),
-                        (int)xlRow.Cell(12).Value.GetNumber(),
-                        0,
-                        xlRow.Cell(14).Value.GetDateTime(),
-                        xlRow.Cell(15).Value.GetDateTime(),
-                        xlRow.Cell(16).Value.GetNumber(),
-                        xlRow.Cell(21).Value.GetDateTime(),
-                        xlRow.Cell(17).Value.GetNumber(),
-                        xlRow.Cell(44).Value.GetNumber(),
-                        xlRow.Cell(23).Value.GetNumber(),
-                        xlRow.Cell(22).Value.GetNumber(),
-                        TimeSpan.FromMinutes(xlRow.Cell(24).Value.GetNumber()),
-                        xlRow.Cell(34).Value.GetNumber(),
-                        xlRow.Cell(35).Value.GetNumber(),
-                        xlRow.Cell(37).Value.GetNumber(),
-                        xlRow.Cell(38).Value.GetNumber(),
-                        xlRow.Cell(39).Value.GetNumber(),
-                        xlRow.Cell(40).Value.GetNumber(),
-                        xlRow.Cell(41).Value.GetNumber(),
-                        xlRow.Cell(42).Value.GetNumber(),
-                        xlRow.Cell(43).Value.GetNumber(),
-                        xlRow.Cell(5).Value.GetText()
-                        ));
-                }
-            }
-
-            return parts;
-        }
-
         /// <summary>
         /// Отчёт за период
         /// </summary>
@@ -256,18 +207,23 @@ namespace remeLog.Infrastructure
             var ws = wb.AddWorksheet("Отчет по операторам");
 
             var operatorColId = 1;
-            var machineColId = 2;
-            var setupColId = 3;
-            var prodColId = 4;
-            var avrReplTimeColId = 5;
-            var maintenanceTimeColId = 6;
-            var toolSrchTimeColId = 7;
-            var mentoringTimeColId = 8;
-            var contactingDepartsTimeColId = 9;
-            var fixtMakingTimeColId = 10;
-            var hardwFailTimeColId = 11;
-            var specDowntimesColId = 12;
+            var qualificationColId = 2;
+            var machineColId = 3;
+            var setupColId = 4;
+            var prodColId = 5;
+            var avrReplTimeColId = 6;
+            var maintenanceTimeColId = 7;
+            var toolSrchTimeColId = 8;
+            var mentoringTimeColId = 9;
+            var contactingDepartsTimeColId = 10;
+            var fixtMakingTimeColId = 11;
+            var hardwFailTimeColId = 12;
+            var specDowntimesColId = 13;
+            var generalRatioColId = 14;
+            var cntSetupsColId = 15;
+            var cntProdsColId = 16;
             ws.Cell(2, operatorColId).Value = "Оператор";
+            ws.Cell(2, qualificationColId).Value = "Разряд";
             ws.Cell(2, machineColId).Value = "Станок";
             ws.Cell(2, setupColId).Value = "Наладка средняя";
             ws.Cell(2, prodColId).Value = "Изготовление";
@@ -279,21 +235,32 @@ namespace remeLog.Infrastructure
             ws.Cell(2, fixtMakingTimeColId).Value = "Оснастка";
             ws.Cell(2, hardwFailTimeColId).Value = "Отказ оборудования";
             ws.Cell(2, specDowntimesColId).Value = "Простои";
-            var lastCol = specDowntimesColId;
+            ws.Cell(2, generalRatioColId).Value = "Общая выработка";
+            ws.Cell(2, cntSetupsColId).Value = "Количество наладок";
+            ws.Cell(2, cntProdsColId).Value = "Количество изготовлений";
+            var lastCol = cntProdsColId;
             var headerRange = ws.Range(2, operatorColId, 2, lastCol);
             headerRange.Style.Font.FontName = "Segoe UI Semibold";
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             headerRange.Style.Alignment.TextRotation = 90;
             var row = 3;
-            foreach (var partGroup in parts.Where(p => p.FinishedCountFact >= underOverBorder).GroupBy(p => p.Operator).OrderBy(pg => pg.Key))
+            foreach (var partGroup in parts.Where(p => p.FinishedCountFact >= underOverBorder)
+                .GroupBy(p => new { p.Operator, p.Machine })
+                .OrderBy(g => g.Key.Machine)
+                .ThenBy(g => g.Key.Operator))
             {
+                if (partGroup.Key.Operator == "Ученик") continue;
                 parts = partGroup.ToList();
-                ws.Cell(row, operatorColId).Value = partGroup.Key;
+                ws.Cell(row, operatorColId).Value = partGroup.Key.Operator;
+                var qualification = partGroup.Key.Operator.GetOperatorQualification();
+                ws.Cell(row, qualificationColId).Value = int.TryParse(qualification, out int qualificationNumber) ? qualificationNumber : qualification;
                 ws.Cell(row, machineColId).Value = parts.First().Machine;
-                ws.Cell(row, setupColId).Value = parts.AverageSetupRatio();
+                var averageSetupRatio = parts.AverageSetupRatio();
+                ws.Cell(row, setupColId).Value = averageSetupRatio;
                 ws.Cell(row, setupColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, prodColId).Value = parts.ProductionRatio();
+                var productionRatio = parts.ProductionRatio();
+                ws.Cell(row, prodColId).Value = productionRatio;
                 ws.Cell(row, prodColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
                 ws.Cell(row, avrReplTimeColId).Value = parts.AverageReplacementTimeRatio();
                 ws.Cell(row, avrReplTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
@@ -309,19 +276,27 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, fixtMakingTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
                 ws.Cell(row, hardwFailTimeColId).Value = parts.Sum(p => p.HardwareFailureTime);
                 ws.Cell(row, hardwFailTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, specDowntimesColId).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, Types.ShiftType.All);
+                ws.Cell(row, specDowntimesColId).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
                 ws.Cell(row, specDowntimesColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, generalRatioColId).Value = (averageSetupRatio != 0 && productionRatio != 0)
+                    ? (averageSetupRatio + productionRatio) / 2
+                    : (averageSetupRatio != 0 ? averageSetupRatio : productionRatio);
+                ws.Cell(row, generalRatioColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, cntSetupsColId).Value = parts.Count(p => p.SetupRatio is not (0 or double.NaN or double.NegativeInfinity or double.PositiveInfinity));
+                ws.Cell(row, cntProdsColId).Value = parts.Count(p => p.ProductionRatio != 0);
                 row++;
             }
             ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
             ws.Columns().AdjustToContents();
+            ws.Column(qualificationColId).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Column(qualificationColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Columns(5, 11).Group(true);
-            ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
+            ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)} (изготовление от {underOverBorder} шт.)";
             ws.Range(1, operatorColId, 1, lastCol).Merge();
             ws.Range(1, operatorColId, 1, 1).Style.Font.FontSize = 16;
-            ws.Columns(3, lastCol).Width = 8;
+            ws.Columns(setupColId, lastCol).Width = 8;
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) 
                 == MessageBoxResult.Yes) Process.Start( new ProcessStartInfo() { UseShellExecute = true, FileName = path});
@@ -480,6 +455,32 @@ namespace remeLog.Infrastructure
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
             return $"Файл сохранен в \"{path}\"";
+        }
+
+        public static string GetOperatorQualification(this string operatorName)
+        {
+            if (!File.Exists(AppSettings.Instance.QualificationSourcePath)) return "Н/Д";
+            try
+            {
+                using (var fs = new FileStream(AppSettings.Instance.QualificationSourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    var wb = new XLWorkbook(fs);
+                    foreach (var xlRow in wb.Worksheet(1).Rows().Skip(2))
+                    {
+                        if (xlRow.Cell(2).Value.IsText && xlRow.Cell(2).Value.GetText() == operatorName)
+                        {
+                            if (xlRow.Cell(4).Value.IsText) return xlRow.Cell(4).Value.GetText();
+                            else if (xlRow.Cell(4).Value.IsNumber) return xlRow.Cell(4).Value.GetNumber().ToString();
+                        }
+                    }
+                    return "Н/Д";
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return "Н/Д";
+            }
         }
     }
 }
