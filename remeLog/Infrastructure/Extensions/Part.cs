@@ -124,10 +124,10 @@ namespace remeLog.Infrastructure.Extensions
         }
 
         /// <summary>
-        /// Соотношение отмеченных простоев к общему времени смены
+        /// Соотношение отмеченных простоев к общему времени
         /// </summary>
         /// <param name="parts">Список изготовлений</param>
-        /// <param name="downtimeType">Фильтр по смене</param>
+        /// <param name="downtimeType">Тип простоя</param>
         /// <returns></returns>
         public static double SpecifiedDowntimeRatio(this IEnumerable<Models.Part> parts, Downtime downtimeType)
         {
@@ -155,6 +155,33 @@ namespace remeLog.Infrastructure.Extensions
                         sum += part.HardwareFailureTime;
                         break;
                 }
+            }
+            return sum / parts.FullWorkedTime().TotalMinutes;
+        }
+
+        /// <summary>
+        /// Соотношение отмеченных простоев к общему времени
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="excludeDowntimeType">Тип простоя</param>
+        /// <returns></returns>
+        public static double SpecifiedDowntimesRatioExcluding(this IEnumerable<Models.Part> parts, Downtime excludeDowntimeType)
+        {
+            double sum = 0;
+            foreach (var part in parts)
+            {
+                if (excludeDowntimeType != Downtime.Maintenance)
+                    sum += part.MaintenanceTime;
+                if (excludeDowntimeType != Downtime.ToolSearching)
+                    sum += part.ToolSearchingTime;
+                if (excludeDowntimeType != Downtime.Mentoring)
+                    sum += part.MentoringTime;
+                if (excludeDowntimeType != Downtime.ContactingDepartments)
+                    sum += part.ContactingDepartmentsTime;
+                if (excludeDowntimeType != Downtime.FixtureMaking)
+                    sum += part.FixtureMakingTime;
+                if (excludeDowntimeType != Downtime.HardwareFailure)
+                    sum += part.HardwareFailureTime;
             }
             return sum / parts.FullWorkedTime().TotalMinutes;
         }

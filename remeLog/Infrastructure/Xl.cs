@@ -276,7 +276,7 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, fixtMakingTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
                 ws.Cell(row, hardwFailTimeColId).Value = parts.Sum(p => p.HardwareFailureTime);
                 ws.Cell(row, hardwFailTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, specDowntimesColId).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
+                ws.Cell(row, specDowntimesColId).Value = parts.SpecifiedDowntimesRatioExcluding(Downtime.HardwareFailure);
                 ws.Cell(row, specDowntimesColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
                 ws.Cell(row, generalRatioColId).Value = (averageSetupRatio != 0 && productionRatio != 0)
                     ? (averageSetupRatio + productionRatio) / 2

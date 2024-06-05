@@ -90,7 +90,7 @@ namespace libeLog
         {
             public static readonly DateTime[] Holidays =
             {
-                new DateTime(2024, 05, 09),
+                new(2024, 05, 09),
             };
         }
     }
