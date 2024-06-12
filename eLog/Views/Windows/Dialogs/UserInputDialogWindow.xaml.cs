@@ -3,16 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace eLog.Views.Windows.Dialogs
@@ -25,19 +16,24 @@ namespace eLog.Views.Windows.Dialogs
         public UserInputDialogWindow(string message)
         {
             InitializeComponent();
-            _Message = message;
+            Message = message;
         }
 
+        public static readonly DependencyProperty MessageProperty =
+            DependencyProperty.Register(
+                nameof(Message),
+                typeof(string),
+                typeof(UserInputDialogWindow),
+                new PropertyMetadata(default(string)));
 
-        private string _Message;
-        /// <summary> Описание </summary>
+        /// <summary>
+        /// Описание
+        /// </summary>
         public string Message
         {
-            get => _Message;
-            set => Set(ref _Message, value);
+            get => (string)GetValue(MessageProperty);
+            set => SetValue(MessageProperty, value);
         }
-
-
 
         private string? _UserInput;
         /// <summary> Описание </summary>

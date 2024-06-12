@@ -7,14 +7,14 @@
     <UseWPF>true</UseWPF>
     <Authors>dece1ver</Authors>
     <Description>Электронный журнал</Description>
-    <Copyright>dece1ver © 2023</Copyright>
+    <Copyright>dece1ver © 2024</Copyright>
     <RepositoryUrl>https://github.com/dece1ver/Work</RepositoryUrl>
     <PackageIcon>eLog.png</PackageIcon>
     <ApplicationIcon>Resources\eLog.ico</ApplicationIcon>
     <Version>$(VersionPrefix)</Version>
 	  <Deterministic>false</Deterministic>
-	  <AssemblyVersion>1.1.8</AssemblyVersion>
-	  <FileVersion>1.1.8</FileVersion>
+	  <AssemblyVersion>1.1.9</AssemblyVersion>
+	  <FileVersion>1.1.9</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

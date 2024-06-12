@@ -205,98 +205,152 @@ namespace remeLog.Infrastructure
             underOverBorder ??= 10;
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet("Отчет по операторам");
+            var workDays = Util.GetWorkDaysBeetween(fromDate, toDate);
+            var columns = new Dictionary<string, (int index, string header)>
+            {
+                { "operator", (1, "Оператор") },
+                { "qualification", (2, "Разряд") },
+                { "machine", (3, "Станок") },
+                { "setup", (4, "Наладка средняя") },
+                { "prod", (5, "Изготовление") },
+                { "avrReplTime", (6, $"Среднее{Environment.NewLine}время замены") },
+                { "maintenanceTime", (7, "Обслуживание") },
+                { "toolSrchTime", (8, "Инструмент") },
+                { "mentoringTime", (9, "Обучение") },
+                { "contactingDepartsTime", (10, "Другие службы") },
+                { "fixtMakingTime", (11, "Оснастка") },
+                { "hardwFailTime", (12, "Отказ оборудования") },
+                { "specDowntimes", (13, $"Простои") },
+                { "specDowntimesEx", (14, $"Простои{Environment.NewLine}(без отказа оборудования)") },
+                { "generalRatio", (15, "Общая выработка") },
+                { "cntSetups", (16, $"Количество{Environment.NewLine}наладок") },
+                { "cntProds", (17, $"Количество{Environment.NewLine}изготовлений") },
+                { "cntWorkedShifts", (18, "Отработано смен") },
+                { "coefficient", (19, "Коэффициент") }
+            };
 
-            var operatorColId = 1;
-            var qualificationColId = 2;
-            var machineColId = 3;
-            var setupColId = 4;
-            var prodColId = 5;
-            var avrReplTimeColId = 6;
-            var maintenanceTimeColId = 7;
-            var toolSrchTimeColId = 8;
-            var mentoringTimeColId = 9;
-            var contactingDepartsTimeColId = 10;
-            var fixtMakingTimeColId = 11;
-            var hardwFailTimeColId = 12;
-            var specDowntimesColId = 13;
-            var generalRatioColId = 14;
-            var cntSetupsColId = 15;
-            var cntProdsColId = 16;
-            ws.Cell(2, operatorColId).Value = "Оператор";
-            ws.Cell(2, qualificationColId).Value = "Разряд";
-            ws.Cell(2, machineColId).Value = "Станок";
-            ws.Cell(2, setupColId).Value = "Наладка средняя";
-            ws.Cell(2, prodColId).Value = "Изготовление";
-            ws.Cell(2, avrReplTimeColId).Value = "Среднее время замены";
-            ws.Cell(2, maintenanceTimeColId).Value = "Обслуживание";
-            ws.Cell(2, toolSrchTimeColId).Value = "Инструмент";
-            ws.Cell(2, mentoringTimeColId).Value = "Обучение";
-            ws.Cell(2, contactingDepartsTimeColId).Value = "Другие службы";
-            ws.Cell(2, fixtMakingTimeColId).Value = "Оснастка";
-            ws.Cell(2, hardwFailTimeColId).Value = "Отказ оборудования";
-            ws.Cell(2, specDowntimesColId).Value = "Простои";
-            ws.Cell(2, generalRatioColId).Value = "Общая выработка";
-            ws.Cell(2, cntSetupsColId).Value = "Количество наладок";
-            ws.Cell(2, cntProdsColId).Value = "Количество изготовлений";
-            var lastCol = cntProdsColId;
-            var headerRange = ws.Range(2, operatorColId, 2, lastCol);
+            double? Coefficient(int qualification, double specDowntimesEx, double generalRatio, int workedShifts)
+            {
+                return specDowntimesEx > 0.1 || workedShifts < workDays / 4 ? null :
+                    (qualification, generalRatio) switch
+                    {
+                        (1 or 2, > 1) => 1.2,
+                        (1 or 2, > 0.9) => 1.1,
+                        (3 or 4, > 1.05) => 1.2,
+                        (3 or 4, > 0.95) => 1.1,
+                        (5, > 1) => 1.1,
+                        _ => null
+                    };
+            }
+
+            foreach (var (index, header) in columns.Values)
+            {
+                ws.Cell(2, index).Value = header;
+            }
+            var lastCol = columns["coefficient"].index;
+            var headerRange = ws.Range(2, columns["operator"].index, 2, lastCol);
             headerRange.Style.Font.FontName = "Segoe UI Semibold";
+            headerRange.Style.Font.FontSize = 10;
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             headerRange.Style.Alignment.TextRotation = 90;
+            ws.Row(2).Height = 100;
             var row = 3;
             foreach (var partGroup in parts.Where(p => p.FinishedCountFact >= underOverBorder)
-                .GroupBy(p => new { p.Operator, p.Machine })
-                .OrderBy(g => g.Key.Machine)
-                .ThenBy(g => g.Key.Operator))
+                               .GroupBy(p => new { p.Operator, p.Machine })
+                               .OrderBy(g => g.Key.Machine)
+                               .ThenBy(g => g.Key.Operator))
             {
                 if (partGroup.Key.Operator == "Ученик") continue;
-                parts = partGroup.ToList();
-                ws.Cell(row, operatorColId).Value = partGroup.Key.Operator;
+                var filteredParts = partGroup.ToList();
+
+                ws.Cell(row, columns["operator"].index)
+                  .SetValue(partGroup.Key.Operator);
                 var qualification = partGroup.Key.Operator.GetOperatorQualification();
-                ws.Cell(row, qualificationColId).Value = int.TryParse(qualification, out int qualificationNumber) ? qualificationNumber : qualification;
-                ws.Cell(row, machineColId).Value = parts.First().Machine;
-                var averageSetupRatio = parts.AverageSetupRatio();
-                ws.Cell(row, setupColId).Value = averageSetupRatio;
-                ws.Cell(row, setupColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                var productionRatio = parts.ProductionRatio();
-                ws.Cell(row, prodColId).Value = productionRatio;
-                ws.Cell(row, prodColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, avrReplTimeColId).Value = parts.AverageReplacementTimeRatio();
-                ws.Cell(row, avrReplTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-                ws.Cell(row, maintenanceTimeColId).Value = parts.Sum(p => p.MaintenanceTime);
-                ws.Cell(row, maintenanceTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, toolSrchTimeColId).Value = parts.Sum(p => p.ToolSearchingTime);
-                ws.Cell(row, toolSrchTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, mentoringTimeColId).Value = parts.Sum(p => p.MentoringTime);
-                ws.Cell(row, mentoringTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, contactingDepartsTimeColId).Value = parts.Sum(p => p.ContactingDepartmentsTime);
-                ws.Cell(row, contactingDepartsTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, fixtMakingTimeColId).Value = parts.Sum(p => p.FixtureMakingTime);
-                ws.Cell(row, fixtMakingTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, hardwFailTimeColId).Value = parts.Sum(p => p.HardwareFailureTime);
-                ws.Cell(row, hardwFailTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-                ws.Cell(row, specDowntimesColId).Value = parts.SpecifiedDowntimesRatioExcluding(Downtime.HardwareFailure);
-                ws.Cell(row, specDowntimesColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, generalRatioColId).Value = (averageSetupRatio != 0 && productionRatio != 0)
+                var validQualification = int.TryParse(qualification, out int qualificationNumber);
+                ws.Cell(row, columns["qualification"].index)
+                  .SetValue(validQualification ? qualificationNumber : qualification);
+                ws.Cell(row, columns["machine"].index)
+                  .SetValue(filteredParts.First().Machine);
+
+                var averageSetupRatio = filteredParts.AverageSetupRatio();
+                ws.Cell(row, columns["setup"].index)
+                  .SetValue(averageSetupRatio)
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                var productionRatio = filteredParts.ProductionRatio();
+                ws.Cell(row, columns["prod"].index)
+                  .SetValue(productionRatio)
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                ws.Cell(row, columns["avrReplTime"].index)
+                  .SetValue(filteredParts.AverageReplacementTimeRatio())
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+
+                ws.Cell(row, columns["maintenanceTime"].index)
+                  .SetValue(filteredParts.Sum(p => p.MaintenanceTime));
+
+                ws.Cell(row, columns["toolSrchTime"].index)
+                  .SetValue(filteredParts.Sum(p => p.ToolSearchingTime));
+
+                ws.Cell(row, columns["mentoringTime"].index)
+                  .SetValue(filteredParts.Sum(p => p.MentoringTime));
+
+                ws.Cell(row, columns["contactingDepartsTime"].index)
+                  .SetValue(filteredParts.Sum(p => p.ContactingDepartmentsTime));
+
+                ws.Cell(row, columns["fixtMakingTime"].index)
+                  .SetValue(filteredParts.Sum(p => p.FixtureMakingTime));
+
+                ws.Cell(row, columns["hardwFailTime"].index)
+                  .SetValue(filteredParts.Sum(p => p.HardwareFailureTime));
+
+                ws.Cell(row, columns["specDowntimes"].index)
+                  .SetValue(filteredParts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All))
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                var specDowntimesEx = filteredParts.SpecifiedDowntimesRatioExcluding(Downtime.HardwareFailure);
+                ws.Cell(row, columns["specDowntimesEx"].index)
+                  .SetValue(specDowntimesEx)
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                var generalRatio = (averageSetupRatio != 0 && productionRatio != 0)
                     ? (averageSetupRatio + productionRatio) / 2
                     : (averageSetupRatio != 0 ? averageSetupRatio : productionRatio);
-                ws.Cell(row, generalRatioColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, cntSetupsColId).Value = parts.Count(p => p.SetupRatio is not (0 or double.NaN or double.NegativeInfinity or double.PositiveInfinity));
-                ws.Cell(row, cntProdsColId).Value = parts.Count(p => p.ProductionRatio != 0);
+
+                ws.Cell(row, columns["generalRatio"].index)
+                  .SetValue(generalRatio)
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                ws.Cell(row, columns["cntSetups"].index)
+                  .SetValue(filteredParts.Count(p => p.SetupRatio is not (0 or double.NaN or double.NegativeInfinity or double.PositiveInfinity)));
+
+                ws.Cell(row, columns["cntProds"].index)
+                  .SetValue(filteredParts.Count(p => p.ProductionRatio != 0));
+
+                var workedShifts = parts.Where(p => p.Operator == partGroup.Key.Operator && p.Machine == partGroup.Key.Machine)
+                                 .Select(p => p.ShiftDate)
+                                 .Distinct()
+                                 .Count();
+                ws.Cell(row, columns["cntWorkedShifts"].index)
+                  .SetValue(workedShifts);
+
+                if (validQualification)
+                    ws.Cell(row, columns["coefficient"].index).SetValue(Coefficient(qualificationNumber, specDowntimesEx, generalRatio, workedShifts));
+
                 row++;
             }
             ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
             ws.Columns().AdjustToContents();
-            ws.Column(qualificationColId).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Column(qualificationColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Columns(5, 11).Group(true);
+            ws.Column(columns["qualification"].index).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Column(columns["qualification"].index).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Columns(columns["maintenanceTime"].index, columns["specDowntimes"].index).Group(true);
             ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)} (изготовление от {underOverBorder} шт.)";
-            ws.Range(1, operatorColId, 1, lastCol).Merge();
-            ws.Range(1, operatorColId, 1, 1).Style.Font.FontSize = 16;
-            ws.Columns(setupColId, lastCol).Width = 8;
+            ws.Range(1, columns["operator"].index, 1, lastCol).Merge();
+            ws.Range(1, columns["operator"].index, 1, 1).Style.Font.FontSize = 14;
+            ws.Columns(columns["setup"].index, lastCol).Width = 7;
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) 
                 == MessageBoxResult.Yes) Process.Start( new ProcessStartInfo() { UseShellExecute = true, FileName = path});

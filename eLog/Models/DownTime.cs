@@ -14,7 +14,7 @@ namespace eLog.Models
     public class DownTime : INotifyPropertyChanged, IDataErrorInfo
     {
         [JsonConstructor]
-        public DownTime(Part part, Types type, DateTime startTime, DateTime endTime)
+        public DownTime(Part part, Types type, DateTime startTime, DateTime endTime, string comment = "")
         {
             _ParentPart = part;
             _Type = type;
@@ -22,9 +22,10 @@ namespace eLog.Models
             _StartTimeText = _StartTime.ToString(Constants.DateTimeFormat);
             _EndTime = endTime;
             _EndTimeText = _EndTime.ToString(Constants.DateTimeFormat);
+            _Comment = comment;
         }
 
-        public DownTime(Part part, Types type)
+        public DownTime(Part part, Types type, string comment = "")
         {
             _ParentPart = part;
             _Type = type;
@@ -33,6 +34,7 @@ namespace eLog.Models
             _StartTimeText = StartTime.ToString(Constants.DateTimeFormat);
             _EndTime = DateTime.MinValue;
             _EndTimeText = string.Empty;
+            _Comment = comment;
         }
 
         /// <summary>
@@ -49,6 +51,7 @@ namespace eLog.Models
             _StartTimeText = downTime.StartTimeText;
             _EndTime = downTime.EndTime;
             _EndTimeText = downTime.EndTimeText;
+            _Comment = downTime.Comment;
         }
 
         private Types _Type;
@@ -177,6 +180,16 @@ namespace eLog.Models
             }
         }
 
+
+        private string _Comment;
+        /// <summary> Комментарий к простою </summary>
+        public string Comment
+        {
+            get => _Comment;
+            set => Set(ref _Comment, value);
+        }
+
+
         /// <summary>
         /// Время простоя с учетом перерывов
         /// </summary>
@@ -233,7 +246,7 @@ namespace eLog.Models
                 }
                 Debug.WriteLine(error);
                 HasError = error != null;
-                return error;
+                return error!;
             }
         }
         [JsonIgnore] public string Error => null!;

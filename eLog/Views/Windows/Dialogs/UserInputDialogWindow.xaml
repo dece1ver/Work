@@ -6,11 +6,12 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
         xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands" 
+        xmlns:cntr="clr-namespace:eLog.Views.Controls" 
         mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource Self}}"
         FontSize="16"
         Title="Диалог" Height="300" Width="400">
     <DockPanel>
-        <TextBlock DockPanel.Dock="Top" Text="{Binding Message}" d:Text="Введите что-то:" Margin="10 5" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" d:Text="Введите что-то:" Margin="10 5" />
 
         <Grid DockPanel.Dock="Bottom">
             <Grid.ColumnDefinitions>
@@ -24,6 +25,9 @@
                     <cmd:CloseDialogCommand DialogResult="False"/>
                 </Button.Command>
             </Button>
+
+            <cntr:TabTipButton Grid.Column="1" Margin="10" Width="50"/>
+
             <Button Grid.Column="2" Height="40" Width="100" Content="{StaticResource ConfirmIcon}" Margin="10"
                     IsDefault="True" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:UserInputDialogWindow}}">
                 <Button.Command>
