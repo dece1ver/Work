@@ -15,6 +15,11 @@ namespace remeLog.Infrastructure
 {
     public static class Xl
     {
+        public enum ExportOperatorReportType
+        {
+            Under, Below
+        }
+
         /// <summary>
         /// Отчёт за период
         /// </summary>
@@ -200,7 +205,17 @@ namespace remeLog.Infrastructure
             return $"Файл сохранен в \"{path}\"";
         }
 
-        public static string ExportOperatorReport(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int? underOverBorder)
+        /// <summary>
+        /// Экспорт отчета по операторам
+        /// </summary>
+        /// <param name="parts">Отметки по которым будут производиться расчеты</param>
+        /// <param name="fromDate">Начальная дата</param>
+        /// <param name="toDate">Конечная дата</param>
+        /// <param name="path">Путь к формируемому файлу</param>
+        /// <param name="underOverBorder">Граничное значение отсечки результатов</param>
+        /// <param name="reportType">Тип расчета: Under = от underOverBorder, Below = до underOverBorder</param>
+        /// <returns>При удачном выполнении возвращает путь к записанному файлу</returns>
+        public static string ExportOperatorReport(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int? underOverBorder, ExportOperatorReportType reportType = ExportOperatorReportType.Under)
         {
             underOverBorder ??= 10;
             var wb = new XLWorkbook();
@@ -247,7 +262,7 @@ namespace remeLog.Infrastructure
             {
                 ws.Cell(2, index).Value = header;
             }
-            var lastCol = columns["coefficient"].index;
+            var lastCol = columns.Count;
             var headerRange = ws.Range(2, columns["operator"].index, 2, lastCol);
             headerRange.Style.Font.FontName = "Segoe UI Semibold";
             headerRange.Style.Font.FontSize = 10;
@@ -357,6 +372,53 @@ namespace remeLog.Infrastructure
             return $"Файл сохранен в \"{path}\"";
         }
 
+        public static string ExportPartsInfo(ICollection<Part> parts, string path)
+        {
+            var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Детали");
+            ws.Style.Font.FontSize = 10;
+            ws.Style.Alignment.WrapText = true;
+            ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            var columns = new Dictionary<string, (int index, string header)>
+            {
+                {"machine", (1, "Станок") },
+                {"part", (2, "Деталь") },
+                {"ordertCnt", (3, "Количество М/Л") },
+                {"partsCnt", (4, "Количество деталей") },
+                {"planSum", (5, "Общее время нормативов") },
+                {"planFact", (6, "Общее время фактическое") },
+            };
+            foreach (var (index, header) in columns.Values)
+            {
+                ws.Cell(1, index).Value = header;
+            }
+
+            var headerRange = ws.Range(1, 1, 1, columns.Count);
+            headerRange.Style.Alignment.TextRotation = 90;
+            headerRange.Style.Font.FontName = "Segoe UI Semibold";
+            ws.Row(1).Height = 100;
+
+            var row = 2;
+
+            foreach (var mg in parts.GroupBy(p => p.Machine))
+            {
+                ws.Cell(row, columns["machine"].index).Value = mg.Key;
+                foreach (var pg in mg.ToList().GroupBy(mg => mg.PartName))
+                {
+                    var p = pg.ToList();
+                    ws.Cell(row, columns["part"].index).Value = pg.Key;
+                    ws.Cell(row, columns["ordersCnt"].index).Value = pg.Select(p => p.Order).Distinct().Count();
+                    ws.Cell(row, columns["partsCnt"].index).Value = pg.Where(p => p.Setup == 1).Sum(p => p.FinishedCount);
+
+                }
+            }
+
+            throw new NotImplementedException();
+        }
+
+
         public static string ExportDataset(ICollection<Part> parts, string path)
         {
             var wb = new XLWorkbook();
@@ -366,149 +428,193 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            ws.Cell(1, 1).Value = "Дата";
-            ws.Column(1).Width = 7;
-            ws.Cell(1, 2).Value = "Смена";
-            ws.Column(2).Width = 4;
-            ws.Cell(1, 3).Value = "Оператор";
-            ws.Column(3).Width = 15;
-            ws.Cell(1, 4).Value = "Деталь";
-            ws.Column(4).Width = 25;
-            ws.Cell(1, 5).Value = "М/Л";
-            ws.Column(5).Width = 15;
-            ws.Cell(1, 6).Value = "Всего по М/Л";
-            ws.Column(6).Width = 4;
-            ws.Cell(1, 7).Value = "Выполнено";
-            ws.Column(7).Width = 4;
-            ws.Cell(1, 8).Value = "Установка";
-            ws.Column(8).Width = 4;
-            ws.Cell(1, 9).Value = "Начало наладки";
-            ws.Column(9).Width = 5;
-            ws.Cell(1, 10).Value = "Начало изготовления";
-            ws.Column(10).Width = 5;
-            ws.Cell(1, 11).Value = "Конец изготовления";
-            ws.Column(11).Width = 5;
-            ws.Cell(1, 12).Value = "Норматив наладки";
-            ws.Column(12).Width = 5;
-            ws.Cell(1, 13).Value = "Фактическая наладка";
-            ws.Column(13).Width = 5;
-            ws.Cell(1, 14).Value = "Норматив штучный";
-            ws.Column(14).Width = 5;
-            ws.Cell(1, 15).Value = "Машинное время";
-            ws.Column(15).Width = 8;
-            ws.Cell(1, 16).Value = "Штучное фактическое";
-            ws.Column(16).Width = 5;
-            ws.Cell(1, 17).Value = "Время замены";
-            ws.Column(17).Width = 5;
-            ws.Cell(1, 18).Value = "Фактическое изготовление";
-            ws.Column(18).Width = 5;
-            ws.Cell(1, 19).Value = "Норматив на партию";
-            ws.Column(19).Width = 5;
-            ws.Cell(1, 20).Value = "Комментарий оператора";
-            ws.Column(20).Width = 30;
-            ws.Cell(1, 21).Value = "Простои в наладке";
-            ws.Column(21).Width = 5;
-            ws.Cell(1, 22).Value = "Простои в изготовлении";
-            ws.Column(22).Width = 5;
-            ws.Cell(1, 23).Value = "Частичная наладка";
-            ws.Column(23).Width = 5;
-            ws.Cell(1, 24).Value = "Обслуживание";
-            ws.Column(24).Width = 5;
-            ws.Cell(1, 25).Value = "Поиск инструмента";
-            ws.Column(25).Width = 5;
-            ws.Cell(1, 26).Value = "Обучение";
-            ws.Column(26).Width = 5;
-            ws.Cell(1, 27).Value = "Другие службы";
-            ws.Column(27).Width = 5;
-            ws.Cell(1, 28).Value = "Изготовление оснастки";
-            ws.Column(28).Width = 5;
-            ws.Cell(1, 29).Value = "Отказ оборудования";
-            ws.Column(29).Width = 5;
-            ws.Cell(1, 30).Value = "Отмеченные простои";
-            ws.Column(30).Width = 5;
-            ws.Cell(1, 31).Value = "Комментарий к простоям";
-            ws.Column(31).Width = 5;
-            ws.Cell(1, 32).Value = "Наладка";
-            ws.Column(32).Width = 5;
-            ws.Cell(1, 33).Value = "Невыполнение норматива наладки";
-            ws.Column(33).Width = 16;
-            ws.Cell(1, 34).Value = "Изготовление";
-            ws.Column(34).Width = 5;
-            ws.Cell(1, 35).Value = "Невыполнение норматива изготовления";
-            ws.Column(35).Width = 15;
-            ws.Cell(1, 36).Value = "Комментарий мастера";
-            ws.Column(36).Width = 15;
-            ws.Cell(1, 37).Value = "Норматив наладки (И)";
-            ws.Column(37).Width = 4;
-            ws.Cell(1, 38).Value = "Норматив изготовления (И)";
-            ws.Column(38).Width = 4;
-            ws.Cell(1, 39).Value = "Комментарий техотдела";
-            ws.Column(39).Width = 15;
-            var headerRange = ws.Range(1, 1, 1, 39);
+            var columns = new Dictionary<string, (int index, string header)>
+            {
+                { "machine", (1, "Станок") },
+                { "date", (2, "Дата") },
+                { "shift", (3, "Смена") },
+                { "operator", (4, "Оператор") },
+                { "part", (5, "Деталь") },
+                { "order", (6, "М/Л") },
+                { "totalByOrder", (7, "Всего по М/Л") },
+                { "finished", (8, "Выполнено") },
+                { "setup", (9, "Установка") },
+                { "startSetupTime", (10, "Начало наладки") },
+                { "startMachiningTime", (11, $"Начало{Environment.NewLine}изготовления") },
+                { "endMachiningTime", (12, $"Конец{Environment.NewLine}изготовления") },
+                { "setupTimePlan", (13, $"Норматив{Environment.NewLine}наладки") },
+                { "setupTimeFact", (14, $"Фактическая{Environment.NewLine}наладка") },
+                { "singleProductionTimePlan", (15, $"Норматив{Environment.NewLine}штучный") },
+                { "machiningTime", (16, "Машинное время") },
+                { "singleProductionTime", (17, $"Штучное{Environment.NewLine}фактическое") },
+                { "partReplacementTime", (18, "Время замены") },
+                { "productionTimeFact", (19, $"Фактическое{Environment.NewLine}изготовление") },
+                { "planForBatch", (20, $"Норматив{Environment.NewLine}на партию") },
+                { "operatorComment", (21, $"Комментарий{Environment.NewLine}оператора") },
+                { "setupDowntimes", (22, $"Простои{Environment.NewLine}в наладке") },
+                { "machiningDowntimes", (23, $"Простои{Environment.NewLine}в изготовлении") },
+                { "partialSetupTime", (24, $"Частичная{Environment.NewLine}наладка") },
+                { "maintenanceTime", (25, "Обслуживание") },
+                { "toolSearchingTime", (26, $"Поиск{Environment.NewLine}инструмента") },
+                { "mentoringTime", (27, "Обучение") },
+                { "contactingDepartmentsTime", (28, "Другие службы") },
+                { "fixtureMakingTime", (29, $"Изготовление{Environment.NewLine}оснастки") },
+                { "hardwareFailureTime", (30, $"Отказ{Environment.NewLine}оборудования") },
+                { "specifiedDowntimesRatio", (31, $"Отмеченные{Environment.NewLine}простои") },
+                { "specifiedDowntimesComment", (32, $"Комментарий{Environment.NewLine}к простоям") },
+                { "setupRatioTitle", (33, "Наладка") },
+                { "masterSetupComment", (34, $"Невыполнение{Environment.NewLine}норматива{Environment.NewLine}наладки") },
+                { "productionRatioTitle", (35, "Изготовление") },
+                { "masterMachiningComment", (36, $"Невыполнение{Environment.NewLine}норматива{Environment.NewLine}изготовления") },
+                { "masterComment", (37, $"Комментарий{Environment.NewLine}мастера") },
+                { "fixedSetupTimePlan", (38, $"Норматив{Environment.NewLine}наладки (И)") },
+                { "fixedProductionTimePlan", (39, $"Норматив{Environment.NewLine}изготовления (И)") },
+                { "engineerComment", (40, $"Комментарий{Environment.NewLine}техотдела") }
+            };
+
+            foreach (var (index, header) in columns.Values)
+            {
+                ws.Cell(1, index).Value = header;
+            }
+
+            var headerRange = ws.Range(1, 1, 1, columns.Count);
             headerRange.Style.Alignment.TextRotation = 90;
             headerRange.Style.Font.FontName = "Segoe UI Semibold";
+            ws.Row(1).Height = 100;
+
             var row = 2;
             foreach (var part in parts)
             {
-                ws.Cell(row, 1).Value = part.ShiftDate;
-                ws.Cell(row, 1).Style.DateFormat.Format = "dd.mm.yy";
-                ws.Cell(row, 2).Value = part.Shift;
-                ws.Cell(row, 3).Value = part.Operator;
-                ws.Cell(row, 4).Value = part.PartName;
-                ws.Cell(row, 5).Value = part.Order;
-                ws.Cell(row, 6).Value = part.TotalCount;
-                ws.Cell(row, 7).Value = part.FinishedCount;
-                ws.Cell(row, 8).Value = part.Setup;
-                ws.Cell(row, 9).Value = part.StartSetupTime;
-                ws.Cell(row, 9).Style.DateFormat.Format = "hh:mm";
-                ws.Cell(row, 10).Value = part.StartMachiningTime;
-                ws.Cell(row, 10).Style.DateFormat.Format = "hh:mm";
-                ws.Cell(row, 11).Value = part.EndMachiningTime;
-                ws.Cell(row, 11).Style.DateFormat.Format = "hh:mm";
-                ws.Cell(row, 12).Value = part.SetupTimePlan;
-                ws.Cell(row, 13).Value = part.SetupTimeFact;
-                ws.Cell(row, 14).Value = part.SingleProductionTimePlan;
-                ws.Cell(row, 15).Value = part.MachiningTime;
-                if (part.SingleProductionTime is double spt && spt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity)) ws.Cell(row, 16).Value = spt;
-                ws.Cell(row, 16).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-                if (part.PartReplacementTime is double prt && prt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity)) ws.Cell(row, 17).Value = prt;
-                ws.Cell(row, 17).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-                ws.Cell(row, 18).Value = part.ProductionTimeFact;
-                ws.Cell(row, 19).Value = part.PlanForBatch;
-                ws.Cell(row, 20).Value = part.OperatorComment;
-                ws.Cell(row, 20).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                ws.Cell(row, 21).Value = part.SetupDowntimes;
-                ws.Cell(row, 22).Value = part.MachiningDowntimes;
-                ws.Cell(row, 23).Value = part.PartialSetupTime;
-                ws.Cell(row, 24).Value = part.MaintenanceTime;
-                ws.Cell(row, 25).Value = part.ToolSearchingTime;
-                ws.Cell(row, 26).Value = part.MentoringTime;
-                ws.Cell(row, 27).Value = part.ContactingDepartmentsTime;
-                ws.Cell(row, 28).Value = part.FixtureMakingTime;
-                ws.Cell(row, 29).Value = part.HardwareFailureTime;
-                ws.Cell(row, 30).Value = part.SpecifiedDowntimesRatio;
-                ws.Cell(row, 30).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, 31).Value = part.SpecifiedDowntimesComment;
-                ws.Cell(row, 32).Value = part.SetupRatioTitle;
-                ws.Cell(row, 33).Value = part.MasterSetupComment;
-                ws.Cell(row, 34).Value = part.ProductionRatioTitle;
-                ws.Cell(row, 35).Value = part.MasterMachiningComment;
-                ws.Cell(row, 36).Value = part.MasterComment;
-                ws.Cell(row, 37).Value = part.FixedSetupTimePlan;
-                ws.Cell(row, 38).Value = part.FixedProductionTimePlan;
-                ws.Cell(row, 39).Value = part.EngineerComment;
+                ws.Cell(row, columns["machine"].index).SetValue(part.Machine);
+
+                ws.Cell(row, columns["date"].index)
+                    .SetValue(part.ShiftDate)
+                    .Style.DateFormat.Format = "dd.MM.yy";
+
+                ws.Cell(row, columns["shift"].index).SetValue(part.Shift);
+
+                ws.Cell(row, columns["operator"].index).SetValue(part.Operator);
+
+                ws.Cell(row, columns["part"].index).SetValue(part.PartName);
+
+                ws.Cell(row, columns["order"].index).SetValue(part.Order);
+
+                ws.Cell(row, columns["totalByOrder"].index).SetValue(part.TotalCount);
+
+                ws.Cell(row, columns["finished"].index).SetValue(part.FinishedCount);
+
+                ws.Cell(row, columns["setup"].index).SetValue(part.Setup);
+
+                ws.Cell(row, columns["startSetupTime"].index)
+                    .SetValue(part.StartSetupTime)
+                    .Style.DateFormat.Format = "HH:mm";
+
+                ws.Cell(row, columns["startMachiningTime"].index)
+                    .SetValue(part.StartMachiningTime)
+                    .Style.DateFormat.Format = "HH:mm";
+
+                ws.Cell(row, columns["endMachiningTime"].index)
+                    .SetValue(part.EndMachiningTime)
+                    .Style.DateFormat.Format = "HH:mm";
+
+                ws.Cell(row, columns["setupTimePlan"].index).SetValue(part.SetupTimePlan);
+
+                ws.Cell(row, columns["setupTimeFact"].index).SetValue(part.SetupTimeFact);
+
+                ws.Cell(row, columns["singleProductionTimePlan"].index).SetValue(part.SingleProductionTimePlan);
+
+                ws.Cell(row, columns["machiningTime"].index).SetValue(part.MachiningTime);
+
+                if (part.SingleProductionTime is double spt && spt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
+                    ws.Cell(row, columns["singleProductionTime"].index)
+                        .SetValue(spt)
+                        .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+
+                if (part.PartReplacementTime is double prt && prt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
+                    ws.Cell(row, columns["partReplacementTime"].index)
+                        .SetValue(prt)
+                        .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+
+                ws.Cell(row, columns["productionTimeFact"].index).SetValue(part.ProductionTimeFact);
+
+                ws.Cell(row, columns["planForBatch"].index).SetValue(part.PlanForBatch);
+
+                ws.Cell(row, columns["operatorComment"].index)
+                    .SetValue(part.OperatorComment)
+                    .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                ws.Cell(row, columns["setupDowntimes"].index).SetValue(part.SetupDowntimes);
+
+                ws.Cell(row, columns["machiningDowntimes"].index).SetValue(part.MachiningDowntimes);
+
+                ws.Cell(row, columns["partialSetupTime"].index).SetValue(part.PartialSetupTime);
+
+                ws.Cell(row, columns["maintenanceTime"].index).SetValue(part.MaintenanceTime);
+
+                ws.Cell(row, columns["toolSearchingTime"].index).SetValue(part.ToolSearchingTime);
+
+                ws.Cell(row, columns["mentoringTime"].index).SetValue(part.MentoringTime);
+
+                ws.Cell(row, columns["contactingDepartmentsTime"].index).SetValue(part.ContactingDepartmentsTime);
+
+                ws.Cell(row, columns["fixtureMakingTime"].index).SetValue(part.FixtureMakingTime);
+
+                ws.Cell(row, columns["hardwareFailureTime"].index).SetValue(part.HardwareFailureTime);
+
+                if (part.SpecifiedDowntimesRatio is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
+                    ws.Cell(row, columns["specifiedDowntimesRatio"].index)
+                        .SetValue(part.SpecifiedDowntimesRatio)
+                        .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                ws.Cell(row, columns["specifiedDowntimesComment"].index).SetValue(part.SpecifiedDowntimesComment);
+
+                ws.Cell(row, columns["setupRatioTitle"].index).SetValue(part.SetupRatioTitle);
+
+                ws.Cell(row, columns["masterSetupComment"].index).SetValue(part.MasterSetupComment);
+
+                ws.Cell(row, columns["productionRatioTitle"].index).SetValue(part.ProductionRatioTitle);
+
+                ws.Cell(row, columns["masterMachiningComment"].index).SetValue(part.MasterMachiningComment);
+
+                ws.Cell(row, columns["masterComment"].index).SetValue(part.MasterComment);
+
+                ws.Cell(row, columns["fixedSetupTimePlan"].index).SetValue(part.FixedSetupTimePlan);
+
+                ws.Cell(row, columns["fixedProductionTimePlan"].index).SetValue(part.FixedProductionTimePlan);
+
+                ws.Cell(row, columns["engineerComment"].index).SetValue(part.EngineerComment);
+
                 row++;
             }
+
             ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().Style.Border.BottomBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
-            ws.Columns(24, 29).Group(true);
-            ws.Columns(18, 19).Group(true);
+            ws.Columns().AdjustToContents();
+
+            ws.Range(2, columns["machine"].index, row, columns["machine"].index)
+                .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            ws.Column(columns["operator"].index).Width = 15;
+
+            ws.Column(columns["part"].index).Width = 25;
+
+            ws.Range(2, columns["operatorComment"].index, row, columns["operatorComment"].index)
+                .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            ws.Column(columns["operatorComment"].index).Width = 35;
+
+            ws.Column(columns["masterSetupComment"].index).Width = 20;
+            ws.Column(columns["masterMachiningComment"].index).Width = 20;
+            ws.Column(columns["masterComment"].index).Width = 20;
+
+            ws.SheetView.FreezeRows(1);
+
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
-            return $"Файл сохранен в \"{path}\"";
+            return path;
         }
 
         public static string GetOperatorQualification(this string operatorName)

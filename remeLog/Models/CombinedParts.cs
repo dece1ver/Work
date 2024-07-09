@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using libeLog.Base;
+using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
 using System;
@@ -116,17 +117,10 @@ namespace remeLog.Models
             }
         }
 
-        public int TotalShifts => (int)(ToDate.AddDays(1) - FromDate).TotalDays * 2;
-        public int WorkedShifts
-        {
-            get
-            {
-                var partsByDates = Parts.Where(part => part.ShiftDate >= FromDate && part.ShiftDate <= ToDate)
+        public int TotalShifts => Util.GetWorkDaysBeetween(FromDate, ToDate) * 2;
+        public int WorkedShifts => Parts.Where(part => part.ShiftDate >= FromDate && part.ShiftDate <= ToDate)
                                         .Select(part => new { part.ShiftDate.Date, part.Shift })
-                                        .Distinct();
-                return partsByDates.Count();
-            }
-        }
+                                        .Distinct().Count();
 
         public double ShiftsRatio => (double)WorkedShifts / TotalShifts * 100;
 

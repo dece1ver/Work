@@ -1,4 +1,5 @@
-﻿using libeLog;
+﻿using FilterDataGrid;
+using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Models;
@@ -608,6 +609,7 @@ namespace remeLog.ViewModels
         {
             try
             {
+
                 var path = Util.GetXlsxPath();
                 if (string.IsNullOrEmpty(path))
                 {
@@ -618,9 +620,26 @@ namespace remeLog.ViewModels
                 {
                     InProgress = true;
                     Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
-                }
-                );
+                });
 
+
+                ////var dlg = new ExportOperatorReportDialogWindow();
+                ////if (dlg.ShowDialog() != true)
+                ////{
+                ////    Status = "Отмена";
+                ////    return;
+                ////}
+
+                //if (dlg.DataContext is ExportOperatorDailogWindowViewModel dx)
+                //{
+                //    var reportType = dx.Type switch
+                //    {
+                //        "От" => Xl.ExportOperatorReportType.Under,
+                //        "До" => Xl.ExportOperatorReportType.Below,
+                //        _ => throw new ArgumentException(),
+                //    };
+                    
+                //}
             }
             catch (Exception ex)
             {

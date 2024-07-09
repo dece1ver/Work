@@ -1,11 +1,7 @@
 ﻿using libeLog.Base;
 using libeLog.Extensions;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace remeLog.Models
 {
@@ -61,12 +57,10 @@ namespace remeLog.Models
             _TotalCount = totalCount;
             _StartSetupTime = startSetupTime;
             _StartMachiningTime = startMachiningTime;
-            //_SetupTimeFact = setupTimeFact;
             _EndMachiningTime = endMachiningTime;
             _SetupTimePlan = setupTimePlan;
             _SetupTimePlanForReport = setupTimePlanForReport;
             _SingleProductionTimePlan = singleProductionTimePlan;
-            //_ProductionTimeFact = productionTimeFact;
             _MachiningTime = machiningTime;
             _SetupDowntimes = setupDowntimes;
             _MachiningDowntimes = machiningDowntimes;
@@ -103,12 +97,10 @@ namespace remeLog.Models
             _TotalCount = part.TotalCount;
             _StartSetupTime = part.StartSetupTime;
             _StartMachiningTime = part.StartMachiningTime;
-            //_SetupTimeFact = part.SetupTimeFact;
             _EndMachiningTime = part.EndMachiningTime;
             _SetupTimePlan = part.SetupTimePlan;
             _SetupTimePlanForReport = part.SetupTimePlanForReport;
             _SingleProductionTimePlan = part.SingleProductionTimePlan;
-            //_ProductionTimeFact = part.ProductionTimeFact;
             _MachiningTime = part.MachiningTime;
             _SetupDowntimes = part.SetupDowntimes;
             _MachiningDowntimes = part.MachiningDowntimes;
@@ -299,7 +291,6 @@ namespace remeLog.Models
                 if (Set(ref _StartSetupTime, FixedDate(value)))
                 {
                     NeedUpdate = true;
-                    //SetupTimeFact = (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes;
                     OnPropertyChanged(nameof(SetupTimeFact));
                     OnPropertyChanged(nameof(ProductionTimeFact));
                     OnPropertyChanged(nameof(SetupRatio));
@@ -326,8 +317,6 @@ namespace remeLog.Models
                 if (Set(ref _StartMachiningTime, FixedDate(value)))
                 {
                     NeedUpdate = true;
-                    //SetupTimeFact = (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes;
-                    //ProductionTimeFact = (EndMachiningTime - StartMachiningTime - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)).TotalMinutes;
                     OnPropertyChanged(nameof(SetupTimeFact));
                     OnPropertyChanged(nameof(ProductionTimeFact));
                     OnPropertyChanged(nameof(SetupRatio));
@@ -344,28 +333,6 @@ namespace remeLog.Models
                 }
             }
         }
-
-        //private double _SetupTimeFact;
-        ///// <summary> Фактическое время наладки </summary>
-        //public double SetupTimeFact
-        //{
-        //    get => _SetupTimeFact;
-        //    set
-        //    {
-        //        if (Set(ref _SetupTimeFact, value))
-        //        {
-        //            NeedUpdate = true;
-        //            OnPropertyChanged(nameof(SetupRatio));
-        //            OnPropertyChanged(nameof(SetupRatioTitle));
-        //            OnPropertyChanged(nameof(ProductionRatio));
-        //            OnPropertyChanged(nameof(ProductionRatioTitle));
-        //            OnPropertyChanged(nameof(SingleProductionTime));
-        //            OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
-        //            OnPropertyChanged(nameof(NeedUpdate));
-        //        }
-
-        //    }
-        //}
 
         public double SetupTimeFact => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes - SetupDowntimes - PartialSetupTime;
         public double ProductionTimeFact => (EndMachiningTime - StartMachiningTime - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)).TotalMinutes - MachiningDowntimes;
@@ -465,28 +432,6 @@ namespace remeLog.Models
                 }
             }
         }
-
-
-        //private double _ProductionTimeFact;
-        ///// <summary> Фасктическое время изготовления </summary>
-        //public double ProductionTimeFact
-        //{
-        //    get => _ProductionTimeFact;
-        //    set {
-        //        if (Set(ref _ProductionTimeFact, value))
-        //        {
-        //            NeedUpdate = true;
-        //            OnPropertyChanged(nameof(SetupRatio));
-        //            OnPropertyChanged(nameof(SetupRatioTitle));
-        //            OnPropertyChanged(nameof(ProductionRatio));
-        //            OnPropertyChanged(nameof(ProductionRatioTitle));
-        //            OnPropertyChanged(nameof(SingleProductionTime));
-        //            OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
-        //            OnPropertyChanged(nameof(NeedUpdate));
-        //        }
-        //    }
-        //}
-
 
         private TimeSpan _MachiningTime;
         /// <summary> Машинное время </summary>

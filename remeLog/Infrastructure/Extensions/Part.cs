@@ -325,6 +325,11 @@ namespace remeLog.Infrastructure.Extensions
             return sum;
         }
 
+        /// <summary>
+        /// Сумма затраченного времени на детали от начала наладки до завершения изготовления.
+        /// </summary>
+        /// <param name="parts">Коллекция деталей</param>
+        /// <returns></returns>
         public static TimeSpan FullWorkedTime(this IEnumerable<Models.Part> parts)
         {
             var sum = new TimeSpan();
