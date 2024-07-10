@@ -376,7 +376,7 @@ namespace remeLog.Infrastructure
         {
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet("Детали");
-            ws.Style.Font.FontSize = 10;
+            ws.Style.Font.FontSize = 12;
             ws.Style.Alignment.WrapText = true;
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -385,10 +385,10 @@ namespace remeLog.Infrastructure
             {
                 {"machine", (1, "Станок") },
                 {"part", (2, "Деталь") },
-                {"ordertCnt", (3, "Количество М/Л") },
-                {"partsCnt", (4, "Количество деталей") },
-                {"planSum", (5, "Общее время нормативов") },
-                {"planFact", (6, "Общее время фактическое") },
+                {"ordersCnt", (3, "Количество М/Л") },
+                {"partsCnt", (4, $"Количество{Environment.NewLine}деталей") },
+                {"planSum", (5, $"Общее время{Environment.NewLine}нормативов") },
+                {"factSum", (6, $"Общее время{Environment.NewLine}фактическое") },
             };
             foreach (var (index, header) in columns.Values)
             {
@@ -404,18 +404,35 @@ namespace remeLog.Infrastructure
 
             foreach (var mg in parts.GroupBy(p => p.Machine))
             {
-                ws.Cell(row, columns["machine"].index).Value = mg.Key;
                 foreach (var pg in mg.ToList().GroupBy(mg => mg.PartName))
                 {
                     var p = pg.ToList();
+                    ws.Cell(row, columns["machine"].index).Value = mg.Key;
                     ws.Cell(row, columns["part"].index).Value = pg.Key;
-                    ws.Cell(row, columns["ordersCnt"].index).Value = pg.Select(p => p.Order).Distinct().Count();
-                    ws.Cell(row, columns["partsCnt"].index).Value = pg.Where(p => p.Setup == 1).Sum(p => p.FinishedCount);
-
+                    ws.Cell(row, columns["ordersCnt"].index).SetValue(pg.Select(p => p.Order).Distinct().Count());
+                    ws.Cell(row, columns["partsCnt"].index).SetValue(pg.Where(p => p.Setup == 1).Sum(p => p.FinishedCount));
+                    ws.Cell(row, columns["planSum"].index).SetValue(pg.Sum(p => p.PlanForBatch) + pg.SetupTimePlanForReport()); 
+                    ws.Cell(row, columns["factSum"].index).SetValue(pg.FullWorkedTime().TotalMinutes); 
+                    row++;
                 }
+
             }
 
-            throw new NotImplementedException();
+            ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.RangeUsed().SetAutoFilter(true);
+            ws.Columns().AdjustToContents();
+
+            ws.Range(2, columns["machine"].index, row, columns["part"].index)
+                .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+            ws.Columns(columns["ordersCnt"].index, columns["factSum"].index).Width = 8;
+
+            wb.SaveAs(path);
+
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
+            return path;
         }
 
 

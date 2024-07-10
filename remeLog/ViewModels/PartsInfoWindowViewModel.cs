@@ -50,6 +50,7 @@ namespace remeLog.ViewModels
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
+            ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
             ExportReportToExcelCommand = new LambdaCommand(OnExportReportToExcelCommandExecuted, CanExportReportToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
@@ -621,25 +622,6 @@ namespace remeLog.ViewModels
                     InProgress = true;
                     Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
                 });
-
-
-                ////var dlg = new ExportOperatorReportDialogWindow();
-                ////if (dlg.ShowDialog() != true)
-                ////{
-                ////    Status = "Отмена";
-                ////    return;
-                ////}
-
-                //if (dlg.DataContext is ExportOperatorDailogWindowViewModel dx)
-                //{
-                //    var reportType = dx.Type switch
-                //    {
-                //        "От" => Xl.ExportOperatorReportType.Under,
-                //        "До" => Xl.ExportOperatorReportType.Below,
-                //        _ => throw new ArgumentException(),
-                //    };
-                    
-                //}
             }
             catch (Exception ex)
             {
@@ -648,6 +630,34 @@ namespace remeLog.ViewModels
             finally { InProgress = false; }
         }
         private static bool CanOperatorReportToExcelCommandExecute(object p) => true;
+        #endregion
+
+        #region ExportPartsReportToExcel
+        public ICommand ExportPartsReportToExcelCommand { get; }
+        private async void OnExportPartsReportToExcelCommandExecuted(object p)
+        {
+            try
+            {
+
+                var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                await Task.Run(() =>
+                {
+                    InProgress = true;
+                    Status = Xl.ExportPartsInfo(Parts, path);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportPartsReportToExcelCommandExecute(object p) => true;
         #endregion
 
         #region ExportReportToExcel

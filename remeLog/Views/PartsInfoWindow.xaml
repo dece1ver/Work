@@ -829,6 +829,12 @@
                             <TextBlock Text="Отчёт за период"/>
                         </MenuItem.Header>
                     </MenuItem>
+                    <MenuItem Command="{Binding ExportPartsReportToExcelCommand}" Icon="{StaticResource DataTableIcon}"
+                              ToolTip="Экспорт отчёта по деталям" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Отчёт по деталям"/>
+                        </MenuItem.Header>
+                    </MenuItem>
                     <MenuItem Command="{Binding ExportToExcelCommand}" Icon="{StaticResource ExcelWorksheetIcon}"
                               ToolTip="Экспорт текущей выборки" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
