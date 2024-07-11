@@ -1,4 +1,6 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Office2010.PowerPoint;
 using libeLog;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
@@ -372,61 +374,129 @@ namespace remeLog.Infrastructure
             return $"Файл сохранен в \"{path}\"";
         }
 
-        public static string ExportPartsInfo(ICollection<Part> parts, string path)
+        public static string ExportPartsInfo(ICollection<Part> parts, string path, DateTime fromDate, DateTime toDate)
         {
             var wb = new XLWorkbook();
-            var ws = wb.AddWorksheet("Детали");
-            ws.Style.Font.FontSize = 12;
-            ws.Style.Alignment.WrapText = true;
-            ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            var wsTotal = wb.AddWorksheet("Общий");
+            wsTotal.Style.Font.FontSize = 12;
+            wsTotal.Style.Alignment.WrapText = true;
+            wsTotal.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            wsTotal.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            
+            var machines = parts.Select(p => p.Machine).Distinct().ToArray();
+
+            foreach ( var machine in machines )
+            {
+                wsTotal.CopyTo(machine);
+            }
 
             var columns = new Dictionary<string, (int index, string header)>
             {
                 {"machine", (1, "Станок") },
                 {"part", (2, "Деталь") },
-                {"ordersCnt", (3, "Количество М/Л") },
-                {"partsCnt", (4, $"Количество{Environment.NewLine}деталей") },
-                {"planSum", (5, $"Общее время{Environment.NewLine}нормативов") },
-                {"factSum", (6, $"Общее время{Environment.NewLine}фактическое") },
+                {"ordersCnt", (3, $"Количество М/Л{Environment.NewLine}(по станку)") },
+                {"partsCnt", (4, $"Количество деталей{Environment.NewLine}(по станку)") },
+                {"planSum", (5, $"Сумма нормативов{Environment.NewLine}(по станку)") },
+                {"factSum", (6, $"Время фактическое{Environment.NewLine}(по станку)") },
+                {"ordersCntTotal", (7, $"Количество М/Л{Environment.NewLine}(общее)") },
+                {"partsCntTotal", (8, $"Количество деталей{Environment.NewLine}(общее)") },
+                {"planSumTotal", (9, $"Сумма нормативов{Environment.NewLine}(общее)") },
+                {"factSumTotal", (10, $"Время фактическое{Environment.NewLine}(общее)") },
             };
             foreach (var (index, header) in columns.Values)
             {
-                ws.Cell(1, index).Value = header;
+                wsTotal.Cell(2, index).Value = header;
             }
 
-            var headerRange = ws.Range(1, 1, 1, columns.Count);
+            var headerRange = wsTotal.Range(2, 1, 2, columns.Count);
             headerRange.Style.Alignment.TextRotation = 90;
             headerRange.Style.Font.FontName = "Segoe UI Semibold";
-            ws.Row(1).Height = 100;
+            headerRange.Style.Font.FontSize = 10;
+            wsTotal.Row(2).Height = 100;
 
-            var row = 2;
-
-            foreach (var mg in parts.GroupBy(p => p.Machine))
+            var row = 3;
+            var tempParts = new List<Part>();
+            foreach (var part in parts)
             {
-                foreach (var pg in mg.ToList().GroupBy(mg => mg.PartName))
+                tempParts.Add(new Part(part) {PartName = part.PartName.ToUpper().Trim('"') });
+            }
+            var machinesGroup = tempParts.GroupBy(p => p.Machine);
+            foreach (var mg in machinesGroup)
+            {
+                foreach (var pg in mg.ToList().OrderBy(p => p.PartName).GroupBy(mg => mg.PartName))
                 {
                     var p = pg.ToList();
-                    ws.Cell(row, columns["machine"].index).Value = mg.Key;
-                    ws.Cell(row, columns["part"].index).Value = pg.Key;
-                    ws.Cell(row, columns["ordersCnt"].index).SetValue(pg.Select(p => p.Order).Distinct().Count());
-                    ws.Cell(row, columns["partsCnt"].index).SetValue(pg.Where(p => p.Setup == 1).Sum(p => p.FinishedCount));
-                    ws.Cell(row, columns["planSum"].index).SetValue(pg.Sum(p => p.PlanForBatch) + pg.SetupTimePlanForReport()); 
-                    ws.Cell(row, columns["factSum"].index).SetValue(pg.FullWorkedTime().TotalMinutes); 
+                    var tp = tempParts.Where(p => p.PartName == pg.Key).ToList();
+                    wsTotal.Cell(row, columns["machine"].index).Value = mg.Key;
+                    wsTotal.Cell(row, columns["part"].index).Value = pg.Key;
+                    wsTotal.Cell(row, columns["ordersCnt"].index).SetValue(pg.Select(p => p.Order).Distinct().Count());
+                    wsTotal.Cell(row, columns["partsCnt"].index).SetValue(pg.Where(p => p.Setup == 1).Sum(p => p.FinishedCount));
+                    wsTotal.Cell(row, columns["planSum"].index).SetValue(pg.Sum(p => p.PlanForBatch) + pg.SetupTimePlanForReport()); 
+                    wsTotal.Cell(row, columns["factSum"].index).SetValue(pg.FullWorkedTime().TotalMinutes);
+                    wsTotal.Cell(row, columns["ordersCntTotal"].index).SetValue(tp.Select(p => p.Order).Distinct().Count());
+                    wsTotal.Cell(row, columns["partsCntTotal"].index).SetValue(tp.Where(p => p.Setup == 1).Sum(p => p.FinishedCount));
+                    wsTotal.Cell(row, columns["planSumTotal"].index).SetValue(tp.Sum(p => p.PlanForBatch) + tp.SetupTimePlanForReport());
+                    wsTotal.Cell(row, columns["factSumTotal"].index).SetValue(tp.FullWorkedTime().TotalMinutes);
                     row++;
                 }
-
             }
 
-            ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.RangeUsed().SetAutoFilter(true);
-            ws.Columns().AdjustToContents();
+            wsTotal.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            wsTotal.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            wsTotal.RangeUsed().SetAutoFilter(true);
+            wsTotal.Columns().AdjustToContents();
 
-            ws.Range(2, columns["machine"].index, row, columns["part"].index)
+            wsTotal.Range(3, columns["machine"].index, row, columns["part"].index)
                 .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-            ws.Columns(columns["ordersCnt"].index, columns["factSum"].index).Width = 8;
+            wsTotal.Columns(columns["ordersCnt"].index, columns["factSumTotal"].index).Width = 8;
+            wsTotal.Cell(1, 1).Value = $"Изготовленное с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}. Станков: {machinesGroup.Count()}шт.";
+            wsTotal.Range(1, columns["machine"].index, 1, columns["factSumTotal"].index).Merge();
+            wsTotal.SheetView.FreezeRows(2);
+
+            foreach (var ws in wb.Worksheets.Skip(1))
+            {
+                foreach (var (index, header) in columns.Values)
+                {
+                    ws.Cell(2, index).Value = header;
+                }
+                var hr = ws.Range(2, 1, 2, 6);
+                hr.Style.Alignment.TextRotation = 90;
+                hr.Style.Font.FontName = "Segoe UI Semibold";
+                hr.Style.Font.FontSize = 10;
+                ws.Row(2).Height = 100;
+
+                row = 3;
+                var wsParts = tempParts.Where(p => p.Machine == ws.Name);
+                var ordersCnt = 0;
+                foreach (var pg in wsParts.OrderBy(p => p.PartName).GroupBy(p => p.PartName))
+                {
+                    var p = pg.ToList();
+                    ws.Cell(row, columns["part"].index).Value = pg.Key;
+                    var orders = pg.Select(p => p.Order).Distinct().Count();
+                    ordersCnt += orders;
+                    ws.Cell(row, columns["ordersCnt"].index).SetValue(orders);
+                    ws.Cell(row, columns["partsCnt"].index).SetValue(pg.Where(p => p.Setup == 1).Sum(p => p.FinishedCount));
+                    ws.Cell(row, columns["planSum"].index).SetValue(pg.Sum(p => p.PlanForBatch) + pg.SetupTimePlanForReport());
+                    ws.Cell(row, columns["factSum"].index).SetValue(pg.FullWorkedTime().TotalMinutes);
+                    row++;
+                }
+                ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+                ws.RangeUsed().SetAutoFilter(true);
+                ws.Columns().AdjustToContents();
+
+                ws.Range(3, columns["machine"].index, row, columns["part"].index)
+                    .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;     
+                ws.Columns(columns["ordersCnt"].index, columns["factSum"].index).Width = 8;
+                ws.Column(1).Delete();
+                ws.Columns(6, 9).Delete();
+                ws.Cell(1, 1).Value = $"Изготовленное с {wsParts.Min(p => p.StartSetupTime).ToString(Constants.ShortDateFormat)} по {wsParts.Max(p => p.EndMachiningTime).ToString(Constants.ShortDateFormat)} " +
+                    $"на станке {ws.Name} (всего м/л: {ordersCnt}, " +
+                    $"деталей: {tempParts.Where(p => p.Machine == ws.Name && p.Setup == 1).Sum(p => p.FinishedCount)})";
+                ws.Range(1, columns["part"].index, 1, columns["factSum"].index).Merge();
+                ws.SheetView.FreezeRows(2);
+            }
 
             wb.SaveAs(path);
 

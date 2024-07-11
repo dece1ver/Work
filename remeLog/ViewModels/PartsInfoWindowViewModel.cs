@@ -54,6 +54,8 @@ namespace remeLog.ViewModels
             ExportReportToExcelCommand = new LambdaCommand(OnExportReportToExcelCommandExecuted, CanExportReportToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
+            HideAllMachinesCommand = new LambdaCommand(OnHideAllMachinesCommandExecuted, CanHideAllMachinesCommandExecute);
+            InvertMachinesCommand = new LambdaCommand(OnInvertMachinesCommandExecuted, CanInvertMachinesCommandExecute);
             DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
 
             CalcFixed = Part.CalcFixed;
@@ -648,7 +650,7 @@ namespace remeLog.ViewModels
                 await Task.Run(() =>
                 {
                     InProgress = true;
-                    Status = Xl.ExportPartsInfo(Parts, path);
+                    Status = Xl.ExportPartsInfo(Parts, path, FromDate, ToDate);
                 });
             }
             catch (Exception ex)
@@ -731,6 +733,7 @@ namespace remeLog.ViewModels
             FinishedCountFilter = "";
             ToDate = PartsInfo.ToDate;
             FromDate = PartsInfo.FromDate;
+            _EngineerCommentFilter = "";
             for (int i = 0; i < MachineFilters.Count; i++)
             {
                 MachineFilters[i].Filter = MachineFilters[i].Machine == PartsInfo.Machine;
@@ -752,6 +755,34 @@ namespace remeLog.ViewModels
             UnlockUpdate();
         }
         private static bool CanShowAllMachinesCommandExecute(object p) => true;
+        #endregion
+
+        #region HideAllMachines
+        public ICommand HideAllMachinesCommand { get; }
+        private void OnHideAllMachinesCommandExecuted(object p)
+        {
+            LockUpdate();
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = false;
+            }
+            UnlockUpdate();
+        }
+        private static bool CanHideAllMachinesCommandExecute(object p) => true;
+        #endregion
+
+        #region InvertMachines
+        public ICommand InvertMachinesCommand { get; }
+        private void OnInvertMachinesCommandExecuted(object p)
+        {
+            LockUpdate();
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = !MachineFilters[i].Filter;
+            }
+            UnlockUpdate();
+        }
+        private static bool CanInvertMachinesCommandExecute(object p) => true;
         #endregion
 
         #region DeletePart
@@ -947,7 +978,8 @@ namespace remeLog.ViewModels
                             $"{(string.IsNullOrEmpty(EngineerCommentFilter) ? "" : $"AND EngineerComment LIKE '%{EngineerCommentFilter}%'")} " +
                             $"{(!isValidFinishedCountFilter ? "" : $"AND FinishedCount {finishedCountOperator} {finishedCountValue}")} " +
                             $"{(!isValidTotalCountFilter ? "" : $"AND TotalCount {totalCountOperator} {totalCountValue}")} " +
-                            $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")} AND Machine IN ({machines})";
+                            $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")} " +
+                            $"{(machines.Length > 0 ? $"AND Machine IN ({machines})" : "")}";
 
                         Parts = Database.ReadPartsWithConditions(conditions);
 

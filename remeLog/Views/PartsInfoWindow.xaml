@@ -767,6 +767,11 @@
                         <StaticResource ResourceKey="DeleteCell"/>
                     </MenuItem.Header>
                 </MenuItem>
+                <MenuItem Header="Станки">
+                    <MenuItem Command="{Binding ShowAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать все"/>
+                    <MenuItem Command="{Binding HideAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Снять все"/>
+                    <MenuItem Command="{Binding InvertMachinesCommand}" HorizontalAlignment="Stretch" Header="Инвертировать"/>
+                </MenuItem>
                 <MenuItem Header="Вид">
                     <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource ConfirmIconFlex}"
                               Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}}"
@@ -797,8 +802,6 @@
                             <TextBlock Text="Ожидаемые"/>
                         </MenuItem.Header>
                     </MenuItem>
-
-                    <MenuItem Command="{Binding ShowAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Все станки"/>
                 </MenuItem>
                 <MenuItem Header="Расчет">
                     <MenuItem Command="{Binding ChangeCalcFixedCommand}" Icon="{StaticResource ConfirmIconFlex}"
