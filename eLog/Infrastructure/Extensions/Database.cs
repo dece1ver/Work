@@ -21,7 +21,7 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="part">Деталь</param>
         /// <param name="passive">Нужно ли присваивать Id, false используется для одновременной работы с двумя источниками, тогда Id назначается при записи в XL</param>
         /// <returns></returns>
-        public static DbResult WritePart(this Part part, bool passive = false)
+        public async static Task<DbResult> WritePartAsync(this Part part, bool passive = false)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Добавление информации об изготовлении в БД.");
             try
@@ -162,7 +162,7 @@ namespace eLog.Infrastructure.Extensions
                         return DbResult.NoConnection;
                     case 2601 or 2627:
                         Util.WriteLog($"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
-                        return UpdatePart(part);
+                        return await UpdatePartAsync(part);
                     case 18456:
                         Util.WriteLog($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
@@ -185,7 +185,7 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="passive">Нужно ли присваивать Id, false используется для одновременной работы с двумя источниками, тогда Id назначается при записи в XL. 
         /// В этом методе используется только для передачи в метод WritePart.</param>
         /// <returns></returns>
-        public static DbResult UpdatePart(this Part part, bool passive = false)
+        public async static Task<DbResult> UpdatePartAsync(this Part part, bool passive = false)
         {
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Обновление информации об изготовлении в БД.");
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
@@ -277,7 +277,7 @@ namespace eLog.Infrastructure.Extensions
                         if (execureResult == 0)
                         {
                             Util.WriteLog("Деталь не найдена, добавение новой.");
-                            return WritePart(part, passive);
+                            return await WritePartAsync(part, passive);
                         }
                     }
                     connection.Close();

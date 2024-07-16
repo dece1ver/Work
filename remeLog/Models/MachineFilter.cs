@@ -9,14 +9,15 @@ namespace remeLog.Models
 {
     public class MachineFilter : ViewModel
     {
-        public MachineFilter(string machine, bool filter)
+        public MachineFilter(string machine, string type, bool filter)
         {
             _Machine = machine;
+            _Type = type;
             _Filter = filter;
         }
 
         private string _Machine;
-        /// <summary> Описание </summary>
+        /// <summary> Название станка </summary>
         public string Machine
         {
             get => _Machine;
@@ -24,8 +25,18 @@ namespace remeLog.Models
         }
 
 
+        private string _Type;
+        /// <summary> Тип </summary>
+        public string Type
+        {
+            get => _Type;
+            set => Set(ref _Type, value);
+        }
+
+
+
         private bool _Filter;
-        /// <summary> Описание </summary>
+        /// <summary> Фильтровать ли по данному станку </summary>
         public bool Filter
         {
             get => _Filter;

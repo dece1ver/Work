@@ -1,5 +1,4 @@
-﻿using FilterDataGrid;
-using libeLog;
+﻿using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Models;
@@ -14,6 +13,8 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,12 +26,14 @@ namespace remeLog.ViewModels
 
     public class PartsInfoWindowViewModel : ViewModel, IDataErrorInfo
     {
-        private readonly object lockObject = new();
-        private static bool lockUpdate = true;
-        private static string[] supportedComparisonOperators = { "<=", "<", ">=", "=", ">", "!=" };
+        private static readonly SemaphoreSlim semaphoreSlim = new(1, 1);
+        private CancellationTokenSource _cancellationTokenSource = new();
+        private static bool lockUpdate;
+        private static readonly string[] supportedComparisonOperators = { "<=", "<", ">=", "=", ">", "!=" };
 
         public PartsInfoWindowViewModel(CombinedParts parts)
         {
+            lockUpdate = true;
             ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
             IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
             DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
@@ -56,6 +59,10 @@ namespace remeLog.ViewModels
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
             HideAllMachinesCommand = new LambdaCommand(OnHideAllMachinesCommandExecuted, CanHideAllMachinesCommandExecute);
             InvertMachinesCommand = new LambdaCommand(OnInvertMachinesCommandExecuted, CanInvertMachinesCommandExecute);
+            SetLatheMachinesCommand = new LambdaCommand(OnSetLatheMachinesCommandExecuted, CanSetLatheMachinesCommandExecute);
+            SetMillMachinesCommand = new LambdaCommand(OnSetMillMachinesCommandExecuted, CanSetMillMachinesCommandExecute);
+            SetHorMillMachinesCommand = new LambdaCommand(OnSetHorMillMachinesCommandExecuted, CanSetHorMillMachinesCommandExecute);
+            SetVerMillMachinesCommand = new LambdaCommand(OnSetVerMillMachinesCommandExecuted, CanSetVerMillMachinesCommandExecute);
             DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
 
             CalcFixed = Part.CalcFixed;
@@ -74,12 +81,20 @@ namespace remeLog.ViewModels
             _MachineFilters = new();
             _MachineFilters.CollectionChanged += MachineFiltersSource_CollectionChanged!;
 
-            _MachineFilters.ReadMachines();
+            _ = Init();
+            
+        }
+
+        async Task Init()
+        {
+            await _MachineFilters.ReadMachines();
+
             foreach (var machineFilter in MachineFilters)
             {
                 machineFilter.Filter = machineFilter.Machine == PartsInfo.Machine;
             }
-            UnlockUpdate();
+
+            lockUpdate = false;
         }
 
         private void MachineFiltersSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -93,10 +108,11 @@ namespace remeLog.ViewModels
                     item.PropertyChanged -= MachineFilters_PropertyChanged!;
         }
 
-        private void MachineFilters_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async void MachineFilters_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            OnPropertyChanged(nameof(MachineVisibility));
             if (e.PropertyName == "Filter")
-                _ = LoadPartsAsync();
+                await LoadPartsAsync();
         }
 
         public Shift[] ShiftFilterItems { get; set; }
@@ -120,7 +136,7 @@ namespace remeLog.ViewModels
 
 
         private DateTime _FromDate;
-        /// <summary> Описание </summary>
+        /// <summary> Начальная дата </summary>
         public DateTime FromDate
         {
             get => _FromDate;
@@ -135,7 +151,7 @@ namespace remeLog.ViewModels
         }
 
         private DateTime _ToDate;
-        /// <summary> Описание </summary>
+        /// <summary> Конечная дата </summary>
         public DateTime ToDate
         {
             get => _ToDate;
@@ -293,7 +309,7 @@ namespace remeLog.ViewModels
         #endregion
 
         private Part? _SelectedPart;
-        /// <summary> Описание </summary>
+        /// <summary> Выбранная деталь </summary>
         public Part? SelectedPart
         {
             get => _SelectedPart;
@@ -323,7 +339,7 @@ namespace remeLog.ViewModels
 
 
         private bool _CompactView = true;
-        /// <summary> Описание </summary>
+        /// <summary> Компактный режим </summary>
         public bool CompactView
         {
             get => _CompactView;
@@ -461,6 +477,8 @@ namespace remeLog.ViewModels
                 }
             }
         }
+
+        public bool MachineVisibility => MachineFilters.Count(m => m.Filter == true) == 1;
 
         #region IncreaseDateCommand
         public ICommand IncreaseDateCommand { get; }
@@ -612,18 +630,31 @@ namespace remeLog.ViewModels
         {
             try
             {
+                using (Overlay = new())
+                {
+                    var dlg = new ExportOperatorReportDialogWindow();
+                    if (p is PartsInfoWindow w) dlg.Owner = w;
+                    if (dlg.ShowDialog() == false)
+                    {
+                        Status = "Отмена";
+                        return;
+                    }
+                    var path = Util.GetXlsxPath();
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        Status = "Выбор файла отменён";
+                        return;
+                    }
+                    if (dlg.DataContext is ExportOperatorDailogWindowViewModel dx)
+                    {
+                        await Task.Run(() =>
+                        {
 
-                var path = Util.GetXlsxPath();
-                if (string.IsNullOrEmpty(path))
-                {
-                    Status = "Выбор файла отменён";
-                    return;
+                            InProgress = true;
+                            Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, dx.Type.ToLowerInvariant() == "до" ? 1 : dx.Count, dx.Type.ToLowerInvariant() == "до" ? dx.Count : int.MaxValue);
+                        });
+                    }
                 }
-                await Task.Run(() =>
-                {
-                    InProgress = true;
-                    Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
-                });
             }
             catch (Exception ex)
             {
@@ -785,6 +816,62 @@ namespace remeLog.ViewModels
         private static bool CanInvertMachinesCommandExecute(object p) => true;
         #endregion
 
+        #region SetLatheMachines
+        public ICommand SetLatheMachinesCommand { get; }
+        private void OnSetLatheMachinesCommandExecuted(object p)
+        {
+            LockUpdate();
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = MachineFilters[i].Type.ToLowerInvariant().Contains("токарный");
+            }
+            UnlockUpdate();
+        }
+        private static bool CanSetLatheMachinesCommandExecute(object p) => true;
+        #endregion
+
+        #region SetMillMachines
+        public ICommand SetMillMachinesCommand { get; }
+        private void OnSetMillMachinesCommandExecuted(object p)
+        {
+            LockUpdate();
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = MachineFilters[i].Type.ToLowerInvariant().Contains("фрезерный");
+            }
+            UnlockUpdate();
+        }
+        private static bool CanSetMillMachinesCommandExecute(object p) => true;
+        #endregion
+
+        #region SetHorMillMachines
+        public ICommand SetHorMillMachinesCommand { get; }
+        private void OnSetHorMillMachinesCommandExecuted(object p)
+        {
+            LockUpdate();
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = MachineFilters[i].Type.ToLowerInvariant().Contains("горизонтально");
+            }
+            UnlockUpdate();
+        }
+        private static bool CanSetHorMillMachinesCommandExecute(object p) => true;
+        #endregion
+
+        #region SetVerMillMachines
+        public ICommand SetVerMillMachinesCommand { get; }
+        private void OnSetVerMillMachinesCommandExecuted(object p)
+        {
+            LockUpdate();
+            for (int i = 0; i < MachineFilters.Count; i++)
+            {
+                MachineFilters[i].Filter = MachineFilters[i].Type.ToLowerInvariant().Contains("вертикально");
+            }
+            UnlockUpdate();
+        }
+        private static bool CanSetVerMillMachinesCommandExecute(object p) => true;
+        #endregion
+
         #region DeletePart
         public ICommand DeletePartCommand { get; }
         private void OnDeletePartCommandExecuted(object p)
@@ -855,14 +942,7 @@ namespace remeLog.ViewModels
         private void OnChangeShowUncheckedCommandExecuted(object p)
         {
             ViewUnchecked = !ViewUnchecked;
-            if (ViewUnchecked)
-            {
-                EngineerCommentFilter = "ожидание";
-            }
-            else
-            {
-                EngineerCommentFilter = "";
-            }
+            EngineerCommentFilter = ViewUnchecked ? "ожидание" : "";
         }
         private static bool CanChangeShowUncheckedCommandExecute(object p) => true;
         #endregion
@@ -955,47 +1035,104 @@ namespace remeLog.ViewModels
         private static bool CanOpenDailyReportWindowCommandExecute(object p) => true;
         #endregion
 
-        private async Task<bool> LoadPartsAsync()
+        private async Task<bool> LoadPartsAsync(bool first = false)
         {
             if (lockUpdate) return false;
-            return await Task.Run(() =>
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource = new();
+            var cancellationToken = _cancellationTokenSource.Token;
+            await semaphoreSlim.WaitAsync(cancellationToken);
+            try
             {
-                try
+                InProgress = true;
+                Status = "Получение информации...";
+                if (!first) await Task.Delay(1000, cancellationToken);
+                var isValidFinishedCountFilter = TryParseComparison(FinishedCountFilter, out string finishedCountOperator, out int finishedCountValue);
+                var isValidTotalCountFilter = TryParseComparison(TotalCountFilter, out string totalCountOperator, out int totalCountValue);
+                var partNameStartStar = PartNameFilter.StartsWith('*');
+
+                if (!MachineFilters.Any(mf => mf.Filter == true))
                 {
-                    lock (lockObject)
-                    {
-                        InProgress = true;
-                        var isValidFinishedCountFilter = TryParseComparison(FinishedCountFilter, out string finishedCountOperator, out int finishedCountValue);
-                        var isValidTotalCountFilter = TryParseComparison(TotalCountFilter, out string totalCountOperator, out int totalCountValue);
-                        var partNameStartStar = PartNameFilter.StartsWith('*');
-                        string machines = string.Join(", ", MachineFilters.Where(mf => mf.Filter == true).Select(m => $"'{m.Machine}'").Distinct());
-
-                        var conditions = $"ShiftDate BETWEEN '{FromDate}' AND '{ToDate}' " +
-                            $"{(ShiftFilter is { Type: ShiftType.All } ? "" : $"AND Shift = '{ShiftFilter.FilterText}'")} " +
-                            $"{(string.IsNullOrEmpty(OperatorFilter) ? "" : $"AND Operator LIKE '{FormatSearchInput(OperatorFilter)}'")} " +
-                            $"{(string.IsNullOrEmpty(PartNameFilter) ? "" : $"AND PartName LIKE '{FormatSearchInput(PartNameFilter)}'")} " +
-                            $"{(string.IsNullOrEmpty(OrderFilter) ? "" : $"AND [Order] LIKE '{FormatSearchInput(OrderFilter)}'")} " +
-                            $"{(string.IsNullOrEmpty(EngineerCommentFilter) ? "" : $"AND EngineerComment LIKE '%{EngineerCommentFilter}%'")} " +
-                            $"{(!isValidFinishedCountFilter ? "" : $"AND FinishedCount {finishedCountOperator} {finishedCountValue}")} " +
-                            $"{(!isValidTotalCountFilter ? "" : $"AND TotalCount {totalCountOperator} {totalCountValue}")} " +
-                            $"{(SetupFilter == null ? "" : $"AND Setup = {SetupFilter}")} " +
-                            $"{(machines.Length > 0 ? $"AND Machine IN ({machines})" : "")}";
-
-                        Parts = Database.ReadPartsWithConditions(conditions);
-
-                    }
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"{ex.Message}");
+                    Application.Current.Dispatcher.Invoke(() => { Parts.Clear(); });
+                    InProgress = false;
                     return false;
                 }
-                finally
+
+                var tempParts = await Task.Run(() => Database.ReadPartsWithConditions(BuildConditions(), cancellationToken));
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    InProgress = false;
-                }
-            });
+                    Parts.Clear();
+                    Parts = new(tempParts);
+                });
+                InProgress = false;
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{ex.Message}");
+                InProgress = false;
+                return false;
+            }
+            finally
+            {
+                semaphoreSlim.Release();
+                Status = "";
+            }
+        }
+
+        /// <summary>
+        /// Собирает строку запроса
+        /// </summary>
+        /// <returns></returns>
+        private string BuildConditions()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendFormat("ShiftDate BETWEEN '{0}' AND '{1}' ", FromDate, ToDate);
+
+            if (ShiftFilter is not { Type: ShiftType.All })
+            {
+                sb.AppendFormat("AND Shift = '{}' ", ShiftFilter.FilterText);
+            }
+
+            AppendCondition(sb, "Operator", FormatSearchInput(OperatorFilter));
+            AppendCondition(sb, "PartName", FormatSearchInput(PartNameFilter));
+            AppendCondition(sb, "[Order]", FormatSearchInput(OrderFilter));
+            AppendCondition(sb, "EngineerComment", EngineerCommentFilter, true);
+
+            if (TryParseComparison(FinishedCountFilter, out var finishedCountOperator, out var finishedCountValue))
+                sb.AppendFormat("AND FinishedCount {0} {1} ", finishedCountOperator, finishedCountValue);
+
+            if (TryParseComparison(TotalCountFilter, out var totalCountOperator, out var totalCountValue))
+                sb.AppendFormat("AND totalCount {0} {1} ", totalCountOperator, totalCountValue);
+
+            if (SetupFilter != null)
+                sb.AppendFormat("AND Setup = {0}", SetupFilter);
+
+            var machines = string.Join(", ", MachineFilters.Where(mf => mf.Filter).Select(m => $"'{m.Machine}'").Distinct());
+            sb.AppendFormat("AND Machine IN ({0}) ", machines);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Поиск по строке, либо с полным совпадением, либо "is Like"
+        /// </summary>
+        /// <param name="sb">StringBuilder в котором формируется строка запроса</param>
+        /// <param name="column">Столбец в который будем писать</param>
+        /// <param name="value">Значение</param>
+        /// <param name="isLike">Примерный поиск, либо точный</param>
+        private void AppendCondition(StringBuilder sb, string column, string value, bool isLike = true)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                sb.AppendFormat("AND {0} {1} '{2}' ", column, isLike ? "LIKE" : "=", isLike ? $"%{value}%" : value);
+            }
         }
 
         /// <summary>
@@ -1056,10 +1193,10 @@ namespace remeLog.ViewModels
 
         private void LockUpdate() => lockUpdate = true;
 
-        private void UnlockUpdate()
+        private void UnlockUpdate(bool first = false)
         {
             lockUpdate = false;
-            _ = LoadPartsAsync();
+            _ = LoadPartsAsync(first);
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using eLog.Infrastructure;
+﻿using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using eLog.Services;
@@ -14,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using static eLog.Infrastructure.Extensions.Util;
@@ -27,6 +27,7 @@ namespace eLog.ViewModels
     {
         bool _editPart = false;
         bool _needSave = false;
+        private CancellationTokenSource _cts = new();
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
@@ -47,7 +48,7 @@ namespace eLog.ViewModels
 
             Parts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(Parts));
 
-            var syncPartsThread = new Thread(SyncParts) { IsBackground = true };
+            var syncPartsThread = new Thread(() => _ = SyncParts()) { IsBackground = true };
             syncPartsThread.Start();
         }
 
@@ -148,7 +149,6 @@ namespace eLog.ViewModels
         }
 
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
-
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { };
         public bool CanStartShift => CurrentOperator is { } && !string.IsNullOrEmpty(CurrentShift);
         public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;
@@ -530,7 +530,7 @@ namespace eLog.ViewModels
         #endregion
 
 
-        private void SyncParts()
+        private async Task SyncParts()
         {
             while (true)
             {
@@ -546,16 +546,14 @@ namespace eLog.ViewModels
                         // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
                         var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
 
-
-
-#pragma warning disable CA1416 // Проверка совместимости платформы
+                        #pragma warning disable CA1416 // Проверка совместимости платформы
                         switch (AppSettings.Instance.StorageType.Type)
                         {
                             case StorageType.Types.Database:
 
                                 ProgressBarVisibility = Visibility.Visible;
                                 Status = $"Запись в БД: [{partName}]";
-                                var writeResult = part.Id == -1 ? Database.WritePart(part) : Database.UpdatePart(part);
+                                var writeResult = part.Id == -1 ? await Database.WritePartAsync(part) : await Database.UpdatePartAsync(part);
                                 switch (writeResult)
                                 {
                                     case DbResult.Ok:
@@ -577,19 +575,19 @@ namespace eLog.ViewModels
 
                                 break;
                             case StorageType.Types.Excel:
-                                WriteToXl(part, i, partName);
+                                await WriteToXlAsync(part, i, partName);
                                 break;
                             case StorageType.Types.All:
                                 ProgressBarVisibility = Visibility.Visible;
                                 Status = $"Запись в БД: {partName}";
-                                _ = part.Id == -1 ? Database.WritePart(part, true) : Database.UpdatePart(part, true);
+                                _ = part.Id == -1 ? await Database.WritePartAsync(part, true) : await Database.UpdatePartAsync(part, true);
                                 Status = $"Готово";
-                                WriteToXl(part, i, partName);
+                                await WriteToXlAsync(part, i, partName);
                                 break;
                             default:
                                 break;
                         }
-#pragma warning restore CA1416 // Проверка совместимости платформы
+                        #pragma warning restore CA1416 // Проверка совместимости платформы
                         ProgressBarVisibility = Visibility.Hidden;
                         OnPropertyChanged(nameof(part.Title));
                         //Application.Current.Dispatcher.Invoke(delegate
@@ -622,7 +620,7 @@ namespace eLog.ViewModels
                 catch (Exception e)
                 {
                     Status = e.Message;
-                    Util.WriteLog(e, "Ошибка синхронизации.");
+                    WriteLog(e, "Ошибка синхронизации.");
                 }
                 finally
                 {
@@ -647,42 +645,46 @@ namespace eLog.ViewModels
             }
         }
 
-        private bool WriteToXl(Part part, int i, string partName)
+        private async Task<bool> WriteToXlAsync(Part part, int i, string partName)
         {
+
             Status = $"Синхронизация: [{partName}]";
             ProgressBarVisibility = Visibility.Visible;
             _needSave = true;
             var index = i;
+
+            var progress = new Progress<string>(m => Status = m);
+
             if (part.Id != -1)
             {
-                var rewriteResult = part.RewriteToXl();
+                var rewriteResult = await part.RewriteToXlAsync(progress);
                 switch (rewriteResult)
                 {
-                    case Util.WriteResult.Ok:
+                    case WriteResult.Ok:
                         part.IsSynced = true;
                         Status = $"Информация обновлена: [{partName}]";
                         break;
-                    case Util.WriteResult.FileNotExist:
+                    case WriteResult.FileNotExist:
                         Status = "Таблица не найдена.";
                         ProgressBarVisibility = Visibility.Hidden;
                         Thread.Sleep(300000);
                         break;
-                    case Util.WriteResult.IOError:
+                    case WriteResult.IOError:
                         Status = "Таблица занята.";
                         ProgressBarVisibility = Visibility.Hidden;
                         Thread.Sleep(new Random().Next(5000, 60000));
                         break;
-                    case Util.WriteResult.Error:
+                    case WriteResult.Error:
                         Status = "Ошибка записи.";
                         ProgressBarVisibility = Visibility.Hidden;
                         Thread.Sleep(10000);
                         break;
-                    case Util.WriteResult.DontNeed:
+                    case WriteResult.DontNeed:
                         ProgressBarVisibility = Visibility.Hidden;
                         Thread.Sleep(10000);
                         break;
-                    case Util.WriteResult.NotFinded:
-                        part.Id = part.WriteToXl();
+                    case WriteResult.NotFinded:
+                        part.Id = await part.WriteToXlAsync(progress);
                         if (part.Id == -1) return false;
                         part.IsSynced = true;
                         Status = $"Информация записана: [{partName}]";
@@ -692,11 +694,11 @@ namespace eLog.ViewModels
                         throw new ArgumentOutOfRangeException();
                 }
 
-                if (rewriteResult is not Util.WriteResult.Ok) return false;
+                if (rewriteResult is not WriteResult.Ok) return false;
             }
             else
             {
-                var res = part.WriteToXl();
+                var res = await part.WriteToXlAsync(progress);
                 switch (res)
                 {
                     // IO Ecxeption

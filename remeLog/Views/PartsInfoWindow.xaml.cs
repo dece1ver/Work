@@ -1,26 +1,13 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml;
-using DocumentFormat.OpenXml.Wordprocessing;
-using libeLog.Extensions;
-using Microsoft.IdentityModel.Tokens;
-using remeLog.Models;
+﻿using remeLog.Models;
 using remeLog.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
-using System.Dynamic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace remeLog.Views
 {
@@ -208,7 +195,7 @@ namespace remeLog.Views
         {
             if (sender is DataGrid dataGrid && DataContext is PartsInfoWindowViewModel d)
             {
-                if (Keyboard.Modifiers == ModifierKeys.Alt)
+                if (Keyboard.Modifiers == ModifierKeys.Control)
                 {
                     switch (e.Key)
                     {
@@ -227,6 +214,7 @@ namespace remeLog.Views
                             e.Handled = true;
                             break;
                         case Key.F:
+                            break;
                             var baseCell = dataGrid.SelectedCells.FirstOrDefault();
                             if (!baseCell.IsValid) return;
                             var content = baseCell.Column.GetCellContent(baseCell.Item);
@@ -242,22 +230,15 @@ namespace remeLog.Views
                                     }
                                 }
                             }
-                            //else if (content is ContentPresenter contentPresenter && contentPresenter.Content is TextBlock cpTextBlock)
-                            //{
-                            //    var value = cpTextBlock.Text;
-                            //    foreach (var cell in dataGrid.SelectedCells.Skip(1))
-                            //    {
-                            //        var cellContent = cell.Column.GetCellContent(cell.Item);
-                            //        if (content is ContentPresenter contentPresenterToUpdaTe && contentPresenterToUpdaTe.Content is TextBlock cpTextBlockToUpdate)
-                            //        {
-                            //            cpTextBlockToUpdate.Text = value;
-                            //        }
-                            //    }
-                            //}
-
-
-
-                            
+                            e.Handled = true; 
+                            break;
+                        case Key.H:
+                            var helpMessage = "Комбинации клавишь при вызове на данной таблице:\n" +
+                                "Alt + D - информация о ячейке\n" +
+                                //"Alt + F - привыделении нескольких ячеек заполняет все следующие содержимым первой\n" +
+                                "Alt + H - данное сообщение\n" +
+                                "Alt + Del - удаляет выбранную деталь (должна быть выбрана строка)";
+                            MessageBox.Show(helpMessage);
                             e.Handled = true;
                             break;
 

@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using static eLog.Infrastructure.Extensions.Text;
 
@@ -173,7 +174,7 @@ namespace eLog.Infrastructure.Extensions
         /// </summary>
         /// <param name="part">Информация об изготовлении</param>
         /// <returns>Int32 - Id записи в таблице</returns>
-        public static int WriteToXl(this Part part)
+        public async static Task<int> WriteToXlAsync(this Part part, IProgress<string> progress)
         {
             if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Новая запись информации о детали."); }
             var id = -1;
@@ -182,9 +183,11 @@ namespace eLog.Infrastructure.Extensions
             var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
             try
             {
+                progress.Report("Создание бэкапа таблицы...");
                 if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
                 using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
+                    progress.Report("Создание записи");
                     var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
                     var ws = wb.Worksheet(1);
                     ws.LastRowUsed().InsertRowsBelow(1);
@@ -315,6 +318,7 @@ namespace eLog.Infrastructure.Extensions
                         }
                         break;
                     }
+                    progress.Report($"Присвоен номер {id}. Запись в файл...");
                     if (AppSettings.Instance.DebugMode) { WriteLog($"Присвоен номер {id}. Запись в файл..."); }
                     Debug.Print("Write");
                     wb.Save(true);
@@ -330,23 +334,27 @@ namespace eLog.Infrastructure.Extensions
             }
             catch (KeyNotFoundException keyNotFoundEx)
             {
+                progress.Report("Ошибка чтения, возможно таблица повреждена");
                 WriteLog(keyNotFoundEx, $"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 Debug.Print("KeyNotFoundException");
                 TryRestoreXl();
             }
             catch (OutOfMemoryException outOfMemEx)
             {
+                progress.Report("Нехватка памяти при работе с XL файлом");
                 WriteLog(outOfMemEx, $"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 Debug.Print("OutOfMemoryException");
                 TryRestoreXl();
             }
             catch (ArgumentException argEx)
             {
+                progress.Report("Ошибка");
                 if (AppSettings.Instance.DebugMode) { WriteLog(argEx); }
                 MessageBox.Show($"{argEx.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception e)
             {
+                progress.Report("Ошибка");
                 WriteLog(e, $"Ошибка при записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
             }
             if (!ValidXl())
@@ -359,7 +367,7 @@ namespace eLog.Infrastructure.Extensions
             return id;
         }
 
-        public static WriteResult RewriteToXl(this Part part, bool doBackup = true)
+        public async static Task<WriteResult> RewriteToXlAsync(this Part part, IProgress<string> progress, bool doBackup = true)
         {
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
             var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
@@ -381,9 +389,9 @@ namespace eLog.Infrastructure.Extensions
             var result = WriteResult.NotFinded;
             try
             {
-                //Thread.Sleep(5000);
+                progress.Report("Создание бэкапа таблицы...");
                 var partial = SetPartialState(ref part, false);
-                //Thread.Sleep(5000);
+                
                 if (doBackup)
                 {
                     if (!BackupXl())
@@ -391,7 +399,7 @@ namespace eLog.Infrastructure.Extensions
                         throw new IOException("Ошибка при создании бэкапа таблицы.");
                     }
                 }
-
+                progress.Report("Открытие таблицы...");
                 using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
@@ -399,6 +407,7 @@ namespace eLog.Infrastructure.Extensions
 
                     var combinedDownTimes = part.DownTimes.Combine();
                     if (AppSettings.Instance.DebugMode) { WriteLog($"Поиск позиции..."); }
+                    progress.Report("Поиск позиции...");
                     foreach (var xlRow in wb.Worksheet(1).Rows())
                     {
                         var rowWithPart = xlRow.Cell(1).Value.IsNumber;
@@ -411,6 +420,7 @@ namespace eLog.Infrastructure.Extensions
                         }
                         if (!rowWithPart || (rowNum == part.Id && guid == Guid.Empty) || guid != part.Guid) continue;
                         if (AppSettings.Instance.DebugMode) { WriteLog($"Позиция найдена на строке №{rowNum}."); }
+                        progress.Report($"Позиция найдена на строке №{rowNum}");
                         xlRow.Cell(5).Value = $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim();
                         var needDiscrease = part.Shift == NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
                         xlRow.Cell(6).Value = needDiscrease
@@ -455,6 +465,7 @@ namespace eLog.Infrastructure.Extensions
                         xlRow.Cell(45).Value = part.SetupTimePlan;
                         xlRow.Cell(46).Value = part.SingleProductionTimePlan;
                         result = WriteResult.Ok;
+                        progress.Report("Запись файла...");
                         if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл..."); }
                         Debug.Print("Rewrite");
                         wb.Save(true);
@@ -469,31 +480,36 @@ namespace eLog.Infrastructure.Extensions
             catch (IOException ioEx)
             {
                 if (AppSettings.Instance.DebugMode) { WriteLog(ioEx); }
+                progress.Report("Ошибка ввода/вывода");
                 return WriteResult.IOError;
             }
             catch (KeyNotFoundException keyNotFoundEx)
             {
-                WriteLog(keyNotFoundEx, $"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                progress.Report("Ошибка чтения, возможно таблица повреждена");
+                WriteLog(keyNotFoundEx, $"(KeyNotFoundException) Не удалось открыть XL файл для записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 Debug.Print("KeyNotFoundException");
                 TryRestoreXl();
                 return WriteResult.Error;
             }
             catch (OutOfMemoryException outOfMemEx)
             {
-                WriteLog(outOfMemEx, $"Нехватка оперативной памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                progress.Report("Нехватка памяти при работе с XL файлом");
+                WriteLog(outOfMemEx, $"Нехватка памяти при работе с XL файлом для записи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 Debug.Print("OutOfMemoryException");
                 TryRestoreXl();
                 return WriteResult.Error;
             }
             catch (Exception e)
             {
+                progress.Report("Ошибка");
                 Debug.Print("Необработанное исключение");
-                WriteLog(e, $"Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n   Оператор - {part.Operator.FullName}");
+                WriteLog(e, $"Ошибка при перезаписи детали {part.FullName} по заказу {part.Order}.\n\tОператор - {part.Operator.FullName}");
                 TryRestoreXl();
                 return WriteResult.Error;
             }
             if (!ValidXl())
             {
+                progress.Report("Файл невалидный, требуется восстановление");
                 WriteLog("Файл невалидный, требуется восстановление.");
                 TryRestoreXl();
                 return WriteResult.Error;

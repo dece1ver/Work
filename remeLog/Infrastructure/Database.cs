@@ -7,11 +7,13 @@ using remeLog.Infrastructure.Extensions;
 using remeLog.Models;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using static libeLog.Constants;
@@ -21,23 +23,25 @@ namespace remeLog.Infrastructure
 {
     public static class Database
     {
-        public static ObservableCollection<Part> ReadPartsWithConditions(string conditions)
+        public async static Task<List<Part>> ReadPartsWithConditions(string conditions, CancellationToken cancellationToken)
         {
-            ObservableCollection<Part> parts = new ObservableCollection<Part>();
-            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            List<Part> parts = new();
+            await Task.Run(async () =>
             {
-                connection.Open();
-                string query = $"SELECT * FROM Parts WHERE {conditions} ORDER BY StartSetupTime ASC;";
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
-                    parts.FillParts(command);
+                    await connection.OpenAsync(cancellationToken);
+                    string query = $"SELECT * FROM Parts WHERE {conditions} ORDER BY StartSetupTime ASC;";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        await FillPartsAsync(parts, command, cancellationToken);
+                    }
                 }
-            }
+            }, cancellationToken);
             return parts;
-
         }
 
-        public static ObservableCollection<Part> ReadPartsByShiftDateAndMachine(DateTime fromDate, DateTime toDate, string machine)
+        public async static Task<ObservableCollection<Part>> ReadPartsByShiftDateAndMachine(DateTime fromDate, DateTime toDate, string machine, CancellationToken cancellationToken)
         {
             ObservableCollection<Part> parts = new();
             using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
@@ -51,13 +55,13 @@ namespace remeLog.Infrastructure
                     command.Parameters.AddWithValue("@ToDate", toDate);
                     command.Parameters.AddWithValue("@Machine", machine);
 
-                    parts.FillParts(command);
+                    await parts.FillPartsAsync(command, cancellationToken);
                 }
             }
             return parts;
         }
 
-        public static ObservableCollection<Part> ReadPartsByPartNameAndOrder(string[] partNames, string[] orders)
+        public async static Task<ObservableCollection<Part>> ReadPartsByPartNameAndOrder(string[] partNames, string[] orders, CancellationToken cancellationToken)
         {
             ObservableCollection<Part> parts = new();
             using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
@@ -67,7 +71,7 @@ namespace remeLog.Infrastructure
                 string query = "SELECT * FROM Parts WHERE PartName IN ('" + string.Join("','", partNames) + "') AND [Order] IN ('" + string.Join("','", orders) + "')";
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    parts.FillParts(command);
+                    await parts.FillPartsAsync(command, cancellationToken);
                 }
             }
             return parts;
@@ -184,49 +188,50 @@ namespace remeLog.Infrastructure
             }
         }
 
-        static void FillParts(this ICollection<Part> parts, SqlCommand command)
+        static async Task FillPartsAsync(this ICollection<Part> parts, SqlCommand command, CancellationToken cancellationToken)
         {
-            using (SqlDataReader reader = command.ExecuteReader())
+            using (SqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken))
             {
-                while (reader.Read())
+                while (await reader.ReadAsync(cancellationToken))
                 {
-                    var guid = reader.GetGuid(0);
-                    var machine = reader.GetString(1);                  
-                    var shift = reader.GetString(2);                  
-                    var shiftDate = reader.GetDateTime(3);                
-                    var @operator = reader.GetString(4);                  
-                    var partName = reader.GetString(5);                  
-                    var order = reader.GetString(6);                  
-                    var setup = reader.GetInt32(7);                   
-                    var finishedCount = reader.GetInt32(8);
-                    var totalCount = reader.GetInt32(9);                   
-                    var startSetupTime = reader.GetDateTime(10);               
-                    var startMachiningTime = reader.GetDateTime(11);
-                    var setupTimeFact = reader.GetDouble(12);                 
-                    var endMachiningTime = reader.GetDateTime(13);               
-                    var setupTimePlan = reader.GetDouble(14);                 
-                    var setupTimePlanForReport = reader.GetDouble(15);                 
-                    var singleProductionTimePlan = reader.GetDouble(16);                 
-                    var productionTimeFact = reader.GetDouble(17);                 
-                    var machininhTime = reader.GetTimeSpan(18);               
-                    var setupDowntimes = reader.GetDouble(19);                 
-                    var machiningDowntimes = reader.GetDouble(20);                 
-                    var partialSetupTime = reader.GetDouble(21);                 
-                    var maintenanceTime = reader.GetDouble(22);                 
-                    var toolSearchingTime = reader.GetDouble(23);                 
-                    var mentoringTime = reader.GetDouble(24);                 
-                    var contactiongDepartmentsTime = reader.GetDouble(25);                 
-                    var fixtureMakingTime = reader.GetDouble(26);                 
-                    var hardwareFailureTime = reader.GetDouble(27);                 
-                    var operatorComment = reader.GetString(28);                 
-                    var masterSetupComment = reader.GetValue(29).ToString() ?? ""; 
-                    var masterMachiningComment = reader.GetValue(30).ToString() ?? ""; 
-                    var specifiedDowntimesComment = reader.GetValue(31).ToString() ?? ""; 
-                    var unspecifiedDowntimesComment = reader.GetValue(32).ToString() ?? ""; 
-                    var masterComment = reader.GetValue(33).ToString() ?? ""; 
-                    var fixedSetupComment = reader.GetValue(34).GetDouble();      
-                    var fixedProductionComment = reader.GetValue(35).GetDouble();     
-                    var engineerComment = reader.GetValue(36).ToString() ?? "";
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var guid = await reader.GetFieldValueAsync<Guid>(0);
+                    var machine = await reader.GetFieldValueAsync<string>(1);
+                    var shift = await reader.GetFieldValueAsync<string>(2);
+                    var shiftDate = await reader.GetFieldValueAsync<DateTime>(3);
+                    var @operator = await reader.GetFieldValueAsync<string>(4);
+                    var partName = await reader.GetFieldValueAsync<string>(5);
+                    var order = await reader.GetFieldValueAsync<string>(6);
+                    var setup = await reader.GetFieldValueAsync<int>(7);
+                    var finishedCount = await reader.GetFieldValueAsync<int>(8);
+                    var totalCount = await reader.GetFieldValueAsync<int>(9);
+                    var startSetupTime = await reader.GetFieldValueAsync<DateTime>(10);
+                    var startMachiningTime = await reader.GetFieldValueAsync<DateTime>(11);
+                    var setupTimeFact = await reader.GetFieldValueAsync<double>(12);
+                    var endMachiningTime = await reader.GetFieldValueAsync<DateTime>(13);
+                    var setupTimePlan = await reader.GetFieldValueAsync<double>(14);
+                    var setupTimePlanForReport = await reader.GetFieldValueAsync<double>(15);
+                    var singleProductionTimePlan = await reader.GetFieldValueAsync<double>(16);
+                    var productionTimeFact = await reader.GetFieldValueAsync<double>(17);
+                    var machininhTime = await reader.GetFieldValueAsync<TimeSpan>(18);
+                    var setupDowntimes = await reader.GetFieldValueAsync<double>(19);
+                    var machiningDowntimes = await reader.GetFieldValueAsync<double>(20);
+                    var partialSetupTime = await reader.GetFieldValueAsync<double>(21);
+                    var maintenanceTime = await reader.GetFieldValueAsync<double>(22);
+                    var toolSearchingTime = await reader.GetFieldValueAsync<double>(23);
+                    var mentoringTime = await reader.GetFieldValueAsync<double>(24);
+                    var contactiongDepartmentsTime = await reader.GetFieldValueAsync<double>(25);
+                    var fixtureMakingTime = await reader.GetFieldValueAsync<double>(26);
+                    var hardwareFailureTime = await reader.GetFieldValueAsync<double>(27);
+                    var operatorComment = await reader.GetFieldValueAsync<string>(28);
+                    var masterSetupComment = reader.GetValue(29)?.ToString() ?? "";
+                    var masterMachiningComment = reader.GetValue(30)?.ToString() ?? "";
+                    var specifiedDowntimesComment = reader.GetValue(31)?.ToString() ?? "";
+                    var unspecifiedDowntimesComment = reader.GetValue(32)?.ToString() ?? "";
+                    var masterComment = reader.GetValue(33)?.ToString() ?? "";
+                    var fixedSetupComment = reader.GetValue(34).GetDouble();
+                    var fixedProductionComment = reader.GetValue(35).GetDouble();
+                    var engineerComment = reader.GetValue(36)?.ToString() ?? "";
 
                     Part part = new Part(
                         guid,
@@ -352,21 +357,21 @@ namespace remeLog.Infrastructure
             }
         }
 
-        public static DbResult ReadMachines(this ICollection<MachineFilter> machines)
+        public async static Task<DbResult> ReadMachines(this ICollection<MachineFilter> machines)
         {
             try
             {
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
-                    connection.Open();
-                    string query = $"SELECT Name FROM cnc_machines WHERE IsActive = 1 ORDER BY Name ASC";
+                    await connection.OpenAsync();
+                    string query = $"SELECT Name, Type FROM cnc_machines WHERE IsActive = 1 ORDER BY Name ASC";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
-                            while (reader.Read())
+                            while (await reader.ReadAsync())
                             {
-                                machines.Add(new(reader.GetString(0), false));
+                                machines.Add(new(await reader.GetFieldValueAsync<string>(0), await reader.GetFieldValueAsync<string>(1), false));
                             }
                         }
                     }

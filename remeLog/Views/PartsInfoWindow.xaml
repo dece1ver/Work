@@ -106,6 +106,19 @@
             </Border>
         </ControlTemplate>
         <!--#region Columns -->
+        <DataGridTextColumn x:Key="MachineColumn" Header="Станок" Binding="{Binding Machine}" 
+                            Width="85" IsReadOnly="True" 
+                            Visibility="{Binding DataContext.MachineVisibility, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+        
         <DataGridTextColumn x:Key="ShiftDateColumn" Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy, Converter={StaticResource ShortDateConverter}}" Width="50">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
@@ -128,7 +141,7 @@
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
-
+        
         <DataGridTextColumn x:Key="OperatorColumn" Header="Оператор" Binding="{Binding Operator}" Width="95">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
@@ -771,6 +784,10 @@
                     <MenuItem Command="{Binding ShowAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать все"/>
                     <MenuItem Command="{Binding HideAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Снять все"/>
                     <MenuItem Command="{Binding InvertMachinesCommand}" HorizontalAlignment="Stretch" Header="Инвертировать"/>
+                    <MenuItem Command="{Binding SetLatheMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать токарные"/>
+                    <MenuItem Command="{Binding SetMillMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать фрезерные"/>
+                    <MenuItem Command="{Binding SetVerMillMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать вертикально-фрезерные"/>
+                    <MenuItem Command="{Binding SetHorMillMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать горизонтально-фрезерные"/>
                 </MenuItem>
                 <MenuItem Header="Вид">
                     <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource ConfirmIconFlex}"
@@ -820,7 +837,7 @@
                     </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Экспорт">
-                    <MenuItem Command="{Binding OperatorReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
+                    <MenuItem Command="{Binding OperatorReportToExcelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" Icon="{StaticResource OperatorsIcon}"
                               ToolTip="Экспорт отчёта по операторам" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
                             <TextBlock Text="Отчёт по операторам"/>
@@ -846,8 +863,15 @@
                     </MenuItem>
                 </MenuItem>
             </Menu>
-            <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
-                      ColumnWidth="SizeToCells" CanUserSortColumns="False" VerticalScrollBarVisibility="Visible" SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False" SelectionMode="Extended"
+            <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
+                      VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
+                      ColumnWidth="SizeToCells" CanUserSortColumns="False" 
+                      VerticalScrollBarVisibility="Visible" 
+                      SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False" 
+                      SelectionMode="Extended" EnableColumnVirtualization="True" 
+                      EnableRowVirtualization="True"
+                      VirtualizingPanel.IsVirtualizing="True" 
+                      VirtualizingPanel.VirtualizationMode="Recycling"
                       IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0" SelectedItem="{Binding SelectedPart, UpdateSourceTrigger=PropertyChanged}"
                       AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectedCellsChanged="DataGrid_SelectedCellsChanged" PreviewKeyDown="DataGrid_PreviewKeyDown"
                       >
@@ -906,6 +930,7 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
+                    <StaticResource ResourceKey="MachineColumn"/>
                     <StaticResource ResourceKey="ShiftDateColumn"/>
                     <StaticResource ResourceKey="ShiftColumn"/>
                     <StaticResource ResourceKey="OperatorColumn"/>
