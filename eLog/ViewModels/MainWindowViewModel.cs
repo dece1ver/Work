@@ -288,7 +288,7 @@ namespace eLog.ViewModels
 
         #region StartDetail
         public ICommand StartDetailCommand { get; }
-        private async void OnStartDetailCommandExecuted(object p)
+        private void OnStartDetailCommandExecuted(object p)
         {
             _editPart = true;
             if (AppSettings.Instance.DebugMode) WriteLog($"Старт новой детали.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tВсего деталей: {Parts.Count}");
@@ -462,7 +462,7 @@ namespace eLog.ViewModels
 
         #region EditDetail
         public ICommand EditDetailCommand { get; }
-        private async void OnEditDetailCommandExecuted(object p)
+        private void OnEditDetailCommandExecuted(object p)
         {
             _editPart = true;
             using (Overlay = new())
@@ -498,7 +498,7 @@ namespace eLog.ViewModels
 
         #region EndDetail
         public ICommand EndDetailCommand { get; }
-        private async void OnEndDetailCommandExecuted(object p)
+        private void OnEndDetailCommandExecuted(object p)
         {
             using (Overlay = new())
             {
@@ -662,7 +662,7 @@ namespace eLog.ViewModels
                 {
                     case WriteResult.Ok:
                         part.IsSynced = true;
-                        Status = $"Информация обновлена: [{partName}]";
+                        Status = $"Информация обновлена: [{part.Order} - {partName}, Уст №{part.Setup}]";
                         break;
                     case WriteResult.FileNotExist:
                         Status = "Таблица не найдена.";
@@ -687,7 +687,7 @@ namespace eLog.ViewModels
                         part.Id = await part.WriteToXlAsync(progress);
                         if (part.Id == -1) return false;
                         part.IsSynced = true;
-                        Status = $"Информация записана: [{partName}]";
+                        Status = $"Информация записана: [{part.Order} - {partName}, Уст №{part.Setup}]";
                         ProgressBarVisibility = Visibility.Hidden;
                         break;
                     default:
@@ -715,7 +715,7 @@ namespace eLog.ViewModels
                         break;
                     // Part exists
                     case -2:
-                        Status = "Отмена записи, деталь была изменена.";
+                        Status = "Обнаружен совпадающий GUID, отмена записи.";
                         ProgressBarVisibility = Visibility.Hidden;
                         break;
                     // Прочие ошибки
@@ -726,7 +726,7 @@ namespace eLog.ViewModels
                     default:
                         part.IsSynced = true;
                         ProgressBarVisibility = Visibility.Hidden;
-                        Status = $"Информация записана: [{partName}]";
+                        Status = $"Информация записана: [{part.Order} - {partName}, Уст №{part.Setup}]";
                         break;
                 }
                 if (part.Id == -1) return false;

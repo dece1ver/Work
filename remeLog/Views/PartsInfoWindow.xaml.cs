@@ -69,22 +69,22 @@ namespace remeLog.Views
                     {
                         switch (column.DisplayIndex)
                         {
-                            case 1:
+                            case 2:
                                 d.ShiftFilter = d.ShiftFilter.FilterText == p.Shift ? new Shift(Infrastructure.Types.ShiftType.All) : new Shift(p.Shift);
                                 break;
-                            case 2:
+                            case 3:
                                 d.OperatorFilter = d.OperatorFilter == p.Operator ? "" : p.Operator;
                                 break;
-                            case 3:
+                            case 4:
                                 d.PartNameFilter = d.PartNameFilter == p.PartName ? "" : p.PartName;
                                 break;
-                            case 4:
+                            case 5:
                                 d.OrderFilter = d.OrderFilter == p.Order ? "" : p.Order;
                                 break;
-                            case 7:
+                            case 8:
                                 d.SetupFilter = d.SetupFilter == p.Setup ? null : p.Setup;
                                 break;
-                            case 38:
+                            case 39:
                                 switch (p.EngineerComment)
                                 {
                                     case "":
@@ -115,7 +115,6 @@ namespace remeLog.Views
                                 break;
                         }
                     }
-                    
                 }
             }
         }

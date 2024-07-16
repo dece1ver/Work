@@ -2,13 +2,10 @@
 using eLog.Models;
 using eLog.Views.Windows.Dialogs;
 using libeLog;
-using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Models;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -184,10 +181,10 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 progress.Report("Создание бэкапа таблицы...");
-                if (!BackupXl()) throw new IOException("Ошибка при создании бэкапа таблицы.");
+                if (! await BackupXlAsync(progress)) throw new IOException("Ошибка при создании бэкапа таблицы.");
                 using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
-                    progress.Report("Создание записи");
+                    progress.Report("Создание записи и присвоение номера...");
                     var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
                     var ws = wb.Worksheet(1);
                     ws.LastRowUsed().InsertRowsBelow(1);
@@ -318,8 +315,8 @@ namespace eLog.Infrastructure.Extensions
                         }
                         break;
                     }
-                    progress.Report($"Присвоен номер {id}. Запись в файл...");
-                    if (AppSettings.Instance.DebugMode) { WriteLog($"Присвоен номер {id}. Запись в файл..."); }
+                    progress.Report($"Присвоен номер {id}. Запись в таблицу...");
+                    if (AppSettings.Instance.DebugMode) { WriteLog($"Присвоен номер {id}. Запись в таблицу..."); }
                     Debug.Print("Write");
                     wb.Save(true);
                     if (AppSettings.Instance.DebugMode) { WriteLog($"Записано."); }
@@ -389,17 +386,16 @@ namespace eLog.Infrastructure.Extensions
             var result = WriteResult.NotFinded;
             try
             {
-                progress.Report("Создание бэкапа таблицы...");
                 var partial = SetPartialState(ref part, false);
-                
+
                 if (doBackup)
                 {
-                    if (!BackupXl())
+                    if (!await BackupXlAsync(progress))
                     {
                         throw new IOException("Ошибка при создании бэкапа таблицы.");
                     }
                 }
-                progress.Report("Открытие таблицы...");
+                progress.Report("Чтение таблицы...");
                 using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
@@ -465,8 +461,8 @@ namespace eLog.Infrastructure.Extensions
                         xlRow.Cell(45).Value = part.SetupTimePlan;
                         xlRow.Cell(46).Value = part.SingleProductionTimePlan;
                         result = WriteResult.Ok;
-                        progress.Report("Запись файла...");
-                        if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в файл..."); }
+                        progress.Report("Запись таблицы...");
+                        if (AppSettings.Instance.DebugMode) { WriteLog($"Запись в таблицу..."); }
                         Debug.Print("Rewrite");
                         wb.Save(true);
                         Debug.Print("Ok");
@@ -517,17 +513,22 @@ namespace eLog.Infrastructure.Extensions
             return result;
         }
 
-        private static bool BackupXl(int count = 3)
+        private async static Task<bool> BackupXlAsync(IProgress<string> progress, int count = 3)
         {
             for (int i = 1; i <= count; i++)
             {
+                
                 if (AppSettings.Instance.DebugMode) WriteLog($"Попытка бэкапа таблицы...{i}");
                 try
                 {
-                    using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
-                    File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
-                    if (AppSettings.Instance.DebugMode) WriteLog("Успешно.");
-                    Thread.Sleep(200);
+                    await Task.Run(() =>
+                    {
+                        progress.Report(i == 1 ? "Создание бэкапа таблицы..." : $"Создание бэкапа таблицы...попытка №{i}");
+                        using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
+                        File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                        if (AppSettings.Instance.DebugMode) WriteLog("Успешно.");
+                        Thread.Sleep(200);
+                    });
                     return true;
                 }
                 catch
