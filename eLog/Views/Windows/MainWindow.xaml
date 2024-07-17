@@ -47,6 +47,8 @@
                 </MenuItem>
             </Menu>
             <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True">
+                <Button Margin="4 4 -4 0" Content="{StaticResource DataTableIcon}" Width="34" Style="{StaticResource GeneralButton}"
+                        Command="{Binding LoadProductionTasksCommand}"/>
                 <TextBlock Text="{Binding Machine.Name}" d:Text="Станок" Padding="0 3" Margin="9 0" DockPanel.Dock="Left"/>
                 <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
                 <ComboBox ItemsSource="{Binding Operators}" DockPanel.Dock="Left"

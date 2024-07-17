@@ -63,14 +63,22 @@ namespace eLog.Models
                     SafeName = "Rontek HTC650M";
                     break;
                 case 13:
+                    Name = "Rontek HTC420 №1";
+                    SafeName = "Rontek HTC420 (1)";
+                    break;
+                case 14:
+                    Name = "Rontek HTC420 №2";
+                    SafeName = "Rontek HTC420 (2)";
+                    break;
+                case 15:
                     Name = "Rontek VMC40C";
                     SafeName = "Rontek VMC40C";
                     break;
-                case 14:
+                case 16:
                     Name = "Rontek VMC90C";
                     SafeName = "Rontek VMC90C";
                     break;
-                case 15:
+                case 17:
                     Name = "Rontek HB1316";
                     SafeName = "Rontek HB1316";
                     break;

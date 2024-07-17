@@ -17,11 +17,13 @@ using System.Windows.Threading;
 namespace eLog.Views.Windows.Settings
 {
     /// <summary>
-    /// Логика взаимодействия для AppSettingsWindow.xaml
+    /// Сохранение настроек происходит в вызывающем окне при DialogResult == true
     /// </summary>
     public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     {
         private string _XlPath;
+        private string _GoogleCredentialsPath;
+        private string _GsId;
         private string _OrdersSourcePath;
         private Machine _Machine;
         private string[] _OrderQualifiers;
@@ -43,6 +45,18 @@ namespace eLog.Views.Windows.Settings
         {
             get => _OrdersSourcePath;
             set => Set(ref _OrdersSourcePath, value);
+        }
+
+        public string GoogleCredentialsPath
+        {
+            get => _GoogleCredentialsPath;
+            set => Set(ref _GoogleCredentialsPath, value);
+        }
+
+        public string GsId
+        {
+            get => _GsId;
+            set => Set(ref _GsId, value);
         }
 
 
@@ -81,26 +95,20 @@ namespace eLog.Views.Windows.Settings
 
         public AppSettingsWindow()
         {
-            Machines = Enumerable.Range(0, 16).Select(i => new Machine(i)).ToList();
+            Machines = AppSettings.Machines;
             StorageTypes = new List<StorageType>()
-        {
-            new StorageType(StorageType.Types.Excel),
-            new StorageType(StorageType.Types.Database),
-            new StorageType (StorageType.Types.All)
-        };
+            {
+                new StorageType(StorageType.Types.Excel),
+                new StorageType(StorageType.Types.Database),
+                new StorageType (StorageType.Types.All)
+            };
             _StorageType = AppSettings.Instance.StorageType;
             _XlPath = AppSettings.Instance.XlPath;
             _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
             _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
             _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
-            //if (AppSettings.Instance.StorageType is null)
-            //{
-            //    _StorageType = new StorageType(StorageType.Types.Excel);
-            //} 
-            //else
-            //{
-            //    _StorageType = StorageTypes.First(x => x.Type == AppSettings.Instance.StorageType.Type);
-            //}
+            _GoogleCredentialsPath = AppSettings.Instance.GoogleCredentialsPath ?? "";
+            _GsId = AppSettings.Instance.GsId ?? "";
             _ConnectionString = AppSettings.Instance.ConnetctionString ?? "";
             _DebugMode = AppSettings.Instance.DebugMode;
             InitializeComponent();
@@ -244,6 +252,17 @@ namespace eLog.Views.Windows.Settings
             {
                 ConnectionStringTextBox.IsEnabled = true;
             }
+        }
+
+        private void SetGoogleCredentialsButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dlg = new()
+            {
+                Filter = "JSON (*.json)|*.json",
+                DefaultExt = "json"
+            };
+            if (dlg.ShowDialog() != true) return;
+            GoogleCredentialsPath = dlg.FileName;
         }
     }
 }

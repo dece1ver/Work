@@ -1,4 +1,5 @@
 ﻿using eLog.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;

@@ -44,6 +44,7 @@ namespace eLog.ViewModels
 
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
+            LoadProductionTasksCommand = new LambdaCommand(OnLoadProductionTasksCommandExecuted, CanLoadProductionTasksCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
 
             Parts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(Parts));
@@ -219,6 +220,26 @@ namespace eLog.ViewModels
             }
         }
         private static bool CanEditSettingsCommandExecute(object p) => true;
+        #endregion
+
+        #region LoadProductionTasks
+        public ICommand LoadProductionTasksCommand { get; }
+        private async void OnLoadProductionTasksCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                try
+                {
+                    var progress = new Progress<string>(m => Status = m);
+                    var tasks = await GoogleSheets.GetProductionTasksData(progress);
+                    MessageBox.Show(string.Join("\n", tasks.Select(t => t.PartName)));
+                } catch 
+                {
+                    Status = "Список работы недоступен.";
+                }
+            }
+        }
+        private static bool CanLoadProductionTasksCommandExecute(object p) => true;
         #endregion
 
         #region EditOperators

@@ -95,6 +95,8 @@ namespace eLog.Services
             AppSettings.Instance.OrderQualifiers = dlg.OrderQualifiers;
             AppSettings.Instance.DebugMode = dlg.DebugMode;
             AppSettings.Instance.StorageType = dlg.StorageType;
+            AppSettings.Instance.GoogleCredentialsPath = dlg.GoogleCredentialsPath;
+            AppSettings.Instance.GsId = dlg.GsId;
             AppSettings.Instance.ConnetctionString = dlg.ConnectionString;
             if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
             return true;

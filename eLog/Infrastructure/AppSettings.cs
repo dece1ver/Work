@@ -3,9 +3,11 @@ using eLog.Models;
 using libeLog.Models;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows.Threading;
@@ -54,6 +56,8 @@ namespace eLog.Infrastructure
 
         private Machine _Machine;
         private string _XlPath;
+        private string _GoogleCredentialsPath;
+        private string _GsId;
         private string _OrdersSourcePath;
         private string[] _OrderQualifiers;
         private DeepObservableCollection<Operator> _Operators;
@@ -64,6 +68,8 @@ namespace eLog.Infrastructure
         private StorageType _StorageType;
         private string _ConnetctionString;
         private bool _DebugMode;
+
+
 
         /// <summary> Текущий станок </summary>
         public Machine Machine
@@ -77,6 +83,20 @@ namespace eLog.Infrastructure
         {
             get => _XlPath;
             set => Set(ref _XlPath, value);
+        }
+
+        /// <summary> Путь к файлу с данными для google api </summary>
+        public string GoogleCredentialsPath
+        {
+            get => _GoogleCredentialsPath;
+            set => Set(ref _GoogleCredentialsPath, value);
+        }
+
+        /// <summary> ID гугл таблицы </summary>
+        public string GsId
+        {
+            get => _GsId;
+            set => Set(ref _GsId, value);
         }
 
         /// <summary> Путь к таблице с номенклатурой </summary>
@@ -148,8 +168,8 @@ namespace eLog.Infrastructure
             set => Set(ref _DebugMode, value);
         }
 
-
-
+        [JsonIgnore]
+        public static List<Machine> Machines { get; } = Enumerable.Range(0, 18).Select(i => new Machine(i)).ToList(); // кейсы в machine model + 1
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private void CreateBaseConfig()
