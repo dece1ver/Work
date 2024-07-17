@@ -1,18 +1,13 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using eLog.Models;
+﻿using eLog.Models;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
-using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace eLog.Infrastructure
 {
@@ -95,7 +90,7 @@ namespace eLog.Infrastructure
 
         public static string SafeGet(IList<object> list, int index)
         {
-            return (list.Count > index && list[index] != null) ? list[index].ToString() : "";
+            return (list.Count > index && list[index] != null) ? list[index].ToString()! : "";
         }
     }
 }
