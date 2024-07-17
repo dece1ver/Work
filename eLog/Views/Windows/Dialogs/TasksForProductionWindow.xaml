@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:eLog.Views.Windows.Dialogs"
         xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:inf="clr-namespace:eLog.Infrastructure"
-        mc:Ignorable="d" DataContext="{Binding RelativeSource={RelativeSource AncestorType=local:TasksForProductionWindow}}"
-        Title="Задания на производство" Height="450" Width="800">
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d" d:DataContext="{Binding RelativeSource={RelativeSource AncestorType=local:TasksForProductionWindow}}"
+        Title="Задания на производство" Height="745" Width="750">
     <Border BorderBrush="Gray" BorderThickness="1">
         <DockPanel>
             <Button DockPanel.Dock="Bottom" Margin="20" Width="120" x:Name="OkButton" Height="42"
@@ -17,11 +18,24 @@
                     <cmd:CloseDialogCommand DialogResult="True"/>
                 </Button.Command>
             </Button>
-            <ListView ItemsSource="{Binding Tasks}">
+            <ListView ItemsSource="{Binding Tasks}" IsManipulationEnabled="False" BorderThickness="0" Margin="0 -1"
+                      BorderBrush="Transparent" Background="Transparent"
+                      ItemContainerStyle="{StaticResource ListViewItemsStyle}" FontSize="14">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <GroupBox Header="{Binding PartName}">
-                            
+                        <GroupBox>
+                            <GroupBox.Header>
+                                <TextBlock Text="{Binding PartName}" FontWeight="SemiBold"/>
+                            </GroupBox.Header>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Order, StringFormat={}{0} -}"/>
+                                    <TextBlock Text="{Binding PartsCount, StringFormat={} {0} шт.}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding EngeneersComment, StringFormat={}Комментарий ТО: {0}}"/>
+                                <TextBlock Text="{Binding PlantComment, StringFormat={}Комментарий МЦ: {0}}"/>
+                                <TextBlock Text="{Binding PdComment, StringFormat={}Комментарий ПДО: {0}}"/>
+                            </StackPanel>
                         </GroupBox>
                     </DataTemplate>
                 </ListView.ItemTemplate>

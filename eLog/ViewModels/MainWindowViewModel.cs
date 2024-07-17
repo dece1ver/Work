@@ -149,6 +149,16 @@ namespace eLog.ViewModels
             set => Set(ref _ProgressBarVisibility, value);
         }
 
+
+        private bool _ProductionTasksIsLoading;
+        /// <summary> В процессе ли загрузка заданий на производство </summary>
+        public bool ProductionTasksIsLoading
+        {
+            get => _ProductionTasksIsLoading;
+            set => Set(ref _ProductionTasksIsLoading, value);
+        }
+
+
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { };
         public bool CanStartShift => CurrentOperator is { } && !string.IsNullOrEmpty(CurrentShift);
@@ -226,17 +236,42 @@ namespace eLog.ViewModels
         public ICommand LoadProductionTasksCommand { get; }
         private async void OnLoadProductionTasksCommandExecuted(object p)
         {
-            using (Overlay = new())
+            _cts = new CancellationTokenSource();
+            if (ProductionTasksIsLoading) _cts.Cancel();
+            try
             {
-                try
+                ProgressBarVisibility = Visibility.Visible;
+                ProductionTasksIsLoading = true;
+                var progress = new Progress<string>(m => Status = m);
+                var tasks = await GoogleSheets.GetProductionTasksData(progress, _cts.Token);
+                ProductionTasksIsLoading = false;
+                ProgressBarVisibility = Visibility.Collapsed;
+                using (Overlay = new())
                 {
-                    var progress = new Progress<string>(m => Status = m);
-                    var tasks = await GoogleSheets.GetProductionTasksData(progress);
-                    MessageBox.Show(string.Join("\n", tasks.Select(t => t.PartName)));
-                } catch 
-                {
-                    Status = "Список работы недоступен.";
+                    if (tasks.Count > 0)
+                    {
+                        TasksForProductionWindow tasksWindow = new(tasks) { Owner = Application.Current.MainWindow };
+                        tasksWindow.ShowDialog();
+                    } 
+                    else
+                    {
+                        MessageBox.Show("В списке нет заданий под данный станок.", "Задания на производство");
+                    }
                 }
+
+            }
+            catch (OperationCanceledException)
+            {
+                Status = "Загрузка списка отменена.";
+            }
+            catch
+            {
+                Status = "Список работы недоступен.";
+            }
+            finally
+            {
+                ProductionTasksIsLoading = false;
+                ProgressBarVisibility = Visibility.Collapsed;
             }
         }
         private static bool CanLoadProductionTasksCommandExecute(object p) => true;
@@ -411,7 +446,7 @@ namespace eLog.ViewModels
                     OnPropertyChanged(nameof(Parts));
                     AppSettings.Instance.Parts = Parts;
                     AppSettings.Save();
-                    
+
                 }
             }
         }
@@ -567,7 +602,7 @@ namespace eLog.ViewModels
                         // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
                         var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
 
-                        #pragma warning disable CA1416 // Проверка совместимости платформы
+#pragma warning disable CA1416 // Проверка совместимости платформы
                         switch (AppSettings.Instance.StorageType.Type)
                         {
                             case StorageType.Types.Database:
@@ -608,7 +643,7 @@ namespace eLog.ViewModels
                             default:
                                 break;
                         }
-                        #pragma warning restore CA1416 // Проверка совместимости платформы
+#pragma warning restore CA1416 // Проверка совместимости платформы
                         ProgressBarVisibility = Visibility.Hidden;
                         OnPropertyChanged(nameof(part.Title));
                         //Application.Current.Dispatcher.Invoke(delegate

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using eLog.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,12 +20,13 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class TasksForProductionWindow : Window
     {
-        public TasksForProductionWindow(List<TasksForProductionWindow> tasks)
+        public TasksForProductionWindow(IReadOnlyList<ProductionTaskData> tasks)
         {
+            DataContext = this;
             Tasks = tasks;
             InitializeComponent();
         }
 
-        public List<TasksForProductionWindow> Tasks { get; set; }
+        public IReadOnlyList<ProductionTaskData> Tasks { get; set; }
     }
 }

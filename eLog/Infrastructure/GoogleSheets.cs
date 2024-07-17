@@ -5,8 +5,11 @@ using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Printing;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace eLog.Infrastructure
@@ -31,7 +34,7 @@ namespace eLog.Infrastructure
             return credential;
         }
 
-        public static async Task<List<ProductionTaskData>> GetProductionTasksData(IProgress<string> progress)
+        public static async Task<IReadOnlyList<ProductionTaskData>> GetProductionTasksData(IProgress<string> progress, CancellationToken cancellationToken)
         {
             List<ProductionTaskData> data = new List<ProductionTaskData>();
             SheetsService = new SheetsService(new BaseClientService.Initializer()
@@ -40,7 +43,7 @@ namespace eLog.Infrastructure
             });
             SpreadsheetsResource.ValuesResource.GetRequest request = SheetsService.Spreadsheets.Values.Get(AppSettings.Instance.GsId, "Загрузка станков!A1:J200");
             progress.Report("Подключение к списку...");
-            ValueRange response = await request.ExecuteAsync();
+            ValueRange response = await request.ExecuteAsync(cancellationToken);
             progress.Report("Формирование списка работы...");
             IList<IList<object>> values = response.Values;
             bool machineFound = false;
@@ -49,6 +52,7 @@ namespace eLog.Infrastructure
             {
                 foreach (var row in values)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (row == null || row.Count == 0) continue;
                     if (skipCnt > 0)
                     {
@@ -63,8 +67,8 @@ namespace eLog.Infrastructure
                         skipCnt = 2;
                     }
                     else if (machineFound && row[0] is string otherMachine 
-                        && otherMachine.Contains('|') 
-                        && AppSettings.Machines.Select(m => m.Name).Any(name => name.Contains(otherMachine.Split('|')[0].Trim())))
+                        && (otherMachine.ToLower() == "маркировка" || otherMachine.Contains('|') 
+                        && AppSettings.Machines.Select(m => m.Name).Any(name => name.Contains(otherMachine.Split('|')[0].Trim()))))
                     {
                         break;
                     }
@@ -80,12 +84,12 @@ namespace eLog.Infrastructure
                         var laborInput = SafeGet(row, 8);
                         var pdComment = SafeGet(row, 9);
 
-                        data.Add(new ProductionTaskData(partName, order, count, date, plantComment, priority, engineerComment, laborInput, pdComment));
+                        data.Add(new ProductionTaskData(partName, order.ToUpper(), count, date, plantComment, priority, engineerComment, laborInput, pdComment));
                     }
                 }
             }
             progress.Report("Список работы сформирован.");
-            return data;
+            return data.OrderBy(pd => pd.Priority).ToList().AsReadOnly();
         }
 
         public static string SafeGet(IList<object> list, int index)

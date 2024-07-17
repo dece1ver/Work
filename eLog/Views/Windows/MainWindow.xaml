@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:inf="clr-namespace:eLog.Infrastructure"
-        xmlns:ext="clr-namespace:eLog.Infrastructure.Extensions"
+        xmlns:v="clr-namespace:eLog.Views.Windows"
         xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
@@ -27,6 +27,24 @@
         <Style TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
         </Style>
+        <Style x:Key="RotatingIconStyle" TargetType="Viewbox">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ProductionTasksIsLoading}" Value="True">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard RepeatBehavior="Forever">
+                                <DoubleAnimation
+                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                    From="0" To="360" Duration="0:0:1" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <StopStoryboard />
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <Grid>
         <DockPanel LastChildFill="True" Grid.Column="0">
@@ -47,8 +65,49 @@
                 </MenuItem>
             </Menu>
             <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True">
-                <Button Margin="4 4 -4 0" Content="{StaticResource DataTableIcon}" Width="34" Style="{StaticResource GeneralButton}"
-                        Command="{Binding LoadProductionTasksCommand}"/>
+                <Button Margin="4 4 -4 0" Width="34"
+                        Command="{Binding LoadProductionTasksCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource GeneralButton}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ProductionTasksIsLoading}" Value="True">
+                                    <Setter Property="Content">
+                                        <Setter.Value>
+                                            <Label Content="{StaticResource SyncIcon}">
+                                                <Label.RenderTransform>
+                                                    <RotateTransform CenterX="13" CenterY="13"/>
+                                                </Label.RenderTransform>
+                                                <Label.Style>
+                                                    <Style TargetType="Label">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ProductionTasksIsLoading}" Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                            <DoubleAnimation
+                                                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                From="0" To="360" Duration="0:0:1" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                                <DataTrigger.ExitActions>
+                                                                    <StopStoryboard />
+                                                                </DataTrigger.ExitActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Label.Style>
+                                            </Label>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ProductionTasksIsLoading}" Value="False">
+                                    <Setter Property="Content" Value="{StaticResource OrderedListIcon}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <TextBlock Text="{Binding Machine.Name}" d:Text="Станок" Padding="0 3" Margin="9 0" DockPanel.Dock="Left"/>
                 <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
                 <ComboBox ItemsSource="{Binding Operators}" DockPanel.Dock="Left"
