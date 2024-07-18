@@ -12,6 +12,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -337,6 +338,23 @@ namespace eLog.ViewModels
                         }
 
                     }
+
+                    if (serviceResult.ResetTasksInfo)
+                    {
+                        try
+                        {
+                            foreach (var part in Parts)
+                            {
+                                part.TaskInfo = Part.PartTaskInfo.NoData;
+                                part.IsTaskStatusWritten = false;
+                            }
+                            Status += "Информация о списках сброшена.";
+                        }
+                        catch
+                        {
+                            Status = "Не удалось сбросить синхронизацию.";
+                        }
+                    }
                 }
             }
         }
@@ -603,7 +621,7 @@ namespace eLog.ViewModels
                         // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
                         var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
 
-#pragma warning disable CA1416 // Проверка совместимости платформы
+                        #pragma warning disable CA1416 // Проверка совместимости платформы
                         switch (AppSettings.Instance.StorageType.Type)
                         {
                             case StorageType.Types.Database:
@@ -644,7 +662,7 @@ namespace eLog.ViewModels
                             default:
                                 break;
                         }
-#pragma warning restore CA1416 // Проверка совместимости платформы
+                        #pragma warning restore CA1416 // Проверка совместимости платформы
                         ProgressBarVisibility = Visibility.Hidden;
                         OnPropertyChanged(nameof(part.Title));
                         //Application.Current.Dispatcher.Invoke(delegate
@@ -655,6 +673,14 @@ namespace eLog.ViewModels
                         //});
 
                     }
+                    //MessageBox.Show($"Before SetPartsTaskInfo {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
+                    await SetPartsTaskInfo();
+                    //MessageBox.Show($"After SetPartsTaskInfo {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
+                    await Task.Delay(500);
+                    //MessageBox.Show($"After Delay {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
+                    await WriteTasksStatuses();
+                    //MessageBox.Show($"After WriteTasksStatuses {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
+
                     Thread.Sleep(2000);
                     Application.Current.Dispatcher.Invoke(delegate
                     {
@@ -674,16 +700,59 @@ namespace eLog.ViewModels
                     ProgressBarVisibility = Visibility.Hidden;
                     Thread.Sleep(30000);
                 }
+                catch (HttpRequestException e)
+                {
+                    Status = "Ошибка соединения";
+                    WriteLog("Ошибка соединения.");
+                }
                 catch (Exception e)
                 {
+                    MessageBox.Show(e.ToString());
                     Status = e.Message;
-                    WriteLog(e, "Ошибка синхронизации.");
+                    WriteLog(e, "Ошибка синхронизации");
                 }
                 finally
                 {
                     ProgressBarVisibility = Visibility.Hidden;
                 }
                 Thread.Sleep(10000);
+            }
+        }
+
+        async Task SetPartsTaskInfo()
+        {
+            if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath)) return;
+            foreach (var part in Parts.Where(p => p.TaskInfo == Part.PartTaskInfo.NoData))
+            {
+                if (_editPart) return;
+                var status = 0;
+                Progress<int> progress = new Progress<int>(p => status = p);
+                await part.GetPositionInTasksList(progress);
+                if (_editPart) return;
+                part.TaskInfo = status switch
+                {
+                    2 => Part.PartTaskInfo.NotInList,
+                    3 => Part.PartTaskInfo.InList,
+                    _ => Part.PartTaskInfo.NoData,
+                };
+                part.NotifyTaskStatus();
+            }
+        }
+
+        async Task WriteTasksStatuses()
+        {
+            if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath)) return;
+            foreach (var part in Parts.Where(p => p.TaskInfo == Part.PartTaskInfo.InList && !p.IsTaskStatusWritten))
+            {
+                if (_editPart) return;
+                var status = 0;
+                Progress<int> progress = new Progress<int>(p => status = p);
+                var partPosition = await part.GetPositionInTasksList(progress);
+                if (string.IsNullOrEmpty(partPosition)) continue;
+                if (_editPart) return;
+                await GoogleSheets.UpdateCellValue(partPosition, part.IsFinished == Part.State.Finished ? "(планшет) готово" : "(планшет) в работе", progress);
+                if (status == 1) part.IsTaskStatusWritten = true;
+                part.NotifyTaskStatus();
             }
         }
 

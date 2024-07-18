@@ -18,6 +18,7 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                     <RowDefinition/>
                     <RowDefinition Height="100"/>
                 </Grid.RowDefinitions>
@@ -27,7 +28,9 @@
                           IsChecked="{Binding ClearParts}"/>
                 <CheckBox Grid.Row="2" Content="Очистить логи" VerticalContentAlignment="Center" Margin="0 5"
                           IsChecked="{Binding ClearLogs}"/>
-                <Button Grid.Row="5" Style="{StaticResource GeneralButton}" DockPanel.Dock="Bottom" Margin="5" Content="Ok" FontSize="24" Padding="30 5" IsDefault="True" 
+                <CheckBox Grid.Row="3" Content="Сбросить информацию по спискам" VerticalContentAlignment="Center" Margin="0 5"
+                          IsChecked="{Binding ResetTasksInfo}"/>
+                <Button Grid.Row="6" Style="{StaticResource GeneralButton}" DockPanel.Dock="Bottom" Margin="5" Content="Ok" FontSize="24" Padding="30 5" IsDefault="True" 
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:ServiceMenuDialogWindow}}">
                     <Button.Command>
                         <cmd:CloseDialogCommand DialogResult="True"/>

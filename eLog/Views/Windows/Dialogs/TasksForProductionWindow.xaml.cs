@@ -28,5 +28,13 @@ namespace eLog.Views.Windows.Dialogs
         }
 
         public IReadOnlyList<ProductionTaskData> Tasks { get; set; }
+
+        private void TextBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                DragMove();
+            }
+        }
     }
 }

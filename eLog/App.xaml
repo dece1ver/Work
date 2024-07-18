@@ -19,6 +19,8 @@
             <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
             <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
             <cnv:SetupsVisibilityConverter x:Key="SetupsVisibilityConverter"/>
+            <cnv:TaskInfoTextConverter x:Key="TaskInfoTextConverter"/>
+            <cnv:TaskInfoVisibilityConverter x:Key="TaskInfoVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -6,10 +6,8 @@ using Google.Apis.Sheets.v4.Data;
 using libeLog.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Printing;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,6 +33,69 @@ namespace eLog.Infrastructure
             return credential;
         }
 
+        public static async Task<string> FindRowByValue(string searchValue, IProgress<int> progress, int column = 2)
+        {
+            progress.Report(0);
+            string range = "Загрузка станков!A1:J200";
+            Credential = GetCredentialsFromFile();
+            SheetsService = new SheetsService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = Credential,
+            });
+            var request = SheetsService.Spreadsheets.Values.Get(AppSettings.Instance.GsId, range);
+            ValueRange response = await request.ExecuteAsync();
+            progress.Report(1);
+            var values = response.Values;
+            bool machineFound = false;
+            if (values != null && values.Count > 0)
+            {
+                for (int i = 0; i < values.Count; i++)
+                {
+                    if (values[i] == null || values[i].Count == 0) continue;
+
+                    if (values[i][0] is string currentMachine 
+                        && currentMachine.Contains('|') 
+                        && AppSettings.Instance.Machine.Name.Contains(currentMachine.Split('|')[0].Trim()))
+                    {
+                        progress.Report(2);
+                        machineFound = true;
+                    }
+                    else if (machineFound && values[i][0] is string otherMachine 
+                        && (otherMachine.ToLower() == "маркировка" || otherMachine.Contains('|') 
+                        && AppSettings.Machines.Select(m => m.Name).Any(name => name.Contains(otherMachine.Split('|')[0].Trim()))))
+                    {
+                        break;
+                    }
+                    else if (machineFound && SafeGet(values[i], column).ToLower() == searchValue.ToLower())
+                    {
+                        progress.Report(3);
+                        return $"Загрузка станков!H{i + 1}";
+                    }
+                }
+            }
+            return "";
+        }
+
+        public static async Task UpdateCellValue(string range, string value, IProgress<int> progress)
+        {
+            progress.Report(0);
+            Credential = GetCredentialsFromFile();
+            SheetsService = new SheetsService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = Credential,
+            });
+            var valueRange = new ValueRange
+            {
+                Values = new List<IList<object>> { new List<object> { value } }
+            };
+
+            var updateRequest = SheetsService.Spreadsheets.Values.Update(valueRange, AppSettings.Instance.GsId, range);
+            updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.RAW;
+
+            await updateRequest.ExecuteAsync();
+            progress.Report(1);
+        }
+
         public static async Task<IReadOnlyList<ProductionTaskData>> GetProductionTasksData(IProgress<string> progress, CancellationToken cancellationToken)
         {
             List<ProductionTaskData> data = new List<ProductionTaskData>();
@@ -47,7 +108,7 @@ namespace eLog.Infrastructure
             progress.Report("Подключение к списку...");
             ValueRange response = await request.ExecuteAsync(cancellationToken);
             progress.Report("Формирование списка работы...");
-            IList<IList<object>> values = response.Values;
+            var values = response.Values;
             bool machineFound = false;
             int skipCnt = 0;
             if (values != null && values.Count > 0)
@@ -104,10 +165,10 @@ namespace eLog.Infrastructure
                 progress.Report("Список работы сформирован.");
 
             }
-
+            progress.Report("Сортировка списка.");
             var sortedData = data
                 .Select((item, index) => new { Item = item, Index = index })
-                .OrderBy(x => ParsePriority(x.Item.Priority), Comparer<int?>.Default)
+                .OrderBy(x => ParsePriority(x.Item.Priority), Comparer<int>.Default)
                 .ThenBy(x => x.Index)
                 .Select(x => x.Item)
                 .ToList()
@@ -115,15 +176,21 @@ namespace eLog.Infrastructure
             return sortedData;
         }
 
-        private static int? ParsePriority(string priority)
+        private static int ParsePriority(string priority)
         {
             if (int.TryParse(priority, out int result))
             {
                 return result;
             }
-            return null; // Вернет null, если не удалось распарсить как число
+            return 9999;
         }
 
+        /// <summary>
+        /// Получает значение ячейки
+        /// </summary>
+        /// <param name="list">Строка</param>
+        /// <param name="index">Столбец</param>
+        /// <returns>Значение ячейки, либо пустая строка</returns>
         public static string SafeGet(IList<object> list, int index)
         {
             return (list.Count > index && list[index] != null) ? list[index].ToString()! : "";

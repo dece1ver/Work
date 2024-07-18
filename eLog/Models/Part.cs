@@ -1,4 +1,5 @@
-﻿using eLog.Infrastructure;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using eLog.Infrastructure;
 using libeLog;
 using libeLog.Extensions;
 using libeLog.Models;
@@ -37,10 +38,14 @@ namespace eLog.Models
         private int _Id;
         private bool _IsSynced;
         private string _OperatorComments;
+        private PartTaskInfo _TaskInfo;
+        private bool _IsTaskStatusWritten;
 
         public Guid Guid { get; init; }
 
         public enum State { Finished, PartialSetup, InProgress }
+
+        public enum PartTaskInfo {NoData, InList, NotInList}
 
         /// <summary> Наименование </summary>
         public string Name
@@ -102,6 +107,34 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(InProduction));
                 OnPropertyChanged(nameof(EndDetailInfo));
+            }
+        }
+        
+        /// <summary> Информация о наличии детали в списке заданий </summary>
+        public PartTaskInfo TaskInfo
+        {
+            get => _TaskInfo;
+            set 
+            {
+                if (Set(ref _TaskInfo, value)) 
+                {
+                    OnPropertyChanged(nameof(IsTaskStatusWritten));
+                    OnPropertyChanged(nameof(NeedToSyncTask));
+                }
+            }
+        }
+        
+        /// <summary> Записан ли статус в список </summary>
+        public bool IsTaskStatusWritten
+        {
+            get => _IsTaskStatusWritten;
+            set
+            {
+                if (Set(ref _IsTaskStatusWritten, value))
+                {
+                    OnPropertyChanged(nameof(TaskInfo));
+                    OnPropertyChanged(nameof(NeedToSyncTask));
+                }
             }
         }
 
@@ -348,6 +381,8 @@ namespace eLog.Models
         /// <summary> Фактическое время наладки </summary>
         [JsonIgnore] public TimeSpan FullSetupTimeFact => StartMachiningTime - StartSetupTime;
 
+        /// <summary> Ненужное свойство потому-что не разобрался с разметкой и хотел спать </summary>
+        [JsonIgnore] public bool NeedToSyncTask => TaskInfo == PartTaskInfo.InList && !IsTaskStatusWritten;
 
         /// <summary> Фактическое время наладки с учетом перерывов </summary>
         [JsonIgnore]
@@ -491,6 +526,8 @@ namespace eLog.Models
                 Set(ref _IsSynced, value);
                 OnPropertyChanged(nameof(Title));
                 OnPropertyChanged(nameof(EndSetupInfo));
+                OnPropertyChanged(nameof(TaskInfo));
+                OnPropertyChanged(nameof(IsTaskStatusWritten));
             }
         }
 
@@ -617,6 +654,13 @@ namespace eLog.Models
             field = value;
             OnPropertyChanged(PropertyName);
             return true;
+        }
+
+        public void NotifyTaskStatus()
+        {
+            OnPropertyChanged(nameof(TaskInfo));
+            OnPropertyChanged(nameof(IsTaskStatusWritten));
+            OnPropertyChanged(nameof(NeedToSyncTask));
         }
     }
 }

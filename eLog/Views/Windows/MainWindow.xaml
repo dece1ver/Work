@@ -6,6 +6,7 @@
         xmlns:inf="clr-namespace:eLog.Infrastructure"
         xmlns:v="clr-namespace:eLog.Views.Windows"
         xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
+        xmlns:md="clr-namespace:eLog.Models"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:eLog" FontSize="24"
         Icon="/Views/Windows/elog.ico"
@@ -208,6 +209,15 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
+                                        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="1" Height="30" Width="150" VerticalAlignment="Top"
+                                                BorderBrush="LightGray" Margin="0 0 0 0" BorderThickness="1" Visibility="{Binding TaskInfo, Converter={StaticResource TaskInfoVisibilityConverter}}">
+                                            <Grid>
+                                                <Label Content="{StaticResource SyncIcon}" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                                       Visibility="{Binding NeedToSyncTask, Converter={StaticResource VisibilityConverter}}">
+                                                </Label>
+                                                <TextBlock Text="{Binding TaskInfo, Converter={StaticResource TaskInfoTextConverter}}" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
                                         <Grid Grid.Column="0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -221,6 +231,7 @@
                                                 <RowDefinition/>
                                                 <RowDefinition/>
                                             </Grid.RowDefinitions>
+                                            
                                             <TextBlock Grid.Column="0" Grid.Row="0" Margin="5 -1" 
                                                    Text="Установка:"/>
                                             <TextBlock Grid.Column="1" Grid.Row="0" Margin="5 -1" 
@@ -244,6 +255,7 @@
                                                    Text="{Binding EndDetailInfo}" />
                                         </Grid>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 -6 0 0">
+                                            
                                             <StackPanel Margin="0" Orientation="Horizontal" HorizontalAlignment="Right" 
                                                 Visibility="{Binding IsStarted, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}">
                                                 <Button Style="{StaticResource LvButton}" 

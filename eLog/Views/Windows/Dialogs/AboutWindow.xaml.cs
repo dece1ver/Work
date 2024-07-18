@@ -25,7 +25,7 @@ namespace eLog.Views.Windows.Dialogs
             InitializeComponent();
         }
         private int _secretMenuCounter = 0;
-        public (bool UnSyncAll, bool ClearParts, bool ClearLogs) ServiceResult;
+        public (bool UnSyncAll, bool ClearParts, bool ClearLogs, bool ResetTasksInfo) ServiceResult;
 
         public static string About
         {
@@ -73,14 +73,17 @@ namespace eLog.Views.Windows.Dialogs
                             ServiceResult.UnSyncAll = serviceWindow.UnsyncAllParts;
                             ServiceResult.ClearParts = serviceWindow.ClearParts;
                             ServiceResult.ClearLogs = serviceWindow.ClearLogs;
+                            ServiceResult.ResetTasksInfo = serviceWindow.ResetTasksInfo;
                         }
                     }
                     Util.WriteLog($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
                     Util.WriteLog($"serviceResult.ClearParts = {ServiceResult.ClearParts}");
                     Util.WriteLog($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
+                    Util.WriteLog($"serviceResult.ResetTasksInfo = {ServiceResult.ResetTasksInfo}");
                     Debug.Print($"serviceResult.UnSyncAll = {ServiceResult.UnSyncAll}");
                     Debug.Print($"serviceResult.ClearParts = {ServiceResult.ClearParts}");
                     Debug.Print($"serviceResult.ClearLogs = {ServiceResult.ClearLogs}");
+                    Debug.Print($"serviceResult.ResetTasksInfo = {ServiceResult.ResetTasksInfo}");
                 }
             }
         }
