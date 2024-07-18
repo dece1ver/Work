@@ -128,6 +128,43 @@ namespace libeLog.Extensions
         }
 
         /// <summary>
+        /// Назначает значение если строка пуста, если нет оставляет оригинальное, либо опционально применяет функцию для преобразования.
+        /// </summary>
+        /// <param name="checkString">Исходная строка.</param>
+        /// <param name="value">Значение, возвращаемое если исходная строка пустая или null.</param>
+        /// <param name="transform">Функция для преобразования оригинального значения, если строка не пустая.</param>
+        /// <returns>
+        /// Возвращает значение параметра <paramref name="value"/>, если исходная строка пустая или null;
+        /// оригинальное значение строки, если не задано преобразование;
+        /// либо результат применения функции <paramref name="transform"/>, если строка не пустая.
+        /// </returns>
+        public static string IfEmpty(this string checkString, string value, Func<string, string> transform = null!) 
+        {
+            if (string.IsNullOrEmpty(checkString)) return value;
+            return transform != null ? transform(checkString) : checkString;
+        }
+
+        /// <summary>
+        /// Обрезает слишком длинную строку по количеству символов
+        /// </summary>
+        /// <param name="str">Исходная строка</param>
+        /// <param name="length">Желаемая длина строки (без учета "...")</param>
+        /// <param name="ending">Добавлять ли многоточие (дает +3 к length)</param>
+        /// <returns>Обрезанная строка</returns>
+        public static string TrimLen(this string str, int length, bool ending = true)
+        {
+            if (string.IsNullOrEmpty(str)) return string.Empty;
+            if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), "Длина не может быть отрицательной.");
+
+            if (str.Length <= length) return str;
+
+            var trimmedLength = ending ? length - 3 : length;
+            if (trimmedLength < 0) return "...";
+
+            var result = str[..trimmedLength];
+            return ending ? result + "..." : result;
+        }
+        /// <summary>
         /// Проверяет наличие директории и права доступа к ней
         /// </summary>
         /// <param name="directoryPath"></param>

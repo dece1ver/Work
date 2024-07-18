@@ -5,37 +5,100 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:eLog.Views.Windows.Dialogs"
         xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
-        xmlns:inf="clr-namespace:eLog.Infrastructure"
-        WindowStartupLocation="CenterOwner"
+        xmlns:inf="clr-namespace:eLog.Infrastructure" FontSize="14"
+        WindowStartupLocation="CenterOwner" WindowStyle="None"
         mc:Ignorable="d" d:DataContext="{Binding RelativeSource={RelativeSource AncestorType=local:TasksForProductionWindow}}"
-        Title="Задания на производство" Height="745" Width="750">
-    <Border BorderBrush="Gray" BorderThickness="1">
+        Title="Задания на производство" Height="600" Width="1080">
+    <Border BorderBrush="Gray" BorderThickness="0">
         <DockPanel>
-            <Button DockPanel.Dock="Bottom" Margin="20" Width="120" x:Name="OkButton" Height="42"
+            <TextBlock DockPanel.Dock="Top" Text="Задания на производство" TextAlignment="Center" HorizontalAlignment="Right" FontWeight="SemiBold" Margin="0 -3 10 2"/>
+            <Button DockPanel.Dock="Bottom" Margin="10" Width="120" x:Name="OkButton" Height="42"
                     VerticalAlignment="Bottom" HorizontalAlignment="Right" Content="{StaticResource ConfirmIcon}" 
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:TasksForProductionWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="True"/>
                 </Button.Command>
             </Button>
-            <ListView ItemsSource="{Binding Tasks}" IsManipulationEnabled="False" BorderThickness="0" Margin="0 -1"
+            <ListView ItemsSource="{Binding Tasks}" IsManipulationEnabled="False" BorderThickness="0" Margin="-3 -5 -1 -3"
                       BorderBrush="Transparent" Background="Transparent"
-                      ItemContainerStyle="{StaticResource ListViewItemsStyle}" FontSize="14">
+                      ItemContainerStyle="{StaticResource ListViewItemsStyle}">
+                <ListView.Resources>
+                    <Style TargetType="RepeatButton">
+                        <Setter Property="Width" Value="40" />
+                        <Setter Property="Height" Value="40" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="RepeatButton">
+                                    <Border Background="Transparent" BorderThickness="0">
+                                        <ContentPresenter />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style TargetType="ScrollViewer">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ScrollViewer">
+                                    <Grid Background="{TemplateBinding Background}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ScrollContentPresenter
+                                            x:Name="ScrollContentPresenter"
+                                            Grid.Column="0"
+                                            Margin="{TemplateBinding Padding}"
+                                            Content="{TemplateBinding Content}"
+                                            ContentTemplate="{TemplateBinding ContentTemplate}" />
+                                        <ScrollBar
+                                            x:Name="PART_VerticalScrollBar"
+                                            Grid.Column="1"
+                                            Width="38"
+                                            Margin="0 12 0 3"
+                                            Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                            IsTabStop="False"
+                                            Maximum="{TemplateBinding ScrollableHeight}"
+                                            Orientation="Vertical"
+                                            Value="{TemplateBinding VerticalOffset}"
+                                            ViewportSize="{TemplateBinding ViewportHeight}" />
+                                    </Grid>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListView.Resources>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <GroupBox>
+                        <GroupBox BorderBrush="DarkGray">
                             <GroupBox.Header>
                                 <TextBlock Text="{Binding PartName}" FontWeight="SemiBold"/>
                             </GroupBox.Header>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Order, StringFormat={}{0} -}"/>
-                                    <TextBlock Text="{Binding PartsCount, StringFormat={} {0} шт.}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Order, StringFormat={}{0} -}"/>
+                                        <TextBlock Text="{Binding PartsCount, StringFormat={} {0} шт.}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Date, StringFormat={}Дата: {0}}"/>
+
                                 </StackPanel>
-                                <TextBlock Text="{Binding EngeneersComment, StringFormat={}Комментарий ТО: {0}}"/>
-                                <TextBlock Text="{Binding PlantComment, StringFormat={}Комментарий МЦ: {0}}"/>
-                                <TextBlock Text="{Binding PdComment, StringFormat={}Комментарий ПДО: {0}}"/>
-                            </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding PlantComment, StringFormat={}Комментарий МЦ: {0}}"/>
+                                    <TextBlock Text="{Binding EngeneersComment, StringFormat={}Комментарий ТО: {0}}"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{Binding PdComment, StringFormat={}Комментарий ПДБ: {0}}"/>
+                                    <TextBlock Text="{Binding LaborInput, StringFormat={}Трудоемкость: {0}}"/>
+                                </StackPanel>
+                            </Grid>
                         </GroupBox>
                     </DataTemplate>
                 </ListView.ItemTemplate>

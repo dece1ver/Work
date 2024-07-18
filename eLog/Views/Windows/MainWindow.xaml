@@ -120,7 +120,7 @@
                           Style="{StaticResource ComboBoxStyle}"
                           SelectedItem="{Binding CurrentShift}" 
                           IsEnabled="{Binding CanEditShiftAndParams}"
-                          Width="250" Margin="4 0 0 0"/>
+                          Width="150" Margin="4 0 0 0"/>
                     <Button Content="Начать смену" DockPanel.Dock="Left" Margin="4 0 0 0"
                             Visibility="{Binding ShiftStarted, Converter={StaticResource InvertedVisibilityConverter}}"
                             IsEnabled="{Binding CanStartShift}"

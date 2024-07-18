@@ -3,6 +3,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
+using libeLog.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -37,6 +38,7 @@ namespace eLog.Infrastructure
         public static async Task<IReadOnlyList<ProductionTaskData>> GetProductionTasksData(IProgress<string> progress, CancellationToken cancellationToken)
         {
             List<ProductionTaskData> data = new List<ProductionTaskData>();
+            Credential = GetCredentialsFromFile();
             SheetsService = new SheetsService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = Credential,
@@ -84,12 +86,42 @@ namespace eLog.Infrastructure
                         var laborInput = SafeGet(row, 8);
                         var pdComment = SafeGet(row, 9);
 
-                        data.Add(new ProductionTaskData(partName, order.ToUpper(), count, date, plantComment, priority, engineerComment, laborInput, pdComment));
+                        if (!string.IsNullOrEmpty(partName))
+                        {
+                            data.Add(new ProductionTaskData(
+                                partName,
+                                order.IfEmpty("Без М/Л", o => o.ToUpper()),
+                                count.IfEmpty("?"),
+                                date.IfEmpty("-"),
+                                plantComment.IfEmpty("-"),
+                                priority,
+                                engineerComment.IfEmpty("-"),
+                                laborInput.IfEmpty("-"),
+                                pdComment.IfEmpty("-")));
+                        }
                     }
                 }
+                progress.Report("Список работы сформирован.");
+
             }
-            progress.Report("Список работы сформирован.");
-            return data.OrderBy(pd => pd.Priority).ToList().AsReadOnly();
+
+            var sortedData = data
+                .Select((item, index) => new { Item = item, Index = index })
+                .OrderBy(x => ParsePriority(x.Item.Priority), Comparer<int?>.Default)
+                .ThenBy(x => x.Index)
+                .Select(x => x.Item)
+                .ToList()
+                .AsReadOnly();
+            return sortedData;
+        }
+
+        private static int? ParsePriority(string priority)
+        {
+            if (int.TryParse(priority, out int result))
+            {
+                return result;
+            }
+            return null; // Вернет null, если не удалось распарсить как число
         }
 
         public static string SafeGet(IList<object> list, int index)

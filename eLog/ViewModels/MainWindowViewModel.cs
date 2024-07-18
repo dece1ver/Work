@@ -236,6 +236,7 @@ namespace eLog.ViewModels
         public ICommand LoadProductionTasksCommand { get; }
         private async void OnLoadProductionTasksCommandExecuted(object p)
         {
+            if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath))
             _cts = new CancellationTokenSource();
             if (ProductionTasksIsLoading) _cts.Cancel();
             try
