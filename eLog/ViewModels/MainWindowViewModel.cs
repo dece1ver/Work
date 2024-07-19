@@ -28,6 +28,7 @@ namespace eLog.ViewModels
     {
         bool _editPart = false;
         bool _needSave = false;
+        SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private CancellationTokenSource _cts = new();
         public MainWindowViewModel()
         {
@@ -168,6 +169,7 @@ namespace eLog.ViewModels
 
         private bool _ShiftStarted = AppSettings.Instance.IsShiftStarted;
         private Visibility _ProgressBarVisibility = Visibility.Collapsed;
+        private object lockObject = new();
 
         public bool ShiftStarted
         {
@@ -619,88 +621,59 @@ namespace eLog.ViewModels
                         if (ProgressBarVisibility == Visibility.Visible) break;
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
                         // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
-                        var partName = part.Name.Length >= 83 ? part.Name[..80] + "..." : part.Name;
+                        var partName = part.Name.TrimLen(86);
 
-                        #pragma warning disable CA1416 // Проверка совместимости платформы
                         switch (AppSettings.Instance.StorageType.Type)
                         {
                             case StorageType.Types.Database:
-
-                                ProgressBarVisibility = Visibility.Visible;
-                                Status = $"Запись в БД: [{partName}]";
-                                var writeResult = part.Id == -1 ? await Database.WritePartAsync(part) : await Database.UpdatePartAsync(part);
-                                switch (writeResult)
-                                {
-                                    case DbResult.Ok:
-                                        part.IsSynced = true;
-                                        Status = $"Готово";
-                                        break;
-                                    case DbResult.AuthError:
-                                        Status = $"Ошибка авторизации в БД";
-                                        break;
-                                    case DbResult.NoConnection:
-                                        Status = $"БД недоступна";
-                                        break;
-                                    case DbResult.Error:
-                                        Status = $"Ошибка записи в БД";
-                                        break;
-                                }
-
-                                ProgressBarVisibility = Visibility.Hidden;
-
+                                await SyncWithDatabase(part, partName);
                                 break;
                             case StorageType.Types.Excel:
                                 await WriteToXlAsync(part, i, partName);
                                 break;
                             case StorageType.Types.All:
-                                ProgressBarVisibility = Visibility.Visible;
-                                Status = $"Запись в БД: {partName}";
-                                _ = part.Id == -1 ? await Database.WritePartAsync(part, true) : await Database.UpdatePartAsync(part, true);
-                                Status = $"Готово";
+                                await SyncWithDatabase(part, partName);
+                                part.IsSynced = false;
                                 await WriteToXlAsync(part, i, partName);
                                 break;
-                            default:
-                                break;
                         }
-                        #pragma warning restore CA1416 // Проверка совместимости платформы
+
                         ProgressBarVisibility = Visibility.Hidden;
                         OnPropertyChanged(nameof(part.Title));
-                        //Application.Current.Dispatcher.Invoke(delegate
-                        //{
-                        //    Parts[index] = part;
-                        //    Parts.RemoveAt(index);
-                        //    Parts.Insert(index, part);
-                        //});
-
                     }
-                    //MessageBox.Show($"Before SetPartsTaskInfo {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
-                    await SetPartsTaskInfo();
-                    //MessageBox.Show($"After SetPartsTaskInfo {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
-                    await Task.Delay(500);
-                    //MessageBox.Show($"After Delay {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
-                    await WriteTasksStatuses();
-                    //MessageBox.Show($"After WriteTasksStatuses {Parts[0].TaskInfo}  {Parts[0].IsTaskStatusWritten} {Parts[0].NeedToSyncTask}");
 
-                    Thread.Sleep(2000);
+
+                    await SetPartsTaskInfo();
+                    
+
+                    //await WriteTasksStatuses();
+                    foreach (var part in Parts)
+                    {
+                        part.NotifyTaskStatus();
+                        OnPropertyChanged(nameof(part.TaskInfo));
+                        OnPropertyChanged(nameof(part.IsTaskStatusWritten));
+                        OnPropertyChanged(nameof(part.NeedToSyncTask));
+                    }
+                    await Task.Delay(2000);
                     Application.Current.Dispatcher.Invoke(delegate
                     {
                         RemoveExcessParts();
                     });
-                    Thread.Sleep(2000);
+                    await Task.Delay(1000);
                     if (_needSave)
                     {
                         AppSettings.Instance.Parts = Parts;
                         AppSettings.Save();
                     }
-                    Thread.Sleep(2000);
+                    await Task.Delay(1000);
                 }
                 catch (InvalidOperationException)
                 {
                     Status = "";
                     ProgressBarVisibility = Visibility.Hidden;
-                    Thread.Sleep(30000);
+                    await Task.Delay(30000);
                 }
-                catch (HttpRequestException e)
+                catch (HttpRequestException)
                 {
                     Status = "Ошибка соединения";
                     WriteLog("Ошибка соединения.");
@@ -715,43 +688,87 @@ namespace eLog.ViewModels
                 {
                     ProgressBarVisibility = Visibility.Hidden;
                 }
-                Thread.Sleep(10000);
+                await Task.Delay(10000);
             }
+        }
+        private async Task SyncWithDatabase(Part part, string partName)
+        {
+            ProgressBarVisibility = Visibility.Visible;
+            Status = $"Запись в БД: [{partName}]";
+            var writeResult = part.Id == -1 ? await Database.WritePartAsync(part) : await Database.UpdatePartAsync(part);
+            switch (writeResult)
+            {
+                case DbResult.Ok:
+                    part.IsSynced = true;
+                    Status = $"Готово";
+                    break;
+                case DbResult.AuthError:
+                    Status = $"Ошибка авторизации в БД";
+                    break;
+                case DbResult.NoConnection:
+                    Status = $"БД недоступна";
+                    break;
+                case DbResult.Error:
+                    Status = $"Ошибка записи в БД";
+                    break;
+            }
+            ProgressBarVisibility = Visibility.Hidden;
         }
 
         async Task SetPartsTaskInfo()
         {
-            if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath)) return;
-            foreach (var part in Parts.Where(p => p.TaskInfo == Part.PartTaskInfo.NoData))
+            lock (lockObject)
             {
-                if (_editPart) return;
-                var status = 0;
-                Progress<int> progress = new Progress<int>(p => status = p);
-                await part.GetPositionInTasksList(progress);
-                if (_editPart) return;
-                part.TaskInfo = status switch
+                int gStatus = 0;
+                Progress<(int, string)> gProgress = new(p =>
                 {
-                    2 => Part.PartTaskInfo.NotInList,
-                    3 => Part.PartTaskInfo.InList,
-                    _ => Part.PartTaskInfo.NoData,
-                };
-                part.NotifyTaskStatus();
+                    gStatus = p.Item1;
+                    Status = p.Item2;
+                });
+                if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath)) return;
+                foreach (var part in Parts.Where(p => p.TaskInfo == Part.PartTaskInfo.NoData || (p.TaskInfo == Part.PartTaskInfo.InList && !p.IsTaskStatusWritten)))
+                {
+                    if (_editPart) return;
+                    var partPosition = part.GetPositionInTasksList(gProgress).Result;
+                    if (_editPart) return;
+                    part.TaskInfo = gStatus switch
+                    {
+                        2 => Part.PartTaskInfo.NotInList,
+                        3 => Part.PartTaskInfo.InList,
+                        _ => Part.PartTaskInfo.NoData,
+                    };
+                    part.NotifyTaskStatus();
+                    gStatus = 0;
+                    if (string.IsNullOrEmpty(partPosition)) continue;
+                    if (_editPart) return;
+                    if (part.TaskInfo is Part.PartTaskInfo.InList && !part.IsTaskStatusWritten)
+                    {
+                        GoogleSheets.UpdateCellValue(partPosition, part.IsFinished == Part.State.Finished ? $"(уст {part.Setup}) готово" : $"(уст {part.Setup}) в работе", gProgress).Wait();
+                    }
+                    if (gStatus == 1) part.IsTaskStatusWritten = true;
+                    part.NotifyTaskStatus();
+                }
             }
+            
         }
 
         async Task WriteTasksStatuses()
         {
+            int gStatus = 0;
+            Progress<(int, string)> gProgress = new(p =>
+            {
+                gStatus = p.Item1;
+                Status = p.Item2;
+            });
             if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath)) return;
             foreach (var part in Parts.Where(p => p.TaskInfo == Part.PartTaskInfo.InList && !p.IsTaskStatusWritten))
             {
                 if (_editPart) return;
-                var status = 0;
-                Progress<int> progress = new Progress<int>(p => status = p);
-                var partPosition = await part.GetPositionInTasksList(progress);
+                var partPosition = await part.GetPositionInTasksList(gProgress);
                 if (string.IsNullOrEmpty(partPosition)) continue;
                 if (_editPart) return;
-                await GoogleSheets.UpdateCellValue(partPosition, part.IsFinished == Part.State.Finished ? "(планшет) готово" : "(планшет) в работе", progress);
-                if (status == 1) part.IsTaskStatusWritten = true;
+                await GoogleSheets.UpdateCellValue(partPosition, part.IsFinished == Part.State.Finished ? $"(уст {part.Setup}) готово" : $"(уст {part.Setup}) в работе", gProgress);
+                if (gStatus == 1) part.IsTaskStatusWritten = true;
                 part.NotifyTaskStatus();
             }
         }
@@ -793,7 +810,7 @@ namespace eLog.ViewModels
                     case WriteResult.FileNotExist:
                         Status = "Таблица не найдена.";
                         ProgressBarVisibility = Visibility.Hidden;
-                        Thread.Sleep(300000);
+                        await Task.Delay(300000);
                         break;
                     case WriteResult.IOError:
                         Status = "Таблица занята.";
@@ -803,11 +820,11 @@ namespace eLog.ViewModels
                     case WriteResult.Error:
                         Status = "Ошибка записи.";
                         ProgressBarVisibility = Visibility.Hidden;
-                        Thread.Sleep(10000);
+                        await Task.Delay(10000);
                         break;
                     case WriteResult.DontNeed:
                         ProgressBarVisibility = Visibility.Hidden;
-                        Thread.Sleep(10000);
+                        await Task.Delay(10000);
                         break;
                     case WriteResult.NotFinded:
                         part.Id = await part.WriteToXlAsync(progress);
@@ -837,7 +854,7 @@ namespace eLog.ViewModels
                     case -3:
                         Status = "Таблица не найдена.";
                         ProgressBarVisibility = Visibility.Hidden;
-                        Thread.Sleep(300000);
+                        await Task.Delay(300000);
                         break;
                     // Part exists
                     case -2:

@@ -6,6 +6,7 @@ using Google.Apis.Sheets.v4.Data;
 using libeLog.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -33,10 +34,11 @@ namespace eLog.Infrastructure
             return credential;
         }
 
-        public static async Task<string> FindRowByValue(string searchValue, IProgress<int> progress, int column = 2)
+        public static async Task<string> FindRowByValue(string searchValue, IProgress<(int, string)> progress, int column = 2)
         {
-            progress.Report(0);
+            progress.Report((0, "Подключение к списку заданий"));
             string range = "Загрузка станков!A1:J200";
+            await Task.Delay(1000);
             Credential = GetCredentialsFromFile();
             SheetsService = new SheetsService(new BaseClientService.Initializer()
             {
@@ -44,7 +46,8 @@ namespace eLog.Infrastructure
             });
             var request = SheetsService.Spreadsheets.Values.Get(AppSettings.Instance.GsId, range);
             ValueRange response = await request.ExecuteAsync();
-            progress.Report(1);
+            progress.Report((1, "Поиск станка"));
+            await Task.Delay(1000);
             var values = response.Values;
             bool machineFound = false;
             if (values != null && values.Count > 0)
@@ -57,8 +60,9 @@ namespace eLog.Infrastructure
                         && currentMachine.Contains('|') 
                         && AppSettings.Instance.Machine.Name.Contains(currentMachine.Split('|')[0].Trim()))
                     {
-                        progress.Report(2);
                         machineFound = true;
+                        progress.Report((2, "Станок найден"));
+                        await Task.Delay(1000);
                     }
                     else if (machineFound && values[i][0] is string otherMachine 
                         && (otherMachine.ToLower() == "маркировка" || otherMachine.Contains('|') 
@@ -68,7 +72,8 @@ namespace eLog.Infrastructure
                     }
                     else if (machineFound && SafeGet(values[i], column).ToLower() == searchValue.ToLower())
                     {
-                        progress.Report(3);
+                        progress.Report((3, $"Деталь найдена"));
+                        await Task.Delay(1000);
                         return $"Загрузка станков!H{i + 1}";
                     }
                 }
@@ -76,9 +81,10 @@ namespace eLog.Infrastructure
             return "";
         }
 
-        public static async Task UpdateCellValue(string range, string value, IProgress<int> progress)
+        public static async Task UpdateCellValue(string range, string value, IProgress<(int, string)> progress)
         {
-            progress.Report(0);
+            progress.Report((0, "Запись статуса"));
+            await Task.Delay(1000);
             Credential = GetCredentialsFromFile();
             SheetsService = new SheetsService(new BaseClientService.Initializer()
             {
@@ -93,7 +99,8 @@ namespace eLog.Infrastructure
             updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.RAW;
 
             await updateRequest.ExecuteAsync();
-            progress.Report(1);
+            progress.Report((1, "Записано"));
+            await Task.Delay(1000);
         }
 
         public static async Task<IReadOnlyList<ProductionTaskData>> GetProductionTasksData(IProgress<string> progress, CancellationToken cancellationToken)

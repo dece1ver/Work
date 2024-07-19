@@ -10,7 +10,7 @@ namespace eLog.Infrastructure.Extensions
 {
     public static class Parts
     {
-        public async static Task<string> GetPositionInTasksList(this Part part, IProgress<int> progress)
+        public async static Task<string> GetPositionInTasksList(this Part part, IProgress<(int, string)> progress)
         {
             var partPosition = await GoogleSheets.FindRowByValue(part.Order, progress);
             if (string.IsNullOrEmpty(partPosition) && part.Order.ToLowerInvariant() == "без м/л") partPosition = await GoogleSheets.FindRowByValue(part.FullName, progress, 1);
