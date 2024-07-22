@@ -743,7 +743,9 @@ namespace eLog.ViewModels
                     if (_editPart) return;
                     if (part.TaskInfo is Part.PartTaskInfo.InList && !part.IsTaskStatusWritten)
                     {
-                        GoogleSheets.UpdateCellValue(partPosition, part.IsFinished == Part.State.Finished ? $"(уст {part.Setup}) готово" : $"(уст {part.Setup}) в работе", gProgress).Wait();
+                        var inProgress = part.IsFinished == Part.State.InProgress || (part.IsFinished == Part.State.PartialSetup && part.FinishedCount == 0);
+
+                        GoogleSheets.UpdateCellValue(partPosition, inProgress ? $"(уст {part.Setup}) в работе" : $"(уст {part.Setup}) готово", gProgress).Wait();
                     }
                     if (gStatus == 1) part.IsTaskStatusWritten = true;
                     part.NotifyTaskStatus();

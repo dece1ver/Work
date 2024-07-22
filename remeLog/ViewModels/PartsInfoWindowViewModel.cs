@@ -1097,7 +1097,7 @@ namespace remeLog.ViewModels
 
             if (ShiftFilter is not { Type: ShiftType.All })
             {
-                sb.AppendFormat("AND Shift = '{}' ", ShiftFilter.FilterText);
+                sb.AppendFormat("AND Shift = '{0}' ", ShiftFilter.FilterText);
             }
 
             AppendCondition(sb, "Operator", FormatSearchInput(OperatorFilter));
