@@ -43,7 +43,8 @@ namespace remeLog.Models
             string masterComment = "",
             double fixedSetupTimePlan = 0,
             double fixedMachineTimePlan = 0,
-            string engineerComment = "")
+            string engineerComment = "",
+            bool excludeFromReports = false)
         {
             _Guid = guid;
             _Machine = machine;
@@ -80,6 +81,7 @@ namespace remeLog.Models
             _FixedSetupTimePlan = fixedSetupTimePlan;
             _FixedProductionTimePlan = fixedMachineTimePlan;
             _EngineerComment = engineerComment;
+            _ExcludeFromReports = excludeFromReports;
             NeedUpdate = false;
         }
 
@@ -898,6 +900,23 @@ namespace remeLog.Models
         }
 
 
+        private bool _ExcludeFromReports;
+        /// <summary> Исключать ли деталь из расчетов в отчетах </summary>
+        public bool ExcludeFromReports
+        {
+            get => _ExcludeFromReports;
+            set
+            {
+                if (Set(ref _ExcludeFromReports, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
+
+
         private bool _NeedUpdate;
         /// <summary> Описание </summary>
         public bool NeedUpdate
@@ -933,7 +952,7 @@ namespace remeLog.Models
         public double ProductionRatio => FinishedCountFact * SingleProductionTimePlan / ProductionTimeFact;
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity or double.NegativeInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;
-        public double PartReplacementTime => SingleProductionTime - MachiningTime.TotalMinutes;
+        public double PartReplacementTime => SingleProductionTime == 0 ? 0 : SingleProductionTime - MachiningTime.TotalMinutes;
         public double PlanForBatch { get {
                 var partsCount = StartSetupTime != StartMachiningTime && FinishedCount > 1 ? FinishedCount - 1 : FinishedCount;
                 return partsCount * ProductionTimePlanForCalc;

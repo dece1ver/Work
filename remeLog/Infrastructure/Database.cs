@@ -6,17 +6,11 @@ using Microsoft.Data.SqlClient;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Models;
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using static libeLog.Constants;
 using Part = remeLog.Models.Part;
 
 namespace remeLog.Infrastructure
@@ -121,7 +115,8 @@ namespace remeLog.Infrastructure
                         "MasterComment = @MasterComment, " +
                         "FixedSetupTimePlan = @FixedSetupTimePlan, " +
                         "FixedProductionTimePlan = @FixedProductionTimePlan, " +
-                        "EngineerComment = @EngineerComment " +
+                        "EngineerComment = @EngineerComment, " +
+                        "ExcludeFromReports = @ExcludeFromReports " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
@@ -162,6 +157,7 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@FixedSetupTimePlan", part.FixedSetupTimePlan);
                         cmd.Parameters.AddWithValue("@FixedProductionTimePlan", part.FixedProductionTimePlan);
                         cmd.Parameters.AddWithValue("@EngineerComment", part.EngineerComment);
+                        cmd.Parameters.AddWithValue("@ExcludeFromReports", part.ExcludeFromReports);
 
                         var execureResult = cmd.ExecuteNonQuery();
                     }
@@ -232,6 +228,7 @@ namespace remeLog.Infrastructure
                     var fixedSetupComment = reader.GetValue(34).GetDouble();
                     var fixedProductionComment = reader.GetValue(35).GetDouble();
                     var engineerComment = reader.GetValue(36)?.ToString() ?? "";
+                    var excludeFromReports = reader.GetValue(37) == DBNull.Value ? false : (bool)reader.GetValue(37);
 
                     Part part = new Part(
                         guid,
@@ -270,7 +267,8 @@ namespace remeLog.Infrastructure
                         masterComment, 
                         fixedSetupComment, 
                         fixedProductionComment, 
-                        engineerComment);
+                        engineerComment, 
+                        excludeFromReports);
                     parts.Add(part);
                 }
             }

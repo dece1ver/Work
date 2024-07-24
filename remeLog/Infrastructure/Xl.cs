@@ -35,7 +35,7 @@ namespace remeLog.Infrastructure
         public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int? underOverBorder)
         {
             underOverBorder ??= 10;
-            var machines = parts.Select(p => $"'{p.Machine}'").Distinct().ToArray();
+            var machines = parts.Where(p => !p.ExcludeFromReports).Select(p => $"'{p.Machine}'").Distinct().ToArray();
             Database.GetShiftsByPeriod(machines, fromDate, toDate, out List<ShiftInfo> shifts);
             var totalDays = Util.GetWorkDaysBeetween(fromDate, toDate);
             double totalWorkedMinutes;
@@ -105,7 +105,7 @@ namespace remeLog.Infrastructure
             var row = 3;
             var firstDataRow = row;
 
-            foreach (var partGroup in parts.GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
+            foreach (var partGroup in parts.Where(p => !p.ExcludeFromReports).GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
             {
                 parts = partGroup.ToList();
                 totalWorkedMinutes = parts.FullWorkedTime().TotalMinutes;
@@ -275,7 +275,7 @@ namespace remeLog.Infrastructure
             ws.Row(2).Height = 100;
             var row = 3;
             foreach (var partGroup in parts
-                .Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount)
+                .Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount && !p.ExcludeFromReports)
                 .GroupBy(p => new { p.Operator, p.Machine })
                 .OrderBy(g => g.Key.Machine)
                 .ThenBy(g => g.Key.Operator))
@@ -382,7 +382,7 @@ namespace remeLog.Infrastructure
             var wsTotal = wb.AddWorksheet("Общий");
             ConfigureWorksheetStyles(wsTotal);
             
-            var machines = parts.Select(p => p.Machine).Distinct().ToArray();
+            var machines = parts.Where(p => !p.ExcludeFromReports).Select(p => p.Machine).Distinct().ToArray();
 
             foreach ( var machine in machines )
             {
@@ -405,7 +405,7 @@ namespace remeLog.Infrastructure
 
             ConfigureWorksheetHeader(wsTotal, columns);
 
-            var tempParts = parts.Select(part => new Part(part) { PartName = part.PartName.ToUpper().Trim('"') }).ToList();
+            var tempParts = parts.Where(p => !p.ExcludeFromReports).Select(part => new Part(part) { PartName = part.PartName.ToUpper().Trim('"') }).ToList();
 
             var machinesGroup = tempParts.GroupBy(p => p.Machine);
 

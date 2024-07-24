@@ -87,6 +87,11 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
+
+        <Style TargetType="CheckBox" x:Key="TableCheckBox">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
         <Style TargetType="Button">
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
@@ -546,6 +551,18 @@
                 <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
+
+        <DataGridCheckBoxColumn x:Key="ExcludeFromReportsColumn" Header="Исключить" Binding="{Binding ExcludeFromReports, UpdateSourceTrigger=PropertyChanged}" Width="33"
+            Visibility="{Binding DataContext.CompactView, 
+            Source={x:Reference partsInfoWindow}, 
+            Converter={StaticResource InvertedVisibilityConverter}}">
+            <DataGridCheckBoxColumn.ElementStyle>
+                <Style TargetType="CheckBox" BasedOn="{StaticResource TableCheckBox}"/>
+            </DataGridCheckBoxColumn.ElementStyle>
+            <DataGridCheckBoxColumn.EditingElementStyle>
+                <Style TargetType="CheckBox" BasedOn="{StaticResource TableCheckBox}"/>
+            </DataGridCheckBoxColumn.EditingElementStyle>
+        </DataGridCheckBoxColumn>
         <!--#endregion-->
     </Window.Resources>
     <Grid>
@@ -971,6 +988,7 @@
                     <StaticResource ResourceKey="FixedSetupTimePlanColumn"/>
                     <StaticResource ResourceKey="FixedProductionTimePlanColumn"/>
                     <StaticResource ResourceKey="EngineerCommentColumn"/>
+                    <StaticResource ResourceKey="ExcludeFromReportsColumn"/>
                 </DataGrid.Columns>
             </DataGrid>
         </DockPanel>
