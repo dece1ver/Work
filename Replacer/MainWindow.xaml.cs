@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using System.ComponentModel;
-using System.Management;
 using System.Text;
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using System.Windows.Media;
+using System.Windows.Input;
 
 namespace Replacer
 {
@@ -47,7 +45,23 @@ namespace Replacer
 
         private async void StartStopButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(SourcePathTextBox.Text) || string.IsNullOrEmpty(DestinationPathTextBox.Text)) return;
+            if (string.IsNullOrEmpty(SourcePathTextBox.Text) && string.IsNullOrEmpty(DestinationPathTextBox.Text))
+            {
+                OutputTextBox.Text = "Не указаны пути";
+                return;
+            }
+            else if (string.IsNullOrEmpty(SourcePathTextBox.Text) && !string.IsNullOrEmpty(DestinationPathTextBox.Text)) 
+            {
+                OutputTextBox.Text = "Не указан исходный путь";
+                return;
+            }
+            else if (!string.IsNullOrEmpty(SourcePathTextBox.Text) && string.IsNullOrEmpty(DestinationPathTextBox.Text)) 
+            {
+                OutputTextBox.Text = "Не указан путь назначения";
+                return;
+            }
+
+
             if (_cancellationTokenSource == null)
             {
                 _cancellationTokenSource = new CancellationTokenSource();
@@ -64,8 +78,11 @@ namespace Replacer
                 _filename = Path.GetFileName(sourcePath);
                 var sb = new StringBuilder();
                 var spaces = (_filename.Length + 2) / 2;
-                sb.Append("Начало копирования файла:\n")
-                  .AppendFormat("[{0}]\n", _filename)
+                sb.AppendFormat("[{0}]\n", _filename)
+                  .Append('─', spaces)
+                  .Append('┬')
+                  .Append('─', _filename.Length % 2 == 0 ? spaces - 1 : spaces)
+                  .AppendLine()
                   .Append(' ', spaces)
                   .AppendFormat("├──◄ [{0}]\n", sourcePath)
                   .Append(' ', spaces)
@@ -107,6 +124,7 @@ namespace Replacer
                     {
                         progress.Report($"Начало копирования...");
                         await Task.Run(() => File.Copy(sourcePath, destinationPath, true), cancellationToken);
+                        progress.Report($"Копирование завершено.");
                         break;
                     }
                     catch (Exception ex)
@@ -118,7 +136,7 @@ namespace Replacer
             }
             catch (TaskCanceledException)
             {
-                progress.Report("Операция отменена");
+                progress.Report("Операция отменена.");
             }
             finally
             {
@@ -131,7 +149,19 @@ namespace Replacer
             }
         }
 
-        
+        private void SourcePathTextBox_PreviewDragOver(object sender, System.Windows.DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+                SourcePathTextBox.Background = (Brush)FindResource("TextBoxMouseDragOverColor");
+                e.Handled = true;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
 
         private void SourcePathTextBox_Drop(object sender, System.Windows.DragEventArgs e)
         {
@@ -143,39 +173,20 @@ namespace Replacer
                     SourcePathTextBox.Text = files[0];
                 }
             }
-            SourcePathTextBox.Background = Brushes.White;
+            SourcePathTextBox.ClearValue(BackgroundProperty);
         }
 
         private void SourcePathTextBox_DragLeave(object sender, System.Windows.DragEventArgs e)
         {
-            SourcePathTextBox.Background = Brushes.White;
-        }
-
-        private void SourcePathTextBox_PreviewDragOver(object sender, System.Windows.DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                e.Effects = DragDropEffects.Copy;
-                SourcePathTextBox.Background = Brushes.LightYellow;
-                e.Handled = true;
-            }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
-        }
-
-        private void DestinationPathTextBox_PreviewDragLeave(object sender, System.Windows.DragEventArgs e)
-        {
-            DestinationPathTextBox.Background = Brushes.White;
-        }
+            SourcePathTextBox.ClearValue(BackgroundProperty);
+        }        
 
         private void DestinationPathTextBox_PreviewDragOver(object sender, System.Windows.DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effects = DragDropEffects.Copy;
-                DestinationPathTextBox.Background = Brushes.LightYellow;
+                DestinationPathTextBox.Background = (Brush)FindResource("TextBoxMouseDragOverColor");
                 e.Handled = true;
             }
             else
@@ -194,7 +205,48 @@ namespace Replacer
                     DestinationPathTextBox.Text = files[0];
                 }
             }
-            DestinationPathTextBox.Background = Brushes.White;
+            DestinationPathTextBox.ClearValue(BackgroundProperty);
+        }
+
+        private void DestinationPathTextBox_PreviewDragLeave(object sender, System.Windows.DragEventArgs e)
+        {
+            DestinationPathTextBox.ClearValue(BackgroundProperty);
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                MaximizeButton.Content = "🗗";
+                WindowState = WindowState.Normal;
+            }
+            else
+            {
+                MaximizeButton.Content = "🗖";
+                WindowState = WindowState.Maximized;
+            }
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                MaximizeButton_Click(sender, e);
+            }
+            else
+            {
+                DragMove();
+            }
         }
     }
 }

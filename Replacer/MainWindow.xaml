@@ -5,15 +5,54 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Replacer"
         mc:Ignorable="d"
-        Title="Заменитель 3000" Height="400" Width="960">
+        Title="Заменитель 3000" Height="600" Width="1200"
+        Background="#2E2E2E" Foreground="White" ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterScreen" AllowsTransparency="True"
+        WindowStyle="None">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Border Background="{StaticResource WindowBackgroundColor}" 
+            CornerRadius="0" 
+            BorderBrush="{StaticResource WindowBackgroundColor}" 
+            BorderThickness="1"
+            SnapsToDevicePixels="True">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" 
+                              BlurRadius="15" 
+                              ShadowDepth="0" 
+                              Opacity="0.7"/>
+        </Border.Effect>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-    <Grid>
-        <ProgressBar x:Name="ProgressBar" IsIndeterminate="True" Visibility="Collapsed"/>
-        <Border Background="White" Margin="0 2">
-            <Grid Margin="10">
+            <Grid x:Name="TitleBar" Style="{StaticResource TitleBarStyle}" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Заменитель 3000" VerticalAlignment="Center" Margin="10 0 0 0" FontSize="14"/>
+                <Button Grid.Column="1" Content="🗕" x:Name="MinimizeButton"
+                        Style="{StaticResource TitleBarButtonStyle}" Click="MinimizeButton_Click"/>
+                <Button Grid.Column="2" Content="🗗" x:Name="MaximizeButton"
+                        Style="{StaticResource TitleBarButtonStyle}" Click="MaximizeButton_Click"/>
+                <Button Grid.Column="3" Content="✕" Style="{StaticResource TitleBarButtonStyle}" Click="CloseButton_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="30"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="40"/>
                 </Grid.RowDefinitions>
@@ -22,22 +61,37 @@
                     <ColumnDefinition Width="80"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBox x:Name="SourcePathTextBox" Grid.Row="0" AllowDrop="True"  Grid.Column="0" 
-                         Margin="0 2 5 2" Panel.ZIndex="0" PreviewDragLeave="SourcePathTextBox_DragLeave" PreviewDrop="SourcePathTextBox_Drop" PreviewDragOver="SourcePathTextBox_PreviewDragOver" />
-                <Button Content="Что" Padding="5 1" Grid.Row="0" Grid.Column="1" Margin="0 2 0 2" 
-                        Click="BrowseSourcePath_Click" />
+                <TextBox x:Name="SourcePathTextBox" Grid.Row="0" 
+                         AllowDrop="True" Grid.Column="0" 
+                         Margin="0 2 3 2" 
+                         PreviewDragLeave="SourcePathTextBox_DragLeave" 
+                         PreviewDrop="SourcePathTextBox_Drop" 
+                         PreviewDragOver="SourcePathTextBox_PreviewDragOver"
+                         Style="{StaticResource TextBoxStyle}"/>
+                <Button Content="Что" 
+                        Grid.Row="0" Grid.Column="1" Margin="0 2 0 2" 
+                        Click="BrowseSourcePath_Click" Style="{StaticResource DefaultButtonStyle}"/>
 
-                <TextBox x:Name="DestinationPathTextBox" Grid.Row="1" AllowDrop="True" Grid.Column="0" Margin="0 2 5 2" PreviewDragLeave="DestinationPathTextBox_PreviewDragLeave" PreviewDragOver="DestinationPathTextBox_PreviewDragOver" PreviewDrop="DestinationPathTextBox_PreviewDrop" />
-                <Button Content="Куда"  Padding="5 1" Grid.Row="1" Grid.Column="1" Margin="0 2 0 2" 
-                        Click="BrowseDestinationPath_Click" />
+                <TextBox x:Name="DestinationPathTextBox" Grid.Row="1" 
+                         AllowDrop="True" Grid.Column="0" 
+                         Margin="0 2 3 0" 
+                         PreviewDragLeave="DestinationPathTextBox_PreviewDragLeave" 
+                         PreviewDragOver="DestinationPathTextBox_PreviewDragOver" 
+                         PreviewDrop="DestinationPathTextBox_PreviewDrop"
+                         Style="{StaticResource TextBoxStyle}"/>
+                <Button Content="Куда" 
+                        Grid.Row="1" Grid.Column="1" Margin="0 2 0 0" 
+                        Click="BrowseDestinationPath_Click" Style="{StaticResource DefaultButtonStyle}"/>
 
-                <TextBox x:Name="OutputTextBox" Grid.Row="2" Grid.ColumnSpan="2" Margin="0 4 0 0" FontFamily="Consolas" FontSize="11"
-                         VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" IsReadOnly="True" BorderThickness="1"/>
+                <TextBox x:Name="OutputTextBox" Grid.Row="2" Grid.ColumnSpan="2" Margin="0 4 0 0" FontSize="11"
+                         VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" IsReadOnly="True"
+                         Style="{StaticResource InfoTextBoxStyle}"/>
 
-                <Button x:Name="StartStopButton" Content="Начать" Grid.Row="3" Grid.ColumnSpan="2" Margin="0 5 0 0" 
-                        Click="StartStopButton_Click" />
-
+                <Button x:Name="StartStopButton" Content="Начать" Grid.Row="3" Grid.ColumnSpan="2" Margin="0 4 0 0" 
+                        Click="StartStopButton_Click" Style="{StaticResource DefaultButtonStyle}"/>
             </Grid>
-        </Border>
-    </Grid>
+
+            <ProgressBar x:Name="ProgressBar" IsIndeterminate="True" Visibility="Collapsed" VerticalAlignment="Top"/>
+        </Grid>
+    </Border>
 </Window>
