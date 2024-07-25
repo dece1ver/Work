@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Replacer"
         mc:Ignorable="d"
-        Title="Заменитель 3000" Height="600" Width="1200"
+        Title="Заменитель 3000" Height="600" MinHeight="300" Width="1200" MinWidth="400"
         Background="#2E2E2E" Foreground="White" ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen" AllowsTransparency="True"
         WindowStyle="None">
@@ -21,13 +21,7 @@
             BorderBrush="{StaticResource WindowBackgroundColor}" 
             BorderThickness="1"
             SnapsToDevicePixels="True">
-        <Border.Effect>
-            <DropShadowEffect Color="Black" 
-                              BlurRadius="15" 
-                              ShadowDepth="0" 
-                              Opacity="0.7"/>
-        </Border.Effect>
-        
+
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="40"/>

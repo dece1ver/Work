@@ -1,14 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using System.Text;
+using System.Windows.Input;
+using System.Windows.Media;
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
-using System.Windows.Media;
-using System.Windows.Input;
 
 namespace Replacer
 {
@@ -51,12 +51,12 @@ namespace Replacer
                 OutputTextBox.Text = "Не указаны пути";
                 return;
             }
-            else if (string.IsNullOrEmpty(SourcePathTextBox.Text) && !string.IsNullOrEmpty(DestinationPathTextBox.Text)) 
+            else if (string.IsNullOrEmpty(SourcePathTextBox.Text) && !string.IsNullOrEmpty(DestinationPathTextBox.Text))
             {
                 OutputTextBox.Text = "Не указан исходный путь";
                 return;
             }
-            else if (!string.IsNullOrEmpty(SourcePathTextBox.Text) && string.IsNullOrEmpty(DestinationPathTextBox.Text)) 
+            else if (!string.IsNullOrEmpty(SourcePathTextBox.Text) && string.IsNullOrEmpty(DestinationPathTextBox.Text))
             {
                 OutputTextBox.Text = "Не указан путь назначения";
                 return;
@@ -104,7 +104,7 @@ namespace Replacer
 
         private async Task CopyFileAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken, IProgress<string> progress)
         {
-            
+
             try
             {
                 if (!File.Exists(sourcePath))
@@ -118,7 +118,7 @@ namespace Replacer
                     return;
                 }
                 else if (Directory.Exists(destinationPath)) destinationPath = Path.Combine(destinationPath, _filename);
-                
+
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
@@ -145,7 +145,7 @@ namespace Replacer
                 Dispatcher.Invoke(() =>
                 {
                     StartStopButton.Content = "Начать";
-                    ProgressBar.Visibility= Visibility.Hidden;
+                    ProgressBar.Visibility = Visibility.Hidden;
                 });
             }
         }
@@ -180,7 +180,7 @@ namespace Replacer
         private void SourcePathTextBox_DragLeave(object sender, System.Windows.DragEventArgs e)
         {
             SourcePathTextBox.ClearValue(BackgroundProperty);
-        }        
+        }
 
         private void DestinationPathTextBox_PreviewDragOver(object sender, System.Windows.DragEventArgs e)
         {
@@ -249,5 +249,7 @@ namespace Replacer
                 DragMove();
             }
         }
+
+        
     }
 }
