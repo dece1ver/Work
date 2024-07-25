@@ -19,6 +19,7 @@ namespace Replacer
     {
         private CancellationTokenSource _cancellationTokenSource;
         string _filename;
+        int _delay = 10000;
 
         public MainWindow()
         {
@@ -130,7 +131,7 @@ namespace Replacer
                     catch (Exception ex)
                     {
                         progress.Report($"Ошибка копирования:\n{ex.Message}");
-                        await Task.Delay(5000, cancellationToken);
+                        await Task.Delay(_delay, cancellationToken);
                     }
                 }
             }
