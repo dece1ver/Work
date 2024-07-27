@@ -185,7 +185,7 @@ namespace remeLog.ViewModels
         public ICommand SetDailyReportsDirCommand { get; }
         private void OnSetDailyReportsDirCommandExecuted(object p)
         {
-            FolderBrowserDialog dlg = new()
+            FolderBrowserDialog dlg = new();
                 ;
             if (dlg.ShowDialog() != DialogResult.OK) return;
             DailyReportsDir.Value = dlg.SelectedPath;

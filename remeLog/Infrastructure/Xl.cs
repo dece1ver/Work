@@ -240,23 +240,24 @@ namespace remeLog.Infrastructure
                 { "hardwFailTime", (12, "Отказ оборудования") },
                 { "specDowntimes", (13, $"Простои") },
                 { "specDowntimesEx", (14, $"Простои{Environment.NewLine}(без отказа оборудования)") },
-                { "generalRatio", (15, "Общая выработка") },
+                { "generalRatio", (15, "Эффективность") },
                 { "cntSetups", (16, $"Количество{Environment.NewLine}наладок") },
                 { "cntProds", (17, $"Количество{Environment.NewLine}изготовлений") },
                 { "cntWorkedShifts", (18, "Отработано смен") },
                 { "coefficient", (19, "Коэффициент") }
             };
 
-            double? Coefficient(int qualification, double specDowntimesEx, double generalRatio, int workedShifts)
+            double? Coefficient(int qualification, double specDowntimesEx, double generalRatio, double averageSetupRatio, int workedShifts)
             {
-                return specDowntimesEx > 0.1 || workedShifts < workDays / 4 ? null :
+                return averageSetupRatio < 0.5 || specDowntimesEx > 0.1 || workedShifts < workDays / 4 ? null :
                     (qualification, generalRatio) switch
                     {
                         (1 or 2, > 1) => 1.2,
                         (1 or 2, > 0.9) => 1.1,
                         (3 or 4, > 1.05) => 1.2,
                         (3 or 4, > 0.95) => 1.1,
-                        (5, > 1) => 1.1,
+                        (5 or 6, > 1.1) => 1.2,
+                        (5 or 6, > 1) => 1.1,
                         _ => null
                     };
             }
@@ -274,8 +275,9 @@ namespace remeLog.Infrastructure
             headerRange.Style.Alignment.TextRotation = 90;
             ws.Row(2).Height = 100;
             var row = 3;
+            // .Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount && !p.ExcludeFromReports)
             foreach (var partGroup in parts
-                .Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount && !p.ExcludeFromReports)
+                .Where(p => !p.ExcludeFromReports)
                 .GroupBy(p => new { p.Operator, p.Machine })
                 .OrderBy(g => g.Key.Machine)
                 .ThenBy(g => g.Key.Operator))
@@ -297,7 +299,7 @@ namespace remeLog.Infrastructure
                   .SetValue(averageSetupRatio)
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                var productionRatio = filteredParts.ProductionRatio();
+                var productionRatio = filteredParts.Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount && !p.ExcludeFromReports).ProductionRatio();
                 ws.Cell(row, columns["prod"].index)
                   .SetValue(productionRatio)
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
@@ -336,6 +338,7 @@ namespace remeLog.Infrastructure
                 var generalRatio = (averageSetupRatio != 0 && productionRatio != 0)
                     ? (averageSetupRatio + productionRatio) / 2
                     : (averageSetupRatio != 0 ? averageSetupRatio : productionRatio);
+                if (qualificationNumber == 1 && productionRatio != 0) generalRatio = productionRatio;
 
                 ws.Cell(row, columns["generalRatio"].index)
                   .SetValue(generalRatio)
@@ -355,7 +358,7 @@ namespace remeLog.Infrastructure
                   .SetValue(workedShifts);
 
                 if (validQualification)
-                    ws.Cell(row, columns["coefficient"].index).SetValue(Coefficient(qualificationNumber, specDowntimesEx, generalRatio, workedShifts));
+                    ws.Cell(row, columns["coefficient"].index).SetValue(Coefficient(qualificationNumber, specDowntimesEx, generalRatio, averageSetupRatio, workedShifts));
 
                 row++;
             }

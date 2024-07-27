@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using libeLog.Extensions;
 
 
 namespace remeLog.Infrastructure.Extensions
@@ -114,14 +115,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <returns></returns>
         public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
-            double sum = 0;
-            var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
-            foreach (var part in filteredParts)
-            {
-                sum += part.SetupDowntimes + part.MachiningDowntimes;
-            }
-            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
-            return sum / parts.FullWorkedTime().TotalMinutes;
+            return parts.SpecifiedDowntimesRatio(fromDate, toDate, new Shift(shiftType));
         }
 
         /// <summary>
@@ -338,7 +332,11 @@ namespace remeLog.Infrastructure.Extensions
             {
                 sum += part.EndMachiningTime - part.StartSetupTime;
             }
-            return sum;
+            if (!parts.Any()) return sum;
+            var start = parts.Min(p => p.StartSetupTime);
+            var end = parts.Max(p => p.EndMachiningTime);
+            var breaks = TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(start, end));
+            return sum - breaks;
         }
     }
 }
