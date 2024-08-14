@@ -124,7 +124,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="parts">Список изготовлений</param>
         /// <param name="downtimeType">Тип простоя</param>
         /// <returns></returns>
-        public static double SpecifiedDowntimeRatio(this IEnumerable<Models.Part> parts, Downtime downtimeType)
+        public static double SpecifiedDowntime(this IEnumerable<Models.Part> parts, Downtime downtimeType)
         {
             double sum = 0;
             foreach (var part in parts)
@@ -151,7 +151,18 @@ namespace remeLog.Infrastructure.Extensions
                         break;
                 }
             }
-            return sum / parts.FullWorkedTime().TotalMinutes;
+            return sum;
+        }
+
+        /// <summary>
+        /// Соотношение отмеченных простоев к общему времени
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="downtimeType">Тип простоя</param>
+        /// <returns></returns>
+        public static double SpecifiedDowntimeRatio(this IEnumerable<Models.Part> parts, Downtime downtimeType)
+        {
+            return parts.SpecifiedDowntime(downtimeType) / parts.FullWorkedTime().TotalMinutes;
         }
 
         /// <summary>

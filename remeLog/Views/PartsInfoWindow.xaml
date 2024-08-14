@@ -872,6 +872,12 @@
                             <TextBlock Text="Отчёт по деталям"/>
                         </MenuItem.Header>
                     </MenuItem>
+                    <MenuItem Command="{Binding ExportShiftsInfoReportCommand}" Icon="{StaticResource CalendarIcon}"
+                        ToolTip="Экспорт текущей выборки" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Отчет по сменам"/>
+                        </MenuItem.Header>
+                    </MenuItem>
                     <MenuItem Command="{Binding ExportToExcelCommand}" Icon="{StaticResource ExcelWorksheetIcon}"
                               ToolTip="Экспорт текущей выборки" HorizontalAlignment="Stretch">
                         <MenuItem.Header>

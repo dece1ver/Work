@@ -48,11 +48,17 @@ namespace eLog.ViewModels
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadProductionTasksCommand = new LambdaCommand(OnLoadProductionTasksCommandExecuted, CanLoadProductionTasksCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
+            TestCommand = new LambdaCommand(OnTestCommandExecuted, CanTestCommandExecute);
 
             Parts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(Parts));
 
             var syncPartsThread = new Thread(() => _ = SyncParts()) { IsBackground = true };
             syncPartsThread.Start();
+
+            var notifyThread = new Thread(() => NotifyWatcher()) { IsBackground = true };
+            notifyThread.Start();
+
+            WriteLog("Старт");
         }
 
         #region Свойства-обертки настроек
@@ -363,6 +369,16 @@ namespace eLog.ViewModels
         private static bool CanShowAboutCommandExecute(object p) => true;
         #endregion
 
+        #region TestCommand
+        public ICommand TestCommand { get; }
+        private void OnTestCommandExecuted(object p)
+        {
+            AppSettings.MailRecievers = GetMailRecievers();
+            Email.SendLongSetupNotify(Parts[0]);
+        }
+        private static bool CanTestCommandExecute(object p) => true;
+        #endregion
+
         #region StartDetail
         public ICommand StartDetailCommand { get; }
         private void OnStartDetailCommandExecuted(object p)
@@ -606,6 +622,37 @@ namespace eLog.ViewModels
 
         #endregion
 
+        private void NotifyWatcher()
+        {
+            while (true)
+            {
+                try
+                {
+                    if (Parts.Count > 0
+                    && Parts[0].IsFinished == Part.State.InProgress
+                    && !Parts[0].LongSetupNotifySended
+                    && Parts[0].StartMachiningTime < Parts[0].StartSetupTime)
+                    {
+                        var totalDowntime = Parts[0].DownTimes
+                        .Where(dt => dt.Type is not DownTime.Types.PartialSetup)
+                        .Aggregate(TimeSpan.Zero, (sum, dt) => sum.Add(dt.Time));
+
+                        var setupTimeWithoutDowntime = DateTime.Now - Parts[0].StartSetupTime - totalDowntime;
+
+                        if (setupTimeWithoutDowntime > TimeSpan.FromHours(3))
+                        {
+                            AppSettings.MailRecievers = GetMailRecievers();
+                            if (Email.SendLongSetupNotify(Parts[0])) Parts[0].LongSetupNotifySended = true;
+                        }
+                    }
+                } 
+                catch (Exception ex) { WriteLog(ex); }
+                finally
+                {
+                    Thread.Sleep(30000);
+                }
+            }
+        }
 
         private async Task SyncParts()
         {
@@ -741,7 +788,7 @@ namespace eLog.ViewModels
                     gStatus = 0;
                     if (string.IsNullOrEmpty(partPosition)) continue;
                     if (_editPart) return;
-                    if (part.TaskInfo is Part.PartTaskInfo.InList && !part.IsTaskStatusWritten)
+                    if (AppSettings.Instance.WiteToGs && part.TaskInfo is Part.PartTaskInfo.InList && !part.IsTaskStatusWritten)
                     {
                         var inProgress = part.IsFinished == Part.State.InProgress || (part.IsFinished == Part.State.PartialSetup && part.FinishedCount == 0);
 
@@ -752,27 +799,6 @@ namespace eLog.ViewModels
                 }
             }
             
-        }
-
-        async Task WriteTasksStatuses()
-        {
-            int gStatus = 0;
-            Progress<(int, string)> gProgress = new(p =>
-            {
-                gStatus = p.Item1;
-                Status = p.Item2;
-            });
-            if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath)) return;
-            foreach (var part in Parts.Where(p => p.TaskInfo == Part.PartTaskInfo.InList && !p.IsTaskStatusWritten))
-            {
-                if (_editPart) return;
-                var partPosition = await part.GetPositionInTasksList(gProgress);
-                if (string.IsNullOrEmpty(partPosition)) continue;
-                if (_editPart) return;
-                await GoogleSheets.UpdateCellValue(partPosition, part.IsFinished == Part.State.Finished ? $"(уст {part.Setup}) готово" : $"(уст {part.Setup}) в работе", gProgress);
-                if (gStatus == 1) part.IsTaskStatusWritten = true;
-                part.NotifyTaskStatus();
-            }
         }
 
         private void RemoveExcessParts(int remains = 20)

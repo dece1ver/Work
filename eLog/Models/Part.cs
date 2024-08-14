@@ -34,6 +34,7 @@ namespace eLog.Models
         private DateTime _StartSetupTime;
         private DateTime _StartMachiningTime;
         private DateTime _EndMachiningTime;
+        private bool _LongSetupNotifySended;
         private DeepObservableCollection<DownTime> _DownTimes;
         private int _Id;
         private bool _IsSynced;
@@ -94,6 +95,13 @@ namespace eLog.Models
         {
             get => _Operator;
             set => Set(ref _Operator, value);
+        }
+
+        /// <summary> Отправлено ли уведомление о длительной наладке </summary>
+        public bool LongSetupNotifySended
+        {
+            get => _LongSetupNotifySended;
+            set => Set(ref _LongSetupNotifySended, value);
         }
 
         /// <summary> Количество выпущено</summary>
@@ -593,6 +601,7 @@ namespace eLog.Models
             _StartMachiningTime = part.StartMachiningTime;
             _EndMachiningTime = part.EndMachiningTime;
             _MachineTime = part.MachineTime;
+            _LongSetupNotifySended = part.LongSetupNotifySended;
             _DownTimes = new DeepObservableCollection<DownTime>();
             _SetupTimePlan = part.SetupTimePlan;
             _SingleProductionTimePlan = part.SingleProductionTimePlan;

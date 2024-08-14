@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using JsonException = System.Text.Json.JsonException;
 
@@ -49,6 +50,12 @@ namespace eLog.Infrastructure
         /// <summary> Путь к резервному списку заказов </summary>
         [JsonIgnore] public static readonly string BackupOrdersFile = Path.Combine(BasePath, "orders-backup.xlsx");
 
+        /// <summary> Путь к локальному списку получателей уведомлений </summary>
+        [JsonIgnore] public static readonly string LocalMailRecieversFile = Path.Combine(BasePath, "recievers");
+
+        /// <summary> Список получателей писем </summary>
+        [JsonIgnore] public static string[] MailRecievers = Util.GetMailRecievers();
+
         /// <summary> Путь к файлу логов </summary>
         [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
 
@@ -58,6 +65,7 @@ namespace eLog.Infrastructure
         private string _XlPath;
         private string _GoogleCredentialsPath;
         private string _GsId;
+        private bool _WiteToGs;
         private string _OrdersSourcePath;
         private string[] _OrderQualifiers;
         private DeepObservableCollection<Operator> _Operators;
@@ -68,7 +76,10 @@ namespace eLog.Infrastructure
         private StorageType _StorageType;
         private string _ConnetctionString;
         private bool _DebugMode;
-
+        private string _SmtpAddress;
+        private int _SmtpPort;
+        private string _SmtpUsername;
+        private string _PathToRecievers;
 
 
         /// <summary> Текущий станок </summary>
@@ -98,6 +109,16 @@ namespace eLog.Infrastructure
             get => _GsId;
             set => Set(ref _GsId, value);
         }
+
+
+        
+        /// <summary> Писать ли в гугл таблицу </summary>
+        public bool WiteToGs
+        {
+            get => _WiteToGs;
+            set => Set(ref _WiteToGs, value);
+        }
+
 
         /// <summary> Путь к таблице с номенклатурой </summary>
         public string OrdersSourcePath
@@ -160,6 +181,35 @@ namespace eLog.Infrastructure
             set => Set(ref _ConnetctionString, value);
         }
 
+
+        /// <summary> Адрес SMTP сервера </summary>
+        public string SmtpAddress
+        {
+            get => _SmtpAddress;
+            set => Set(ref _SmtpAddress, value);
+        }
+
+        /// <summary> Порт SMTP </summary>
+        public int SmtpPort
+        {
+            get => _SmtpPort;
+            set => Set(ref _SmtpPort, value);
+        }
+
+
+        /// <summary> Отправитель </summary>
+        public string SmtpUsername
+        {
+            get => _SmtpUsername;
+            set => Set(ref _SmtpUsername, value);
+        }
+
+        /// <summary> Путь к файлу с получателями </summary>
+        public string PathToRecievers
+        {
+            get => _PathToRecievers;
+            set => Set(ref _PathToRecievers, value);
+        }
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode
@@ -231,6 +281,8 @@ namespace eLog.Infrastructure
                 };
 
                 JsonConvert.PopulateObject(json, Instance, settings);
+
+
                 //Parts.CollectionChanged += (_, _) => Save();
                 //foreach (var part in Parts)
                 //{
@@ -265,14 +317,14 @@ namespace eLog.Infrastructure
                     {
                         var msg = "Резервный файл конфигурации некорректен, установка конфигурации по умолчанию.";
                         Debug.WriteLine(msg);
-                        Util.WriteLog(msg);
+                        Task.Run(() => Util.WriteLogAsync(msg));
                         CreateBaseConfig();
                     }
                     catch (Exception ex)
                     {
                         var msg = "Неизвестная ошибка при чтении резервного файла конфигурации, установка конфигурации по умолчанию.";
                         Debug.WriteLine(msg);
-                        Util.WriteLog(ex, msg);
+                        Task.Run(() => Util.WriteLogAsync(ex, msg));
                         CreateBaseConfig();
                     }
 
@@ -313,14 +365,14 @@ namespace eLog.Infrastructure
                 {
                     var msg = "Записан некорректный файл конфигурации, восстановление";
                     Debug.WriteLine(msg);
-                    Util.WriteLog(ex, msg);
+                    Task.Run(() => Util.WriteLogAsync(ex, msg));
                     File.Copy(ConfigBackupPath, ConfigFilePath, true);
                 }
                 catch (Exception ex)
                 {
                     var msg = "Неизвестная ошибка при создании бэкапа конфигурации";
                     Debug.WriteLine(msg);
-                    Util.WriteLog(ex, msg);
+                    Task.Run(() => Util.WriteLogAsync(ex, msg));
                 }
 
             }
@@ -328,21 +380,21 @@ namespace eLog.Infrastructure
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Доступ запрещен).";
                 Debug.WriteLine(msg);
-                Util.WriteLog(msg);
+                Task.Run(() => Util.WriteLogAsync(msg));
                 if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (IOException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Ошибка ввода/вывода).";
                 Debug.WriteLine(msg);
-                Util.WriteLog(msg);
+                Task.Run(() => Util.WriteLogAsync(msg));
                 if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (Exception ex)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
                 Debug.WriteLine(msg);
-                Util.WriteLog(ex, msg);
+                Task.Run(() => Util.WriteLogAsync(ex, msg));
                 try
                 {
                     if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);

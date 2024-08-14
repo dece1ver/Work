@@ -8,6 +8,7 @@ using remeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -610,7 +611,7 @@ namespace remeLog.Infrastructure
                 {
                     connection.Open();
                     //string machineNums = string.Join(", ", machines.Select((_, i) => $"@machine{i}"));
-                    string machinesNames = string.Join(", ", machines);
+                    string machinesNames = string.Join(", ", machines.Select(m => $"'{m}'"));
 
                     string query = $"SELECT * FROM cnc_shifts WHERE ShiftDate BETWEEN @FromDate AND @ToDate AND Machine IN ({machinesNames})";
                     using (SqlCommand command = new SqlCommand(query, connection))

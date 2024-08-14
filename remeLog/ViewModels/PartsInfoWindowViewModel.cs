@@ -51,6 +51,7 @@ namespace remeLog.ViewModels
             ChangeCalcFixedCommand = new LambdaCommand(OnChangeCalcFixedCommandExecuted, CanChangeCalcFixedCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
+            ExportShiftsInfoReportCommand = new LambdaCommand(OnExportShiftsInfoReportCommandExecuted, CanExportShiftsInfoReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
@@ -719,6 +720,36 @@ namespace remeLog.ViewModels
             finally { InProgress = false; }
         }
         private static bool CanExportReportToExcelCommandExecute(object p) => true;
+        #endregion
+
+        #region ExportShiftsInfoReport
+        public ICommand ExportShiftsInfoReportCommand { get; }
+        private async void OnExportShiftsInfoReportCommandExecuted(object p)
+        {
+            try
+            {
+
+                var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                await Task.Run(() =>
+                {
+                    InProgress = true;
+                    Status = Xl.ExportShiftsInfo(Parts, path, FromDate, ToDate);
+                }
+                );
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportShiftsInfoReportCommandExecute(object p) => true;
         #endregion
 
         #region ExportToExcel

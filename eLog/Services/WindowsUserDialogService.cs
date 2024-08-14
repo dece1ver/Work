@@ -97,7 +97,12 @@ namespace eLog.Services
             AppSettings.Instance.StorageType = dlg.StorageType;
             AppSettings.Instance.GoogleCredentialsPath = dlg.GoogleCredentialsPath;
             AppSettings.Instance.GsId = dlg.GsId;
+            AppSettings.Instance.WiteToGs = dlg.WriteToGs;
             AppSettings.Instance.ConnetctionString = dlg.ConnectionString;
+            AppSettings.Instance.PathToRecievers = dlg.PathToRecievers;
+            AppSettings.Instance.SmtpAddress = dlg.SmtpAddress;
+            AppSettings.Instance.SmtpPort = dlg.SmtpPort;
+            AppSettings.Instance.SmtpUsername = dlg.SmtpUsername;
             if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
             return true;
         }

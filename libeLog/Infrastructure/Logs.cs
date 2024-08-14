@@ -34,6 +34,7 @@ namespace libeLog.Infrastructure
         /// <param name="additionMessage"></param>
         public static async Task Write(string path, Exception exception, string additionMessage = "", string copyDir = "")
         {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
             for (int i = 0; i < 3; i++)
             {
                 try

@@ -2,6 +2,7 @@
 using eLog.Models;
 using eLog.Views.Windows.Dialogs;
 using libeLog;
+using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Models;
 using System;
@@ -572,20 +573,60 @@ namespace eLog.Infrastructure.Extensions
         }
 
         /// <summary>
+        /// Асинхронно получает директорию для копирования логов, которой является директория таблицы.
+        /// </summary>
+        /// <returns>Путь к директории или пустая строка, если директория не найдена.</returns>
+        private static async Task<string> GetCopyDirAsync()
+        {
+            return await Task.Run(() =>
+            {
+                if (File.Exists(AppSettings.Instance.XlPath) && Directory.GetParent(AppSettings.Instance.XlPath) is { Exists: true } parent)
+                {
+                    return parent.FullName;
+                }
+                return "";
+            });
+        }
+
+        /// <summary>
         /// Записывает информацию об исключении в лог.
         /// </summary>
         /// <param name="exception"></param>
         /// <param name="additionMessage"></param>
         public static void WriteLog(Exception exception, string additionMessage = "")
-            => _ = Logs.Write(AppSettings.LogFile, exception, additionMessage, GetCopyDir());
+            => Task.Run(() => Logs.Write(AppSettings.LogFile, exception, additionMessage, GetCopyDirAsync().Result));
 
+
+        /// <summary>
+        /// Асинхронно записывает информацию об исключении в лог.
+        /// </summary>
+        /// <param name="exception"></param>
+        /// <param name="additionMessage"></param>
+        /// <returns></returns>
+        public static async Task WriteLogAsync(Exception exception, string additionMessage = "")
+        {
+            string copyDir = await GetCopyDirAsync();
+            await Logs.Write(AppSettings.LogFile, exception, additionMessage, copyDir);
+        }
 
         /// <summary>
         /// Записывает сообщение в лог.
         /// </summary>
         /// <param name="message"></param>
         public static void WriteLog(string message)
-            => _ = Logs.Write(AppSettings.LogFile, message, GetCopyDir());
+            => Task.Run(() => Logs.Write(AppSettings.LogFile, message, GetCopyDir()));
+
+        /// <summary>
+        /// Асинхронно записывает сообщение в лог.
+        /// </summary>
+        /// <param name="exception"></param>
+        /// <param name="additionMessage"></param>
+        /// <returns></returns>
+        public static async Task WriteLogAsync(string message)
+        {
+            string copyDir = await GetCopyDirAsync();
+            await Logs.Write(AppSettings.LogFile, message, copyDir);
+        }
 
 
         /// <summary>
@@ -600,7 +641,7 @@ namespace eLog.Infrastructure.Extensions
                         $"Деталь №{part.Id}: {part.Name} | {part.Setup} уст.\n\t" +
                         $"М/Л: {part.Order} | {part.TotalCountInfo}\n\t" +
                         $"GUID: {part.Guid}\n\n";
-            _ = Logs.Write(AppSettings.LogFile, content, GetCopyDir());
+            Task.Run(() => Logs.Write(AppSettings.LogFile, content, GetCopyDir()));
         }
 
 
@@ -666,6 +707,45 @@ namespace eLog.Infrastructure.Extensions
             part.DownTimes.Add(new DownTime(part, type));
         }
 
+        /// <summary>
+        /// Получает список получателей электронной почты из локального файла. 
+        /// Если удаленный файл новее локального, локальный файл обновляется.
+        /// В случае ошибки при работе с удаленным файлом, используется локальный файл, если он существует.
+        /// Если локальный файл пуст или его нет, возвращается пустой массив.
+        /// Любые другие исключения логируются, и также возвращается пустой массив.
+        /// </summary>
+        /// <returns>Массив строк, содержащий адреса получателей электронной почты. Возвращает пустой массив, если файл пустой или возникла ошибка.</returns>
+        public static string[] GetMailRecievers()
+        {
+            try
+            {
+                try
+                {
+                    if (File.Exists(AppSettings.LocalOrdersFile) || AppSettings.Instance.PathToRecievers.IsFileNewerThan(AppSettings.LocalOrdersFile))
+                    {
+                        File.Copy(AppSettings.Instance.PathToRecievers, AppSettings.LocalMailRecieversFile, true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteLog(ex);
+                }
 
+                if (File.Exists(AppSettings.LocalMailRecieversFile))
+                {
+                    var lines = File.ReadLines(AppSettings.LocalMailRecieversFile).ToArray();
+                    return lines.Length > 0 ? lines : Array.Empty<string>();
+                }
+                else
+                {
+                    return Array.Empty<string>();
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog(ex);
+                return Array.Empty<string>();
+            }
+        }
     }
 }

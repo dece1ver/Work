@@ -131,13 +131,13 @@ namespace remeLog.Infrastructure
                     catch (JsonException)
                     {
                         var msg = "Резервный файл конфигурации некорректен, установка конфигурации по умолчанию.";
-                        Util.WriteLog(msg);
+                        Util.WriteLogAsync(msg);
                         CreateBaseConfig();
                     }
                     catch (Exception ex)
                     {
                         var msg = "Неизвестная ошибка при чтении резервного файла конфигурации, установка конфигурации по умолчанию.";
-                        Util.WriteLog(ex, msg);
+                        Util.WriteLogAsync(ex, msg);
                         CreateBaseConfig();
                     }
 
@@ -174,32 +174,32 @@ namespace remeLog.Infrastructure
                 catch (JsonException ex)
                 {
                     var msg = "Записан некорректный файл конфигурации, восстановление";
-                    Util.WriteLog(ex, msg);
+                    Util.WriteLogAsync(ex, msg);
                     File.Copy(ConfigBackupPath, ConfigFilePath, true);
                 }
                 catch (Exception ex)
                 {
                     var msg = "Неизвестная ошибка при создании бэкапа конфигурации";
-                    Util.WriteLog(ex, msg);
+                    Util.WriteLogAsync(ex, msg);
                 }
 
             }
             catch (UnauthorizedAccessException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Доступ запрещен).";
-                Util.WriteLog(msg);
+                Util.WriteLogAsync(msg);
                 if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (IOException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Ошибка ввода/вывода).";
-                Util.WriteLog(msg);
+                Util.WriteLogAsync(msg);
                 if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (Exception ex)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
-                Util.WriteLog(ex, msg);
+                Util.WriteLogAsync(ex, msg);
                 try
                 {
                     if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
