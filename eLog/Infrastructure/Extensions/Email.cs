@@ -57,6 +57,7 @@ namespace eLog.Infrastructure.Extensions
                             <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine.Name}</p>
                             <p style=""margin: 6px 0;""><strong>Оператор:</strong> {part.Operator.FullName}</p>
                             <p style=""margin: 6px 0;""><strong>Деталь:</strong> {part.FullName.TrimLen(70)}</p>
+                            <p style=""margin: 6px 0;""><strong>Установка:</strong> {part.Setup}</p>
                             <p style=""margin: 6px 0;""><strong>М/Л:</strong> {part.Order}</p>
                             <p style=""margin: 6px 0;""><strong>Начало наладки:</strong> {part.StartSetupTime}</p>
                         </div>
@@ -72,7 +73,7 @@ namespace eLog.Infrastructure.Extensions
                     foreach (var dt in part.DownTimes)
                     {
                         emailBody.Append($@"
-                            <p style=""margin: 6px 0;""><strong>{dt.Name}: </strong>{dt.StartTime:t} - {dt.EndTime:t}</p>
+                            <p style=""margin: 6px 0;""><strong>{dt.Name}: </strong>{dt.StartTime:t} - {(dt.EndTime == DateTime.MinValue ? "..." : $"{dt.EndTime:t}")}</p>
                         ");
                     }
 

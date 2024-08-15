@@ -9,6 +9,7 @@ using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -633,7 +634,13 @@ namespace eLog.ViewModels
                     && !Parts[0].LongSetupNotifySended
                     && Parts[0].StartMachiningTime < Parts[0].StartSetupTime)
                     {
-                        var totalDowntime = Parts[0].DownTimes
+                        var tempDowntimes = new List<DownTime>();
+                        foreach (var dt in Parts[0].DownTimes)
+                        {
+                            var edt = dt.EndTime == DateTime.MinValue ? DateTime.Now : dt.EndTime;
+                            tempDowntimes.Add(new DownTime(Parts[0], dt) { EndTimeText = edt.ToString(Constants.DateTimeFormat) });
+                        }
+                        var totalDowntime = tempDowntimes
                         .Where(dt => dt.Type is not DownTime.Types.PartialSetup)
                         .Aggregate(TimeSpan.Zero, (sum, dt) => sum.Add(dt.Time));
 
