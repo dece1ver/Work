@@ -9,7 +9,7 @@
         mc:Ignorable="d" xmlns:inf="clr-namespace:remeLog.Infrastructure" xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:remeLog.ViewModels" xmlns:md="clr-namespace:remeLog.Models" 
         d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
-        Title="{Binding PartsInfo.Machine}" Height="720" Width="1280" WindowStartupLocation="CenterOwner" WindowState="Maximized">
+        Title="{Binding PartsInfo.Machine}" Height="720" Width="1280" WindowStartupLocation="CenterOwner" WindowState="Maximized" PreviewKeyDown="partsInfoWindow_PreviewKeyDown">
     <Window.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>

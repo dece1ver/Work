@@ -112,10 +112,10 @@ namespace remeLog.Infrastructure
                 switch (exception)
                 {
                     case Newtonsoft.Json.JsonException:
-                        Util.WriteLog("Некорректный файл конфигурации.");
+                        Util.WriteLogAsync("Некорректный файл конфигурации.");
                         break;
                     default:
-                        Util.WriteLog(exception, "Ошибка при чтении конфигурации.");
+                        Util.WriteLogAsync(exception, "Ошибка при чтении конфигурации.");
                         break;
                 }
 

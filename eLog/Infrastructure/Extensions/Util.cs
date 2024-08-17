@@ -734,7 +734,7 @@ namespace eLog.Infrastructure.Extensions
                 if (File.Exists(AppSettings.LocalMailRecieversFile))
                 {
                     var lines = File.ReadLines(AppSettings.LocalMailRecieversFile).ToArray();
-                    return lines.Length > 0 ? lines : Array.Empty<string>();
+                    return lines.Length > 1 ? lines : Array.Empty<string>();
                 }
                 else
                 {

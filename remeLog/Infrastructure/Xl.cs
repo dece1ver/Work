@@ -733,7 +733,7 @@ namespace remeLog.Infrastructure
             }
             catch (Exception ex)
             {
-                Util.WriteLog(ex);
+                Util.WriteLogAsync(ex);
                 return "Н/Д";
             }
         }

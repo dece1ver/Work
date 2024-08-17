@@ -104,7 +104,7 @@
             </DockPanel>
 
             <CheckBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding InstantUpdateOnMainWindow}" 
-                      Content="Мнгновенное обновление информации на главной странице" Margin="4 6"/>
+                      Content="Мгновенное обновление информации на главной странице" Margin="4 6"/>
 
             <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" 
                         Orientation="Horizontal" FlowDirection="RightToLeft">

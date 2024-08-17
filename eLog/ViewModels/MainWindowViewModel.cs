@@ -644,7 +644,7 @@ namespace eLog.ViewModels
                         .Where(dt => dt.Type is not DownTime.Types.PartialSetup)
                         .Aggregate(TimeSpan.Zero, (sum, dt) => sum.Add(dt.Time));
 
-                        var setupTimeWithoutDowntime = DateTime.Now - Parts[0].StartSetupTime - totalDowntime;
+                        var setupTimeWithoutDowntime = DateTime.Now - Parts[0].StartSetupTime - totalDowntime - TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(Parts[0].StartSetupTime, DateTime.Now));
 
                         if (setupTimeWithoutDowntime > TimeSpan.FromHours(3))
                         {
@@ -674,7 +674,6 @@ namespace eLog.ViewModels
                     {
                         if (ProgressBarVisibility == Visibility.Visible) break;
                         if (Parts[i] is not { IsSynced: false, IsFinished: not Part.State.InProgress } part) continue;
-                        // if (AppSettings.Instance.DebugMode) { WriteLog(part, "Нужна синхронизация"); }
                         var partName = part.Name.TrimLen(86);
 
                         switch (AppSettings.Instance.StorageType.Type)

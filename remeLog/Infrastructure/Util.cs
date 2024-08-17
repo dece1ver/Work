@@ -15,10 +15,10 @@ namespace remeLog.Infrastructure
 {
     public static class Util
     {
-        public static async void WriteLog(string message)
+        public static async void WriteLogAsync(string message)
             => await Logs.Write(AppSettings.LogFile, message, GetCopyDir());
 
-        public static async void WriteLog(Exception exception, string additionalMessage = "")
+        public static async void WriteLogAsync(Exception exception, string additionalMessage = "")
             => await Logs.Write(AppSettings.LogFile, exception, additionalMessage, GetCopyDir());
 
         /// <summary>
