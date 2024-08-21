@@ -22,7 +22,7 @@ namespace Vovannum
 
             if (_ret != Focas1.EW_OK)
             {
-                Console.WriteLine($"Unable to connect to 127.0.0.1 on port 8193\n\nReturn Code: {_ret}\n\nExiting....");
+                Console.WriteLine($"Unable to connect\n\nReturn Code: {_ret}\n\nExiting....");
                 Console.Read();
             }
             else
@@ -31,10 +31,10 @@ namespace Vovannum
 
                 while (!_exit)
                 {
-                    Console.Clear();
+                    //Console.Clear();
                     var odbspeed = new ODBSPEED();
                     var bbb = cnc_rdspeed(_handle, -1, odbspeed);
-                    Console.Write($"{(GetOpSignal() ? "Работает" : "Стоит")} в режиме {GetMode()} ({GetStatus()}) " +
+                    Console.Write($"\r\b{(GetOpSignal() ? "Работает" : "Стоит")} в режиме {GetMode()} ({GetStatus()}) " +
                         $"| Обороты: {odbspeed.acts.data} | Подача: {odbspeed.actf.data} мм/мин ({(double)odbspeed.actf.data/(double)odbspeed.acts.data:0.000} мм/об)   ");
 
                     //for (short i = short.MinValue; i < short.MaxValue; i++)
@@ -49,10 +49,10 @@ namespace Vovannum
                     //    }
                     //}
 
-                    var sops = new IODBSGNL();
-                    var aaa = cnc_rdopnlsgnl(_handle, -1, sops);
-                    PrintMembers(sops);
-                    Thread.Sleep(5000);
+                    //var sops = new IODBSGNL();
+                    //var aaa = cnc_rdopnlsgnl(_handle, -1, sops);
+                    //PrintMembers(sops);
+                    Thread.Sleep(500);
                 }
 
 

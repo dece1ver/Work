@@ -54,11 +54,15 @@
             <Menu DockPanel.Dock="Top" Background="Transparent">
                 <MenuItem Header="Параметры">
                     <MenuItem Header="Параметры"
-                      Command="{Binding EditSettingsCommand}" Icon="{StaticResource SettingsIcon}"/>
+                              Command="{Binding EditSettingsCommand}" Icon="{StaticResource SettingsIcon}"/>
+                </MenuItem>
+                <MenuItem Header="Инструменты">
+                    <MenuItem Header="Мониторинг"
+                              Command="{Binding ShowMonitorCommand}" Icon="{StaticResource AboutIcon}"/>
                 </MenuItem>
                 <MenuItem Header="Справка">
                     <MenuItem Header="О программе"
-                      Command="{Binding ShowAboutCommand}" Icon="{StaticResource AboutIcon}"/>
+                              Command="{Binding ShowAboutCommand}" Icon="{StaticResource AboutIcon}"/>
                 </MenuItem>
             </Menu>
             <StatusBar DockPanel.Dock="Bottom">

@@ -22,6 +22,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Replacer", "Replacer\Replacer.csproj", "{3EF99EC7-BD1F-4781-BCDF-930D7708629D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vovannum", "Vovannum\Vovannum.csproj", "{BEA0CDAD-AB92-4C3D-88B6-23C9C0EBFBDF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{24686872-C7C8-42B3-BB97-EB067BC2791F} = {24686872-C7C8-42B3-BB97-EB067BC2791F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

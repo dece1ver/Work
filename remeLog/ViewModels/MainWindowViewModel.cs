@@ -34,6 +34,7 @@ namespace remeLog.ViewModels
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadPartsInfoCommand = new LambdaCommand(OnLoadPartsInfoCommandExecuted, CanLoadPartsInfoCommandExecute);
+            ShowMonitorCommand = new LambdaCommand(OnShowMonitorCommandExecuted, CanShowMonitorCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
             ShowPartsInfoCommand = new LambdaCommand(OnShowPartsInfoCommandExecuted, CanShowPartsInfoCommandExecute);
             IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
@@ -186,6 +187,19 @@ namespace remeLog.ViewModels
             await LoadPartsAsync(true);
         }
         private static bool CanLoadPartsInfoCommandExecute(object p) => true;
+        #endregion
+
+        #region ShowMonitor
+        public ICommand ShowMonitorCommand { get; }
+        private void OnShowMonitorCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                FanucMonitor fanucMonitor = new FanucMonitor();
+                fanucMonitor.ShowDialog();
+            }
+        }
+        private static bool CanShowMonitorCommandExecute(object p) => true;
         #endregion
 
         #region ShowAbout

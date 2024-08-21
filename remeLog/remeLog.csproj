@@ -11,6 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="fwlib0DN64.dll" />
+    <None Remove="Fwlib32.dll" />
+    <None Remove="Fwlib64.dll" />
+    <None Remove="fwlibe64.dll" />
+    <None Remove="fwlibNCG64.dll" />
     <None Remove="Resources\eLogSplashScreen.png" />
     <None Remove="Resources\remeLogSplashScreen.png" />
     <None Remove="Views\Settings.png" />
@@ -18,6 +23,16 @@
 
   <ItemGroup>
     <Content Include="Resources\remeLog.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="fwlib0DN64.dll" />
+    <EmbeddedResource Include="Fwlib32.dll" />
+    <EmbeddedResource Include="Fwlib64.dll">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fwlibe64.dll" />
+    <EmbeddedResource Include="fwlibNCG64.dll" />
   </ItemGroup>
 
   <ItemGroup>
