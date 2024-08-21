@@ -1,15 +1,12 @@
-﻿using DocumentFormat.OpenXml.VariantTypes;
-using libeLog;
+﻿using libeLog;
 using libeLog.Base;
-using libeLog.Extensions;
+using libeLog.FanucApi;
+using libeLog.Infrastructure;
 using remeLog.Models;
-using remeLog.Views;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,14 +14,16 @@ using System.Windows.Input;
 
 namespace remeLog.ViewModels
 {
-    class FanucMonitorViewModel : ViewModel
+    public class FanucMonitorViewModel : ViewModel
     {
+        private readonly FanucService _fanucService;
         private ushort _handle = 0;
         private short _ret = 0;
         private bool _isConnected = false;
-
         private string _ipAddress;
         private MachineStatus _status;
+        private List<char> _axisNames = new();
+        private int _axisCount = 0;
 
         public string IPAddress
         {
@@ -55,18 +54,30 @@ namespace remeLog.ViewModels
                 OnPropertyChanged(nameof(IsConnected));
             }
         }
+
+        
+        public ICommand ConnectCommand { get; }
+
         public FanucMonitorViewModel()
         {
-            Status = new MachineStatus();
+            _fanucService = new FanucService();
+            _ipAddress = "127.0.0.1";
+            _status = new MachineStatus();
             ConnectCommand = new LambdaCommand(OnConnectCommandExecuted, CanConnectCommandExecute);
         }
+
+        private void OnConnectCommandExecuted(object p)
+        {
+            ConnectToMachine();
+        }
+
+        private static bool CanConnectCommandExecute(object p) => true;
 
         private void ConnectToMachine()
         {
             Task.Run(() =>
             {
                 _ret = Focas1.cnc_allclibhndl3(IPAddress, 8193, 6, out _handle);
-
                 if (_ret == Focas1.EW_OK)
                 {
                     IsConnected = true;
@@ -80,177 +91,58 @@ namespace remeLog.ViewModels
             });
         }
 
-        #region Connect
-        public ICommand ConnectCommand { get; }
-        private void OnConnectCommandExecuted(object p)
-        {
-            ConnectToMachine();
-        }
-
-        private static bool CanConnectCommandExecute(object p) => true;
-        #endregion
-
         private void MonitorMachine()
         {
-            while (IsConnected)
-            {
-                var odbspeed = new Focas1.ODBSPEED();
-                var _ = Focas1.cnc_rdspeed(_handle, -1, odbspeed);
-                Status.Speed = odbspeed.acts.data;
-                Status.Feed = odbspeed.actf.data;
-                Status.FeedPerRevolution = odbspeed.acts.data != 0 ? (double)odbspeed.actf.data / odbspeed.acts.data : 0;
-                Status.IsOperating = GetOpSignal(_handle);
-                Status.Mode = GetMode(_handle);
-                Status.Status = GetStatus(_handle);
-
-                (Status.X, Status.Y, Status.Z) = GetAllAxisAbsolutePositions(_handle);
-
-                OnPropertyChanged(nameof(Status));
-                Thread.Sleep(250);
-            }
-        }
-
-        public static bool GetOpSignal(ushort _handle)
-        {
-            if (_handle == 0)
-            {
-                MessageBox.Show("Error: Please obtain a handle before calling this method");
-                return false;
-            }
-
-            short addr_kind = 1; // F
-            short data_type = 0; // Byte
-            ushort start = 0;
-            ushort end = 0;
-            ushort data_length = 9; // 8 + N
-            Focas1.IODBPMC0 pmc = new Focas1.IODBPMC0();
-            var _ret = Focas1.pmc_rdpmcrng(_handle, addr_kind, data_type, start, end, data_length, pmc);
-            if (_ret != Focas1.EW_OK)
-            {
-                MessageBox.Show($"Error: Unable to ontain the OP Signal");
-                return false;
-            }
-            return pmc.cdata[0].GetBit(7);
-        }
-
-        public static (double x, double y, double z) GetAllAxisAbsolutePositions(ushort _handle)
-        {
-            if (_handle == 0)
-                return (0, 0, 0);
-            var _scale = 1000;
             try
             {
-                Focas1.ODBAXIS _axisPositionMachine = new Focas1.ODBAXIS();
-
-                //for (short i = 4; i < short.MaxValue; i++)
-                //{
-                //    var _ret = Focas1.cnc_absolute(_handle, -1, i, _axisPositionMachine);
-                //    Debug.Print($"i = {i} | ret = {_ret}");
-                //    if (_ret == Focas1.EW_OK) MessageBox.Show($"i = {i} | ret = {_ret}");
-                //    Thread.Sleep(500);
-                //}
-                short _ret = 0;
-                _ret = Focas1.cnc_absolute(_handle, 1, 8, _axisPositionMachine);
-
-                if (_ret != Focas1.EW_OK)
-                    return (0, 0, 0);
-                double x = _axisPositionMachine.data[0];
-
-                _ret = Focas1.cnc_absolute(_handle, 2, 8, _axisPositionMachine);
-
-                if (_ret != Focas1.EW_OK)
-                    return (0, 0, 0);
-                double y = _axisPositionMachine.data[0];
-
-                _ret = Focas1.cnc_absolute(_handle, 3, 8, _axisPositionMachine);
-
-                if (_ret != Focas1.EW_OK)
-                    return (0, 0, 0);
-                double z = _axisPositionMachine.data[0];
-
-                return (x / _scale, y / _scale, z / _scale);
+                Status.MaxRpm = _fanucService.GetMaxRpm(_handle);
+                var axisNames = _fanucService.GetAllAxisNames(_handle);
+                _axisCount = axisNames.Count(ax => ax != char.MinValue);
+                if (axisNames.Count == 5)
+                {
+                    Status.FirstAxisName = axisNames[0].ToString();
+                    Status.SecondAxisName = axisNames[1].ToString();
+                    Status.ThirdAxisName = axisNames[2].ToString();
+                    Status.FourthAxisName = axisNames[3].ToString();
+                    Status.FivethAxisName = axisNames[4].ToString();
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                MessageBox.Show(ex.Message);
+                return;
             }
+            while (IsConnected)
+            {
+                try
+                {
+                    UpdateAxisValues(_axisCount);
+                    (Status.Speed, Status.Feed) = _fanucService.GetActRpmAndFeedrate(_handle);
+                    Status.IsOperating = _fanucService.GetOpSignal(_handle);
+                    Status.Mode = _fanucService.GetMode(_handle);
+                    Status.Status = _fanucService.GetStatus(_handle);
 
-            return (0, 0, 0);
+                    OnPropertyChanged(nameof(Status));
+
+                    Thread.Sleep(250);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Monitoring Error");
+                }
+            }
         }
 
-        public static string GetMode(ushort _handle)
+        private void UpdateAxisValues(int count)
         {
-            if (_handle == 0)
-            {
-                MessageBox.Show("Error: Please obtain a handle before calling this method");
-                return "";
-            }
-
-            Focas1.ODBST Mode = new Focas1.ODBST();
-
-            var _ret = Focas1.cnc_statinfo(_handle, Mode);
-
-            if (_ret != 0)
-            {
-                MessageBox.Show($"Error: Unable to obtain mode.\nReturn Code: {_ret}");
-                return "";
-            }
-
-            return ModeNumberToString(Mode.aut);
+            var axisRelativeValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.Relative);
+            var axisAbsoluteValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.Absolute);
+            var axisMachineValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.Machine);
+            var axisDistanceToGoValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.DistanceToGo);
+            Status.SetAxisValues(AxisPositionType.Relative, axisRelativeValues.Take(count).ToList());
+            Status.SetAxisValues(AxisPositionType.Absolute, axisAbsoluteValues.Take(count).ToList());
+            Status.SetAxisValues(AxisPositionType.Machine, axisMachineValues.Take(count).ToList());
+            Status.SetAxisValues(AxisPositionType.DistanceToGo, axisDistanceToGoValues.Take(count).ToList());
         }
-
-        public static string ModeNumberToString(int num)
-        {
-            switch (num)
-            {
-                case 0: { return "MDI"; }
-                case 1: { return "Memory"; }
-                case 3: { return "Edit"; }
-                case 4: { return "Handle"; }
-                case 5: { return "JOG"; }
-                case 6: { return "Teach in JOG"; }
-                case 7: { return "Teach in HND"; }
-                case 8: { return "INC"; }
-                case 9: { return "REF"; }
-                case 10: { return "RMT"; }
-                default: { return "UNAVAILABLE"; }
-            }
-        }
-
-        public static string GetStatus(ushort _handle)
-        {
-            if (_handle == 0)
-            {
-                Console.WriteLine("Error: Please obtain a handle before calling this method");
-                return "";
-            }
-
-            Focas1.ODBST Status = new Focas1.ODBST();
-
-            var _ret = Focas1.cnc_statinfo(_handle, Status);
-
-            if (_ret != 0)
-            {
-                Console.WriteLine($"Error: Unable to obtain status.\nReturn Code: {_ret}");
-                return "";
-            }
-
-            return StatusNumberToString(Status.run);
-        }
-
-        public static string StatusNumberToString(int num)
-        {
-            switch (num)
-            {
-                case 0: { return "****"; }
-                case 1: { return "STOP"; }
-                case 2: { return "HOLD"; }
-                case 3: { return "STRT"; }
-                case 4: { return "MSTR"; }
-                default: { return "UNAVAILABLE"; }
-            }
-        }
-
-
     }
 }

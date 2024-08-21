@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:remeLog.Views"
         xmlns:vm="clr-namespace:remeLog.ViewModels"
         mc:Ignorable="d"
-        Title="FanucMonitor" Height="450" Width="800">
+        Title="FanucMonitor" Height="600" Width="800">
     <Window.DataContext>
         <vm:FanucMonitorViewModel />
     </Window.DataContext>
@@ -15,33 +15,176 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Margin="5">
             <TextBlock Text="IP Address:" />
             <TextBox Text="{Binding IPAddress, UpdateSourceTrigger=PropertyChanged}" />
             <Button Content="Connect" Command="{Binding ConnectCommand}" />
         </StackPanel>
-        <StackPanel Grid.Row="1" Margin="10">
-            <TextBlock Text="Status:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.Status}" />
-            <TextBlock Text="Mode:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.Mode}" />
-            <TextBlock Text="Operating:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.IsOperating}" />
-            <TextBlock Text="Speed:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.Speed}" />
-            <TextBlock Text="Feed:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.Feed}" />
-            <TextBlock Text="Feed per Revolution:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.FeedPerRevolution, StringFormat=0.###}" />
-
-            <!-- Добавляем отображение координат по осям -->
-            <TextBlock Text="X Coordinate:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.X}" />
-            <TextBlock Text="Y Coordinate:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.Y}" />
-            <TextBlock Text="Z Coordinate:" FontWeight="Bold" />
-            <TextBlock Text="{Binding Status.Z}" />
-        </StackPanel>
+        <DockPanel Margin="5" Grid.Column="1">
+            <DockPanel DockPanel.Dock="Top">
+                <TextBlock DockPanel.Dock="Left" Text="{Binding Status.Feed, StringFormat={}F {0} мм/мин}" />
+                <TextBlock DockPanel.Dock="Left" Text="{Binding Status.FeedPerRevolution, StringFormat={} ({0:n3} об/мин) }" />
+            </DockPanel>
+            <DockPanel DockPanel.Dock="Top">
+                <TextBlock DockPanel.Dock="Left" Text="{Binding Status.Speed, StringFormat={}S {0} об/мин}" />
+                <TextBlock DockPanel.Dock="Left" Text="{Binding Status.CutSpeed, StringFormat={} ({0:n0} м/мин) }" />
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Status.MaxRpm, StringFormat={} / {0}}" TextAlignment="Right"/>
+            </DockPanel>
+            
+            <ProgressBar Value="{Binding Status.Speed}" Maximum="{Binding Status.MaxRpm}"/>
+        </DockPanel>
+        <Border Grid.Row="1" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <DockPanel Margin="5">
+                <TextBlock DockPanel.Dock="Top" Text="Relative" TextAlignment="Center"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Status.FirstAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Status.FirstRelativeAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Status.SecondAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Status.SecondRelativeAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="2" Text="{Binding Status.ThirdAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Status.ThirdRelativeAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="3"  Text="{Binding Status.FourthAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding Status.FourthRelativeAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="4" Text="{Binding Status.FivethAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding Status.FirstRelativeAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                </Grid>
+            </DockPanel>
+        </Border>
+        <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <DockPanel Margin="5">
+                <TextBlock DockPanel.Dock="Top" Text="Absolute" TextAlignment="Center"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Status.FirstAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Status.FirstAbsoluteAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Status.SecondAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Status.SecondAbsoluteAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="2" Text="{Binding Status.ThirdAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Status.ThirdAbsoluteAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="3"  Text="{Binding Status.FourthAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding Status.FourthAbsoluteAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="4" Text="{Binding Status.FivethAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding Status.FivethAbsoluteAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                </Grid>
+            </DockPanel>
+        </Border>
+        <Border Grid.Row="2" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <DockPanel Margin="5">
+                <TextBlock DockPanel.Dock="Top" Text="Machine" TextAlignment="Center"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Status.FirstAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Status.FirstMachineAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Status.SecondAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Status.SecondMachineAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="2" Text="{Binding Status.ThirdAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Status.ThirdMachineAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="3"  Text="{Binding Status.FourthAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding Status.FourthMachineAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="4" Text="{Binding Status.FivethAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding Status.FirstMachineAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                </Grid>
+            </DockPanel>
+        </Border>
+        <Border Grid.Row="2" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <DockPanel Margin="5">
+                <TextBlock DockPanel.Dock="Top" Text="Distance To Go" TextAlignment="Center"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Status.FirstAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Status.FirstDistanceToGoAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Status.SecondAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Status.SecondDistanceToGoAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="2" Text="{Binding Status.ThirdAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Status.ThirdDistanceToGoAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="3"  Text="{Binding Status.FourthAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding Status.FourthDistanceToGoAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                    <TextBlock Grid.Column="0" Grid.Row="4" Text="{Binding Status.FivethAxisName}"/>
+                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding Status.FivethDistanceToGoAxisValue, StringFormat=0.000}"
+                               TextAlignment="Right"/>
+                </Grid>
+            </DockPanel>
+        </Border>
+        <Border Grid.Row="0" Grid.Column="2" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <DockPanel Margin="5">
+                <StackPanel>
+                    <TextBlock Text="Статус:" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Status.Status}" />
+                    <TextBlock Text="Режим:" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Status.Mode}" />
+                </StackPanel>
+                <Rectangle Width="30" Height="30" Fill="{Binding Status.IndicatorColor, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>
