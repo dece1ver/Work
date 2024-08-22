@@ -122,6 +122,8 @@ namespace remeLog.ViewModels
                     Status.IsOperating = _fanucService.GetOpSignal(_handle);
                     Status.Mode = _fanucService.GetMode(_handle);
                     Status.Status = _fanucService.GetStatus(_handle);
+                    (Status.UsedProgramms, Status.UnusedProgramms, Status.UsedMem, Status.UnusedMem) = _fanucService.GetProgramDataInfo(_handle);                   
+                    Status.Alarms = _fanucService.GetAlarms(_handle);
 
                     OnPropertyChanged(nameof(Status));
 

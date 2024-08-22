@@ -37,7 +37,6 @@ namespace remeLog
             }
 
             SingleInstanceWatcher();
-            // Добавляем распаковку DLL в начале конструктора
             ExtractAndLoadDll("fwlib0DN64.dll");
             ExtractAndLoadDll("Fwlib64.dll");
             ExtractAndLoadDll("fwlibe64.dll");
@@ -47,7 +46,7 @@ namespace remeLog
         private void ExtractAndLoadDll(string dllName)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = $"remeLog.{dllName}"; // Убедитесь, что путь к ресурсу правильный
+            var resourceName = $"remeLog.{dllName}";
 
             using (var stream = assembly.GetManifestResourceStream(resourceName))
             {

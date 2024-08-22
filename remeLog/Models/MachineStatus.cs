@@ -2,14 +2,13 @@
 using libeLog.Infrastructure;
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Windows.Media;
 
 namespace remeLog.Models
 {
     public class MachineStatus : ViewModel
     {
-        
+
         private string _Mode = "N/A";
         /// <summary> Режим </summary>
         public string Mode
@@ -285,6 +284,7 @@ namespace remeLog.Models
         {
             get
             {
+                if (Alarms.Count > 0) return Brushes.Red;
                 if (IsOperating)
                 {
                     return Status == "STRT" ? Brushes.Green : Brushes.Yellow;
@@ -343,6 +343,71 @@ namespace remeLog.Models
             get => _FivethDistanceToGoAxisValue;
             set => Set(ref _FivethDistanceToGoAxisValue, value);
         }
+
+
+        private int? _UsedProgramms;
+        /// <summary> Использовано программ </summary>
+        public int? UsedProgramms
+        {
+            get => _UsedProgramms;
+            set
+            {
+                if (Set(ref _UsedProgramms, value))
+                {
+                    OnPropertyChanged(nameof(TotalProgramms));
+                }
+            }
+        }
+
+        private int? _UnusedProgramms;
+        /// <summary> Неиспользовано программ </summary>
+        public int? UnusedProgramms
+        {
+            get => _UnusedProgramms;
+            set => Set(ref _UnusedProgramms, value);
+        }
+
+        public int? TotalProgramms => UsedProgramms + UnusedProgramms;
+
+        private int? _UsedMem;
+        /// <summary> Использовано памяти </summary>
+        public int? UsedMem
+        {
+            get => _UsedMem;
+            set
+            {
+                if (Set(ref _UsedMem, value))
+                {
+                    OnPropertyChanged(nameof(TotalMem));
+                }
+            }
+        }
+
+        private int? _UnusedMem;
+        /// <summary> Неиспользовано памяти </summary>
+        public int? UnusedMem
+        {
+            get => _UnusedMem;
+            set => Set(ref _UnusedMem, value);
+        }
+
+        public int? TotalMem => UsedMem + UnusedMem;
+
+
+        private List<string> _Alarms = new();
+        /// <summary> Ошибки </summary>
+        public List<string> Alarms
+        {
+            get => _Alarms;
+            set
+            {
+                if (Set(ref _Alarms, value))
+                {
+                    OnPropertyChanged(nameof(IndicatorColor));
+                }
+            }
+        }
+
 
         public void SetAxisValues(AxisPositionType positionType, List<double> axisValues)
         {

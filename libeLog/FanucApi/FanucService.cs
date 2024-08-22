@@ -1,8 +1,7 @@
 ﻿using libeLog.Extensions;
-using libeLog.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Windows;
-using System.Xaml;
 
 namespace libeLog.FanucApi
 {
@@ -51,32 +50,6 @@ namespace libeLog.FanucApi
             return result;
         }
 
-        public List<double> GetAxisPositions(ushort handle, int axisCount, AxisPositionType positionType)
-        {
-            var result = new List<double>();
-            var scale = 1000.0;
-            var axisData = new Focas1.ODBAXIS();
-
-            for (short i = 1; i <= 8; i++)
-            {
-                var a = i;
-                var _ret = positionType switch
-                {
-                    AxisPositionType.Relative => Focas1.cnc_relative2(handle, a, 8, axisData),
-                    AxisPositionType.Absolute => Focas1.cnc_absolute2(handle, a, 8, axisData),
-                    AxisPositionType.Machine => Focas1.cnc_machine(handle, a, 8, axisData),
-                    AxisPositionType.DistanceToGo => Focas1.cnc_distance(handle, a, 8, axisData),
-                    _ => 0
-                };
-
-                if (_ret == Focas1.EW_OK)
-                {
-                    result.Add(axisData.data[0] / scale);
-                }
-            }
-            return result;
-        }
-
         public string GetMode(ushort handle)
         {
             return handle == 0 ? string.Empty : ModeNumberToString(GetStatusData(handle).aut);
@@ -85,6 +58,49 @@ namespace libeLog.FanucApi
         public string GetStatus(ushort handle)
         {
             return handle == 0 ? string.Empty : StatusNumberToString(GetStatusData(handle).run);
+        }
+
+        public (int? regPrg, int? unregPrg, int? usedMem, int? unusedMem) GetProgramDataInfo(ushort handle)
+        {
+            var odbnc = new Focas1.ODBNC_1();
+            var ret = Focas1.cnc_rdproginfo(handle, 0, 12, odbnc);
+            if (ret != Focas1.EW_OK)
+            {
+                MessageBox.Show(ret.ToString(), "GetProgramDataInfo");
+                return (null, null, null, null);
+            }
+            return (odbnc.reg_prg, odbnc.unreg_prg, odbnc.used_mem, odbnc.unused_mem);
+        }
+
+        public List<string> GetAlarms(ushort handle)
+        {
+            List<string> alarms = new();
+
+            string[] almmsg = {
+                    "P/S 100 ALARM","P/S 000 ALARM",
+                    "P/S 101 ALARM","P/S ALARM (1-255)",
+                    "OT ALARM",     "OH ALARM",
+                    "SERVO ALARM",  "SYSTEM ALARM",
+                    "APC ALARM",    "SPINDLE ALARM",
+                    "P/S ALARM (5000-)"
+            };
+            int alm;
+            ushort idx;
+            Focas1.cnc_alarm2(handle, out alm);
+            if (alm == 0)
+            {
+                return alarms;
+            }
+            for (idx = 0; idx < 11; idx++)
+            {
+                if ((alm & 0x0001) > 0)
+                {
+                    alarms.Add(almmsg[idx]);
+                }
+                alm >>= 1;
+            }
+
+            return alarms;
         }
 
         private Focas1.ODBST GetStatusData(ushort handle)
@@ -119,5 +135,4 @@ namespace libeLog.FanucApi
             _ => "UNAVAILABLE"
         };
     }
-
 }

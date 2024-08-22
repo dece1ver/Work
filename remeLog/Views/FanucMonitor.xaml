@@ -176,13 +176,34 @@
         </Border>
         <Border Grid.Row="0" Grid.Column="2" BorderBrush="Black" BorderThickness="1" Margin="5">
             <DockPanel Margin="5">
+                <Rectangle DockPanel.Dock="Right" Width="20" Fill="{Binding Status.IndicatorColor, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Stretch" HorizontalAlignment="Right"/>
+                <UniformGrid Columns="2">
+                    <StackPanel>
+                        <TextBlock Text="Статус:" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Status.Status}" />
+                        <TextBlock Text="Режим:" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Status.Mode}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Status.Alarms, Converter={StaticResource CollectionConverteter}}" Foreground="Red"/>
+                </UniformGrid>       
+            </DockPanel>
+        </Border>
+        <Border Grid.Row="0" Grid.Column="3" BorderBrush="Black" BorderThickness="1" Margin="5">
+            <DockPanel Margin="5">
                 <StackPanel>
-                    <TextBlock Text="Статус:" FontWeight="Bold" />
-                    <TextBlock Text="{Binding Status.Status}" />
-                    <TextBlock Text="Режим:" FontWeight="Bold" />
-                    <TextBlock Text="{Binding Status.Mode}" />
+                    <TextBlock Text="Используется программ:" FontWeight="Bold" />
+                    <UniformGrid Columns="3">
+                        <TextBlock Text="{Binding Status.UsedProgramms, TargetNullValue=N/A}" TextAlignment="Left"/>
+                        <TextBlock Text="/" TextAlignment="Center"/>
+                        <TextBlock Text="{Binding Status.TotalProgramms, TargetNullValue=N/A}" TextAlignment="Right"/>
+                    </UniformGrid>
+                    <TextBlock Text="Используется памяти:" FontWeight="Bold" />
+                    <UniformGrid Columns="3">
+                        <TextBlock Text="{Binding Status.UsedMem, TargetNullValue=N/A}" TextAlignment="Left"/>
+                        <TextBlock Text="/" TextAlignment="Center"/>
+                        <TextBlock Text="{Binding Status.TotalMem, TargetNullValue=N/A}" TextAlignment="Right"/>
+                    </UniformGrid>
                 </StackPanel>
-                <Rectangle Width="30" Height="30" Fill="{Binding Status.IndicatorColor, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
             </DockPanel>
         </Border>
     </Grid>
