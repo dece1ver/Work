@@ -5,8 +5,10 @@ using libeLog.Infrastructure;
 using remeLog.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,9 +24,8 @@ namespace remeLog.ViewModels
         private bool _isConnected = false;
         private string _ipAddress;
         private MachineStatus _status;
-        private List<char> _axisNames = new();
         private int _axisCount = 0;
-
+        private double _scale = 1000.0;
         public string IPAddress
         {
             get => _ipAddress;
@@ -97,8 +98,8 @@ namespace remeLog.ViewModels
             {
                 Status.MaxRpm = _fanucService.GetMaxRpm(_handle);
                 var axisNames = _fanucService.GetAllAxisNames(_handle);
-                _axisCount = axisNames.Count(ax => ax != char.MinValue);
-                if (axisNames.Count == 5)
+                _axisCount = axisNames.Count(ax => !string.IsNullOrEmpty(ax));
+                if (axisNames.Count >= 5)
                 {
                     Status.FirstAxisName = axisNames[0].ToString();
                     Status.SecondAxisName = axisNames[1].ToString();
@@ -116,7 +117,7 @@ namespace remeLog.ViewModels
             {
                 try
                 {
-                    UpdateAxisValues(_axisCount);
+                    UpdateAxisValues();
                     (Status.Speed, Status.Feed) = _fanucService.GetActRpmAndFeedrate(_handle);
                     Status.IsOperating = _fanucService.GetOpSignal(_handle);
                     Status.Mode = _fanucService.GetMode(_handle);
@@ -133,16 +134,53 @@ namespace remeLog.ViewModels
             }
         }
 
-        private void UpdateAxisValues(int count)
-        {
-            var axisRelativeValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.Relative);
-            var axisAbsoluteValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.Absolute);
-            var axisMachineValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.Machine);
-            var axisDistanceToGoValues = _fanucService.GetAxisPositions(_handle, count, AxisPositionType.DistanceToGo);
-            Status.SetAxisValues(AxisPositionType.Relative, axisRelativeValues.Take(count).ToList());
-            Status.SetAxisValues(AxisPositionType.Absolute, axisAbsoluteValues.Take(count).ToList());
-            Status.SetAxisValues(AxisPositionType.Machine, axisMachineValues.Take(count).ToList());
-            Status.SetAxisValues(AxisPositionType.DistanceToGo, axisDistanceToGoValues.Take(count).ToList());
+        private void UpdateAxisValues()
+        {           
+            short num = Focas1.MAX_AXIS;
+            var odb = new Focas1.ODBPOS();
+
+            short ret = Focas1.cnc_rdposition(_handle, Focas1.ALL_AXES, ref num, odb);
+            if (ret == Focas1.EW_OK)
+            {
+                for (int i = 1; i <= _axisCount; i++)
+                {
+                    switch (i)
+                    {
+                        case 1:
+                            Status.FirstRelativeAxisValue = odb.p1.rel.data / _scale;
+                            Status.FirstAbsoluteAxisValue = odb.p1.abs.data / _scale;
+                            Status.FirstMachineAxisValue = odb.p1.mach.data / _scale;
+                            Status.FirstDistanceToGoAxisValue = odb.p1.dist.data / _scale;
+                            break;
+                        case 2:
+                            Status.SecondRelativeAxisValue = odb.p2.rel.data / _scale;
+                            Status.SecondAbsoluteAxisValue = odb.p2.abs.data / _scale;
+                            Status.SecondMachineAxisValue = odb.p2.mach.data / _scale;
+                            Status.SecondDistanceToGoAxisValue = odb.p2.dist.data / _scale;
+                            break;
+                        case 3:
+                            Status.ThirdRelativeAxisValue = odb.p3.rel.data / _scale;
+                            Status.ThirdAbsoluteAxisValue = odb.p3.abs.data / _scale;
+                            Status.ThirdMachineAxisValue = odb.p3.mach.data / _scale;
+                            Status.ThirdDistanceToGoAxisValue = odb.p3.dist.data / _scale;
+                            break;
+                        case 4:
+                            Status.FourthRelativeAxisValue = odb.p4.rel.data / _scale;
+                            Status.FourthAbsoluteAxisValue = odb.p4.abs.data / _scale;
+                            Status.FourthMachineAxisValue = odb.p4.mach.data / _scale;
+                            Status.FourthDistanceToGoAxisValue = odb.p4.dist.data / _scale;
+                            break;
+                        case 5:
+                            Status.FivethRelativeAxisValue = odb.p5.rel.data / _scale;
+                            Status.FivethAbsoluteAxisValue = odb.p5.abs.data / _scale;
+                            Status.FivethMachineAxisValue = odb.p5.mach.data / _scale;
+                            Status.FivethDistanceToGoAxisValue = odb.p5.dist.data / _scale;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
         }
     }
 }

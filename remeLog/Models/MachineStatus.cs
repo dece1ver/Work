@@ -287,7 +287,7 @@ namespace remeLog.Models
             {
                 if (IsOperating)
                 {
-                    return Mode == "Memory" ? Brushes.Green : Brushes.Yellow;
+                    return Status == "STRT" ? Brushes.Green : Brushes.Yellow;
                 }
                 return Brushes.Gray;
             }

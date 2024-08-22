@@ -195,7 +195,7 @@ namespace remeLog.ViewModels
         {
             using (Overlay = new())
             {
-                FanucMonitor fanucMonitor = new FanucMonitor();
+                FanucMonitor fanucMonitor = new FanucMonitor() {Owner = App.Current.MainWindow };
                 fanucMonitor.ShowDialog();
             }
         }
