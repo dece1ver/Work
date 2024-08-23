@@ -13,7 +13,8 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
@@ -25,12 +26,12 @@
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <DockPanel Margin="5">
+        <DockPanel Margin="2" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2">
             <TextBlock DockPanel.Dock="Top" Text="IP Address:" />
             <TextBox DockPanel.Dock="Top" Text="{Binding IPAddress, UpdateSourceTrigger=PropertyChanged}" />
-            <Button DockPanel.Dock="Top" Content="Connect" Command="{Binding ConnectCommand}" />
+            <Button DockPanel.Dock="Top" Content="Connect" Command="{Binding ConnectCommand}"/>
         </DockPanel>
-        <DockPanel Margin="5" Grid.Column="1">
+        <DockPanel Margin="2" Grid.Row="0" Grid.Column="1" Grid.RowSpan="2">
             <DockPanel DockPanel.Dock="Top">
                 <TextBlock DockPanel.Dock="Left" Text="{Binding Status.Feed, StringFormat={}F {0} мм/мин}" />
                 <TextBlock DockPanel.Dock="Left" Text="{Binding Status.FeedPerRevolution, StringFormat={} ({0:n3} об/мин) }" />
@@ -40,11 +41,26 @@
                 <TextBlock DockPanel.Dock="Left" Text="{Binding Status.CutSpeed, StringFormat={} ({0:n0} м/мин) }" />
                 <TextBlock DockPanel.Dock="Right" Text="{Binding Status.MaxRpm, StringFormat={} / {0}}" TextAlignment="Right"/>
             </DockPanel>
-            <ProgressBar Value="{Binding Status.Speed}" Maximum="{Binding Status.MaxRpm}"/>
+            <UniformGrid Rows="2">
+                <DockPanel >
+                    <TextBlock Text="RPM" VerticalAlignment="Center" Width="40"/>
+                    <ProgressBar Value="{Binding Status.Speed}" Maximum="{Binding Status.MaxRpm}" Margin="0 2 0 0"/>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="Load" VerticalAlignment="Center" Width="40"/>
+                    <ProgressBar Value="{Binding Status.Spindle1Load}" Maximum="100" Margin="0 2 0 0"/>
+                </DockPanel>
+            </UniformGrid>
         </DockPanel>
-        <Border Grid.Row="1" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="5">
+        <Border Grid.Row="2" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="2">
+            <Border.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontFamily" Value="Consolas"/>
+                    <Setter Property="FontSize" Value="16"/>
+                </Style>
+            </Border.Resources>
             <DockPanel Margin="5">
-                <TextBlock DockPanel.Dock="Top" Text="Relative" TextAlignment="Center"/>
+                <TextBlock DockPanel.Dock="Top" Text="Relative" TextAlignment="Center" FontWeight="SemiBold"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="30"/>
@@ -75,9 +91,15 @@
                 </Grid>
             </DockPanel>
         </Border>
-        <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="5">
+        <Border Grid.Row="2" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="2">
+            <Border.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontFamily" Value="Consolas"/>
+                    <Setter Property="FontSize" Value="16"/>
+                </Style>
+            </Border.Resources>
             <DockPanel Margin="5">
-                <TextBlock DockPanel.Dock="Top" Text="Absolute" TextAlignment="Center"/>
+                <TextBlock DockPanel.Dock="Top" Text="Absolute" TextAlignment="Center" FontWeight="SemiBold"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="30"/>
@@ -108,9 +130,15 @@
                 </Grid>
             </DockPanel>
         </Border>
-        <Border Grid.Row="2" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="5">
+        <Border Grid.Row="3" Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="2">
+            <Border.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontFamily" Value="Consolas"/>
+                    <Setter Property="FontSize" Value="16"/>
+                </Style>
+            </Border.Resources>
             <DockPanel Margin="5">
-                <TextBlock DockPanel.Dock="Top" Text="Machine" TextAlignment="Center"/>
+                <TextBlock DockPanel.Dock="Top" Text="Machine" TextAlignment="Center" FontWeight="SemiBold"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="30"/>
@@ -141,9 +169,15 @@
                 </Grid>
             </DockPanel>
         </Border>
-        <Border Grid.Row="2" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="5">
+        <Border Grid.Row="3" Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="2">
+            <Border.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontFamily" Value="Consolas"/>
+                    <Setter Property="FontSize" Value="16"/>
+                </Style>
+            </Border.Resources>
             <DockPanel Margin="5">
-                <TextBlock DockPanel.Dock="Top" Text="Distance To Go" TextAlignment="Center"/>
+                <TextBlock DockPanel.Dock="Top" Text="Distance To Go" TextAlignment="Center" FontWeight="SemiBold"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="30"/>
@@ -174,30 +208,31 @@
                 </Grid>
             </DockPanel>
         </Border>
-        <Border Grid.Row="0" Grid.Column="2" BorderBrush="Black" BorderThickness="1" Margin="5">
-            <DockPanel Margin="5">
-                <Rectangle DockPanel.Dock="Right" Width="20" Fill="{Binding Status.IndicatorColor, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Stretch" HorizontalAlignment="Right"/>
+        <TextBlock Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Status.ProgramName}" d:Text="PROGRAM NAME" Margin="1 0 0 0"/>
+        <Border Grid.Row="1" Grid.Column="2" BorderBrush="Black" BorderThickness="1" Margin="2">
+            <DockPanel Margin="0">
+                <Rectangle DockPanel.Dock="Left" Width="20" Fill="{Binding Status.IndicatorColor, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Stretch" HorizontalAlignment="Left" Margin="0 0 5 0"/>
                 <UniformGrid Columns="2">
-                    <StackPanel>
-                        <TextBlock Text="Статус:" FontWeight="Bold" />
-                        <TextBlock Text="{Binding Status.Status}" />
-                        <TextBlock Text="Режим:" FontWeight="Bold" />
-                        <TextBlock Text="{Binding Status.Mode}" />
-                    </StackPanel>
+                    <UniformGrid Rows="4">
+                        <TextBlock Text="Статус:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Status.Status}" VerticalAlignment="Top" />
+                        <TextBlock Text="Режим:" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Status.Mode}" VerticalAlignment="Top" />
+                    </UniformGrid>
                     <TextBlock Text="{Binding Status.Alarms, Converter={StaticResource CollectionConverteter}}" Foreground="Red"/>
                 </UniformGrid>       
             </DockPanel>
         </Border>
-        <Border Grid.Row="0" Grid.Column="3" BorderBrush="Black" BorderThickness="1" Margin="5">
+        <Border Grid.Row="1" Grid.Column="3" BorderBrush="Black" BorderThickness="1" Margin="2">
             <DockPanel Margin="5">
                 <StackPanel>
-                    <TextBlock Text="Используется программ:" FontWeight="Bold" />
+                    <TextBlock Text="Используется программ:" FontWeight="SemiBold" />
                     <UniformGrid Columns="3">
-                        <TextBlock Text="{Binding Status.UsedProgramms, TargetNullValue=N/A}" TextAlignment="Left"/>
+                        <TextBlock Text="{Binding Status.UsedPrograms, TargetNullValue=N/A}" TextAlignment="Left"/>
                         <TextBlock Text="/" TextAlignment="Center"/>
-                        <TextBlock Text="{Binding Status.TotalProgramms, TargetNullValue=N/A}" TextAlignment="Right"/>
+                        <TextBlock Text="{Binding Status.TotalPrograms, TargetNullValue=N/A}" TextAlignment="Right"/>
                     </UniformGrid>
-                    <TextBlock Text="Используется памяти:" FontWeight="Bold" />
+                    <TextBlock Text="Используется памяти:" FontWeight="SemiBold" />
                     <UniformGrid Columns="3">
                         <TextBlock Text="{Binding Status.UsedMem, TargetNullValue=N/A}" TextAlignment="Left"/>
                         <TextBlock Text="/" TextAlignment="Center"/>

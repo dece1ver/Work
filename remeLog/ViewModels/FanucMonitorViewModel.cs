@@ -1,14 +1,9 @@
 ﻿using libeLog;
 using libeLog.Base;
 using libeLog.FanucApi;
-using libeLog.Infrastructure;
 using remeLog.Models;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,7 +20,6 @@ namespace remeLog.ViewModels
         private string _ipAddress;
         private MachineStatus _status;
         private int _axisCount = 0;
-        private double _scale = 1000.0;
         public string IPAddress
         {
             get => _ipAddress;
@@ -56,7 +50,7 @@ namespace remeLog.ViewModels
             }
         }
 
-        
+
         public ICommand ConnectCommand { get; }
 
         public FanucMonitorViewModel()
@@ -69,14 +63,21 @@ namespace remeLog.ViewModels
 
         private void OnConnectCommandExecuted(object p)
         {
-            ConnectToMachine();
+            Task.Run(() => ConnectToMachine());
         }
 
         private static bool CanConnectCommandExecute(object p) => true;
 
-        private void ConnectToMachine()
+        private async Task ConnectToMachine()
         {
-            Task.Run(() =>
+            if (_isConnected)
+            {
+                _isConnected = false;
+                Focas1.cnc_freelibhndl(_handle);
+                await Task.Delay(1000);
+            }
+
+            await Task.Run(() =>
             {
                 _ret = Focas1.cnc_allclibhndl3(IPAddress, 8193, 6, out _handle);
                 if (_ret == Focas1.EW_OK)
@@ -122,8 +123,10 @@ namespace remeLog.ViewModels
                     Status.IsOperating = _fanucService.GetOpSignal(_handle);
                     Status.Mode = _fanucService.GetMode(_handle);
                     Status.Status = _fanucService.GetStatus(_handle);
-                    (Status.UsedProgramms, Status.UnusedProgramms, Status.UsedMem, Status.UnusedMem) = _fanucService.GetProgramDataInfo(_handle);                   
+                    (Status.UsedPrograms, Status.UnusedPrograms, Status.UsedMem, Status.UnusedMem) = _fanucService.GetProgramDataInfo(_handle);
                     Status.Alarms = _fanucService.GetAlarms(_handle);
+                    Status.Spindle1Load = _fanucService.GetSpindleLoad(_handle, 1);
+                    Status.ProgramName = _fanucService.GetProgramName(_handle);
 
                     OnPropertyChanged(nameof(Status));
 
@@ -137,7 +140,7 @@ namespace remeLog.ViewModels
         }
 
         private void UpdateAxisValues()
-        {           
+        {
             short num = Focas1.MAX_AXIS;
             var odb = new Focas1.ODBPOS();
 
@@ -149,34 +152,34 @@ namespace remeLog.ViewModels
                     switch (i)
                     {
                         case 1:
-                            Status.FirstRelativeAxisValue = odb.p1.rel.data / _scale;
-                            Status.FirstAbsoluteAxisValue = odb.p1.abs.data / _scale;
-                            Status.FirstMachineAxisValue = odb.p1.mach.data / _scale;
-                            Status.FirstDistanceToGoAxisValue = odb.p1.dist.data / _scale;
+                            Status.FirstRelativeAxisValue = odb.p1.rel.data / Math.Pow(10, odb.p1.rel.dec);
+                            Status.FirstAbsoluteAxisValue = odb.p1.abs.data / Math.Pow(10, odb.p1.abs.dec);
+                            Status.FirstMachineAxisValue = odb.p1.mach.data / Math.Pow(10, odb.p1.mach.dec);
+                            Status.FirstDistanceToGoAxisValue = odb.p1.dist.data / Math.Pow(10, odb.p1.dist.dec);
                             break;
                         case 2:
-                            Status.SecondRelativeAxisValue = odb.p2.rel.data / _scale;
-                            Status.SecondAbsoluteAxisValue = odb.p2.abs.data / _scale;
-                            Status.SecondMachineAxisValue = odb.p2.mach.data / _scale;
-                            Status.SecondDistanceToGoAxisValue = odb.p2.dist.data / _scale;
+                            Status.SecondRelativeAxisValue = odb.p2.rel.data / Math.Pow(10, odb.p2.rel.dec);
+                            Status.SecondAbsoluteAxisValue = odb.p2.abs.data / Math.Pow(10, odb.p2.abs.dec);
+                            Status.SecondMachineAxisValue = odb.p2.mach.data / Math.Pow(10, odb.p2.mach.dec);
+                            Status.SecondDistanceToGoAxisValue = odb.p2.dist.data / Math.Pow(10, odb.p2.dist.dec);
                             break;
                         case 3:
-                            Status.ThirdRelativeAxisValue = odb.p3.rel.data / _scale;
-                            Status.ThirdAbsoluteAxisValue = odb.p3.abs.data / _scale;
-                            Status.ThirdMachineAxisValue = odb.p3.mach.data / _scale;
-                            Status.ThirdDistanceToGoAxisValue = odb.p3.dist.data / _scale;
+                            Status.ThirdRelativeAxisValue = odb.p3.rel.data / Math.Pow(10, odb.p3.rel.dec);
+                            Status.ThirdAbsoluteAxisValue = odb.p3.abs.data / Math.Pow(10, odb.p3.abs.dec);
+                            Status.ThirdMachineAxisValue = odb.p3.mach.data / Math.Pow(10, odb.p3.mach.dec);
+                            Status.ThirdDistanceToGoAxisValue = odb.p3.dist.data / Math.Pow(10, odb.p3.dist.dec);
                             break;
                         case 4:
-                            Status.FourthRelativeAxisValue = odb.p4.rel.data / _scale;
-                            Status.FourthAbsoluteAxisValue = odb.p4.abs.data / _scale;
-                            Status.FourthMachineAxisValue = odb.p4.mach.data / _scale;
-                            Status.FourthDistanceToGoAxisValue = odb.p4.dist.data / _scale;
+                            Status.FourthRelativeAxisValue = odb.p4.rel.data / Math.Pow(10, odb.p4.rel.dec);
+                            Status.FourthAbsoluteAxisValue = odb.p4.abs.data / Math.Pow(10, odb.p4.abs.dec);
+                            Status.FourthMachineAxisValue = odb.p4.mach.data / Math.Pow(10, odb.p4.mach.dec);
+                            Status.FourthDistanceToGoAxisValue = odb.p4.dist.data / Math.Pow(10, odb.p4.dist.dec);
                             break;
                         case 5:
-                            Status.FivethRelativeAxisValue = odb.p5.rel.data / _scale;
-                            Status.FivethAbsoluteAxisValue = odb.p5.abs.data / _scale;
-                            Status.FivethMachineAxisValue = odb.p5.mach.data / _scale;
-                            Status.FivethDistanceToGoAxisValue = odb.p5.dist.data / _scale;
+                            Status.FivethRelativeAxisValue = odb.p5.rel.data / Math.Pow(10, odb.p5.rel.dec);
+                            Status.FivethAbsoluteAxisValue = odb.p5.abs.data / Math.Pow(10, odb.p5.abs.dec);
+                            Status.FivethMachineAxisValue = odb.p5.mach.data / Math.Pow(10, odb.p5.mach.dec);
+                            Status.FivethDistanceToGoAxisValue = odb.p5.dist.data / Math.Pow(10, odb.p5.dist.dec);
                             break;
                         default:
                             break;

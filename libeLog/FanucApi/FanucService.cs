@@ -1,6 +1,7 @@
 ﻿using libeLog.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Windows;
 
 namespace libeLog.FanucApi
@@ -72,6 +73,28 @@ namespace libeLog.FanucApi
             return (odbnc.reg_prg, odbnc.unreg_prg, odbnc.used_mem, odbnc.unused_mem);
         }
 
+        public int GetSpindleLoad(ushort handle, short spindleNumber)
+        {
+            var buf = new Focas1.ODBSPLOAD();
+            var ret = Focas1.cnc_rdspmeter(handle, 0, ref spindleNumber, buf);
+            if (ret != Focas1.EW_OK)
+            {
+                MessageBox.Show(ret.ToString(), "GetSpindleLoad");
+                return 0;
+            }
+            return buf.spload1.spload.data;
+        }
+
+        public string GetProgramName(ushort handle)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            //var odbpro = new Focas1.ODBPRO();
+            var odbexeprg = new Focas1.ODBEXEPRG();
+            //if (Focas1.cnc_rdprgnum(handle, odbpro) == Focas1.EW_OK) { stringBuilder.Append(odbpro.data); }
+            if (Focas1.cnc_exeprgname(handle, odbexeprg) == Focas1.EW_OK) { stringBuilder.Append($"N{odbexeprg.o_num:D4} (").Append(odbexeprg.name).Append(")"); }
+            return stringBuilder.ToString().Trim();
+        }
+
         public List<string> GetAlarms(ushort handle)
         {
             List<string> alarms = new();
@@ -99,7 +122,6 @@ namespace libeLog.FanucApi
                 }
                 alm >>= 1;
             }
-
             return alarms;
         }
 

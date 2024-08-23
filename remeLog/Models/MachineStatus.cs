@@ -187,7 +187,6 @@ namespace remeLog.Models
             }
         }
 
-
         private double _SecondAbsoluteAxisValue;
         /// <summary> Координата второй оси </summary>
         public double SecondAbsoluteAxisValue
@@ -287,7 +286,7 @@ namespace remeLog.Models
                 if (Alarms.Count > 0) return Brushes.Red;
                 if (IsOperating)
                 {
-                    return Status == "STRT" ? Brushes.Green : Brushes.Yellow;
+                    return Status == "STRT" && Mode == "Memory" ? Brushes.Green : Brushes.Yellow;
                 }
                 return Brushes.Gray;
             }
@@ -345,29 +344,29 @@ namespace remeLog.Models
         }
 
 
-        private int? _UsedProgramms;
+        private int? _UsedPrograms;
         /// <summary> Использовано программ </summary>
-        public int? UsedProgramms
+        public int? UsedPrograms
         {
-            get => _UsedProgramms;
+            get => _UsedPrograms;
             set
             {
-                if (Set(ref _UsedProgramms, value))
+                if (Set(ref _UsedPrograms, value))
                 {
-                    OnPropertyChanged(nameof(TotalProgramms));
+                    OnPropertyChanged(nameof(TotalPrograms));
                 }
             }
         }
 
-        private int? _UnusedProgramms;
+        private int? _UnusedPrograms;
         /// <summary> Неиспользовано программ </summary>
-        public int? UnusedProgramms
+        public int? UnusedPrograms
         {
-            get => _UnusedProgramms;
-            set => Set(ref _UnusedProgramms, value);
+            get => _UnusedPrograms;
+            set => Set(ref _UnusedPrograms, value);
         }
 
-        public int? TotalProgramms => UsedProgramms + UnusedProgramms;
+        public int? TotalPrograms => UsedPrograms + UnusedPrograms;
 
         private int? _UsedMem;
         /// <summary> Использовано памяти </summary>
@@ -407,6 +406,34 @@ namespace remeLog.Models
                 }
             }
         }
+
+
+        private int _Spindle1Load;
+        /// <summary> Нагрузка на 1 шпиндель </summary>
+        public int Spindle1Load
+        {
+            get => _Spindle1Load;
+            set => Set(ref _Spindle1Load, value);
+        }
+
+
+        private string _ProgramNumber;
+        /// <summary> Описание </summary>
+        public string ProgramNumber
+        {
+            get => _ProgramNumber;
+            set => Set(ref _ProgramNumber, value);
+        }
+
+
+        private string _ProgramName;
+        /// <summary> Описание </summary>
+        public string ProgramName
+        {
+            get => _ProgramName;
+            set => Set(ref _ProgramName, value);
+        }
+
 
 
         public void SetAxisValues(AxisPositionType positionType, List<double> axisValues)
