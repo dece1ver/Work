@@ -1,4 +1,5 @@
-﻿using libeLog;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Models;
@@ -51,6 +52,7 @@ namespace remeLog.ViewModels
             ChangeCalcFixedCommand = new LambdaCommand(OnChangeCalcFixedCommandExecuted, CanChangeCalcFixedCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
+            ShowArchiveTableCommand = new LambdaCommand(OnShowArchiveTableCommandExecuted, CanShowArchiveTableCommandExecute);
             ExportShiftsInfoReportCommand = new LambdaCommand(OnExportShiftsInfoReportCommandExecuted, CanExportShiftsInfoReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
@@ -722,6 +724,9 @@ namespace remeLog.ViewModels
         private static bool CanExportReportToExcelCommandExecute(object p) => true;
         #endregion
 
+        /// <summary>
+        /// todo
+        /// </summary>
         #region ExportShiftsInfoReport
         public ICommand ExportShiftsInfoReportCommand { get; }
         private async void OnExportShiftsInfoReportCommandExecuted(object p)
@@ -901,6 +906,33 @@ namespace remeLog.ViewModels
             UnlockUpdate();
         }
         private static bool CanSetVerMillMachinesCommandExecute(object p) => true;
+        #endregion
+
+        #region ShowArchiveTable
+        public ICommand ShowArchiveTableCommand { get; }
+        private void OnShowArchiveTableCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                //var disqualifiedKeys = new HashSet<(string PartName, int Setup, string Machine)>();
+                //var filteredPrograms = new List<Part>();
+                //foreach (var part in Parts)
+                //{
+                //    var key = (part.PartName, part.Setup, part.Machine);
+
+                //}
+
+                var parts = Parts
+                    .GroupBy(p => (p.PartName, p.Setup, p.Machine))
+                    .Select(g => g.OrderByDescending(p => p.StartSetupTime).First())
+                    .OrderBy(p => p.Machine)
+                    .ThenBy(p => p.StartSetupTime).ToList();
+
+                ArchiveListWindow archiveListWindow = new(parts) { Owner = p as PartsInfoWindow };
+                archiveListWindow.ShowDialog();
+            }
+        }
+        private static bool CanShowArchiveTableCommandExecute(object p) => true;
         #endregion
 
         #region DeletePart

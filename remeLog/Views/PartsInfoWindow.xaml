@@ -836,6 +836,13 @@
                             <TextBlock Text="Ожидаемые"/>
                         </MenuItem.Header>
                     </MenuItem>
+                    <MenuItem Command="{Binding ShowArchiveTableCommand}" Icon="{StaticResource DataTableIcon}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}"
+                              ToolTip="Таблица для архива" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Таблица для архива"/>
+                        </MenuItem.Header>
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Расчет">
                     <MenuItem Command="{Binding ChangeCalcFixedCommand}" Icon="{StaticResource ConfirmIconFlex}"

@@ -216,23 +216,23 @@ namespace remeLog.Views
                         case Key.F:
                             // не работает - надо разобраться
                             break; // временно закрыл
-                            var baseCell = dataGrid.SelectedCells.FirstOrDefault();
-                            if (!baseCell.IsValid) return;
-                            var content = baseCell.Column.GetCellContent(baseCell.Item);
-                            if (content is TextBlock textBlock)
-                            {
-                                var value = textBlock.Text;
-                                foreach (var cell in dataGrid.SelectedCells.Skip(1))
-                                {
-                                    var cellContent = cell.Column.GetCellContent(cell.Item);
-                                    if (cellContent is TextBlock textBlockToUpdate)
-                                    {
-                                        textBlockToUpdate.Text = value;
-                                    }
-                                }
-                            }
-                            e.Handled = true;
-                            break;
+                            //var baseCell = dataGrid.SelectedCells.FirstOrDefault();
+                            //if (!baseCell.IsValid) return;
+                            //var content = baseCell.Column.GetCellContent(baseCell.Item);
+                            //if (content is TextBlock textBlock)
+                            //{
+                            //    var value = textBlock.Text;
+                            //    foreach (var cell in dataGrid.SelectedCells.Skip(1))
+                            //    {
+                            //        var cellContent = cell.Column.GetCellContent(cell.Item);
+                            //        if (cellContent is TextBlock textBlockToUpdate)
+                            //        {
+                            //            textBlockToUpdate.Text = value;
+                            //        }
+                            //    }
+                            //}
+                            //e.Handled = true;
+                            //break;
 
                         case Key.Delete:
                             if (d.SelectedPart is Part p)
