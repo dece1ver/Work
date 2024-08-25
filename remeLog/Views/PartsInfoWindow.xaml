@@ -879,10 +879,16 @@
                             <TextBlock Text="Отчёт по деталям"/>
                         </MenuItem.Header>
                     </MenuItem>
-                    <MenuItem Command="{Binding ExportShiftsInfoReportCommand}" Icon="{StaticResource CalendarIcon}"
+                    <MenuItem Command="{Binding ExportShiftsInfoReportCommand}" Icon="{StaticResource ComparePerformanceIcon}"
                         ToolTip="Экспорт текущей выборки" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
                             <TextBlock Text="Отчет по сменам"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ExportVerevkinReportCommand}" Icon="{StaticResource ComparePerformanceIcon}"
+                              ToolTip="Экспорт отчета Верёвкина" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Отчет Верёвкина"/>
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem Command="{Binding ExportToExcelCommand}" Icon="{StaticResource ExcelWorksheetIcon}"

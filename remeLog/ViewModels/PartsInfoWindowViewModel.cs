@@ -54,6 +54,7 @@ namespace remeLog.ViewModels
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
             ShowArchiveTableCommand = new LambdaCommand(OnShowArchiveTableCommandExecuted, CanShowArchiveTableCommandExecute);
             ExportShiftsInfoReportCommand = new LambdaCommand(OnExportShiftsInfoReportCommandExecuted, CanExportShiftsInfoReportCommandExecute);
+            ExportVerevkinReportCommand = new LambdaCommand(OnExportVerevkinReportCommandExecuted, CanExportVerevkinReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
@@ -755,6 +756,65 @@ namespace remeLog.ViewModels
             finally { InProgress = false; }
         }
         private static bool CanExportShiftsInfoReportCommandExecute(object p) => true;
+        #endregion
+
+        /// <summary>
+        /// todo
+        /// </summary>
+        #region ExportVerevkinReportReport
+        public ICommand ExportVerevkinReportCommand { get; }
+        private async void OnExportVerevkinReportCommandExecuted(object p)
+        {
+            try
+            {
+                var path = Util.GetXlsxPath(false);
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                InProgress = true;
+                Progress<string> progress = new(p => Status = p);
+                await Task.Run(() =>
+                {
+                    var verevkinParts = Parts.GroupBy(p => new { p.PartName, p.Order })
+                    .Select(g =>
+                    {
+                        var verevkinPart = new VerevkinPart(g.Key.PartName, g.Key.Order, g.Sum(p => p.FinishedCount));
+
+                        foreach (var part in g)
+                        {
+                            switch (part.Setup)
+                            {
+                                case 1:
+                                    verevkinPart.MachineTime1 += part.MachiningTime;
+                                    break;
+                                case 2:
+                                    verevkinPart.MachineTime2 += part.MachiningTime;
+                                    break;
+                                case 3:
+                                    verevkinPart.MachineTime3 += part.MachiningTime;
+                                    break;
+                                case 4:
+                                    verevkinPart.MachineTime4 += part.MachiningTime;
+                                    break;
+                                case 5:
+                                    verevkinPart.MachineTime5 += part.MachiningTime;
+                                    break;
+                            }
+                        }
+                        return verevkinPart;
+                    }).ToList();
+                    Xl.ExportVerevkinReport(verevkinParts, path, progress);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportVerevkinReportCommandExecute(object p) => true;
         #endregion
 
         #region ExportToExcel

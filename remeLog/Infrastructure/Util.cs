@@ -34,15 +34,28 @@ namespace remeLog.Infrastructure
             return "";
         }
 
-        public static string GetXlsxPath()
+        public static string GetXlsxPath(bool save = true)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog() {
-                Filter = "Книга Excel (*.xlsx)|*.xlsx",
-                DefaultExt = "xlsx"
-            };
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            FileDialog fileDialog;
+            if (save)
             {
-                return saveFileDialog.FileName;
+                fileDialog = new SaveFileDialog()
+                {
+                    Filter = "Книга Excel (*.xlsx)|*.xlsx",
+                    DefaultExt = "xlsx"
+                };
+            }
+            else
+            {
+                fileDialog = new OpenFileDialog()
+                {
+                    Filter = "Книга Excel (*.xlsx)|*.xlsx",
+                    DefaultExt = "xlsx"
+                };
+            }
+            if (fileDialog.ShowDialog() == DialogResult.OK)
+            {
+                return fileDialog.FileName;
             }
             return "";
         }
