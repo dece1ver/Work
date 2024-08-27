@@ -103,6 +103,7 @@ namespace eLog.Services
             AppSettings.Instance.SmtpAddress = dlg.SmtpAddress;
             AppSettings.Instance.SmtpPort = dlg.SmtpPort;
             AppSettings.Instance.SmtpUsername = dlg.SmtpUsername;
+            AppSettings.Instance.TimerForNotify = dlg.TimerForNotify;
             if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
             return true;
         }

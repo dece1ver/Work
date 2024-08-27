@@ -247,7 +247,7 @@ namespace eLog.ViewModels
         private async void OnLoadProductionTasksCommandExecuted(object p)
         {
             if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath))
-            _cts = new CancellationTokenSource();
+                _cts = new CancellationTokenSource();
             if (ProductionTasksIsLoading) _cts.Cancel();
             try
             {
@@ -263,7 +263,7 @@ namespace eLog.ViewModels
                     {
                         TasksForProductionWindow tasksWindow = new(tasks) { Owner = Application.Current.MainWindow };
                         tasksWindow.ShowDialog();
-                    } 
+                    }
                     else
                     {
                         MessageBox.Show("В списке нет заданий под данный станок.", "Задания на производство");
@@ -632,7 +632,8 @@ namespace eLog.ViewModels
                     if (Parts.Count > 0
                     && Parts[0].IsFinished == Part.State.InProgress
                     && !Parts[0].LongSetupNotifySended
-                    && Parts[0].StartMachiningTime < Parts[0].StartSetupTime)
+                    && Parts[0].StartMachiningTime < Parts[0].StartSetupTime
+                    && AppSettings.Instance.TimerForNotify > 0)
                     {
                         var tempDowntimes = new List<DownTime>();
                         foreach (var dt in Parts[0].DownTimes)
@@ -644,15 +645,16 @@ namespace eLog.ViewModels
                         .Where(dt => dt.Type is not DownTime.Types.PartialSetup)
                         .Aggregate(TimeSpan.Zero, (sum, dt) => sum.Add(dt.Time));
 
-                        var setupTimeWithoutDowntime = DateTime.Now - Parts[0].StartSetupTime - totalDowntime - TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(Parts[0].StartSetupTime, DateTime.Now));
-
-                        if (setupTimeWithoutDowntime > TimeSpan.FromHours(3))
+                        var setupTimeWithoutDowntime = DateTime.Now - Parts[0].StartSetupTime - totalDowntime;
+                        var breaks = TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(Parts[0].StartSetupTime, DateTime.Now));
+                        var factSetupTime = setupTimeWithoutDowntime - breaks;
+                        if (factSetupTime > TimeSpan.FromHours(AppSettings.Instance.TimerForNotify))
                         {
                             AppSettings.MailRecievers = GetMailRecievers();
                             if (Email.SendLongSetupNotify(Parts[0])) Parts[0].LongSetupNotifySended = true;
                         }
                     }
-                } 
+                }
                 catch (Exception ex) { WriteLog(ex); }
                 finally
                 {
@@ -697,7 +699,7 @@ namespace eLog.ViewModels
 
 
                     await SetPartsTaskInfo();
-                    
+
 
                     //await WriteTasksStatuses();
                     foreach (var part in Parts)
@@ -781,6 +783,7 @@ namespace eLog.ViewModels
                 if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath)) return;
                 foreach (var part in Parts.Where(p => p.TaskInfo == Part.PartTaskInfo.NoData || (p.TaskInfo == Part.PartTaskInfo.InList && !p.IsTaskStatusWritten)))
                 {
+                    if (Parts.Count > 0 && Parts[0].FullName == part.FullName && Parts[0].Setup == part.Setup && Parts.IndexOf(part) > 0) return;
                     if (_editPart) return;
                     var partPosition = part.GetPositionInTasksList(gProgress).Result;
                     if (_editPart) return;
@@ -804,7 +807,7 @@ namespace eLog.ViewModels
                     part.NotifyTaskStatus();
                 }
             }
-            
+
         }
 
         private void RemoveExcessParts(int remains = 20)

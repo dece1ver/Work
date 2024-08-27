@@ -115,6 +115,10 @@
                 <TextBlock Text="Порт: " Margin="15 0 0 0" VerticalAlignment="Center" />
                 <TextBox VerticalContentAlignment="Center" VerticalAlignment="Stretch" 
                          Margin="0 1" Width="50" Text="{Binding SmtpPort}"/>
+
+                <TextBox  DockPanel.Dock="Right" VerticalContentAlignment="Center" VerticalAlignment="Stretch" 
+                         Margin="0 1" Width="33" Text="{Binding TimerForNotify, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock DockPanel.Dock="Right" Text="Таймер: " Margin="15 0 0 0" VerticalAlignment="Center" />
             </DockPanel>
 
             <TextBlock Grid.Row="9" Grid.Column="0" Text="Получатели:" VerticalAlignment="Center" Margin="5 0" />

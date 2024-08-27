@@ -211,6 +211,16 @@ namespace eLog.Infrastructure
             set => Set(ref _PathToRecievers, value);
         }
 
+
+        private int _TimerForNotify;
+        /// <summary> Таймер до уведомления (в часах) </summary>
+        public int TimerForNotify
+        {
+            get => _TimerForNotify;
+            set => Set(ref _TimerForNotify, value);
+        }
+
+
         /// <summary> Режим отладки </summary>
         public bool DebugMode
         {
@@ -255,6 +265,7 @@ namespace eLog.Infrastructure
             StorageType = new StorageType(StorageType.Types.Excel);
             ConnetctionString = string.Empty;
             IsShiftStarted = false;
+            TimerForNotify = 4;
             Save();
         }
 

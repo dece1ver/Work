@@ -144,6 +144,14 @@ namespace eLog.Views.Windows.Settings
         }
 
 
+        private int _TimerForNotify;
+        /// <summary> Таймер для уведомлений (в часах) </summary>
+        public int TimerForNotify
+        {
+            get => _TimerForNotify;
+            set => Set(ref _TimerForNotify, value);
+        }
+
 
         public AppSettingsWindow()
         {
@@ -167,6 +175,7 @@ namespace eLog.Views.Windows.Settings
             _SmtpPort = AppSettings.Instance.SmtpPort;
             _SmtpUsername = AppSettings.Instance.SmtpUsername ?? "";
             _PathToRecievers = AppSettings.Instance.PathToRecievers ?? "";
+            _TimerForNotify = AppSettings.Instance.TimerForNotify;
             _DebugMode = AppSettings.Instance.DebugMode;
             InitializeComponent();
         }
@@ -259,6 +268,8 @@ namespace eLog.Views.Windows.Settings
                 var currentShift = AppSettings.Instance.CurrentShift;
                 var isShiftStarted = AppSettings.Instance.IsShiftStarted;
 
+                var tempName = $"{AppSettings.ConfigFilePath}.temp";
+                File.Copy(AppSettings.ConfigFilePath, tempName, true);
                 JsonConvert.PopulateObject(json, AppSettings.Instance, settings);
 
                 AppSettings.Instance.Parts = parts;
@@ -281,7 +292,13 @@ namespace eLog.Views.Windows.Settings
                 SmtpPort = AppSettings.Instance.SmtpPort;
                 SmtpUsername = AppSettings.Instance.SmtpUsername ?? "";
                 PathToRecievers = AppSettings.Instance.PathToRecievers ?? "";
+                TimerForNotify = AppSettings.Instance.TimerForNotify;
                 DebugMode = AppSettings.Instance.DebugMode;
+
+                File.Copy(tempName, AppSettings.ConfigFilePath, true);
+                AppSettings.Instance.ReadConfig();
+                File.Delete(tempName);
+
 
                 MessageBox.Show($"Параметры импортированы", "Импорт");
             }

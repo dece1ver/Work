@@ -37,7 +37,6 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                
                 var smtpPwd = Environment.GetEnvironmentVariable("NOTIFY_SMTP_PWD", EnvironmentVariableTarget.User);
                 if (string.IsNullOrEmpty(smtpPwd)) throw new Exception("SMTP пароль не установлен.");
                 var emailBody = new StringBuilder();
@@ -48,7 +47,7 @@ namespace eLog.Infrastructure.Extensions
                     <div style=""max-width: 320px; margin: 0 auto; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"">
         
                         <p style=""font-size: 18px; font-weight: bold; color: #d9534f; text-align: center;"">
-                            Внимание: процесс наладки превысил 3 часа!
+                            Внимание: процесс наладки превысил {AppSettings.Instance.TimerForNotify.FormattedHours()}!
                         </p>
 
                         <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
@@ -62,7 +61,6 @@ namespace eLog.Infrastructure.Extensions
                             <p style=""margin: 6px 0;""><strong>Начало наладки:</strong> {part.StartSetupTime}</p>
                         </div>
                 ");
-
                 if (part.DownTimes.Any())
                 {
                     emailBody.Append(@"
