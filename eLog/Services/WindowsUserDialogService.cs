@@ -130,14 +130,14 @@ namespace eLog.Services
             return dlg.EndSetupResult;
         }
 
-        public static bool EditDetail(ref Part part, bool newDetail = false)
+        public static bool EditDetail(ref Part part, bool newDetail = false, bool fromTask = false)
         {
             if (AppSettings.Instance.DebugMode && !newDetail) { WriteLog(part, $"Редактирование детали."); }
 
             var tempPart = new Part(part);
             tempPart.DownTimes = new DeepObservableCollection<DownTime>(
                         tempPart.DownTimes.Where(downtime => downtime.Type != DownTime.Types.PartialSetup));
-            var dlg = new EditDetailWindow(tempPart, newDetail)
+            var dlg = new EditDetailWindow(tempPart, newDetail, fromTask)
             {
                 Owner = Application.Current.MainWindow,
             };

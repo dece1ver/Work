@@ -263,6 +263,7 @@ namespace eLog.ViewModels
                     {
                         TasksForProductionWindow tasksWindow = new(tasks) { Owner = Application.Current.MainWindow };
                         tasksWindow.ShowDialog();
+                        if (tasksWindow.NeedStart) StartDetailCommand.Execute(tasksWindow.SelectedTask);
                     }
                     else
                     {
@@ -384,6 +385,8 @@ namespace eLog.ViewModels
         public ICommand StartDetailCommand { get; }
         private void OnStartDetailCommandExecuted(object p)
         {
+            ProductionTaskData? productionTaskData = null;
+            if (p is ProductionTaskData ptd) productionTaskData = ptd;
             _editPart = true;
             if (AppSettings.Instance.DebugMode) WriteLog($"Старт новой детали.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tВсего деталей: {Parts.Count}");
             using (Overlay = new())
@@ -394,17 +397,32 @@ namespace eLog.ViewModels
                     Shift = AppSettings.Instance.CurrentShift,
                     Setup = 1,
                 };
-                if (!WindowsUserDialogService.EditDetail(ref part, true))
+                if (productionTaskData == null)
                 {
-                    if (AppSettings.Instance.DebugMode) WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
-                    _editPart = false;
-                    return;
+                    if (!WindowsUserDialogService.EditDetail(ref part, true))
+                    {
+                        if (AppSettings.Instance.DebugMode) WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
+                        _editPart = false;
+                        return;
+                    }
+                    
+                }
+                else
+                {
+                    part.Order = productionTaskData.Order;
+                    if (!WindowsUserDialogService.EditDetail(ref part, true, true))
+                    {
+                        if (AppSettings.Instance.DebugMode) WriteLog($"Отмена старта.\n\tВсего деталей: {Parts.Count}");
+                        _editPart = false;
+                        return;
+                    }
                 }
                 if (AppSettings.Instance.DebugMode) WriteLog($"Подтверждение старта.\n\tВсего деталей: {Parts.Count}");
                 Status = string.Empty;
                 if (AppSettings.Instance.DebugMode) WriteLog($"Добавление в список.\n\tДеталь: {part.Name}");
                 Parts.Insert(0, part);
                 _ = SetPartialState(ref part);
+
                 if (AppSettings.Instance.DebugMode) WriteLog($"Добавлено.\n\tВсего деталей: {Parts.Count}");
                 OnPropertyChanged(nameof(WorkIsNotInProgress));
                 OnPropertyChanged(nameof(CanEditShiftAndParams));

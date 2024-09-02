@@ -644,6 +644,10 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style x:Key="ListViewItemSelectableStyle" TargetType="ListViewItem" BasedOn="{StaticResource ListViewItemsStyle}">
+        <Setter Property="Focusable" Value="True"/>
+    </Style>
     
     <Style TargetType="ListViewItem" x:Key="ListViewItemsStyle2">
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />

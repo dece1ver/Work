@@ -1,4 +1,5 @@
-﻿using System;
+﻿using libeLog.Base;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace eLog.Models
 {
-    public class ProductionTaskData
+    public class ProductionTaskData: ViewModel
     {
         public string PartName { get; set; }
 
@@ -25,6 +26,15 @@ namespace eLog.Models
         public string LaborInput { get; set; }
 
         public string PdComment { get; set;}
+
+
+        private bool _IsSelected;
+        /// <summary> Описание </summary>
+        public bool IsSelected
+        {
+            get => _IsSelected;
+            set => Set(ref _IsSelected, value);
+        }
 
         public ProductionTaskData(string partName, string order, string partsCount, string date, string plantComment, string priority, string engeneersComment, string laborInput, string pdComment)
         {

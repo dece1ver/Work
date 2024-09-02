@@ -29,9 +29,10 @@ namespace eLog.Views.Windows.Dialogs
     /// </summary>
     public partial class EditDetailWindow : INotifyPropertyChanged, IDataErrorInfo, IOverlay
     {
-        public EditDetailWindow(Part part, bool newDetail = false)
+        public EditDetailWindow(Part part, bool newDetail = false, bool fromTasks = false)
         {
             NewDetail = newDetail;
+            FromTasks = fromTasks;
             _Status = string.Empty;
             Part = part;
             WithSetup = newDetail || part.StartSetupTime != part.StartMachiningTime;
@@ -63,10 +64,10 @@ namespace eLog.Views.Windows.Dialogs
             _SingleProductionTimePlan = Part.SingleProductionTimePlan > 0
                 ? Part.SingleProductionTimePlan.ToString(CultureInfo.InvariantCulture)
                 : newDetail ? string.Empty : "-";
-
+            
             InitializeComponent();
         }
-
+        public bool FromTasks { get; set; }
         public List<Part> Parts { get; set; } = new();
         public int PartIndex { get; set; }
         public Part Part { get; set; }
@@ -564,6 +565,7 @@ namespace eLog.Views.Windows.Dialogs
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            if (FromTasks) Task.Run(() => FindOrders());
             if (File.Exists(AppSettings.LocalOrdersFile))
             {
                 Status =
@@ -580,8 +582,11 @@ namespace eLog.Views.Windows.Dialogs
 
         private async void FindOrders()
         {
-            ProgressBarVisibility = Visibility.Visible;
-            this.IsEnabled = false;
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                ProgressBarVisibility = Visibility.Visible;
+                this.IsEnabled = false;
+            });
             await Task.Run(() =>
             {
                 switch (OrderValidation)
@@ -624,8 +629,12 @@ namespace eLog.Views.Windows.Dialogs
                         break;
                 }
             });
-            this.IsEnabled = true;
-            ProgressBarVisibility = Visibility.Collapsed;
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                this.IsEnabled = true;
+                ProgressBarVisibility = Visibility.Collapsed;
+            });
+            
         }
 
         /// <summary> Убирает наладку </summary>
