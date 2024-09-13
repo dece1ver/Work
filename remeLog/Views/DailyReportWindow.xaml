@@ -5,8 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views" d:DataContext="{d:DesignInstance Type=vm:DailyReportWindowViewModel}"
         xmlns:inf="clr-namespace:remeLog.Infrastructure" WindowStartupLocation="CenterOwner"
-        mc:Ignorable="d" xmlns:vm="clr-namespace:remeLog.ViewModels"
-        Title="{Binding Title}" d:Title="Суточный отчет за 01.01.2024 по станку Goodway GS-1500" Height="520" Width="800">
+        mc:Ignorable="d" xmlns:vm="clr-namespace:remeLog.ViewModels" xmlns:controls="clr-namespace:remeLog.Views.Controls"
+        Title="{Binding Title}" d:Title="Суточный отчет за 01.01.2024 по станку Goodway GS-1500" Height="520" Width="1200">
+    <Window.Resources>
+        <Style TargetType="CheckBox">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="LayoutTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
@@ -57,6 +68,10 @@
                             <ColumnDefinition Width="150"/>
                             <ColumnDefinition Width="250"/>
                             <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="350"/>
+                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -68,7 +83,7 @@
                             <RowDefinition/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        
+
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Оператор:"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding DayOperator}" d:Text="Бабохин Кирилл Георгиевич"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Отмечена работа:"/>
@@ -135,11 +150,73 @@
 
                         <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Комментарий мастера по дневной смене:"/>
-                        <TextBox Grid.Row="1" Grid.Column="4" Grid.RowSpan="6" Text="{Binding DayMasterComment}" TextWrapping="Wrap"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Комментарий мастера по дневной смене:"/>
+                        <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="6" Text="{Binding DayMasterComment}" TextWrapping="Wrap"/>
+
+                        <Border Grid.Row="0" Grid.Column="4" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
+
+                        <TextBlock Grid.Row="0" Grid.Column="6" Text="Принял" TextAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="7" Text="Сдал" TextAlignment="Center"/>
+
+                        <Border Grid.Row="1" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Text="Рабочее место убрано"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Text="Аварии"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="3" Grid.Column="5" Text="Посторонние шумы"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="4" Grid.Column="5" Text="Утечки жидкостей"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="5" Grid.Column="5" Text="Поломки инструмента"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="6" Grid.Column="5" Text="Концентрация СОЖ"/>
+                        </Border>
+
+                        <Border Grid.Row="1" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayRecieverWorkplaceCleaned}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayRecieverFailures}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayRecieverExtraneousNoises}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayRecieverLiquidLeaks}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayRecieverToolBreakage}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBox VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding DayRecieverCoolantConcentration, StringFormat=0.#}" IsEnabled="{Binding AdvancedMode}" Width="50"/>
+                        </Border>
+
+                        <Border Grid.Row="1" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray" >
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayGiverWorkplaceCleaned}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayGiverFailures}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayGiverExtraneousNoises}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayGiverLiquidLeaks}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding DayGiverToolBreakage}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBox VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding DayGiverCoolantConcentration, StringFormat=0.#}" IsEnabled="{Binding AdvancedMode}" Width="50"/>
+                        </Border>
                     </Grid>
                 </GroupBox>
-                
+
                 <GroupBox BorderBrush="Gray">
                     <GroupBox.Header>
                         <TextBlock Text=" Ночь " FontWeight="SemiBold"/>
@@ -154,6 +231,10 @@
                             <ColumnDefinition Width="150"/>
                             <ColumnDefinition Width="250"/>
                             <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="350"/>
+                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -169,7 +250,7 @@
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Оператор:"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding NightOperator}" d:Text="Бабохин Кирилл Георгиевич"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Отмечена работа:"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalWorkedNightTime, StringFormat={}{0} / 630 мин.}" d:Text="613 / 630 мин."/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalWorkedNightTime, StringFormat={}{0} / 660 мин.}" d:Text="613 / 630 мин."/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding NightWorkInfo}" d:Text="М/Л: 5, Деталей: 85"/>
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Частичная наладка:"/>
@@ -232,8 +313,72 @@
 
                         <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
-                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Комментарий мастера по ночной смене:"/>
-                        <TextBox Grid.Row="1" Grid.Column="4" Grid.RowSpan="6" Text="{Binding NightMasterComment}" TextWrapping="Wrap"/>
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Комментарий мастера по ночной смене:"/>
+                        <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="6" Text="{Binding NightMasterComment}" TextWrapping="Wrap"/>
+
+                        <Border Grid.Row="0" Grid.Column="4" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
+
+                        <TextBlock Grid.Row="0" Grid.Column="6" Text="Принял" TextAlignment="Center"/>
+                        <TextBlock Grid.Row="0" Grid.Column="7" Text="Сдал" TextAlignment="Center"/>
+
+                        <Border Grid.Row="1" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Text="Рабочее место убрано"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Text="Аварии"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="3" Grid.Column="5" Text="Посторонние шумы"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="4" Grid.Column="5" Text="Утечки жидкостей"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="5" Grid.Column="5" Text="Поломки инструмента"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="5" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBlock Grid.Row="6" Grid.Column="5" Text="Концентрация СОЖ"/>
+                        </Border>
+                        
+                        <Border Grid.Row="1" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightRecieverWorkplaceCleaned}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightRecieverFailures}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightRecieverExtraneousNoises}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightRecieverLiquidLeaks}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightRecieverToolBreakage}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="6" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBox VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding NightRecieverCoolantConcentration, StringFormat=0.#}" IsEnabled="{Binding AdvancedMode}" Width="50"/>
+                        </Border>
+
+                        <Border Grid.Row="1" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray" >
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightGiverWorkplaceCleaned}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightGiverFailures}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="3" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightGiverExtraneousNoises}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightGiverLiquidLeaks}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="5" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <controls:NullableCheckBox VerticalAlignment="Center" HorizontalAlignment="Center" IsChecked="{Binding NightGiverToolBreakage}" IsEnabled="{Binding AdvancedMode}"/>
+                        </Border>
+                        <Border Grid.Row="6" Grid.Column="7" BorderThickness="0 0 0 1" BorderBrush="LightGray">
+                            <TextBox VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding NightGiverCoolantConcentration, StringFormat=0.#}" IsEnabled="{Binding AdvancedMode, StringFormat=0.#}" Width="50"/>
+                        </Border>
+
+                       
                     </Grid>
                 </GroupBox>
             </UniformGrid>

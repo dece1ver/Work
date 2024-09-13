@@ -152,6 +152,14 @@ namespace eLog.Views.Windows.Settings
             set => Set(ref _TimerForNotify, value);
         }
 
+        private bool _EnableWriteShiftHandover;
+        /// <summary> Передача смены </summary>
+        public bool EnableWriteShiftHandover
+        {
+            get => _EnableWriteShiftHandover;
+            set => Set(ref _EnableWriteShiftHandover, value);
+        }
+
 
         public AppSettingsWindow()
         {
@@ -176,6 +184,7 @@ namespace eLog.Views.Windows.Settings
             _SmtpUsername = AppSettings.Instance.SmtpUsername ?? "";
             _PathToRecievers = AppSettings.Instance.PathToRecievers ?? "";
             _TimerForNotify = AppSettings.Instance.TimerForNotify;
+            _EnableWriteShiftHandover = AppSettings.Instance.EnableWriteShiftHandover;
             _DebugMode = AppSettings.Instance.DebugMode;
             InitializeComponent();
         }

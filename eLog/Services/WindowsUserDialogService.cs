@@ -104,6 +104,7 @@ namespace eLog.Services
             AppSettings.Instance.SmtpPort = dlg.SmtpPort;
             AppSettings.Instance.SmtpUsername = dlg.SmtpUsername;
             AppSettings.Instance.TimerForNotify = dlg.TimerForNotify;
+            AppSettings.Instance.EnableWriteShiftHandover = dlg.EnableWriteShiftHandover;
             if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
             return true;
         }

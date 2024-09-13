@@ -16,6 +16,7 @@
             <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
             <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
             <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <cnv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
             <cnv:ReportStateVisibility x:Key="ReportStateVisibility"/>
             <cnv:TimeConverter x:Key="TimeConverter"/>
             <cnv:IntNullableConverter x:Key="IntNullableConverter"/>

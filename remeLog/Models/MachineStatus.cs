@@ -433,47 +433,5 @@ namespace remeLog.Models
             get => _ProgramName;
             set => Set(ref _ProgramName, value);
         }
-
-
-
-        public void SetAxisValues(AxisPositionType positionType, List<double> axisValues)
-        {
-            if (axisValues == null || axisValues.Count == 0) return;
-
-            switch (positionType)
-            {
-                case AxisPositionType.Relative:
-                    if (axisValues.Count > 0) FirstRelativeAxisValue = axisValues[0];
-                    if (axisValues.Count > 1) SecondRelativeAxisValue = axisValues[1];
-                    if (axisValues.Count > 2) ThirdRelativeAxisValue = axisValues[2];
-                    if (axisValues.Count > 3) FourthRelativeAxisValue = axisValues[3];
-                    if (axisValues.Count > 4) FivethRelativeAxisValue = axisValues[4];
-                    break;
-
-                case AxisPositionType.Absolute:
-                    if (axisValues.Count > 0) FirstAbsoluteAxisValue = axisValues[0];
-                    if (axisValues.Count > 1) SecondAbsoluteAxisValue = axisValues[1];
-                    if (axisValues.Count > 2) ThirdAbsoluteAxisValue = axisValues[2];
-                    if (axisValues.Count > 3) FourthAbsoluteAxisValue = axisValues[3];
-                    if (axisValues.Count > 4) FivethAbsoluteAxisValue = axisValues[4];
-                    break;
-
-                case AxisPositionType.Machine:
-                    if (axisValues.Count > 0) FirstMachineAxisValue = axisValues[0];
-                    if (axisValues.Count > 1) SecondMachineAxisValue = axisValues[1];
-                    if (axisValues.Count > 2) ThirdMachineAxisValue = axisValues[2];
-                    if (axisValues.Count > 3) FourthMachineAxisValue = axisValues[3];
-                    if (axisValues.Count > 4) FivethMachineAxisValue = axisValues[4];
-                    break;
-
-                case AxisPositionType.DistanceToGo:
-                    if (axisValues.Count > 0) FirstDistanceToGoAxisValue = axisValues[0];
-                    if (axisValues.Count > 1) SecondDistanceToGoAxisValue = axisValues[1];
-                    if (axisValues.Count > 2) ThirdDistanceToGoAxisValue = axisValues[2];
-                    if (axisValues.Count > 3) FourthDistanceToGoAxisValue = axisValues[3];
-                    if (axisValues.Count > 4) FivethDistanceToGoAxisValue = axisValues[4];
-                    break;
-            }
-        }
     }
 }

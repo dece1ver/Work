@@ -352,5 +352,95 @@ namespace eLog.Infrastructure.Extensions
                 return DbResult.Error;
             }
         }
+
+        /// <summary>
+        /// Записывает данные о передаче смены в базу данных. 
+        /// Если запись для указанной даты и типа смены существует, она обновляется.
+        /// Иначе создается новая запись. Запись ведется либо для передающего (giver), либо для принимающего (receiver).
+        /// </summary>
+        /// <param name="shiftDate">Дата смены.</param>
+        /// <param name="shiftType">Тип смены ("День" или "Ночь").</param>
+        /// <param name="giver">True, если передающая сторона (giver), иначе - принимающая (receiver).</param>
+        /// <param name="workplaceCleaned">Флаг, указывающий, было ли убрано рабочее место.</param>
+        /// <param name="failures">Флаг наличия неисправностей.</param>
+        /// <param name="extraneousNoises">Флаг наличия посторонних шумов.</param>
+        /// <param name="liquidLeaks">Флаг наличия утечек жидкостей.</param>
+        /// <param name="toolBreakage">Флаг поломки инструмента.</param>
+        /// <param name="coolantConcentration">Концентрация охлаждающей жидкости.</param>
+        /// <returns>Возвращает результат операции записи в базу данных.</returns>
+        public static async Task<DbResult> WriteShiftHandover(DateTime shiftDate, string shiftType, bool giver, bool workplaceCleaned, bool failures, bool extraneousNoises, bool liquidLeaks, bool toolBreakage, double coolantConcentration)
+        {
+            try
+            {
+                var who = giver ? "Giver" : "Reciever";
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
+                {
+                    await connection.OpenAsync();
+                    var query = $@"
+                MERGE INTO cnc_shifts AS target
+                USING (VALUES (@ShiftDate, @ShiftType, @Machine, @Master, @UnspecifiedDowntimes, 
+                               @DowntimesComment, @CommonComment, @IsChecked, @WorkplaceCleaned, 
+                               @Failures, @ExtraneousNoises, @LiquidLeaks, @ToolBreakage, @CoolantConcentration))
+                AS source (ShiftDate, ShiftType, Machine, Master, UnspecifiedDowntimes, 
+                           DowntimesComment, CommonComment, IsChecked, WorkplaceCleaned, 
+                           Failures, ExtraneousNoises, LiquidLeaks, ToolBreakage, CoolantConcentration)
+                ON target.ShiftDate = source.ShiftDate AND target.Shift = source.ShiftType
+                WHEN MATCHED THEN
+                    UPDATE SET
+                        target.{who}WorkplaceCleaned = source.WorkplaceCleaned,
+                        target.{who}Failures = source.Failures,
+                        target.{who}ExtraneousNoises = source.ExtraneousNoises,
+                        target.{who}LiquidLeaks = source.LiquidLeaks,
+                        target.{who}ToolBreakage = source.ToolBreakage,
+                        target.{who}CoolantConcentration = source.CoolantConcentration
+                WHEN NOT MATCHED THEN
+                    INSERT (ShiftDate, Shift, Machine, Master, UnspecifiedDowntimes, DowntimesComment, CommonComment, IsChecked, 
+                            {who}WorkplaceCleaned, {who}Failures, {who}ExtraneousNoises, {who}LiquidLeaks, {who}ToolBreakage, {who}CoolantConcentration)
+                    VALUES (source.ShiftDate, source.ShiftType, source.Machine, source.Master, source.UnspecifiedDowntimes, source.DowntimesComment, source.CommonComment, source.IsChecked, 
+                            source.WorkplaceCleaned, source.Failures, source.ExtraneousNoises, source.LiquidLeaks, source.ToolBreakage, source.CoolantConcentration);
+            ";
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@ShiftDate", shiftDate);
+                        cmd.Parameters.AddWithValue("@ShiftType", shiftType);
+                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
+                        cmd.Parameters.AddWithValue("@Master", "");  // Мастер специально пустой, как признак отстутствия отчета
+                        cmd.Parameters.AddWithValue("@UnspecifiedDowntimes", 0); // Заполняет мастер в отчете
+                        cmd.Parameters.AddWithValue("@DowntimesComment", ""); // Заполняет мастер в отчете
+                        cmd.Parameters.AddWithValue("@CommonComment", ""); // Заполняет мастер в отчете
+                        cmd.Parameters.AddWithValue("@IsChecked", false); // Заполняет техотдел
+                        cmd.Parameters.AddWithValue("@WorkplaceCleaned", workplaceCleaned);
+                        cmd.Parameters.AddWithValue("@Failures", failures);
+                        cmd.Parameters.AddWithValue("@ExtraneousNoises", extraneousNoises);
+                        cmd.Parameters.AddWithValue("@LiquidLeaks", liquidLeaks);
+                        cmd.Parameters.AddWithValue("@ToolBreakage", toolBreakage);
+                        cmd.Parameters.AddWithValue("@CoolantConcentration", coolantConcentration);
+
+                        var execureResult = await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                return DbResult.Ok;
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case -1:
+                        Util.WriteLog("База данных недоступна.");
+                        return DbResult.NoConnection;
+                    case 18456:
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
+        }
     }
 }

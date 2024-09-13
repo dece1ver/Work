@@ -29,7 +29,6 @@ namespace eLog.Models
 
 
         private bool _IsSelected;
-        /// <summary> Описание </summary>
         public bool IsSelected
         {
             get => _IsSelected;

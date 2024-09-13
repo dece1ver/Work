@@ -205,8 +205,26 @@ namespace eLog.ViewModels
 
         #region StartShift
         public ICommand StartShiftCommand { get; }
-        private void OnStartShiftCommandExecuted(object p)
+        private async void OnStartShiftCommandExecuted(object p)
         {
+            if (AppSettings.Instance.EnableWriteShiftHandover)
+            {
+                DateTime dateTime = DateTime.Today;
+                if (DateTime.Now.Hour < 8 && AppSettings.Instance.CurrentShift == "Ночь") dateTime.AddDays(-1);
+                ShiftHandoverWindow shiftHandoverWindow = new($"Приём смены {dateTime:dd.MM.yy}");
+                if (shiftHandoverWindow.ShowDialog() == false) return;
+                var dbResult = await Database.WriteShiftHandover(
+                    dateTime, 
+                    AppSettings.Instance.CurrentShift, 
+                    true,
+                    shiftHandoverWindow.WorkplaceCleaned,
+                    shiftHandoverWindow.Failures,
+                    shiftHandoverWindow.ExtraneousNoises,
+                    shiftHandoverWindow.LiquidLeaks,
+                    shiftHandoverWindow.ToolBreakage, 
+                    shiftHandoverWindow.СoolantСoncentration);
+                Util.WriteLog($"Приём смены: {dbResult}");
+            }
             if (AppSettings.Instance.DebugMode) WriteLog($"Старт смены.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tСмена: {AppSettings.Instance.CurrentShift}.");
             ShiftStarted = true;
             OnPropertyChanged(nameof(CanEndShift));
@@ -219,8 +237,26 @@ namespace eLog.ViewModels
         #region EndShift
         public ICommand EndShiftCommand { get; }
 
-        private void OnEndShiftCommandExecuted(object p)
+        private async void OnEndShiftCommandExecuted(object p)
         {
+            if (AppSettings.Instance.EnableWriteShiftHandover)
+            {
+                DateTime dateTime = DateTime.Today;
+                if (DateTime.Now.Hour < 8 && AppSettings.Instance.CurrentShift == "Ночь") dateTime.AddDays(-1);
+                ShiftHandoverWindow shiftHandoverWindow = new($"Сдача смены {dateTime:dd.MM.yy}") {Owner = App.Current.MainWindow };
+                if (shiftHandoverWindow.ShowDialog() == false) return;
+                var dbResult = await Database.WriteShiftHandover(
+                    dateTime,
+                    AppSettings.Instance.CurrentShift,
+                    false,
+                    shiftHandoverWindow.WorkplaceCleaned,
+                    shiftHandoverWindow.Failures,
+                    shiftHandoverWindow.ExtraneousNoises,
+                    shiftHandoverWindow.LiquidLeaks,
+                    shiftHandoverWindow.ToolBreakage,
+                    shiftHandoverWindow.СoolantСoncentration);
+                Util.WriteLog($"Сдача смены: {dbResult}");
+            }
             if (AppSettings.Instance.DebugMode) WriteLog($"Завершение смены.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tСмена: {AppSettings.Instance.CurrentShift}.");
             ShiftStarted = false;
             OnPropertyChanged(nameof(CanEndShift));

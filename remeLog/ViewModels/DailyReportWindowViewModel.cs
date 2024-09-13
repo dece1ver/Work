@@ -52,6 +52,19 @@ namespace remeLog.ViewModels
                 _CurrentMaster = shift.Master;
                 _DayDowntimesReason = shift.DowntimesComment;
                 _DayMasterComment = shift.CommonComment;
+                _DayGiverWorkplaceCleaned = shift.GiverWorkplaceCleaned;
+                _DayGiverFailures = shift.GiverFailures;
+                _DayGiverExtraneousNoises = shift.GiverExtraneousNoises;
+                _DayGiverLiquidLeaks = shift.GiverLiquidLeaks;
+                _DayGiverToolBreakage = shift.GiverToolBreakage;
+                _DayGiverCoolantConcentration = shift.GiverСoolantСoncentration;
+                _DayRecieverWorkplaceCleaned = shift.RecieverWorkplaceCleaned;
+                _DayRecieverFailures = shift.RecieverFailures;
+                _DayRecieverExtraneousNoises = shift.RecieverExtraneousNoises;
+                _DayRecieverLiquidLeaks = shift.RecieverLiquidLeaks;
+                _DayRecieverToolBreakage = shift.RecieverToolBreakage;
+                _DayRecieverCoolantConcentration = shift.RecieverСoolantСoncentration;
+                
                 if (UnspecifiedDayDowntimes != shift.UnspecifiedDowntimes)
                 {
                     MessageBox.Show("Время неотмеченных простоев изменилось с момента последнего сохранения отчета!\n\nПодробная информация будет добавлена в комментарий мастера.", 
@@ -81,6 +94,18 @@ namespace remeLog.ViewModels
                 _NightDowntimesReason = shift.DowntimesComment;
                 _NightMasterComment = shift.CommonComment;
                 _IsChecked = shift.IsChecked;
+                _NightGiverWorkplaceCleaned = shift.GiverWorkplaceCleaned;
+                _NightGiverFailures = shift.GiverFailures;
+                _NightGiverExtraneousNoises = shift.GiverExtraneousNoises;
+                _NightGiverLiquidLeaks = shift.GiverLiquidLeaks;
+                _NightGiverToolBreakage = shift.GiverToolBreakage;
+                _NightGiverCoolantConcentration = shift.GiverСoolantСoncentration;
+                _NightRecieverWorkplaceCleaned = shift.RecieverWorkplaceCleaned;
+                _NightRecieverFailures = shift.RecieverFailures;
+                _NightRecieverExtraneousNoises = shift.RecieverExtraneousNoises;
+                _NightRecieverLiquidLeaks = shift.RecieverLiquidLeaks;
+                _NightRecieverToolBreakage = shift.RecieverToolBreakage;
+                _NightRecieverCoolantConcentration = shift.RecieverСoolantСoncentration;
                 if (UnspecifiedNightDowntimes != shift.UnspecifiedDowntimes)
                 {
                     MessageBox.Show("Время неотмеченных простоев изменилось с момента последнего сохранения отчета!\n\nПрошлое значение будет добавлено в комментарий мастера.",
@@ -236,6 +261,184 @@ namespace remeLog.ViewModels
         public double TotalWorkedDayTime => (int)ShiftType.Day - Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Day);
         public double TotalWorkedNightTime => (int)ShiftType.Night - Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Night);
 
+        private bool? _DayGiverWorkplaceCleaned;
+        public bool? DayGiverWorkplaceCleaned
+        {
+            get => _DayGiverWorkplaceCleaned;
+            set => Set(ref _DayGiverWorkplaceCleaned, value);
+        }
+
+        private bool? _DayGiverFailures;
+        public bool? DayGiverFailures
+        {
+            get => _DayGiverFailures;
+            set => Set(ref _DayGiverFailures, value);
+        }
+
+        private bool? _DayGiverExtraneousNoises;
+        public bool? DayGiverExtraneousNoises
+        {
+            get => _DayGiverExtraneousNoises;
+            set => Set(ref _DayGiverExtraneousNoises, value);
+        }
+
+        private bool? _DayGiverLiquidLeaks;
+        public bool? DayGiverLiquidLeaks
+        {
+            get => _DayGiverLiquidLeaks;
+            set => Set(ref _DayGiverLiquidLeaks, value);
+        }
+
+        private bool? _DayGiverToolBreakage;
+        public bool? DayGiverToolBreakage
+        {
+            get => _DayGiverToolBreakage;
+            set => Set(ref _DayGiverToolBreakage, value);
+        }
+
+        private double? _DayGiverCoolantConcentration;
+        public double? DayGiverCoolantConcentration
+        {
+            get => _DayGiverCoolantConcentration;
+            set => Set(ref _DayGiverCoolantConcentration, value);
+        }
+
+        private bool? _DayRecieverWorkplaceCleaned;
+        public bool? DayRecieverWorkplaceCleaned
+        {
+            get => _DayRecieverWorkplaceCleaned;
+            set => Set(ref _DayRecieverWorkplaceCleaned, value);
+        }
+
+        private bool? _DayRecieverFailures;
+        public bool? DayRecieverFailures
+        {
+            get => _DayRecieverFailures;
+            set => Set(ref _DayRecieverFailures, value);
+        }
+
+        private bool? _DayRecieverExtraneousNoises;
+        public bool? DayRecieverExtraneousNoises
+        {
+            get => _DayRecieverExtraneousNoises;
+            set => Set(ref _DayRecieverExtraneousNoises, value);
+        }
+
+        private bool? _DayRecieverLiquidLeaks;
+        public bool? DayRecieverLiquidLeaks
+        {
+            get => _DayRecieverLiquidLeaks;
+            set => Set(ref _DayRecieverLiquidLeaks, value);
+        }
+
+        private bool? _DayRecieverToolBreakage;
+        public bool? DayRecieverToolBreakage
+        {
+            get => _DayRecieverToolBreakage;
+            set => Set(ref _DayRecieverToolBreakage, value);
+        }
+
+        private double? _DayRecieverCoolantConcentration;
+        public double? DayRecieverCoolantConcentration
+        {
+            get => _DayRecieverCoolantConcentration;
+            set => Set(ref _DayRecieverCoolantConcentration, value);
+        }
+
+        private bool? _NightGiverWorkplaceCleaned;
+        public bool? NightGiverWorkplaceCleaned
+        {
+            get => _NightGiverWorkplaceCleaned;
+            set => Set(ref _NightGiverWorkplaceCleaned, value);
+        }
+
+        private bool? _NightGiverFailures;
+        public bool? NightGiverFailures
+        {
+            get => _NightGiverFailures;
+            set => Set(ref _NightGiverFailures, value);
+        }
+
+        private bool? _NightGiverExtraneousNoises;
+        public bool? NightGiverExtraneousNoises
+        {
+            get => _NightGiverExtraneousNoises;
+            set => Set(ref _NightGiverExtraneousNoises, value);
+        }
+
+        private bool? _NightGiverLiquidLeaks;
+        public bool? NightGiverLiquidLeaks
+        {
+            get => _NightGiverLiquidLeaks;
+            set => Set(ref _NightGiverLiquidLeaks, value);
+        }
+
+        private bool? _NightGiverToolBreakage;
+        public bool? NightGiverToolBreakage
+        {
+            get => _NightGiverToolBreakage;
+            set => Set(ref _NightGiverToolBreakage, value);
+        }
+
+        private double? _NightGiverCoolantConcentration;
+        public double? NightGiverCoolantConcentration
+        {
+            get => _NightGiverCoolantConcentration;
+            set => Set(ref _NightGiverCoolantConcentration, value);
+        }
+
+        private bool? _NightRecieverWorkplaceCleaned;
+        public bool? NightRecieverWorkplaceCleaned
+        {
+            get => _NightRecieverWorkplaceCleaned;
+            set => Set(ref _NightRecieverWorkplaceCleaned, value);
+        }
+
+        private bool? _NightRecieverFailures;
+        public bool? NightRecieverFailures
+        {
+            get => _NightRecieverFailures;
+            set => Set(ref _NightRecieverFailures, value);
+        }
+
+        private bool? _NightRecieverExtraneousNoises;
+        public bool? NightRecieverExtraneousNoises
+        {
+            get => _NightRecieverExtraneousNoises;
+            set => Set(ref _NightRecieverExtraneousNoises, value);
+        }
+
+        private bool? _NightRecieverLiquidLeaks;
+        public bool? NightRecieverLiquidLeaks
+        {
+            get => _NightRecieverLiquidLeaks;
+            set => Set(ref _NightRecieverLiquidLeaks, value);
+        }
+
+        private bool? _NightRecieverToolBreakage;
+        public bool? NightRecieverToolBreakage
+        {
+            get => _NightRecieverToolBreakage;
+            set => Set(ref _NightRecieverToolBreakage, value);
+        }
+
+        private double? _NightRecieverCoolantConcentration;
+        public double? NightRecieverCoolantConcentration
+        {
+            get => _NightRecieverCoolantConcentration;
+            set => Set(ref _NightRecieverCoolantConcentration, value);
+        }
+
+
+        private bool _AdvancedMode;
+        /// <summary> Расширенный режим </summary>
+        public bool AdvancedMode
+        {
+            get => _AdvancedMode;
+            set => Set(ref _AdvancedMode, value);
+        }
+
+
         #region UpdateShiftInfo
         public ICommand UpdateShiftInfoCommand { get; }
 
@@ -280,8 +483,8 @@ namespace remeLog.ViewModels
             }
             if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) 
                 return;
-            var dayShift = new ShiftInfo(null, ShiftDate, ShiftType.Day, Machine, CurrentMaster, UnspecifiedDayDowntimes, DayDowntimesReason, DayMasterComment, IsChecked);
-            var nightShift = new ShiftInfo(null, ShiftDate, ShiftType.Night, Machine, CurrentMaster, UnspecifiedNightDowntimes, NightDowntimesReason, NightMasterComment, IsChecked);
+            var dayShift = new ShiftInfo(null, ShiftDate, ShiftType.Day, Machine, CurrentMaster, UnspecifiedDayDowntimes, DayDowntimesReason, DayMasterComment, IsChecked, DayGiverWorkplaceCleaned, DayGiverFailures, DayGiverExtraneousNoises, DayGiverLiquidLeaks, DayGiverToolBreakage, DayGiverCoolantConcentration, DayRecieverWorkplaceCleaned, DayRecieverFailures, DayRecieverExtraneousNoises, DayRecieverLiquidLeaks, DayRecieverToolBreakage, DayRecieverCoolantConcentration);
+            var nightShift = new ShiftInfo(null, ShiftDate, ShiftType.Night, Machine, CurrentMaster, UnspecifiedNightDowntimes, NightDowntimesReason, NightMasterComment, IsChecked, NightGiverWorkplaceCleaned, NightGiverFailures, NightGiverExtraneousNoises, NightGiverLiquidLeaks, NightGiverToolBreakage, NightGiverCoolantConcentration, NightRecieverWorkplaceCleaned, NightRecieverFailures, NightRecieverExtraneousNoises, NightRecieverLiquidLeaks, NightRecieverToolBreakage, NightRecieverCoolantConcentration);
             var dayWriteResult = Database.WriteShiftInfo(dayShift);
             switch (dayWriteResult)
             {

@@ -567,15 +567,28 @@ namespace remeLog.Infrastructure
                                 shifts.Add(
 
                                     new ShiftInfo(
-                                        reader.GetInt32(0),         // Id
-                                        reader.GetDateTime(1),      // ShiftDate
-                                        reader.GetString(2),        // Shift
-                                        reader.GetString(3),        // Machine
-                                        reader.GetString(4),        // Master
-                                        reader.GetDouble(5),        // UnspecifiedDowntimes
-                                        reader.GetString(6),        // DowntimesComment
-                                        reader.GetString(7),        // CommonComment
-                                        reader.GetBoolean(8))       // IsChecked
+                                        reader.GetInt32(0),                 // Id
+                                        reader.GetDateTime(1),              // ShiftDate
+                                        reader.GetString(2),                // Shift
+                                        reader.GetString(3),                // Machine
+                                        reader.GetString(4),                // Master
+                                        reader.GetDouble(5),                // UnspecifiedDowntimes
+                                        reader.GetString(6),                // DowntimesComment
+                                        reader.GetString(7),                // CommonComment
+                                        reader.GetBoolean(8),               // IsChecked
+                                        reader.GetNullableBoolean(9),       // GiverWorkplaceCleaned
+                                        reader.GetNullableBoolean(10),      // GiverFailures
+                                        reader.GetNullableBoolean(11),      // GiverExtraneousNoises
+                                        reader.GetNullableBoolean(12),      // GiverLiquidLeaks
+                                        reader.GetNullableBoolean(13),      // GiverToolBreakage
+                                        reader.GetNullableDouble(14),       // GiverCoolantConcentration
+                                        reader.GetNullableBoolean(15),      // RecieverWorkplaceCleaned
+                                        reader.GetNullableBoolean(16),      // RecieverFailures
+                                        reader.GetNullableBoolean(17),      // RecieverExtraneousNoises
+                                        reader.GetNullableBoolean(18),      // RecieverLiquidLeaks
+                                        reader.GetNullableBoolean(19),      // RecieverToolBreakage
+                                        reader.GetNullableDouble(20)        // RecieverCoolantConcentration
+                                        )       
                                     );
                             }
                         }
@@ -631,15 +644,28 @@ namespace remeLog.Infrastructure
                                 shifts.Add(
 
                                     new ShiftInfo(
-                                        reader.GetInt32(0),         // Id
-                                        reader.GetDateTime(1),      // ShiftDate
-                                        reader.GetString(2),        // Shift
-                                        reader.GetString(3),        // Machine
-                                        reader.GetString(4),        // Master
-                                        reader.GetDouble(5),        // UnspecifiedDowntimes
-                                        reader.GetString(6),        // DowntimesComment
-                                        reader.GetString(7),        // CommonComment
-                                        reader.GetBoolean(8))       // IsChecked
+                                        reader.GetInt32(0),                 // Id
+                                        reader.GetDateTime(1),              // ShiftDate
+                                        reader.GetString(2),                // Shift
+                                        reader.GetString(3),                // Machine
+                                        reader.GetString(4),                // Master
+                                        reader.GetDouble(5),                // UnspecifiedDowntimes
+                                        reader.GetString(6),                // DowntimesComment
+                                        reader.GetString(7),                // CommonComment
+                                        reader.GetBoolean(8),               // IsChecked
+                                        reader.GetNullableBoolean(9),       // GiverWorkplaceCleaned
+                                        reader.GetNullableBoolean(10),      // GiverFailures
+                                        reader.GetNullableBoolean(11),      // GiverExtraneousNoises
+                                        reader.GetNullableBoolean(12),      // GiverLiquidLeaks
+                                        reader.GetNullableBoolean(13),      // GiverToolBreakage
+                                        reader.GetNullableDouble(14),       // GiverCoolantConcentration
+                                        reader.GetNullableBoolean(15),      // RecieverWorkplaceCleaned
+                                        reader.GetNullableBoolean(16),      // RecieverFailures
+                                        reader.GetNullableBoolean(17),      // RecieverExtraneousNoises
+                                        reader.GetNullableBoolean(18),      // RecieverLiquidLeaks
+                                        reader.GetNullableBoolean(19),      // RecieverToolBreakage
+                                        reader.GetNullableDouble(20)        // RecieverCoolantConcentration
+                                        )
                                     );
                             }
                         }

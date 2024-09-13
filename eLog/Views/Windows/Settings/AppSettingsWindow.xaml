@@ -53,6 +53,7 @@
                 <RowDefinition Height="24"/>
                 <RowDefinition Height="24"/>
                 <RowDefinition Height="24"/>
+                <RowDefinition Height="24"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="Станок:" Margin="5 0" VerticalAlignment="Center"/>
             <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" Margin="0 1"
@@ -129,7 +130,10 @@
                          Text="{Binding PathToRecievers}"/>
             </DockPanel>
 
-            <CheckBox Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Content="Запись дополнительных отладочных логов"
+            <CheckBox Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Content="Передача смены"
+                      VerticalAlignment="Center" IsChecked="{Binding EnableWriteShiftHandover}" Margin="5 0 0 0"/>
+            
+            <CheckBox Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2" Content="Запись дополнительных отладочных логов"
                       VerticalAlignment="Center" IsChecked="{Binding DebugMode}" Margin="5 0 0 0"/>
         </Grid>
     </DockPanel>

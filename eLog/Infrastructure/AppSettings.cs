@@ -221,6 +221,15 @@ namespace eLog.Infrastructure
         }
 
 
+        private bool _EnableWriteShiftHandover;
+        /// <summary> Передача смены </summary>
+        public bool EnableWriteShiftHandover
+        {
+            get => _EnableWriteShiftHandover;
+            set => Set(ref _EnableWriteShiftHandover, value);
+        }
+
+
         /// <summary> Режим отладки </summary>
         public bool DebugMode
         {
@@ -234,8 +243,8 @@ namespace eLog.Infrastructure
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private void CreateBaseConfig()
         {
-            if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
-            if (File.Exists(ConfigBackupPath)) File.Delete(ConfigBackupPath);
+            if (File.Exists(ConfigFilePath)) File.Move(ConfigFilePath, ConfigFilePath + $".mvd{DateTime.Now.Ticks}");
+            if (File.Exists(ConfigBackupPath)) File.Move(ConfigBackupPath, ConfigBackupPath + $".mvd{DateTime.Now.Ticks}");
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
             Machine = new Machine(0);
             Operators = new DeepObservableCollection<Operator>()
@@ -266,6 +275,7 @@ namespace eLog.Infrastructure
             ConnetctionString = string.Empty;
             IsShiftStarted = false;
             TimerForNotify = 4;
+            EnableWriteShiftHandover = true;
             Save();
         }
 
