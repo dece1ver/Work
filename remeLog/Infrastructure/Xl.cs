@@ -20,6 +20,11 @@ namespace remeLog.Infrastructure
             Under, Below
         }
 
+        public enum HeaderRotateOption
+        {
+            Horizontal, Vertical
+        }
+
         /// <summary>
         /// Отчёт за период
         /// </summary>
@@ -372,6 +377,65 @@ namespace remeLog.Infrastructure
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
+            return $"Файл сохранен в \"{path}\"";
+        }
+
+        /// <summary>
+        /// Экспортирует отчет по сменам операторов в Excel.
+        /// </summary>
+        /// <param name="parts">Коллекция деталей, содержащих данные для отчета.</param>
+        /// <param name="fromDate">Начальная дата периода для отчета.</param>
+        /// <param name="toDate">Конечная дата периода для отчета.</param>
+        /// <param name="path">Путь для сохранения отчета в виде файла Excel.</param>
+        /// <returns>Строка сообщения, указывающая путь и успешность выполнения.</returns>
+        /// <remarks>
+        /// В отчете выводится количество смен для каждого оператора за указанный период. 
+        /// Отчет формируется в виде Excel-файла с заголовками и форматированием.
+        /// Если оператором указан "Ученик", то данные по нему не включаются в отчет.
+        /// После успешного сохранения файла пользователю предлагается открыть его.
+        /// </remarks>
+        public static string ExportOperatorsShiftsReport(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path)
+        {
+            var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Отчет по операторам");
+            var columns = new Dictionary<string, (int index, string header)>
+            {
+                { "operator", (1, "Оператор") },
+                { "shifts", (2, "Смены") },
+            };
+            var lastCol = columns.Count - 1;
+            ConfigureWorksheetHeader(ws, columns, HeaderRotateOption.Horizontal);
+
+            var row = 3;
+
+            foreach (var partGroup in parts
+                .Where(p => p.Operator != "Ученик")
+                .GroupBy(p => p.Operator)
+                .OrderBy(pg => pg.Key))
+            {
+                var distinctShiftsCount = partGroup.Select(pg => pg.ShiftDate).Distinct().Count();
+
+                ws.Cell(row, columns["operator"].index)
+                  .SetValue(partGroup.Key);
+
+                ws.Cell(row, columns["shifts"].index)
+                  .SetValue(distinctShiftsCount)
+                  .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                row++;
+            }
+            var usedRange = ws.RangeUsed();
+            usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            usedRange.SetAutoFilter(true);
+            ws.Columns().AdjustToContents();
+            ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
+            wb.SaveAs(path);
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопрос", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
+            }
+
             return $"Файл сохранен в \"{path}\"";
         }
 
@@ -823,7 +887,7 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
         }
 
-        private static void ConfigureWorksheetHeader(IXLWorksheet ws, Dictionary<string, (int index, string header)> columns)
+        private static void ConfigureWorksheetHeader(IXLWorksheet ws, Dictionary<string, (int index, string header)> columns, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical)
         {
             foreach (var (index, header) in columns.Values)
             {
@@ -831,9 +895,11 @@ namespace remeLog.Infrastructure
             }
 
             var headerRange = ws.Range(2, 1, 2, columns.Count);
-            headerRange.Style.Alignment.TextRotation = 90;
+            if (headerRotateOption == HeaderRotateOption.Vertical) headerRange.Style.Alignment.TextRotation = 90;
             headerRange.Style.Font.FontName = "Segoe UI Semibold";
             headerRange.Style.Font.FontSize = 10;
+            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             ws.Row(2).Height = 100;
         }
 

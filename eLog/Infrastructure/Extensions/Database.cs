@@ -1,19 +1,15 @@
-﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
-using eLog.Models;
-using libeLog.Extensions;
+﻿using eLog.Models;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace eLog.Infrastructure.Extensions
 {
     public static class Database
     {
-        
+
 
         /// <summary>
         /// Запись информации о детали в БЖ
@@ -326,7 +322,7 @@ namespace eLog.Infrastructure.Extensions
                             cmd.Parameters.AddWithValue("PlanDate", DateTime.Today.AddDays(7));
                             var execureResult = cmd.ExecuteNonQuery();
                         }
-                        
+
                     }
                 });
                 return DbResult.Ok;
@@ -368,11 +364,11 @@ namespace eLog.Infrastructure.Extensions
         /// <param name="toolBreakage">Флаг поломки инструмента.</param>
         /// <param name="coolantConcentration">Концентрация охлаждающей жидкости.</param>
         /// <returns>Возвращает результат операции записи в базу данных.</returns>
-        public static async Task<DbResult> WriteShiftHandover(DateTime shiftDate, string shiftType, bool giver, bool workplaceCleaned, bool failures, bool extraneousNoises, bool liquidLeaks, bool toolBreakage, double coolantConcentration)
+        public static async Task<DbResult> WriteShiftHandover(ShiftHandOverInfo shiftInfo)
         {
             try
             {
-                var who = giver ? "Giver" : "Reciever";
+                var who = shiftInfo.Giver ? "Giver" : "Reciever";
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
                 {
                     await connection.OpenAsync();
@@ -384,7 +380,7 @@ namespace eLog.Infrastructure.Extensions
                 AS source (ShiftDate, ShiftType, Machine, Master, UnspecifiedDowntimes, 
                            DowntimesComment, CommonComment, IsChecked, WorkplaceCleaned, 
                            Failures, ExtraneousNoises, LiquidLeaks, ToolBreakage, CoolantConcentration)
-                ON target.ShiftDate = source.ShiftDate AND target.Shift = source.ShiftType
+                ON target.ShiftDate = source.ShiftDate AND target.Shift = source.ShiftType AND target.Machine = source.Machine
                 WHEN MATCHED THEN
                     UPDATE SET
                         target.{who}WorkplaceCleaned = source.WorkplaceCleaned,
@@ -397,24 +393,23 @@ namespace eLog.Infrastructure.Extensions
                     INSERT (ShiftDate, Shift, Machine, Master, UnspecifiedDowntimes, DowntimesComment, CommonComment, IsChecked, 
                             {who}WorkplaceCleaned, {who}Failures, {who}ExtraneousNoises, {who}LiquidLeaks, {who}ToolBreakage, {who}CoolantConcentration)
                     VALUES (source.ShiftDate, source.ShiftType, source.Machine, source.Master, source.UnspecifiedDowntimes, source.DowntimesComment, source.CommonComment, source.IsChecked, 
-                            source.WorkplaceCleaned, source.Failures, source.ExtraneousNoises, source.LiquidLeaks, source.ToolBreakage, source.CoolantConcentration);
-            ";
+                            source.WorkplaceCleaned, source.Failures, source.ExtraneousNoises, source.LiquidLeaks, source.ToolBreakage, source.CoolantConcentration);";
                     using (SqlCommand cmd = new SqlCommand(query, connection))
                     {
-                        cmd.Parameters.AddWithValue("@ShiftDate", shiftDate);
-                        cmd.Parameters.AddWithValue("@ShiftType", shiftType);
-                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
+                        cmd.Parameters.AddWithValue("@ShiftDate", shiftInfo.Date);
+                        cmd.Parameters.AddWithValue("@ShiftType", shiftInfo.Type);
+                        cmd.Parameters.AddWithValue("@Machine", shiftInfo.Machine);
                         cmd.Parameters.AddWithValue("@Master", "");  // Мастер специально пустой, как признак отстутствия отчета
                         cmd.Parameters.AddWithValue("@UnspecifiedDowntimes", 0); // Заполняет мастер в отчете
                         cmd.Parameters.AddWithValue("@DowntimesComment", ""); // Заполняет мастер в отчете
                         cmd.Parameters.AddWithValue("@CommonComment", ""); // Заполняет мастер в отчете
                         cmd.Parameters.AddWithValue("@IsChecked", false); // Заполняет техотдел
-                        cmd.Parameters.AddWithValue("@WorkplaceCleaned", workplaceCleaned);
-                        cmd.Parameters.AddWithValue("@Failures", failures);
-                        cmd.Parameters.AddWithValue("@ExtraneousNoises", extraneousNoises);
-                        cmd.Parameters.AddWithValue("@LiquidLeaks", liquidLeaks);
-                        cmd.Parameters.AddWithValue("@ToolBreakage", toolBreakage);
-                        cmd.Parameters.AddWithValue("@CoolantConcentration", coolantConcentration);
+                        cmd.Parameters.AddWithValue("@WorkplaceCleaned", shiftInfo.WorkplaceCleaned);
+                        cmd.Parameters.AddWithValue("@Failures", shiftInfo.Failures);
+                        cmd.Parameters.AddWithValue("@ExtraneousNoises", shiftInfo.ExtraneousNoises);
+                        cmd.Parameters.AddWithValue("@LiquidLeaks", shiftInfo.LiquidLeaks);
+                        cmd.Parameters.AddWithValue("@ToolBreakage", shiftInfo.ToolBreakage);
+                        cmd.Parameters.AddWithValue("@CoolantConcentration", shiftInfo.CoolantConcentration);
 
                         var execureResult = await cmd.ExecuteNonQueryAsync();
                     }

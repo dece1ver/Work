@@ -65,7 +65,7 @@ namespace remeLog.ViewModels
                 _DayRecieverToolBreakage = shift.RecieverToolBreakage;
                 _DayRecieverCoolantConcentration = shift.RecieverСoolantСoncentration;
                 
-                if (UnspecifiedDayDowntimes != shift.UnspecifiedDowntimes)
+                if (UnspecifiedDayDowntimes != shift.UnspecifiedDowntimes && shift.Master != "")
                 {
                     MessageBox.Show("Время неотмеченных простоев изменилось с момента последнего сохранения отчета!\n\nПодробная информация будет добавлена в комментарий мастера.", 
                         "Внимание.",
@@ -106,7 +106,7 @@ namespace remeLog.ViewModels
                 _NightRecieverLiquidLeaks = shift.RecieverLiquidLeaks;
                 _NightRecieverToolBreakage = shift.RecieverToolBreakage;
                 _NightRecieverCoolantConcentration = shift.RecieverСoolantСoncentration;
-                if (UnspecifiedNightDowntimes != shift.UnspecifiedDowntimes)
+                if (UnspecifiedNightDowntimes != shift.UnspecifiedDowntimes && shift.Master != "")
                 {
                     MessageBox.Show("Время неотмеченных простоев изменилось с момента последнего сохранения отчета!\n\nПрошлое значение будет добавлено в комментарий мастера.",
                         "Внимание.",

@@ -59,6 +59,9 @@ namespace eLog.ViewModels
             var notifyThread = new Thread(() => NotifyWatcher()) { IsBackground = true };
             notifyThread.Start();
 
+            var shiftHandoverWatcher = new Thread(() => ShiftHandoverWatcher()) { IsBackground = true };
+            shiftHandoverWatcher.Start();
+
             WriteLog("Старт");
         }
 
@@ -205,25 +208,33 @@ namespace eLog.ViewModels
 
         #region StartShift
         public ICommand StartShiftCommand { get; }
-        private async void OnStartShiftCommandExecuted(object p)
+        private void OnStartShiftCommandExecuted(object p)
         {
             if (AppSettings.Instance.EnableWriteShiftHandover)
             {
                 DateTime dateTime = DateTime.Today;
                 if (DateTime.Now.Hour < 8 && AppSettings.Instance.CurrentShift == "Ночь") dateTime.AddDays(-1);
-                ShiftHandoverWindow shiftHandoverWindow = new($"Приём смены {dateTime:dd.MM.yy}");
+                ShiftHandoverWindow shiftHandoverWindow = new($"Приём смены {dateTime:dd.MM.yy}") { Owner = App.Current.MainWindow };
                 if (shiftHandoverWindow.ShowDialog() == false) return;
-                var dbResult = await Database.WriteShiftHandover(
-                    dateTime, 
-                    AppSettings.Instance.CurrentShift, 
-                    true,
-                    shiftHandoverWindow.WorkplaceCleaned,
-                    shiftHandoverWindow.Failures,
-                    shiftHandoverWindow.ExtraneousNoises,
-                    shiftHandoverWindow.LiquidLeaks,
-                    shiftHandoverWindow.ToolBreakage, 
-                    shiftHandoverWindow.СoolantСoncentration);
-                Util.WriteLog($"Приём смены: {dbResult}");
+                Task.Run(async () =>
+                {
+                    var shiftInfo = new ShiftHandOverInfo(dateTime,
+                        AppSettings.Instance.CurrentShift,
+                        AppSettings.Instance.Machine.Name,
+                        false,
+                        shiftHandoverWindow.WorkplaceCleaned,
+                        shiftHandoverWindow.Failures,
+                        shiftHandoverWindow.ExtraneousNoises,
+                        shiftHandoverWindow.ExtraneousNoises,
+                        shiftHandoverWindow.ToolBreakage,
+                        shiftHandoverWindow.СoolantСoncentration);
+                    var dbResult = await Database.WriteShiftHandover(shiftInfo);
+                    if (dbResult != DbResult.Ok)
+                    {
+                        AppSettings.Instance.NotWritedShiftHandovers.Add(shiftInfo);
+                    }
+                    WriteLog($"Приём смены: {dbResult}");
+                });
             }
             if (AppSettings.Instance.DebugMode) WriteLog($"Старт смены.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tСмена: {AppSettings.Instance.CurrentShift}.");
             ShiftStarted = true;
@@ -237,25 +248,33 @@ namespace eLog.ViewModels
         #region EndShift
         public ICommand EndShiftCommand { get; }
 
-        private async void OnEndShiftCommandExecuted(object p)
+        private void OnEndShiftCommandExecuted(object p)
         {
             if (AppSettings.Instance.EnableWriteShiftHandover)
             {
                 DateTime dateTime = DateTime.Today;
                 if (DateTime.Now.Hour < 8 && AppSettings.Instance.CurrentShift == "Ночь") dateTime.AddDays(-1);
-                ShiftHandoverWindow shiftHandoverWindow = new($"Сдача смены {dateTime:dd.MM.yy}") {Owner = App.Current.MainWindow };
+                ShiftHandoverWindow shiftHandoverWindow = new($"Сдача смены {dateTime:dd.MM.yy}") { Owner = App.Current.MainWindow };
                 if (shiftHandoverWindow.ShowDialog() == false) return;
-                var dbResult = await Database.WriteShiftHandover(
-                    dateTime,
-                    AppSettings.Instance.CurrentShift,
-                    false,
-                    shiftHandoverWindow.WorkplaceCleaned,
-                    shiftHandoverWindow.Failures,
-                    shiftHandoverWindow.ExtraneousNoises,
-                    shiftHandoverWindow.LiquidLeaks,
-                    shiftHandoverWindow.ToolBreakage,
-                    shiftHandoverWindow.СoolantСoncentration);
-                Util.WriteLog($"Сдача смены: {dbResult}");
+                Task.Run(async () =>
+                {
+                    var shiftInfo = new ShiftHandOverInfo(dateTime,
+                        AppSettings.Instance.CurrentShift,
+                        AppSettings.Instance.Machine.Name,
+                        true,
+                        shiftHandoverWindow.WorkplaceCleaned,
+                        shiftHandoverWindow.Failures,
+                        shiftHandoverWindow.ExtraneousNoises,
+                        shiftHandoverWindow.ExtraneousNoises,
+                        shiftHandoverWindow.ToolBreakage,
+                        shiftHandoverWindow.СoolantСoncentration);
+                    var dbResult = await Database.WriteShiftHandover(shiftInfo);
+                    if (dbResult != DbResult.Ok)
+                    {
+                        AppSettings.Instance.NotWritedShiftHandovers.Add(shiftInfo);
+                    }
+                    WriteLog($"Сдача смены: {dbResult}");
+                });
             }
             if (AppSettings.Instance.DebugMode) WriteLog($"Завершение смены.\n\tОператор {AppSettings.Instance.CurrentOperator?.DisplayName}\n\tСмена: {AppSettings.Instance.CurrentShift}.");
             ShiftStarted = false;
@@ -441,7 +460,7 @@ namespace eLog.ViewModels
                         _editPart = false;
                         return;
                     }
-                    
+
                 }
                 else
                 {
@@ -708,6 +727,27 @@ namespace eLog.ViewModels
                             if (Email.SendLongSetupNotify(Parts[0])) Parts[0].LongSetupNotifySended = true;
                         }
                     }
+                }
+                catch (Exception ex) { WriteLog(ex); }
+                finally
+                {
+                    Thread.Sleep(30000);
+                }
+            }
+        }
+
+        private async void ShiftHandoverWatcher()
+        {
+            while (true)
+            {
+                try
+                {
+                    AppSettings.Instance.NotWritedShiftHandovers ??= new();
+                    foreach (var shiftHandover in AppSettings.Instance.NotWritedShiftHandovers)
+                    {
+                        if (await Database.WriteShiftHandover(shiftHandover) == DbResult.Ok) AppSettings.Instance.NotWritedShiftHandovers.Remove(shiftHandover);
+                    }
+                    AppSettings.Save();
                 }
                 catch (Exception ex) { WriteLog(ex); }
                 finally

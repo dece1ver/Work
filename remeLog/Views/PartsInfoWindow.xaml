@@ -862,9 +862,15 @@
                 </MenuItem>
                 <MenuItem Header="Экспорт">
                     <MenuItem Command="{Binding OperatorReportToExcelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" Icon="{StaticResource OperatorsIcon}"
-                              ToolTip="Экспорт отчёта по операторам" HorizontalAlignment="Stretch">
+                              ToolTip="Выработка по операторам" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Отчёт по операторам"/>
+                            <TextBlock Text="Выработка по операторам"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding OperatorsShiftsReportToExcelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" Icon="{StaticResource OperatorsIcon}"
+                              ToolTip="Операторы-смены" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Операторы-смены"/>
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem Command="{Binding ExportReportToExcelCommand}" Icon="{StaticResource CalendarIcon}"

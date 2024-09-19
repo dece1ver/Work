@@ -57,6 +57,7 @@ namespace remeLog.ViewModels
             ExportVerevkinReportCommand = new LambdaCommand(OnExportVerevkinReportCommandExecuted, CanExportVerevkinReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
+            OperatorsShiftsReportToExcelCommand = new LambdaCommand(OnOperatorsShiftsReportToExcelCommandExecuted, CanOperatorsShiftsReportToExcelCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
             ExportReportToExcelCommand = new LambdaCommand(OnExportReportToExcelCommandExecuted, CanExportReportToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
@@ -668,6 +669,37 @@ namespace remeLog.ViewModels
         }
         private static bool CanOperatorReportToExcelCommandExecute(object p) => true;
         #endregion
+
+        #region OperatorsShiftsReportToExcel
+        public ICommand OperatorsShiftsReportToExcelCommand { get; }
+        private async void OnOperatorsShiftsReportToExcelCommandExecuted(object p)
+        {
+            try
+            {
+                using (Overlay = new())
+                {
+                    var path = Util.GetXlsxPath();
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        Status = "Выбор файла отменён";
+                        return;
+                    }
+                    await Task.Run(() =>
+                    {
+                        InProgress = true;
+                        Status = Xl.ExportOperatorsShiftsReport(Parts, FromDate, ToDate, path);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanOperatorsShiftsReportToExcelCommandExecute(object p) => true;
+        #endregion
+
 
         #region ExportPartsReportToExcel
         public ICommand ExportPartsReportToExcelCommand { get; }

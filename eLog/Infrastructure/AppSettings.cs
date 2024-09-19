@@ -230,6 +230,15 @@ namespace eLog.Infrastructure
         }
 
 
+        private List<ShiftHandOverInfo> _NotWritedShiftHandovers;
+        /// <summary> Описание </summary>
+        public List<ShiftHandOverInfo> NotWritedShiftHandovers
+        {
+            get => _NotWritedShiftHandovers;
+            set => Set(ref _NotWritedShiftHandovers, value);
+        }
+
+
         /// <summary> Режим отладки </summary>
         public bool DebugMode
         {
@@ -276,6 +285,7 @@ namespace eLog.Infrastructure
             IsShiftStarted = false;
             TimerForNotify = 4;
             EnableWriteShiftHandover = true;
+            NotWritedShiftHandovers = new();
             Save();
         }
 

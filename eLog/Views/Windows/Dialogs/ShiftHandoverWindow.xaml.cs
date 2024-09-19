@@ -50,7 +50,7 @@ namespace eLog.Views.Windows.Dialogs
         public ShiftHandoverWindow(string title)
         {
             InitializeComponent();
-            TypeTitle = title;
+            _TypeTitle = title;
         }
 
 

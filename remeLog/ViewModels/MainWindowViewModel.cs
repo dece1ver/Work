@@ -364,13 +364,13 @@ namespace remeLog.ViewModels
                     bool nightChecked = false;
                     if (FromDate == ToDate)
                     {
-                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Day, machine), out var dbDayShifts) is DbResult.Ok && dbDayShifts.Count > 0)
+                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Day, machine), out var dbDayShifts) is DbResult.Ok && dbDayShifts.Count > 0 && dbDayShifts[0].Master != "")
                         {
                             dayExist = true;
                             if (dbDayShifts.Any(s => s.IsChecked)) dayChecked = true;
                         }
 
-                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0)
+                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0 && dbDayShifts[0].Master != "")
                         {
                             nightExist = true;
                             if (dbNightShifts.Any(s => s.IsChecked)) nightChecked = true;
@@ -433,7 +433,7 @@ namespace remeLog.ViewModels
         {
             while (true)
             {
-
+                
             }
         }
     }
