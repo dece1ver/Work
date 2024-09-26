@@ -9,6 +9,7 @@ using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using remeLog.Views;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -1353,5 +1354,14 @@ namespace remeLog.ViewModels
             lockUpdate = false;
             _ = LoadPartsAsync(first);
         }
+
+        public int MyProperty { get; set; }
+
+        public int MyProperty1 { get; set; }
+
+        
     }
+
+    
+   
 }

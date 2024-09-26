@@ -35,6 +35,7 @@ namespace remeLog.ViewModels
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadPartsInfoCommand = new LambdaCommand(OnLoadPartsInfoCommandExecuted, CanLoadPartsInfoCommandExecute);
             ShowMonitorCommand = new LambdaCommand(OnShowMonitorCommandExecuted, CanShowMonitorCommandExecute);
+            EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
             ShowPartsInfoCommand = new LambdaCommand(OnShowPartsInfoCommandExecuted, CanShowPartsInfoCommandExecute);
             IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
@@ -178,6 +179,19 @@ namespace remeLog.ViewModels
             }
         }
         private static bool CanEditSettingsCommandExecute(object p) => true;
+        #endregion
+
+        #region EditOperators
+        public ICommand EditOperatorsCommand { get; }
+        private void OnEditOperatorsCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                EditOperatorsWindow editOperatorsWindow = new EditOperatorsWindow() { Owner = Application.Current.MainWindow };
+                editOperatorsWindow.ShowDialog();
+            }
+        }
+        private static bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
 
         #region LoadPartsInfo

@@ -59,6 +59,8 @@
                 <MenuItem Header="Инструменты">
                     <MenuItem Header="Мониторинг"
                               Command="{Binding ShowMonitorCommand}" Icon="{StaticResource AboutIcon}"/>
+                    <MenuItem Header="Операторы"
+                              Command="{Binding EditOperatorsCommand}" Icon="{StaticResource OperatorsIcon}"/>
                 </MenuItem>
                 <MenuItem Header="Справка">
                     <MenuItem Header="О программе"

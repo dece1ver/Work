@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
-using DocumentFormat.OpenXml.VariantTypes;
-using libeLog.Extensions;
+﻿using libeLog.Extensions;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using remeLog.Infrastructure.Extensions;
@@ -18,6 +16,151 @@ namespace remeLog.Infrastructure
 {
     public static class Database
     {
+        public static List<OperatorInfo> GetOperators()
+        {
+            List<OperatorInfo> operators = new();
+            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            {
+                connection.Open();
+                string query = $"SELECT * FROM cnc_operators ORDER BY Name ASC;";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            operators.Add(new OperatorInfo(
+                                reader.GetInt32(0),
+                                reader.GetString(1).Trim(),
+                                reader.GetInt32(2),
+                                reader.GetBoolean(3)));
+                        }
+                    }
+                }
+            }
+            return operators;
+        }
+
+        public async static Task<List<OperatorInfo>> GetOperatorsAsync(IProgress<string> progress)
+        {
+            List<OperatorInfo> operators = new();
+            
+            await Task.Run(async () =>
+            {
+                progress.Report("Подключение к БД...");
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = $"SELECT * FROM cnc_operators ORDER BY Name ASC;";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            progress.Report("Чтение данных из БД...");
+                            while (reader.Read())
+                            {
+                                operators.Add(new OperatorInfo(
+                                    reader.GetInt32(0), 
+                                    reader.GetString(1).Trim(), 
+                                    reader.GetInt32(2), 
+                                    reader.GetBoolean(3)));
+                            }
+                        }
+                    }
+                }
+                progress.Report("Чтение завершено");
+            });
+            return operators;
+        }
+
+        /// <summary>
+        /// Сохраняет информацию об операторе в базе данных.
+        /// Если оператор с заданным Id существует, выполняется обновление его данных,
+        /// если нет - создается новый оператор.
+        /// </summary>
+        /// <param name="operatorInfo">Объект оператора, содержащий данные для сохранения.</param>
+        /// <param name="progress">Прогресс для отслеживания состояния выполнения.</param>
+        /// <returns>Асинхронная задача, представляющая операцию сохранения.</returns>
+        public static async Task SaveOperatorAsync(OperatorInfo operatorInfo, IProgress<string> progress)
+        {
+            
+            string query = "IF EXISTS (SELECT 1 FROM cnc_operators WHERE Id = @Id) " +
+                           "BEGIN " +
+                           "    UPDATE cnc_operators SET Name = @Name, Qualification = @Qualification, IsActive = @IsActive WHERE Id = @Id; " +
+                           "END " +
+                           "ELSE " +
+                           "BEGIN " +
+                           "    INSERT INTO cnc_operators (Name, Qualification, IsActive) VALUES (@Name, @Qualification, @IsActive); " +
+                           "END;";
+            progress.Report("Подключение к БД...");
+            using (var connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", operatorInfo.Id);
+                    command.Parameters.AddWithValue("@Name", operatorInfo.Name);
+                    command.Parameters.AddWithValue("@Qualification", operatorInfo.Qualification);
+                    command.Parameters.AddWithValue("@IsActive", operatorInfo.IsActive);
+
+                    progress.Report($"Сохранение оператора '{operatorInfo.Name}' в БД...");
+                    await command.ExecuteNonQueryAsync();
+                    progress.Report($"Оператор '{operatorInfo.Name}' успешно сохранен.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Сохраняет список операторов в базе данных.
+        /// Для каждого оператора в списке вызывается метод SaveOperatorAsync,
+        /// который проверяет существование оператора и выполняет соответствующее действие.
+        /// </summary>
+        /// <param name="operators">Список операторов для сохранения.</param>
+        /// <param name="progress">Прогресс для отслеживания состояния выполнения.</param>
+        /// <returns>Асинхронная задача, представляющая операцию сохранения.</returns>
+        public static async Task SaveOperatorsAsync(IEnumerable<OperatorInfo> operators, IProgress<string> progress)
+        {
+            progress.Report("Сохранение операторов в БД");
+            foreach (var operatorInfo in operators)
+            {
+                await SaveOperatorAsync(operatorInfo, progress);
+            }
+            progress.Report("Сохранение операторов в БД выполнено");
+        }
+
+        /// <summary>
+        /// Удаляет оператора из базы данных по указанному идентификатору.
+        /// Если оператор с данным Id существует, он будет удален.
+        /// </summary>
+        /// <param name="operatorId">Уникальный идентификатор оператора, которого необходимо удалить.</param>
+        /// <param name="progress">Прогресс для отслеживания состояния выполнения.</param>
+        /// <returns>Асинхронная задача, представляющая операцию удаления.</returns>
+        public static async Task DeleteOperatorAsync(int operatorId, IProgress<string> progress)
+        {
+            string query = "DELETE FROM cnc_operators WHERE Id = @Id;";
+
+            using (var connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", operatorId);
+
+                    progress.Report("Удаление оператора из БД...");
+                    int rowsAffected = await command.ExecuteNonQueryAsync(); 
+
+                    if (rowsAffected > 0)
+                    {
+                        progress.Report("Оператор успешно удален.");
+                    }
+                    else
+                    {
+                        progress.Report("Оператор не найден.");
+                    }
+                }
+            }
+        }
+
         public async static Task<List<Part>> ReadPartsWithConditions(string conditions, CancellationToken cancellationToken)
         {
             List<Part> parts = new();
@@ -233,42 +376,42 @@ namespace remeLog.Infrastructure
 
                     Part part = new Part(
                         guid,
-                        machine,                   
+                        machine,
                         shift,
-                        shiftDate, 
-                        @operator, 
-                        partName, 
-                        order, 
-                        setup, 
-                        finishedCount, 
-                        totalCount, 
-                        startSetupTime, 
-                        startMachiningTime, 
-                        setupTimeFact, 
-                        endMachiningTime, 
-                        setupTimePlan, 
-                        setupTimePlanForReport, 
-                        singleProductionTimePlan, 
-                        productionTimeFact, 
+                        shiftDate,
+                        @operator,
+                        partName,
+                        order,
+                        setup,
+                        finishedCount,
+                        totalCount,
+                        startSetupTime,
+                        startMachiningTime,
+                        setupTimeFact,
+                        endMachiningTime,
+                        setupTimePlan,
+                        setupTimePlanForReport,
+                        singleProductionTimePlan,
+                        productionTimeFact,
                         machininhTime,
-                        setupDowntimes, 
-                        machiningDowntimes, 
-                        partialSetupTime, 
-                        maintenanceTime, 
-                        toolSearchingTime, 
-                        mentoringTime, 
+                        setupDowntimes,
+                        machiningDowntimes,
+                        partialSetupTime,
+                        maintenanceTime,
+                        toolSearchingTime,
+                        mentoringTime,
                         contactiongDepartmentsTime,
                         fixtureMakingTime,
-                        hardwareFailureTime, 
+                        hardwareFailureTime,
                         operatorComment,
-                        masterSetupComment, 
-                        masterMachiningComment, 
-                        specifiedDowntimesComment, 
+                        masterSetupComment,
+                        masterMachiningComment,
+                        specifiedDowntimesComment,
                         unspecifiedDowntimesComment,
-                        masterComment, 
-                        fixedSetupComment, 
-                        fixedProductionComment, 
-                        engineerComment, 
+                        masterComment,
+                        fixedSetupComment,
+                        fixedProductionComment,
+                        engineerComment,
                         excludeFromReports);
                     parts.Add(part);
                 }
@@ -489,7 +632,7 @@ namespace remeLog.Infrastructure
             try
             {
                 ReadShiftInfo(shiftInfo, out var shifts);
-                if (shifts is { Count: 1})
+                if (shifts is { Count: 1 })
                 {
                     return UpdateShiftInfo(shiftInfo);
                 }
@@ -588,7 +731,7 @@ namespace remeLog.Infrastructure
                                         reader.GetNullableBoolean(18),      // RecieverLiquidLeaks
                                         reader.GetNullableBoolean(19),      // RecieverToolBreakage
                                         reader.GetNullableDouble(20)        // RecieverCoolantConcentration
-                                        )       
+                                        )
                                     );
                             }
                         }
@@ -717,7 +860,8 @@ namespace remeLog.Infrastructure
                         {
                             Util.WriteLogAsync("Смена не найдена, добавение новой.");
                             return WriteShiftInfo(shiftInfo);
-                        } else
+                        }
+                        else
                         {
                             if (AppSettings.Instance.DebugMode) Util.WriteLogAsync($"Смена обновлена.");
                         }
