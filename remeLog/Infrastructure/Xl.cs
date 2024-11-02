@@ -15,6 +15,8 @@ namespace remeLog.Infrastructure
 {
     public static class Xl
     {
+        const double Coefficient1 = 1.2;
+        const double Coefficient2 = 1.4;
         public enum ExportOperatorReportType
         {
             Under, Below
@@ -253,12 +255,12 @@ namespace remeLog.Infrastructure
                 return averageSetupRatio < 0.5 || specDowntimesEx > 0.1 || workedShifts < workDays / 4 ? null :
                     (qualification, generalRatio) switch
                     {
-                        (1 or 2, > 1) => 1.2,
-                        (1 or 2, > 0.9) => 1.1,
-                        (3 or 4, > 1.05) => 1.2,
-                        (3 or 4, > 0.95) => 1.1,
-                        (5 or 6, > 1.1) => 1.2,
-                        (5 or 6, > 1) => 1.1,
+                        (1 or 2, > 1) => Coefficient2,     // 1.4
+                        (1 or 2, > 0.9) => Coefficient1,   // 1.2
+                        (3 or 4, > 1.05) => Coefficient2,  // 1.4
+                        (3 or 4, > 0.95) => Coefficient1,  // 1.2
+                        (5 or 6, > 1.1) => Coefficient2,   // 1.4
+                        (5 or 6, > 1) => Coefficient1,     // 1.2
                         _ => null
                     };
             }

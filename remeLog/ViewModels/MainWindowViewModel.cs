@@ -209,7 +209,7 @@ namespace remeLog.ViewModels
         {
             using (Overlay = new())
             {
-                FanucMonitor fanucMonitor = new FanucMonitor() {Owner = App.Current.MainWindow };
+                FanucMonitor fanucMonitor = new FanucMonitor() { Owner = App.Current.MainWindow };
                 fanucMonitor.ShowDialog();
             }
         }
@@ -297,7 +297,7 @@ namespace remeLog.ViewModels
         {
             if (lockUpdate) return;
             _cancellationTokenSource.Cancel();
-            _cancellationTokenSource = new ();
+            _cancellationTokenSource = new();
             var cancellationToken = _cancellationTokenSource.Token;
             await semaphoreSlim.WaitAsync(cancellationToken);
             ProgressBarVisibility = Visibility.Visible;
@@ -326,7 +326,7 @@ namespace remeLog.ViewModels
                     MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                     break;
             }
-
+            Status = "Получение списка причин неотмеченных простоев...";
             switch (AppSettings.Instance.UnspecifiedDowntimesReasons.ReadDowntimeReasons())
             {
                 case DbResult.AuthError:
@@ -340,6 +340,7 @@ namespace remeLog.ViewModels
                     break;
             }
 
+            Status = "Получение списка причин отклонений в наладке...";
             switch (AppSettings.Instance.SetupReasons.ReadDeviationReasons(DeviationReasonType.Setup))
             {
                 case DbResult.AuthError:
@@ -353,6 +354,7 @@ namespace remeLog.ViewModels
                     break;
             }
 
+            Status = "Получение списка причин отклонений в изготовлении...";
             switch (AppSettings.Instance.MachiningReasons.ReadDeviationReasons(DeviationReasonType.Machining))
             {
                 case DbResult.AuthError:
@@ -368,6 +370,7 @@ namespace remeLog.ViewModels
 
             Application.Current.Dispatcher.Invoke(() =>
             {
+                Status = "Очистка списка деталей...";
                 Parts.Clear();
                 foreach (var machine in Machines)
                 {
@@ -376,6 +379,7 @@ namespace remeLog.ViewModels
                     bool nightExist = false;
                     bool dayChecked = false;
                     bool nightChecked = false;
+                    Status = $"Получение информации за сутки на стнке {machine}...";
                     if (FromDate == ToDate)
                     {
                         if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Day, machine), out var dbDayShifts) is DbResult.Ok && dbDayShifts.Count > 0 && dbDayShifts[0].Master != "")
@@ -384,7 +388,7 @@ namespace remeLog.ViewModels
                             if (dbDayShifts.Any(s => s.IsChecked)) dayChecked = true;
                         }
 
-                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0 && dbDayShifts[0].Master != "")
+                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0 && dbNightShifts[0].Master != "")
                         {
                             nightExist = true;
                             if (dbNightShifts.Any(s => s.IsChecked)) nightChecked = true;
@@ -447,7 +451,7 @@ namespace remeLog.ViewModels
         {
             while (true)
             {
-                
+
             }
         }
     }
