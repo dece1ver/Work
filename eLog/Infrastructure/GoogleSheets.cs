@@ -111,7 +111,7 @@ namespace eLog.Infrastructure
             {
                 HttpClientInitializer = Credential,
             });
-            SpreadsheetsResource.ValuesResource.GetRequest request = SheetsService.Spreadsheets.Values.Get(AppSettings.Instance.GsId, "Загрузка станков!A1:J200");
+            SpreadsheetsResource.ValuesResource.GetRequest request = SheetsService.Spreadsheets.Values.Get(AppSettings.Instance.GsId, "Загрузка станков!A1:K200");
             progress.Report("Подключение к списку...");
             ValueRange response = await request.ExecuteAsync(cancellationToken);
             progress.Report("Формирование списка работы...");
@@ -153,6 +153,7 @@ namespace eLog.Infrastructure
                         var engineerComment = SafeGet(row, 7);
                         var laborInput = SafeGet(row, 8);
                         var pdComment = SafeGet(row, 9);
+                        var ncProgramHref = SafeGet(row, 10);
 
                         if (!string.IsNullOrEmpty(partName))
                         {
@@ -165,7 +166,8 @@ namespace eLog.Infrastructure
                                 priority,
                                 engineerComment.IfEmpty("-"),
                                 laborInput.IfEmpty("-"),
-                                pdComment.IfEmpty("-")));
+                                pdComment.IfEmpty("-"),
+                                ncProgramHref.IfEmpty("-")));
                         }
                     }
                 }

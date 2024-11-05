@@ -28,14 +28,31 @@ namespace eLog.Models
         public string PdComment { get; set;}
 
 
+        private string _NcProgramHref;
+        /// <summary> Описание </summary>
+        public string NcProgramHref
+        {
+            get => _NcProgramHref;
+            set => Set(ref _NcProgramHref, value);
+        }
+
+
+        public bool NcProgramButtonEnabled => IsSelected && NcProgramHref != "-" && !string.IsNullOrEmpty(NcProgramHref);
+
         private bool _IsSelected;
         public bool IsSelected
         {
             get => _IsSelected;
-            set => Set(ref _IsSelected, value);
+            set 
+            {
+                if (Set(ref _IsSelected, value))
+                {
+                    OnPropertyChanged(nameof(NcProgramButtonEnabled));
+                }
+            }
         }
 
-        public ProductionTaskData(string partName, string order, string partsCount, string date, string plantComment, string priority, string engeneersComment, string laborInput, string pdComment)
+        public ProductionTaskData(string partName, string order, string partsCount, string date, string plantComment, string priority, string engeneersComment, string laborInput, string pdComment, string ncProgramHref)
         {
             PartName = partName;
             Order = order;
@@ -46,6 +63,7 @@ namespace eLog.Models
             EngeneersComment = engeneersComment;
             LaborInput = laborInput;
             PdComment = pdComment;
+            _NcProgramHref = ncProgramHref;
         }
     }
 }

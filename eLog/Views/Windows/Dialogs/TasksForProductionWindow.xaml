@@ -11,6 +11,11 @@
         Title="Задания на производство" Height="600" Width="1080">
     <Border BorderBrush="Gray" BorderThickness="0">
         <DockPanel>
+            <StatusBar DockPanel.Dock="Bottom">
+                <StatusBarItem>
+                    <TextBlock Text="{Binding Status}"/>
+                </StatusBarItem>
+            </StatusBar>
             <TextBlock DockPanel.Dock="Top" Text="Задания на производство" TextAlignment="Center" HorizontalAlignment="Right" FontWeight="SemiBold" Margin="0 -3 10 2" MouseLeftButtonDown="TextBlock_MouseLeftButtonDown"/>
             <Button DockPanel.Dock="Bottom" Margin="10" Width="120" x:Name="OkButton" Height="42"
                     VerticalAlignment="Bottom" HorizontalAlignment="Right" Content="{StaticResource ConfirmIcon}" 
@@ -74,6 +79,10 @@
                             <Button Content="▶" DockPanel.Dock="Right" Style="{StaticResource GeneralButton}" 
                                     Margin="2 11 1 1" Padding="3 0 0 3" Width="50" Visibility="{Binding IsSelected, Converter={StaticResource VisibilityConverter}}" Click="Button_Click"
                                     />
+                            <Button Content="УП" DockPanel.Dock="Right" Style="{StaticResource GeneralButton}" Margin="2 11 1 1" Padding="0" Width="50" 
+                                    Visibility="{Binding NcProgramButtonEnabled, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}" Click="Button_Click_1">
+                                
+                            </Button>
                             <GroupBox BorderBrush="DarkGray">
                                 <GroupBox.Header>
                                     <TextBlock Text="{Binding PartName}" FontWeight="SemiBold"/>
