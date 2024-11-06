@@ -12,7 +12,8 @@
         public static class DownTimes
         {
             public const string Maintenance = "Обслуживание";
-            public const string ToolSearching = "Поиск / получение / замена инструмента";
+            public const string ToolSearching = "Поиск и получение инструмента";
+            public const string ToolChanging = "Замена инструмента";
             public const string Mentoring = "Помощь / обучение";
             public const string ContactingDepartments = "Обращение в другие службы";
             public const string FixtureMaking = "Изготовление оснастки и калибров";

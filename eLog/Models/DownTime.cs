@@ -75,6 +75,7 @@ namespace eLog.Models
         {
             Maintenance,
             ToolSearching,
+            ToolChanging,
             Mentoring,
             ContactingDepartments,
             FixtureMaking,
@@ -112,6 +113,7 @@ namespace eLog.Models
         {
             Types.Maintenance => Text.DownTimes.Maintenance,
             Types.ToolSearching => Text.DownTimes.ToolSearching,
+            Types.ToolChanging => Text.DownTimes.ToolChanging,
             Types.Mentoring => Text.DownTimes.Mentoring,
             Types.ContactingDepartments => Text.DownTimes.ContactingDepartments,
             Types.FixtureMaking => Text.DownTimes.FixtureMaking,

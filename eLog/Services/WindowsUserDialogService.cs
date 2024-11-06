@@ -192,14 +192,44 @@ namespace eLog.Services
                 Owner = owner ?? Application.Current.MainWindow,
             };
             _ = dlg.ShowDialog();
-            if (dlg.Type == DownTime.Types.HardwareFailure)
+            switch (dlg.Type)
             {
-                var failureDlg = new UserInputDialogWindow("Опишите неисправность оборудования.") { 
-                    Title = DownTimes.HardwareFailure, 
-                    Owner = owner ?? Application.Current.MainWindow };
-                if (failureDlg.ShowDialog() != true) return null;
-                var message = failureDlg.UserInput ?? "Без комментария.";
-                _ = TrySendHardwareFailureMessageAsync(message);
+                case DownTime.Types.Maintenance:
+                    break;
+                case DownTime.Types.ToolSearching:
+                    if (MessageBox.Show("Желаете указать что ищете?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) break;
+                    var toolSearchingDlg = new UserInputDialogWindow("Что вы ищите?")
+                    {
+                        Title = DownTimes.ToolSearching,
+                        Owner = owner ?? Application.Current.MainWindow
+                    };
+                    if (toolSearchingDlg.ShowDialog() != true) return null;
+                    var toolSearchingDlgMessage = toolSearchingDlg.UserInput ?? "Без комментария.";
+                    AppSettings.Instance.NotSendedToolComments ??= new();
+                    AppSettings.Instance.NotSendedToolComments.Add(toolSearchingDlgMessage);
+                    break;
+                case DownTime.Types.ToolChanging:
+                    break;
+                case DownTime.Types.Mentoring:
+                    break;
+                case DownTime.Types.ContactingDepartments:
+                    break;
+                case DownTime.Types.FixtureMaking:
+                    break;
+                case DownTime.Types.HardwareFailure:
+                    var failureDlg = new UserInputDialogWindow("Опишите неисправность оборудования.")
+                    {
+                        Title = DownTimes.HardwareFailure,
+                        Owner = owner ?? Application.Current.MainWindow
+                    };
+                    if (failureDlg.ShowDialog() != true) return null;
+                    var failureDlgMessage = failureDlg.UserInput ?? "Без комментария.";
+                    _ = TrySendHardwareFailureMessageAsync(failureDlgMessage);
+                    break;
+                case DownTime.Types.PartialSetup:
+                    break;
+                default:
+                    break;
             }
             return dlg.Type;
         }

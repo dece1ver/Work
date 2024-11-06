@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 using eLog.Models;
 using eLog.Views.Windows.Dialogs;
 using libeLog;
@@ -715,13 +716,14 @@ namespace eLog.Infrastructure.Extensions
         /// Любые другие исключения логируются, и также возвращается пустой массив.
         /// </summary>
         /// <returns>Массив строк, содержащий адреса получателей электронной почты. Возвращает пустой массив, если файл пустой или возникла ошибка.</returns>
-        public static string[] GetMailRecievers()
+        public static List<string> GetMailRecievers(RecieversType recieversType)
         {
+            var recievers = new List<string>();
             try
             {
                 try
                 {
-                    if (File.Exists(AppSettings.LocalOrdersFile) || AppSettings.Instance.PathToRecievers.IsFileNewerThan(AppSettings.LocalOrdersFile))
+                    if (!File.Exists(AppSettings.LocalMailRecieversFile) || AppSettings.Instance.PathToRecievers.IsFileNewerThan(AppSettings.LocalMailRecieversFile))
                     {
                         File.Copy(AppSettings.Instance.PathToRecievers, AppSettings.LocalMailRecieversFile, true);
                     }
@@ -733,19 +735,42 @@ namespace eLog.Infrastructure.Extensions
 
                 if (File.Exists(AppSettings.LocalMailRecieversFile))
                 {
-                    var lines = File.ReadLines(AppSettings.LocalMailRecieversFile).ToArray();
-                    return lines.Length > 1 ? lines : Array.Empty<string>();
+                    RecieversType? currentSection = null;
+                    foreach (var line in File.ReadLines(AppSettings.LocalMailRecieversFile))
+                    {
+                        if (string.IsNullOrWhiteSpace(line.Trim())) continue;
+                        if (line.Trim().StartsWith('[') && line.EndsWith(']') && line.Length > 2)
+                        {
+                            var section = line.Trim().Replace(" ", "");
+                            if (Enum.TryParse(section[1..^1], true, out RecieversType tempCurrentSection))
+                            {
+                                currentSection = tempCurrentSection;
+                                continue;
+                            }
+                        }
+                        if (currentSection != null)
+                        {
+                            if (currentSection == recieversType) recievers.Add(line.Trim());
+                        }
+                    }
+                    return recievers;
                 }
                 else
                 {
-                    return Array.Empty<string>();
+                    return recievers;
                 }
             }
             catch (Exception ex)
             {
                 WriteLog(ex);
-                return Array.Empty<string>();
+                return recievers;
             }
+        }
+
+        public enum RecieversType
+        {
+            LongSetup,
+            ToolSearch,
         }
     }
 }

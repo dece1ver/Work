@@ -430,8 +430,7 @@ namespace eLog.ViewModels
         public ICommand TestCommand { get; }
         private void OnTestCommandExecuted(object p)
         {
-            AppSettings.MailRecievers = GetMailRecievers();
-            Email.SendLongSetupNotify(Parts[0]);
+            
         }
         private static bool CanTestCommandExecute(object p) => true;
         #endregion
@@ -702,6 +701,23 @@ namespace eLog.ViewModels
             {
                 try
                 {
+                    if (AppSettings.Instance.NotSendedToolComments.Any()) 
+                    {
+                        AppSettings.ToolSearchMailRecievers = GetMailRecievers(Util.RecieversType.ToolSearch);
+                        if (AppSettings.Instance.NotSendedToolComments != null && Parts.Any())
+                        {
+                            var tempList = AppSettings.Instance.NotSendedToolComments.ToList();
+                            foreach (var item in tempList)
+                            {
+                                if (Email.SendToolSearchComment(Parts[0], item))
+                                {
+                                    AppSettings.Instance.NotSendedToolComments.Remove(item);
+                                }
+                            }
+                        }
+                    }
+
+                    // Длинные наладки
                     if (Parts.Count > 0
                     && Parts[0].IsFinished == Part.State.InProgress
                     && !Parts[0].LongSetupNotifySended
@@ -723,7 +739,7 @@ namespace eLog.ViewModels
                         var factSetupTime = setupTimeWithoutDowntime - breaks;
                         if (factSetupTime > TimeSpan.FromHours(AppSettings.Instance.TimerForNotify))
                         {
-                            AppSettings.MailRecievers = GetMailRecievers();
+                            AppSettings.LongSetupsMailRecievers = GetMailRecievers(Util.RecieversType.LongSetup);
                             if (Email.SendLongSetupNotify(Parts[0])) Parts[0].LongSetupNotifySended = true;
                         }
                     }

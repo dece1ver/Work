@@ -359,20 +359,20 @@ namespace remeLog.Infrastructure
                     var partialSetupTime = await reader.GetFieldValueAsync<double>(21);
                     var maintenanceTime = await reader.GetFieldValueAsync<double>(22);
                     var toolSearchingTime = await reader.GetFieldValueAsync<double>(23);
-                    var mentoringTime = await reader.GetFieldValueAsync<double>(24);
-                    var contactiongDepartmentsTime = await reader.GetFieldValueAsync<double>(25);
-                    var fixtureMakingTime = await reader.GetFieldValueAsync<double>(26);
-                    var hardwareFailureTime = await reader.GetFieldValueAsync<double>(27);
-                    var operatorComment = await reader.GetFieldValueAsync<string>(28);
-                    var masterSetupComment = reader.GetValue(29)?.ToString() ?? "";
-                    var masterMachiningComment = reader.GetValue(30)?.ToString() ?? "";
-                    var specifiedDowntimesComment = reader.GetValue(31)?.ToString() ?? "";
-                    var unspecifiedDowntimesComment = reader.GetValue(32)?.ToString() ?? "";
-                    var masterComment = reader.GetValue(33)?.ToString() ?? "";
-                    var fixedSetupComment = reader.GetValue(34).GetDouble();
-                    var fixedProductionComment = reader.GetValue(35).GetDouble();
-                    var engineerComment = reader.GetValue(36)?.ToString() ?? "";
-                    var excludeFromReports = reader.GetValue(37) == DBNull.Value ? false : (bool)reader.GetValue(37);
+                    var mentoringTime = await reader.GetFieldValueAsync<double>(25);
+                    var contactiongDepartmentsTime = await reader.GetFieldValueAsync<double>(26);
+                    var fixtureMakingTime = await reader.GetFieldValueAsync<double>(27);
+                    var hardwareFailureTime = await reader.GetFieldValueAsync<double>(28);
+                    var operatorComment = await reader.GetFieldValueAsync<string>(29);
+                    var masterSetupComment = reader.GetValue(30)?.ToString() ?? "";
+                    var masterMachiningComment = reader.GetValue(31)?.ToString() ?? "";
+                    var specifiedDowntimesComment = reader.GetValue(32)?.ToString() ?? "";
+                    var unspecifiedDowntimesComment = reader.GetValue(33)?.ToString() ?? "";
+                    var masterComment = reader.GetValue(34)?.ToString() ?? "";
+                    var fixedSetupComment = reader.GetValue(35).GetDouble();
+                    var fixedProductionComment = reader.GetValue(36).GetDouble();
+                    var engineerComment = reader.GetValue(37)?.ToString() ?? "";
+                    var excludeFromReports = reader.GetValue(38) == DBNull.Value ? false : (bool)reader.GetValue(38);
 
                     Part part = new Part(
                         guid,

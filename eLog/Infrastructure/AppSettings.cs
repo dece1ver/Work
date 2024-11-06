@@ -53,8 +53,10 @@ namespace eLog.Infrastructure
         /// <summary> Путь к локальному списку получателей уведомлений </summary>
         [JsonIgnore] public static readonly string LocalMailRecieversFile = Path.Combine(BasePath, "recievers");
 
-        /// <summary> Список получателей писем </summary>
-        [JsonIgnore] public static string[] MailRecievers = Util.GetMailRecievers();
+        /// <summary> Список получателей писем о долгой наладке </summary>
+        [JsonIgnore] public static List<string> LongSetupsMailRecievers = new();
+        /// <summary> Список получателей писем о поиске инструмента </summary>
+        [JsonIgnore] public static List<string> ToolSearchMailRecievers = new();
 
         /// <summary> Путь к файлу логов </summary>
         [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
@@ -231,11 +233,20 @@ namespace eLog.Infrastructure
 
 
         private List<ShiftHandOverInfo> _NotWritedShiftHandovers;
-        /// <summary> Описание </summary>
+        /// <summary> Не записанные передачи смен </summary>
         public List<ShiftHandOverInfo> NotWritedShiftHandovers
         {
             get => _NotWritedShiftHandovers;
             set => Set(ref _NotWritedShiftHandovers, value);
+        }
+
+
+        private List<string> _NotSendedToolComments;
+        /// <summary> Не отправленные комментарии по поиску инструмента </summary>
+        public List<string> NotSendedToolComments 
+        {
+            get => _NotSendedToolComments;
+            set => Set(ref _NotSendedToolComments, value);
         }
 
 
@@ -285,7 +296,9 @@ namespace eLog.Infrastructure
             IsShiftStarted = false;
             TimerForNotify = 4;
             EnableWriteShiftHandover = true;
+            PathToRecievers = "";
             NotWritedShiftHandovers = new();
+            NotSendedToolComments = new();
             Save();
         }
 
@@ -313,6 +326,8 @@ namespace eLog.Infrastructure
 
                 JsonConvert.PopulateObject(json, Instance, settings);
 
+                LongSetupsMailRecievers = Util.GetMailRecievers(Util.RecieversType.LongSetup);
+                ToolSearchMailRecievers = Util.GetMailRecievers(Util.RecieversType.ToolSearch);
 
                 //Parts.CollectionChanged += (_, _) => Save();
                 //foreach (var part in Parts)
