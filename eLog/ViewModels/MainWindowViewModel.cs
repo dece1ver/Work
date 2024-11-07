@@ -701,9 +701,10 @@ namespace eLog.ViewModels
             {
                 try
                 {
+                    AppSettings.Instance.NotSendedToolComments ??= new();
                     if (AppSettings.Instance.NotSendedToolComments.Any()) 
                     {
-                        AppSettings.ToolSearchMailRecievers = GetMailRecievers(Util.RecieversType.ToolSearch);
+                        AppSettings.ToolSearchMailRecievers = GetMailReceivers(Util.ReceiversType.ToolSearch);
                         if (AppSettings.Instance.NotSendedToolComments != null && Parts.Any())
                         {
                             var tempList = AppSettings.Instance.NotSendedToolComments.ToList();
@@ -739,7 +740,7 @@ namespace eLog.ViewModels
                         var factSetupTime = setupTimeWithoutDowntime - breaks;
                         if (factSetupTime > TimeSpan.FromHours(AppSettings.Instance.TimerForNotify))
                         {
-                            AppSettings.LongSetupsMailRecievers = GetMailRecievers(Util.RecieversType.LongSetup);
+                            AppSettings.LongSetupsMailRecievers = GetMailReceivers(Util.ReceiversType.LongSetup);
                             if (Email.SendLongSetupNotify(Parts[0])) Parts[0].LongSetupNotifySended = true;
                         }
                     }

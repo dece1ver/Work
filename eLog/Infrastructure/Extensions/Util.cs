@@ -709,65 +709,88 @@ namespace eLog.Infrastructure.Extensions
         }
 
         /// <summary>
-        /// Получает список получателей электронной почты из локального файла. 
+        /// Получает список получателей электронной почты определенной секции из локального файла. 
         /// Если удаленный файл новее локального, локальный файл обновляется.
         /// В случае ошибки при работе с удаленным файлом, используется локальный файл, если он существует.
-        /// Если локальный файл пуст или его нет, возвращается пустой массив.
-        /// Любые другие исключения логируются, и также возвращается пустой массив.
+        /// Если локальный файл пуст, не содержит указанной секции или его нет, возвращается пустой список.
+        /// Любые исключения логируются, и также возвращается пустой список.
         /// </summary>
-        /// <returns>Массив строк, содержащий адреса получателей электронной почты. Возвращает пустой массив, если файл пустой или возникла ошибка.</returns>
-        public static List<string> GetMailRecievers(RecieversType recieversType)
+        /// <param name="receiversType">Тип получателей (секция) для чтения из файла</param>
+        /// <returns>Список строк, содержащий адреса получателей электронной почты для указанной секции. 
+        /// Возвращает пустой список, если файл пустой, секция не найдена или возникла ошибка.</returns>
+        public static List<string> GetMailReceivers(ReceiversType receiversType)
         {
-            var recievers = new List<string>();
             try
             {
-                try
-                {
-                    if (!File.Exists(AppSettings.LocalMailRecieversFile) || AppSettings.Instance.PathToRecievers.IsFileNewerThan(AppSettings.LocalMailRecieversFile))
-                    {
-                        File.Copy(AppSettings.Instance.PathToRecievers, AppSettings.LocalMailRecieversFile, true);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteLog(ex);
-                }
+                UpdateLocalFileIfNeeded();
+                return ReadReceiversFromFile(receiversType);
+            }
+            catch (Exception ex)
+            {
+                WriteLog(ex);
+                return new List<string>();
+            }
+        }
 
-                if (File.Exists(AppSettings.LocalMailRecieversFile))
+        private static void UpdateLocalFileIfNeeded()
+        {
+            try
+            {
+                if (!File.Exists(AppSettings.LocalMailRecieversFile) ||
+                    AppSettings.Instance.PathToRecievers.IsFileNewerThan(AppSettings.LocalMailRecieversFile))
                 {
-                    RecieversType? currentSection = null;
-                    foreach (var line in File.ReadLines(AppSettings.LocalMailRecieversFile))
-                    {
-                        if (string.IsNullOrWhiteSpace(line.Trim())) continue;
-                        if (line.Trim().StartsWith('[') && line.EndsWith(']') && line.Length > 2)
-                        {
-                            var section = line.Trim().Replace(" ", "");
-                            if (Enum.TryParse(section[1..^1], true, out RecieversType tempCurrentSection))
-                            {
-                                currentSection = tempCurrentSection;
-                                continue;
-                            }
-                        }
-                        if (currentSection != null)
-                        {
-                            if (currentSection == recieversType) recievers.Add(line.Trim());
-                        }
-                    }
-                    return recievers;
-                }
-                else
-                {
-                    return recievers;
+                    File.Copy(AppSettings.Instance.PathToRecievers, AppSettings.LocalMailRecieversFile, true);
                 }
             }
             catch (Exception ex)
             {
                 WriteLog(ex);
-                return recievers;
             }
         }
 
-        public enum RecieversType
+        private static List<string> ReadReceiversFromFile(ReceiversType receiversType)
+        {
+            if (!File.Exists(AppSettings.LocalMailRecieversFile))
+                return new List<string>();
+
+            var receivers = new List<string>();
+            ReceiversType? currentSection = null;
+
+            foreach (var line in File.ReadLines(AppSettings.LocalMailRecieversFile))
+            {
+                var trimmedLine = line.Trim();
+                if (string.IsNullOrWhiteSpace(trimmedLine))
+                    continue;
+
+                if (IsSection(trimmedLine))
+                {
+                    currentSection = ParseSection(trimmedLine);
+                    continue;
+                }
+
+                if (currentSection == receiversType)
+                {
+                    receivers.Add(trimmedLine);
+                }
+            }
+
+            return receivers;
+        }
+
+        private static bool IsSection(string line)
+        {
+            return line.StartsWith('[') && line.EndsWith(']') && line.Length > 2;
+        }
+
+        private static ReceiversType? ParseSection(string line)
+        {
+            var sectionName = line.Replace(" ", "")[1..^1];
+            return Enum.TryParse<ReceiversType>(sectionName, true, out var section)
+                ? section
+                : null;
+        }
+
+        public enum ReceiversType
         {
             LongSetup,
             ToolSearch,

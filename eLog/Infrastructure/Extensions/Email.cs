@@ -136,7 +136,7 @@ namespace eLog.Infrastructure.Extensions
                     </div>
                 </body>
                 </html>");
-                SendEmail("Уведомление о длительной наладке", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.ToolSearchMailRecievers);
+                SendEmail("Уведомление об инструменте", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.ToolSearchMailRecievers);
 
                 return true;
             }

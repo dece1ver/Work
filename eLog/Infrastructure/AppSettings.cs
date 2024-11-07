@@ -326,8 +326,8 @@ namespace eLog.Infrastructure
 
                 JsonConvert.PopulateObject(json, Instance, settings);
 
-                LongSetupsMailRecievers = Util.GetMailRecievers(Util.RecieversType.LongSetup);
-                ToolSearchMailRecievers = Util.GetMailRecievers(Util.RecieversType.ToolSearch);
+                LongSetupsMailRecievers = Util.GetMailReceivers(Util.ReceiversType.LongSetup);
+                ToolSearchMailRecievers = Util.GetMailReceivers(Util.ReceiversType.ToolSearch);
 
                 //Parts.CollectionChanged += (_, _) => Save();
                 //foreach (var part in Parts)
