@@ -705,7 +705,7 @@ namespace eLog.ViewModels
                     if (AppSettings.Instance.NotSendedToolComments.Any()) 
                     {
                         AppSettings.ToolSearchMailRecievers = GetMailReceivers(Util.ReceiversType.ToolSearch);
-                        if (AppSettings.Instance.NotSendedToolComments != null && Parts.Any())
+                        if (Parts.Any())
                         {
                             var tempList = AppSettings.Instance.NotSendedToolComments.ToList();
                             foreach (var item in tempList)

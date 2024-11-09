@@ -1175,9 +1175,15 @@ namespace remeLog.ViewModels
                 MessageBox.Show("Для составления суточного отчета не должно быть фильтра по установке.", "Лишние фильтры.", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+            if (Parts.Any(x => x.NeedUpdate))
+            {
+                MessageBox.Show("Есть несохраненные данные.", "Подтверждение.",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             if (Parts.Any(x => !string.IsNullOrEmpty(x.Error)))
             {
-                MessageBox.Show("Не всё заполнено корректно", "Подтверждение.",
+                MessageBox.Show("Не всё заполнено корректно.", "Предупреждение.",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
