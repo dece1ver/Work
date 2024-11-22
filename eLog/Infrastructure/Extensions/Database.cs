@@ -2,6 +2,7 @@
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,7 +23,7 @@ namespace eLog.Infrastructure.Extensions
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Добавление информации об изготовлении в БД.");
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
@@ -192,7 +193,7 @@ namespace eLog.Infrastructure.Extensions
             var partial = Util.SetPartialState(ref part, false);
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
@@ -314,7 +315,7 @@ namespace eLog.Infrastructure.Extensions
             {
                 await Task.Run(() =>
                 {
-                    using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
+                    using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                     {
                         connection.Open();
                         var query = "INSERT INTO maintenance_log (machine, creation_date, rq_status, comments, plandate) VALUES (@Machine, @Date, @Status, @Comment, @PlanDate);";
@@ -374,7 +375,7 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var who = shiftInfo.Giver ? "Giver" : "Reciever";
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnetctionString))
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     var query = $@"
@@ -440,6 +441,94 @@ namespace eLog.Infrastructure.Extensions
             {
                 Util.WriteLog(ex);
                 return DbResult.Error;
+            }
+        }
+
+        public static (DbResult Result, int? SetupLimit) GetMachineSetupLimit(this string machine)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT SetupLimit FROM cnc_machines WHERE Name = @Name";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Name", machine);
+
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                int setupLimit = reader.GetInt32(0);
+                                return (DbResult.Ok, setupLimit);
+                            }
+                        }
+                    }
+                }
+
+                return (DbResult.NotFound, null);
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return (DbResult.AuthError, null);
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return (DbResult.Error, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return (DbResult.Error, null);
+            }
+        }
+
+        public static (DbResult Result, double? SetupCoefficient) GetMachineSetupCoefficient(this string machine)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT SetupCoefficient FROM cnc_machines WHERE Name = @Name";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Name", machine);
+
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                double setupCoefficient = reader.GetDouble(0);
+                                return (DbResult.Ok, setupCoefficient);
+                            }
+                        }
+                    }
+                }
+
+                return (DbResult.NotFound, null);
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return (DbResult.AuthError, null);
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return (DbResult.Error, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return (DbResult.Error, null);
             }
         }
     }

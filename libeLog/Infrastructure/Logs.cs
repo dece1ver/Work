@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,6 +42,7 @@ namespace libeLog.Infrastructure
                 {
                     await semaphore.WaitAsync();
                     if (File.Exists(path)) CheckLogSize(path);
+                    var version = GetVersion();
                     await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: " +
                                                             $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
                                                             $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
@@ -63,6 +65,16 @@ namespace libeLog.Infrastructure
             }
         }
 
+        public static string GetVersion() {
+            try
+            {
+                var exe = Environment.ProcessPath;
+                var date = exe is null ? string.Empty : $" от {File.GetLastWriteTime(exe).ToString(Constants.DateTimeFormat)}";
+                var ver = Assembly.GetExecutingAssembly().GetName().Version!;
+                return $"v{ver.Major}.{ver.Minor}.{ver.Build}{date}";
+            }
+            catch { return "N/A"; }
+        }
 
         /// <summary>
         /// Записывает сообщение в лог.

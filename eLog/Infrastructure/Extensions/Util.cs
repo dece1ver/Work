@@ -736,6 +736,8 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
+                if (AppSettings.LocalMailRecieversFile == null || AppSettings.Instance.PathToRecievers == null) return;
+                if (!File.Exists(AppSettings.Instance.PathToRecievers)) return;
                 if (!File.Exists(AppSettings.LocalMailRecieversFile) ||
                     AppSettings.Instance.PathToRecievers.IsFileNewerThan(AppSettings.LocalMailRecieversFile))
                 {

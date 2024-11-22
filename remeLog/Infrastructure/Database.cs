@@ -359,6 +359,7 @@ namespace remeLog.Infrastructure
                     var partialSetupTime = await reader.GetFieldValueAsync<double>(21);
                     var maintenanceTime = await reader.GetFieldValueAsync<double>(22);
                     var toolSearchingTime = await reader.GetFieldValueAsync<double>(23);
+                    var toolChangingTime = await reader.GetFieldValueAsync<double>(24);
                     var mentoringTime = await reader.GetFieldValueAsync<double>(25);
                     var contactiongDepartmentsTime = await reader.GetFieldValueAsync<double>(26);
                     var fixtureMakingTime = await reader.GetFieldValueAsync<double>(27);
@@ -399,6 +400,7 @@ namespace remeLog.Infrastructure
                         partialSetupTime,
                         maintenanceTime,
                         toolSearchingTime,
+                        toolChangingTime,
                         mentoringTime,
                         contactiongDepartmentsTime,
                         fixtureMakingTime,

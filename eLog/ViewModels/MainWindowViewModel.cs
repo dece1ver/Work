@@ -1,4 +1,5 @@
-﻿using eLog.Infrastructure;
+﻿using DocumentFormat.OpenXml.Office2010.Word;
+using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using eLog.Services;
@@ -14,12 +15,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection.PortableExecutable;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using static eLog.Infrastructure.Extensions.Util;
 using Application = System.Windows.Application;
+using Machine = eLog.Models.Machine;
 using MessageBox = System.Windows.MessageBox;
 using Text = eLog.Infrastructure.Extensions.Text;
 
@@ -725,6 +728,30 @@ namespace eLog.ViewModels
                     && Parts[0].StartMachiningTime < Parts[0].StartSetupTime
                     && AppSettings.Instance.TimerForNotify > 0)
                     {
+                        int limit;
+                        if (Parts[0].SetupTimePlan > 0)
+                        {
+                            var (result, setupCoefficient) = AppSettings.Instance.Machine.Name.GetMachineSetupCoefficient();
+                            if (result == DbResult.Ok && setupCoefficient.HasValue)
+                            {
+                                limit = (int)(setupCoefficient.Value * Parts[0].SetupTimePlan);
+                            }
+                            else
+                            {
+                                limit = AppSettings.Instance.TimerForNotify * 60;
+                            }
+                        } else
+                        {
+                            var (result, setupLimit) = AppSettings.Instance.Machine.Name.GetMachineSetupLimit();
+                            if (result == DbResult.Ok && setupLimit.HasValue)
+                            {
+                                limit = setupLimit.Value;
+                            }
+                            else
+                            {
+                                limit = AppSettings.Instance.TimerForNotify * 60;
+                            }
+                        }
                         var tempDowntimes = new List<DownTime>();
                         foreach (var dt in Parts[0].DownTimes)
                         {
@@ -738,10 +765,10 @@ namespace eLog.ViewModels
                         var setupTimeWithoutDowntime = DateTime.Now - Parts[0].StartSetupTime - totalDowntime;
                         var breaks = TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(Parts[0].StartSetupTime, DateTime.Now));
                         var factSetupTime = setupTimeWithoutDowntime - breaks;
-                        if (factSetupTime > TimeSpan.FromHours(AppSettings.Instance.TimerForNotify))
+                        if (factSetupTime > TimeSpan.FromMinutes(limit))
                         {
                             AppSettings.LongSetupsMailRecievers = GetMailReceivers(Util.ReceiversType.LongSetup);
-                            if (Email.SendLongSetupNotify(Parts[0])) Parts[0].LongSetupNotifySended = true;
+                            if (Email.SendLongSetupNotify(Parts[0], limit)) Parts[0].LongSetupNotifySended = true;
                         }
                     }
                 }

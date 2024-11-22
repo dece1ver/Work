@@ -84,7 +84,7 @@ namespace remeLog.Views
                             case 8:
                                 d.SetupFilter = d.SetupFilter == p.Setup ? null : p.Setup;
                                 break;
-                            case 39:
+                            case 40:
                                 switch (p.EngineerComment)
                                 {
                                     case "":
@@ -251,56 +251,56 @@ namespace remeLog.Views
 
         private void partsInfoWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (DataContext is PartsInfoWindowViewModel d)
-            {
-                if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.H)
-                {
-                    using (d.Overlay = new())
-                    {
-                        var helpWindow = new PartsInfoHelpWindow() { Owner = this };
-                        helpWindow.ShowDialog();
-                    }
-                    e.Handled = true;
-                    return;
-                }
+            //if (DataContext is PartsInfoWindowViewModel d)
+            //{
+            //    if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.H)
+            //    {
+            //        using (d.Overlay = new())
+            //        {
+            //            var helpWindow = new PartsInfoHelpWindow() { Owner = this };
+            //            helpWindow.ShowDialog();
+            //        }
+            //        e.Handled = true;
+            //        return;
+            //    }
 
-                int days = e.Key switch
-                {
-                    Key.Up => 1,
-                    Key.Down => -1,
-                    Key.PageUp => 7,
-                    Key.PageDown => -7,
-                    _ => 0
-                };
+            //    int days = e.Key switch
+            //    {
+            //        Key.Up => 1,
+            //        Key.Down => -1,
+            //        Key.PageUp => 7,
+            //        Key.PageDown => -7,
+            //        _ => 0
+            //    };
 
-                DateTime? dt = days != 0 ? null : e.Key switch
-                {
-                    Key.Home => new DateTime(2023, 1, 3),
-                    Key.End => DateTime.Today,
-                    _ => null,
-                };
+            //    DateTime? dt = days != 0 ? null : e.Key switch
+            //    {
+            //        Key.Home => new DateTime(2023, 1, 3),
+            //        Key.End => DateTime.Today,
+            //        _ => null,
+            //    };
 
-                if (days != 0 || dt.HasValue)
-                {
-                    DateTime fromDate = dt ?? d.FromDate.AddDays(days);
-                    DateTime toDate = dt ?? d.ToDate.AddDays(days);
+            //    if (days != 0 || dt.HasValue)
+            //    {
+            //        DateTime fromDate = dt ?? d.FromDate.AddDays(days);
+            //        DateTime toDate = dt ?? d.ToDate.AddDays(days);
 
-                    switch (Keyboard.Modifiers)
-                    {
-                        case ModifierKeys.None:
-                            d.FromDate = fromDate;
-                            d.ToDate = toDate;
-                            break;
-                        case ModifierKeys.Shift:
-                            d.FromDate = fromDate;
-                            break;
-                        case ModifierKeys.Control:
-                            d.ToDate = toDate;
-                            break;
-                    }
-                    e.Handled = true;
-                }
-            }
+            //        switch (Keyboard.Modifiers)
+            //        {
+            //            case ModifierKeys.None:
+            //                d.FromDate = fromDate;
+            //                d.ToDate = toDate;
+            //                break;
+            //            case ModifierKeys.Shift:
+            //                d.FromDate = fromDate;
+            //                break;
+            //            case ModifierKeys.Control:
+            //                d.ToDate = toDate;
+            //                break;
+            //        }
+            //        e.Handled = true;
+            //    }
+            //}
         }
     }
 }

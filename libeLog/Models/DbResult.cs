@@ -8,6 +8,6 @@ namespace libeLog.Models
 {
     public enum DbResult
     {
-        Ok, AuthError, Error, NoConnection
+        Ok, AuthError, Error, NoConnection, NotFound
     }
 }

@@ -98,7 +98,7 @@ namespace eLog.Services
             AppSettings.Instance.GoogleCredentialsPath = dlg.GoogleCredentialsPath;
             AppSettings.Instance.GsId = dlg.GsId;
             AppSettings.Instance.WiteToGs = dlg.WriteToGs;
-            AppSettings.Instance.ConnetctionString = dlg.ConnectionString;
+            AppSettings.Instance.ConnectionString = dlg.ConnectionString;
             AppSettings.Instance.PathToRecievers = dlg.PathToRecievers;
             AppSettings.Instance.SmtpAddress = dlg.SmtpAddress;
             AppSettings.Instance.SmtpPort = dlg.SmtpPort;

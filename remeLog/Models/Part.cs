@@ -31,6 +31,7 @@ namespace remeLog.Models
             double partialSetupTime,
             double maintenanceTime,
             double toolSearchingTime,
+            double toolChangingTime,
             double mentoringTime,
             double contactingDepartmentsTime,
             double fixtureMakingTime,
@@ -68,6 +69,7 @@ namespace remeLog.Models
             _PartialSetupTime = partialSetupTime;
             _MaintenanceTime = maintenanceTime;
             _ToolSearchingTime = toolSearchingTime;
+            _ToolChangingTime = toolChangingTime;
             _MentoringTime = mentoringTime;
             _ContactingDepartmentsTime = contactingDepartmentsTime;
             _FixtureMakingTime = fixtureMakingTime;
@@ -109,6 +111,7 @@ namespace remeLog.Models
             _PartialSetupTime = part.PartialSetupTime;
             _MaintenanceTime = part.MaintenanceTime;
             _ToolSearchingTime = part.ToolSearchingTime;
+            _ToolChangingTime = part.ToolChangingTime;
             _MentoringTime = part.MentoringTime;
             _ContactingDepartmentsTime = part.ContactingDepartmentsTime;
             _FixtureMakingTime = part.FixtureMakingTime;
@@ -565,6 +568,33 @@ namespace remeLog.Models
             get => _ToolSearchingTime;
             set {
                 if (Set(ref _ToolSearchingTime, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SingleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(MasterSetupComment));
+                    OnPropertyChanged(nameof(MasterMachiningComment));
+                    OnPropertyChanged(nameof(MasterComment));
+                    OnPropertyChanged(nameof(Error));
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
+        private double _ToolChangingTime;
+        /// <summary> Время простоя "Замена инструмента" </summary>
+        public double ToolChangingTime
+        {
+            get => _ToolChangingTime;
+            set
+            {
+                if (Set(ref _ToolChangingTime, value))
                 {
                     NeedUpdate = true;
                     OnPropertyChanged(nameof(SetupTimeFact));

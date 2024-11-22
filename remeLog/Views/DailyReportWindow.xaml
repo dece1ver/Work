@@ -250,7 +250,7 @@
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Оператор:"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding NightOperator}" d:Text="Бабохин Кирилл Георгиевич"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Отмечена работа:"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalWorkedNightTime, StringFormat={}{0} / 660 мин.}" d:Text="613 / 630 мин."/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalWorkedNightTime, StringFormat={}{0} / 630 мин.}" d:Text="613 / 630 мин."/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding NightWorkInfo}" d:Text="М/Л: 5, Деталей: 85"/>
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Частичная наладка:"/>

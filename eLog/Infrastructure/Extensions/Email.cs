@@ -33,7 +33,7 @@ namespace eLog.Infrastructure.Extensions
             }
         }
 
-        public static bool SendLongSetupNotify(Part part)
+        public static bool SendLongSetupNotify(Part part, int limit)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace eLog.Infrastructure.Extensions
                     <div style=""max-width: 320px; margin: 0 auto; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"">
         
                         <p style=""font-size: 18px; font-weight: bold; color: #d9534f; text-align: center;"">
-                            Внимание: процесс наладки превысил {AppSettings.Instance.TimerForNotify.FormattedHours()}!
+                            Внимание: процесс наладки превысил {limit.FormattedMinutes()}!
                         </p>
 
                         <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
@@ -59,6 +59,8 @@ namespace eLog.Infrastructure.Extensions
                             <p style=""margin: 6px 0;""><strong>Установка:</strong> {part.Setup}</p>
                             <p style=""margin: 6px 0;""><strong>М/Л:</strong> {part.Order}</p>
                             <p style=""margin: 6px 0;""><strong>Начало наладки:</strong> {part.StartSetupTime}</p>
+                            <p style=""margin: 6px 0;""><strong>Норматив наладки:</strong> {part.SetupTimePlan}</p>
+                            <p style=""margin: 6px 0;""><strong>Лимит наладки:</strong> {limit}</p>
                         </div>
                 ");
                 if (part.DownTimes.Any())

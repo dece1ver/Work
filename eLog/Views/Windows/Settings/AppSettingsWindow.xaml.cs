@@ -178,7 +178,7 @@ namespace eLog.Views.Windows.Settings
             _GoogleCredentialsPath = AppSettings.Instance.GoogleCredentialsPath ?? "";
             _GsId = AppSettings.Instance.GsId ?? "";
             _WriteToGs = AppSettings.Instance.WiteToGs;
-            _ConnectionString = AppSettings.Instance.ConnetctionString ?? "";
+            _ConnectionString = AppSettings.Instance.ConnectionString ?? "";
             _SmtpAddress = AppSettings.Instance.SmtpAddress ?? "";
             _SmtpPort = AppSettings.Instance.SmtpPort;
             _SmtpUsername = AppSettings.Instance.SmtpUsername ?? "";
@@ -296,7 +296,7 @@ namespace eLog.Views.Windows.Settings
                 GoogleCredentialsPath = AppSettings.Instance.GoogleCredentialsPath ?? "";
                 GsId = AppSettings.Instance.GsId ?? "";
                 WriteToGs = AppSettings.Instance.WiteToGs;
-                ConnectionString = AppSettings.Instance.ConnetctionString ?? "";
+                ConnectionString = AppSettings.Instance.ConnectionString ?? "";
                 SmtpAddress = AppSettings.Instance.SmtpAddress ?? "";
                 SmtpPort = AppSettings.Instance.SmtpPort;
                 SmtpUsername = AppSettings.Instance.SmtpUsername ?? "";

@@ -24,5 +24,24 @@ namespace libeLog.Extensions
             };
             return $"{hours} {word}";
         }
+
+        public static string FormattedMinutes(this int minutes)
+        {
+            if (minutes < 0) throw new ArgumentException("Значение должно быть положительным");
+            if (minutes % 100 >= 11 && minutes % 100 <= 19)
+            {
+                return $"{minutes} минут";
+            }
+            int lastDigit = minutes % 10;
+            var word = lastDigit switch
+            {
+                1 => "минута",
+                2 => "минуты",
+                3 => "минуты",
+                4 => "минуты",
+                _ => "минут"
+            };
+            return $"{minutes} {word}";
+        }
     }
 }

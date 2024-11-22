@@ -21,6 +21,7 @@ namespace eLog.Infrastructure
     /// </summary>
     public class AppSettings : INotifyPropertyChanged
     {
+        private static readonly SettingsManager _settingsManager = new SettingsManager();
         private AppSettings()
         {
 
@@ -76,7 +77,7 @@ namespace eLog.Infrastructure
         private bool _IsShiftStarted;
         private Operator? _CurrentOperator;
         private StorageType _StorageType;
-        private string _ConnetctionString;
+        private string _ConnectionString;
         private bool _DebugMode;
         private string _SmtpAddress;
         private int _SmtpPort;
@@ -177,10 +178,10 @@ namespace eLog.Infrastructure
         }
 
         /// <summary> Строка подключения к БД </summary>
-        public string ConnetctionString
+        public string ConnectionString
         {
-            get => _ConnetctionString;
-            set => Set(ref _ConnetctionString, value);
+            get => _ConnectionString;
+            set => Set(ref _ConnectionString, value);
         }
 
 
@@ -292,7 +293,7 @@ namespace eLog.Infrastructure
             "СЛ",
         };
             StorageType = new StorageType(StorageType.Types.Excel);
-            ConnetctionString = string.Empty;
+            ConnectionString = string.Empty;
             IsShiftStarted = false;
             TimerForNotify = 4;
             EnableWriteShiftHandover = true;
@@ -329,15 +330,36 @@ namespace eLog.Infrastructure
                 LongSetupsMailRecievers = Util.GetMailReceivers(Util.ReceiversType.LongSetup);
                 ToolSearchMailRecievers = Util.GetMailReceivers(Util.ReceiversType.ToolSearch);
 
-                //Parts.CollectionChanged += (_, _) => Save();
-                //foreach (var part in Parts)
-                //{
-                //    part.PropertyChanged += SaveEvent;
-                //    foreach (var downTime in part.DownTimes)
-                //    {
-                //        downTime.PropertyChanged += (_, _) => Save();
-                //    }
-                //}
+                Machine ??= new Machine(0);
+                GoogleCredentialsPath ??= "";
+                GsId ??= "";
+                OrdersSourcePath ??= "";
+                OrderQualifiers ??= new[]
+                {
+                Text.WithoutOrderItem,
+                "УЧ",
+                "ФЛ",
+                "БП",
+                "СУ",
+                "УУ",
+                "ЗУ",
+                "СЛ",
+            };
+                CurrentOperator ??= new()
+                {
+                    LastName = "Бабохин",
+                    FirstName = "Кирилл",
+                    Patronymic = "Георгиевич"
+                };
+
+                Operators ??= new() { CurrentOperator };
+                CurrentShift ??= "День";
+                Parts ??= new();
+                ConnectionString ??= "";
+                SmtpAddress ??= "";
+                SmtpUsername ??= "";
+                PathToRecievers ??= "";
+                NotSendedToolComments ??= new();
             }
             catch (Exception exception)
             {
@@ -388,68 +410,7 @@ namespace eLog.Infrastructure
         /// </summary>
         public static void Save()
         {
-
-            var settings = new JsonSerializerSettings()
-            {
-                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
-                ObjectCreationHandling = ObjectCreationHandling.Replace
-            };
-            try
-            {
-                if (File.Exists(ConfigFilePath)) File.Copy(ConfigFilePath, ConfigTempPath, true);
-                if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
-                var json = JsonConvert.SerializeObject(Instance, Formatting.Indented, settings);
-                File.WriteAllText(ConfigFilePath, json);
-                if (File.Exists(ConfigTempPath)) File.Delete(ConfigTempPath);
-                Debug.WriteLine("Записаны настройки");
-                try
-                {
-                    JsonDocument.Parse(json);
-                    File.Copy(ConfigFilePath, ConfigBackupPath, true);
-                }
-                catch (JsonException ex)
-                {
-                    var msg = "Записан некорректный файл конфигурации, восстановление";
-                    Debug.WriteLine(msg);
-                    Task.Run(() => Util.WriteLogAsync(ex, msg));
-                    File.Copy(ConfigBackupPath, ConfigFilePath, true);
-                }
-                catch (Exception ex)
-                {
-                    var msg = "Неизвестная ошибка при создании бэкапа конфигурации";
-                    Debug.WriteLine(msg);
-                    Task.Run(() => Util.WriteLogAsync(ex, msg));
-                }
-
-            }
-            catch (UnauthorizedAccessException)
-            {
-                var msg = "Ошибка при сохранении файла конфигурации (Доступ запрещен).";
-                Debug.WriteLine(msg);
-                Task.Run(() => Util.WriteLogAsync(msg));
-                if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
-            }
-            catch (IOException)
-            {
-                var msg = "Ошибка при сохранении файла конфигурации (Ошибка ввода/вывода).";
-                Debug.WriteLine(msg);
-                Task.Run(() => Util.WriteLogAsync(msg));
-                if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
-            }
-            catch (Exception ex)
-            {
-                var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
-                Debug.WriteLine(msg);
-                Task.Run(() => Util.WriteLogAsync(ex, msg));
-                try
-                {
-                    if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
-                }
-                catch { }
-
-                if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, Path.Combine(BasePath, $"{DateTime.Now:dd-mm-yyyy-hh-mm-ss}_w"), true);
-                if (File.Exists(ConfigFilePath)) Debug.WriteLine("Восстановлен бэкап конфигурации.");
-            }
+            _settingsManager.ScheduleSave();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -480,8 +441,7 @@ namespace eLog.Infrastructure
             if (Equals(field, value)) return false;
             field = value;
             OnPropertyChanged(PropertyName);
-            Save();
-            Debug.WriteLine("Rewrite config from Set notification");
+            _settingsManager.ScheduleSave();
             return true;
         }
     }
