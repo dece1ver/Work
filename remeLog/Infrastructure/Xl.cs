@@ -441,6 +441,98 @@ namespace remeLog.Infrastructure
             return $"Файл сохранен в \"{path}\"";
         }
 
+        public static string ExportHistory(ICollection<Part> parts, string path)
+        {
+            var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Экспорт");
+            ws.Style.Font.FontSize = 10;
+            ws.Style.Alignment.WrapText = true;
+            ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            // Столбцы и их заголовки
+            var columns = new Dictionary<string, (int index, string header)>
+    {
+        { "machine", (1, "Станок") },
+        { "date", (2, "Дата") },
+        { "operator", (3, "Оператор") },
+        { "part", (4, "Деталь") },
+        { "order", (5, "М/Л") },
+        { "finished", (6, "Выполнено") },
+        { "setup", (7, "Установка") },
+        { "setupTimePlan", (8, "Норматив наладки") },
+        { "setupTimeFact", (9, "Фактическая наладка") },
+        { "singleProductionTimePlan", (10, "Норматив штучный") },
+        { "machiningTime", (11, "Машинное время") },
+        { "singleProductionTime", (12, "Штучное фактическое") },
+        { "operatorComment", (13, "Комментарий оператора") },
+        { "specifiedDowntimesComment", (14, "Типовые проблемы") },
+        { "masterSetupComment", (15, "Невыполнение норматива наладки") },
+        { "masterMachiningComment", (16, "Невыполнение норматива изготовления") },
+        { "masterComment", (17, "Комментарий мастера") }
+    };
+
+            // Заголовки
+            foreach (var (index, header) in columns.Values)
+            {
+                ws.Cell(1, index).Value = header;
+            }
+            ws.Row(1).Style.Font.Bold = true;
+
+            // Группировка данных по станкам и выбор последних 5 строк
+            var groupedParts = parts
+                .GroupBy(p => p.Machine)
+                .Select(group => group
+                    .OrderByDescending(p => p.Order)
+                    .Take(5)
+                    .ToList())
+                .ToList();
+
+            int row = 2;
+            foreach (var group in groupedParts)
+            {
+                foreach (var part in group)
+                {
+                    ws.Cell(row, columns["machine"].index).SetValue(part.Machine);
+                    ws.Cell(row, columns["date"].index).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
+                    ws.Cell(row, columns["operator"].index).SetValue(part.Operator);
+                    ws.Cell(row, columns["part"].index).SetValue(part.PartName);
+                    ws.Cell(row, columns["order"].index).SetValue(part.Order);
+                    ws.Cell(row, columns["finished"].index).SetValue(part.FinishedCount);
+                    ws.Cell(row, columns["setup"].index).SetValue(part.Setup);
+                    ws.Cell(row, columns["setupTimePlan"].index).SetValue(part.SetupTimePlan);
+                    ws.Cell(row, columns["setupTimeFact"].index).SetValue(part.SetupTimeFact);
+                    ws.Cell(row, columns["singleProductionTimePlan"].index).SetValue(part.SingleProductionTimePlan);
+                    ws.Cell(row, columns["machiningTime"].index).SetValue(part.MachiningTime);
+                    ws.Cell(row, columns["singleProductionTime"].index).SetValue(part.SingleProductionTime);
+                    ws.Cell(row, columns["operatorComment"].index).SetValue(part.OperatorComment);
+                    ws.Cell(row, columns["specifiedDowntimesComment"].index).SetValue(part.SpecifiedDowntimesComment);
+                    ws.Cell(row, columns["masterSetupComment"].index).SetValue(part.MasterSetupComment);
+                    ws.Cell(row, columns["masterMachiningComment"].index).SetValue(part.MasterMachiningComment);
+                    ws.Cell(row, columns["masterComment"].index).SetValue(part.MasterComment);
+                    row++;
+                }
+
+                // Граница между группами станков
+                ws.Range(row, 1, row, columns.Count)
+                    .Style.Border.BottomBorder = XLBorderStyleValues.Medium;
+            }
+
+            // Форматирование
+            ws.Columns().AdjustToContents();
+            ws.SheetView.FreezeRows(1);
+
+            // Сохранение и открытие файла
+            wb.SaveAs(path);
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
+            }
+
+            return path;
+        }
+
         public static string ExportPartsInfo(ICollection<Part> parts, string path, DateTime fromDate, DateTime toDate)
         {
             var wb = new XLWorkbook();

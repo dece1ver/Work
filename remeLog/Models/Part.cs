@@ -1,7 +1,10 @@
 ﻿using libeLog.Base;
 using libeLog.Extensions;
+using remeLog.Infrastructure;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace remeLog.Models
 {
@@ -304,6 +307,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -330,6 +334,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -360,6 +365,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -387,6 +393,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -429,6 +436,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -470,6 +478,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -497,6 +506,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -524,6 +534,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -551,6 +562,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -578,6 +590,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -605,6 +618,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -632,6 +646,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -659,6 +674,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -686,6 +702,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -713,6 +730,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -755,6 +773,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -782,6 +801,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -809,6 +829,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -836,6 +857,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -863,6 +885,7 @@ namespace remeLog.Models
                     OnPropertyChanged(nameof(ProductionRatioTitle));
                     OnPropertyChanged(nameof(SingleProductionTime));
                     OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
                     OnPropertyChanged(nameof(MasterSetupComment));
                     OnPropertyChanged(nameof(MasterMachiningComment));
                     OnPropertyChanged(nameof(MasterComment));
@@ -1004,7 +1027,8 @@ namespace remeLog.Models
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(this[nameof(MasterSetupComment)]) &&
+                if (string.IsNullOrWhiteSpace(this[nameof(SpecifiedDowntimesComment)]) &&
+                    string.IsNullOrWhiteSpace(this[nameof(MasterSetupComment)]) &&
                     string.IsNullOrWhiteSpace(this[nameof(MasterMachiningComment)]) &&
                     string.IsNullOrWhiteSpace(this[nameof(MasterComment)]))
                 {
@@ -1015,6 +1039,18 @@ namespace remeLog.Models
                     return "Ошибка валидации";
                 }
             }
+        }
+
+        public Dictionary<string, bool> SetupReasonsRequireComment =>
+            AppSettings.Instance.SetupReasons.ToDictionary(x => x.Reason, x => x.RequireComment);
+        public Dictionary<string, bool> MachiningReasonsRequireComment =>
+            AppSettings.Instance.MachiningReasons.ToDictionary(x => x.Reason, x => x.RequireComment);
+
+        private static bool RequiresComment(string? comment, Dictionary<string, bool> reasonsDict)
+        {
+            return !string.IsNullOrWhiteSpace(comment) &&
+                   reasonsDict.TryGetValue(comment, out bool requiresComment) &&
+                   requiresComment;
         }
 
         public string this[string columnName]
@@ -1033,9 +1069,12 @@ namespace remeLog.Models
                     case nameof(MasterMachiningComment) when string.IsNullOrWhiteSpace(MasterMachiningComment) && ProductionRatio is < 0.695 or > 1.2:
                         return "Необходимо указать причину невыполнения номатива изготовления.";
 
-                    case nameof(MasterComment) when string.IsNullOrWhiteSpace(MasterComment) && (MasterSetupComment == "Другое" || MasterMachiningComment == "Другое"):
-                        return "При выборе причины \"Другое\" нужно указать причину в этом поле.";
-
+                    case nameof(MasterComment) when string.IsNullOrWhiteSpace(MasterComment) &&
+                    (RequiresComment(MasterSetupComment, SetupReasonsRequireComment) ||
+                     RequiresComment(MasterMachiningComment, MachiningReasonsRequireComment)):
+                        return "Требуется указать дополнительный комментарий для выбранной причины.";
+                    case nameof(SpecifiedDowntimesComment) when string.IsNullOrWhiteSpace(SpecifiedDowntimesComment) && SpecifiedDowntimesRatio > 0.5:
+                        return "Необходимо дать комментарий т.к. простой более 50%.";
                     default:
                         return null!;
                 }

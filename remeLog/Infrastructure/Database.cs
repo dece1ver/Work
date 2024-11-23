@@ -541,7 +541,7 @@ namespace remeLog.Infrastructure
             }
         }
 
-        public static DbResult ReadDeviationReasons(this ICollection<string> reasons, DeviationReasonType type)
+        public static DbResult ReadDeviationReasons(this ICollection<(string, bool)> reasons, DeviationReasonType type)
         {
             try
             {
@@ -555,14 +555,14 @@ namespace remeLog.Infrastructure
                         _ => throw new ArgumentException("Неверный аргумент в типе причин."),
                     };
                     connection.Open();
-                    string query = $"SELECT Reason FROM cnc_deviation_reasons WHERE Type IS NULL OR {typeCondition} ORDER BY Reason ASC";
+                    string query = $"SELECT Reason, RequireComment FROM cnc_deviation_reasons WHERE Type IS NULL OR {typeCondition} ORDER BY Reason ASC";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                reasons.Add(reader.GetString(0));
+                                reasons.Add((reader.GetString(0), reader.GetBoolean(1)));
                             }
                         }
                     }

@@ -61,6 +61,7 @@ namespace remeLog.ViewModels
             OperatorsShiftsReportToExcelCommand = new LambdaCommand(OnOperatorsShiftsReportToExcelCommandExecuted, CanOperatorsShiftsReportToExcelCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
             ExportReportToExcelCommand = new LambdaCommand(OnExportReportToExcelCommandExecuted, CanExportReportToExcelCommandExecute);
+            ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
             HideAllMachinesCommand = new LambdaCommand(OnHideAllMachinesCommandExecuted, CanHideAllMachinesCommandExecute);
@@ -371,8 +372,12 @@ namespace remeLog.ViewModels
             set => Set(ref _Overlay, value);
         }
 
-        public List<string> SetupReasons => AppSettings.Instance.SetupReasons;
-        public List<string> MachiningReasons => AppSettings.Instance.MachiningReasons;
+        public List<string> SetupReasons => AppSettings.Instance.SetupReasons.Select(x => x.Reason).ToList();
+        public Dictionary<string, bool> SetupReasonsRequireComment =>
+            AppSettings.Instance.SetupReasons.ToDictionary(x => x.Reason, x => x.RequireComment);
+        public List<string> MachiningReasons => AppSettings.Instance.MachiningReasons.Select(x => x.Reason).ToList();
+        public Dictionary<string, bool> MachiningReasonsRequireComment =>
+            AppSettings.Instance.MachiningReasons.ToDictionary(x => x.Reason, x => x.RequireComment);
 
         public double AverageSetupRatio =>
             MachineFilters.Count(f => f.Filter) > 0
@@ -701,7 +706,6 @@ namespace remeLog.ViewModels
         private static bool CanOperatorsShiftsReportToExcelCommandExecute(object p) => true;
         #endregion
 
-
         #region ExportPartsReportToExcel
         public ICommand ExportPartsReportToExcelCommand { get; }
         private async void OnExportPartsReportToExcelCommandExecuted(object p)
@@ -757,6 +761,41 @@ namespace remeLog.ViewModels
         }
         private static bool CanExportReportToExcelCommandExecute(object p) => true;
         #endregion
+
+        #region ExportHistoryToExcel
+        public ICommand ExportHistoryToExcelCommand { get; }
+        private async void OnExportHistoryToExcelCommandExecuted(object p)
+        {
+            try
+            {
+                var dlg = new PartnameDialogWindow(PartNameFilter);
+                if (p is PartsInfoWindow w) dlg.Owner = w;
+                if (dlg.ShowDialog() != true) return;
+                var path = Util.GetXlsxPath();
+                var partName = dlg.InputText;
+                await Task.Run(async () =>
+                {
+                    InProgress = true;
+                    var cancellationToken = _cancellationTokenSource.Token;
+                    var parts = await Task.Run(() => Database.ReadPartsWithConditions(BuildConditionsForPartForAllTime(partName), cancellationToken));
+                    Status = Xl.ExportHistory(parts, path);
+                });
+                
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportHistoryToExcelCommandExecute(object p) => true;
+        #endregion
+
 
         /// <summary>
         /// todo
@@ -1283,6 +1322,21 @@ namespace remeLog.ViewModels
         }
 
         /// <summary>
+        /// Собирает строку запроса для получения списка всех изготовлений на всех станках для этой детали
+        /// </summary>
+        /// <returns></returns>
+        private string BuildConditionsForPartForAllTime(string partName)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendFormat("ShiftDate BETWEEN '{0}' AND '{1}' ", new DateTime(2023, 1, 1), DateTime.Today);
+
+            AppendCondition(sb, "PartName", FormatSearchInput(partName));
+
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Поиск по строке, либо с полным совпадением, либо "is Like"
         /// </summary>
         /// <param name="sb">StringBuilder в котором формируется строка запроса</param>
@@ -1359,15 +1413,6 @@ namespace remeLog.ViewModels
         {
             lockUpdate = false;
             _ = LoadPartsAsync(first);
-        }
-
-        public int MyProperty { get; set; }
-
-        public int MyProperty1 { get; set; }
-
-        
-    }
-
-    
-   
+        }        
+    }   
 }

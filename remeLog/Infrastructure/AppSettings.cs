@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using System;
 using System.Collections.Generic;
@@ -44,9 +45,9 @@ namespace remeLog.Infrastructure
         public static readonly string[] ShiftTypes = new string[] { "День", "Ночь" };
 
         [JsonIgnore]
-        public List<string> SetupReasons { get; set; } = new();
+        public List<(string Reason, bool RequireComment)> SetupReasons { get; set; } = new();
         [JsonIgnore]
-        public List<string> MachiningReasons { get; set; } = new();
+        public List<(string Reason, bool RequireComment)> MachiningReasons { get; set; } = new();
         [JsonIgnore]
         public List<string> UnspecifiedDowntimesReasons = new();
 
@@ -68,6 +69,8 @@ namespace remeLog.Infrastructure
 
         public bool InstantUpdateOnMainWindow { get; set; }
 
+        public User? User { get; set; }
+
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private void CreateBaseConfig()
@@ -81,6 +84,7 @@ namespace remeLog.Infrastructure
             ReportsPath = "";
             DailyReportsDir = "";
             ConnectionString = "";
+            User = null;
             Save();
         }
 

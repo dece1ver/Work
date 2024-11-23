@@ -277,10 +277,7 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="PartReplacementTimeColumn" Header="Время замены" Binding="{Binding PartReplacementTime, StringFormat=0.#}" 
-            Width="35" IsReadOnly="True" 
-            Visibility="{Binding DataContext.CompactView, 
-            Source={x:Reference partsInfoWindow}, 
-            Converter={StaticResource InvertedVisibilityConverter}}">
+            Width="35" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -445,14 +442,22 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="SpecifiedDowntimesCommentColumn" Header="Комментарий к простоям" Binding="{Binding SpecifiedDowntimesComment}" Width="120">
-            <DataGridTextColumn.ElementStyle>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-            </DataGridTextColumn.ElementStyle>
-            <DataGridTextColumn.EditingElementStyle>
-                <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
-            </DataGridTextColumn.EditingElementStyle>
-        </DataGridTextColumn>
+        <DataGridTemplateColumn x:Key="SpecifiedDowntimesCommentColumn" Header="Комментарий к простоям" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding SpecifiedDowntimesComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+               Style="{StaticResource TableTextBlock}" Validation.ErrorTemplate="{StaticResource ValidationTemplate}">
+                    </TextBlock>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding SpecifiedDowntimesComment, UpdateSourceTrigger=PropertyChanged}" 
+             Style="{StaticResource TableLargeTextBox}">
+                    </TextBox>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+        </DataGridTemplateColumn>
 
         <DataGridTextColumn x:Key="SetupRatioTitleColumn" Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="36" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
@@ -494,9 +499,9 @@
             <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate>
                     <ComboBox ItemsSource="{Binding DataContext.MachiningReasons, Source={x:Reference partsInfoWindow}}" 
-                      SelectedItem="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                      Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch" 
-                      >
+                              SelectedItem="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                              Style="{StaticResource TableComboBox}" 
+                              VerticalAlignment="Stretch">
                     </ComboBox>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
@@ -879,7 +884,8 @@
                             <TextBlock Text="Выработка по операторам"/>
                         </MenuItem.Header>
                     </MenuItem>
-                    <MenuItem Command="{Binding OperatorsShiftsReportToExcelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" Icon="{StaticResource OperatorsIcon}"
+                    <MenuItem Command="{Binding OperatorsShiftsReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
                               ToolTip="Операторы-смены" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
                             <TextBlock Text="Операторы-смены"/>
@@ -898,9 +904,16 @@
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem Command="{Binding ExportShiftsInfoReportCommand}" Icon="{StaticResource CalendarIcon}"
-                        ToolTip="Экспорт текущей выборки" HorizontalAlignment="Stretch">
+                        ToolTip="Экспорт отчёта по сменам" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
                             <TextBlock Text="Отчет по сменам"/>
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <MenuItem Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource HistoryLayersIcon}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
+                        ToolTip="Экспорт истории запусков детали" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Отчет по истории"/>
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem Command="{Binding ExportVerevkinReportCommand}" Icon="{StaticResource ComparePerformanceIcon}"

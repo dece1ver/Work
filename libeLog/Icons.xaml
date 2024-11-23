@@ -275,6 +275,49 @@
         </Rectangle>
     </Viewbox>
 
+    <Viewbox x:Key="HistoryLayersIcon" x:Shared="False" Width="16" Height="16">
+        <Rectangle Width="16" Height="16" Margin="-1 -1 -2 -2">
+            <Rectangle.Resources>
+                <SolidColorBrush x:Key="canvas" Opacity="0" />
+                <SolidColorBrush x:Key="light-gray-10" Color="#424242" Opacity="0.1" />
+                <SolidColorBrush x:Key="light-gray" Color="#424242" Opacity="1" />
+            </Rectangle.Resources>
+            <Rectangle.Fill>
+                <DrawingBrush Stretch="None">
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <DrawingGroup>
+                                <GeometryDrawing Brush="{DynamicResource canvas}" Geometry="F1M16,16H0V0H16Z" />
+                            </DrawingGroup>
+                            <DrawingGroup>
+                                <!-- Задний слой -->
+                                <GeometryDrawing Brush="{DynamicResource light-gray-10}" 
+                                           Geometry="F1M4,12L4,5L12,5L12,12Z" />
+                                <!-- Контур заднего слоя -->
+                                <GeometryDrawing Brush="{DynamicResource light-gray}" 
+                                           Geometry="F1M3.5,12.5v-8h9v8Zm1-1h7v-6h-7Z" />
+
+                                <!-- Средний слой -->
+                                <GeometryDrawing Brush="{DynamicResource light-gray-10}" 
+                                           Geometry="F1M5,11L5,4L13,4L13,11Z" />
+                                <!-- Контур среднего слоя -->
+                                <GeometryDrawing Brush="{DynamicResource light-gray}" 
+                                           Geometry="F1M4.5,11.5v-8h9v8Zm1-1h7v-6h-7Z" />
+
+                                <!-- Передний слой -->
+                                <GeometryDrawing Brush="{DynamicResource light-gray-10}" 
+                                           Geometry="F1M6,10L6,3L14,3L14,10Z" />
+                                <!-- Контур переднего слоя -->
+                                <GeometryDrawing Brush="{DynamicResource light-gray}" 
+                                           Geometry="F1M5.5,10.5v-8h9v8Zm1-1h7v-6h-7Z" />
+                            </DrawingGroup>
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Viewbox>
+
 
     <Viewbox x:Key="SyncIcon" x:Shared="False" Width="16" Height="16">
         <Rectangle Width="16 " Height="16">
