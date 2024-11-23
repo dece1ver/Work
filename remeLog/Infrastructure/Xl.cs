@@ -450,48 +450,54 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            // Столбцы и их заголовки
             var columns = new Dictionary<string, (int index, string header)>
-    {
-        { "machine", (1, "Станок") },
-        { "date", (2, "Дата") },
-        { "operator", (3, "Оператор") },
-        { "part", (4, "Деталь") },
-        { "order", (5, "М/Л") },
-        { "finished", (6, "Выполнено") },
-        { "setup", (7, "Установка") },
-        { "setupTimePlan", (8, "Норматив наладки") },
-        { "setupTimeFact", (9, "Фактическая наладка") },
-        { "singleProductionTimePlan", (10, "Норматив штучный") },
-        { "machiningTime", (11, "Машинное время") },
-        { "singleProductionTime", (12, "Штучное фактическое") },
-        { "operatorComment", (13, "Комментарий оператора") },
-        { "specifiedDowntimesComment", (14, "Типовые проблемы") },
-        { "masterSetupComment", (15, "Невыполнение норматива наладки") },
-        { "masterMachiningComment", (16, "Невыполнение норматива изготовления") },
-        { "masterComment", (17, "Комментарий мастера") }
-    };
+            {
+                { "machine", (1, "Станок") },
+                { "date", (2, "Дата") },
+                { "operator", (3, "Оператор") },
+                { "part", (4, "Деталь") },
+                { "order", (5, "М/Л") },
+                { "finished", (6, "Выполнено") },
+                { "setup", (7, "Установка") },
+                { "setupTimePlan", (8, "Норматив наладки") },
+                { "setupTimeFact", (9, "Фактическая наладка") },
+                { "singleProductionTimePlan", (10, "Норматив штучный") },
+                { "machiningTime", (11, "Машинное время") },
+                { "singleProductionTime", (12, "Штучное фактическое") },
+                { "operatorComment", (13, "Комментарий оператора") },
+                { "problems", (14, "Типовые проблемы") },
+                { "specifiedDowntimesComment", (15, "Комментарий к простоям") },
+                { "masterSetupComment", (16, "Невыполнение норматива наладки") },
+                { "masterMachiningComment", (17, "Невыполнение норматива изготовления") },
+                { "masterComment", (18, "Комментарий мастера") }
+            };
 
-            // Заголовки
             foreach (var (index, header) in columns.Values)
             {
                 ws.Cell(1, index).Value = header;
             }
             ws.Row(1).Style.Font.Bold = true;
 
-            // Группировка данных по станкам и выбор последних 5 строк
             var groupedParts = parts
                 .GroupBy(p => p.Machine)
-                .Select(group => group
-                    .OrderByDescending(p => p.Order)
-                    .Take(5)
-                    .ToList())
                 .ToList();
 
             int row = 2;
             foreach (var group in groupedParts)
             {
-                foreach (var part in group)
+                var last5Orders = group
+                    .Select(p => p.Order)
+                    .Distinct()
+                    .Take(5)
+                    .ToList();
+
+                var filteredParts = group
+                    .Where(p => last5Orders.Contains(p.Order))
+                    .OrderBy(p => p.Order)
+                    .ThenByDescending(p => p.ShiftDate)
+                    .ToList();
+
+                foreach (var part in filteredParts)
                 {
                     ws.Cell(row, columns["machine"].index).SetValue(part.Machine);
                     ws.Cell(row, columns["date"].index).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
@@ -506,23 +512,25 @@ namespace remeLog.Infrastructure
                     ws.Cell(row, columns["machiningTime"].index).SetValue(part.MachiningTime);
                     ws.Cell(row, columns["singleProductionTime"].index).SetValue(part.SingleProductionTime);
                     ws.Cell(row, columns["operatorComment"].index).SetValue(part.OperatorComment);
+                    ws.Cell(row, columns["problems"].index).SetValue(part.OperatorComment);
                     ws.Cell(row, columns["specifiedDowntimesComment"].index).SetValue(part.SpecifiedDowntimesComment);
                     ws.Cell(row, columns["masterSetupComment"].index).SetValue(part.MasterSetupComment);
                     ws.Cell(row, columns["masterMachiningComment"].index).SetValue(part.MasterMachiningComment);
                     ws.Cell(row, columns["masterComment"].index).SetValue(part.MasterComment);
+
+                    ws.Range(row, 1, row, columns.Count).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, columns.Count).Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                    ws.Range(row, 1, row, columns.Count).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+
                     row++;
                 }
-
-                // Граница между группами станков
                 ws.Range(row, 1, row, columns.Count)
                     .Style.Border.BottomBorder = XLBorderStyleValues.Medium;
             }
 
-            // Форматирование
             ws.Columns().AdjustToContents();
             ws.SheetView.FreezeRows(1);
 
-            // Сохранение и открытие файла
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes)

@@ -584,6 +584,127 @@
             </Rectangle.Fill>
         </Rectangle>
     </Viewbox>
+    
+    <Viewbox x:Key="FindPartIcon" Width="16 " Height="16" x:Shared="False" >
+      <Rectangle Width="16 " Height="16">
+        <Rectangle.Resources>
+          <SolidColorBrush x:Key="canvas" Opacity="0" />
+          <SolidColorBrush x:Key="light-lightblue-10" Color="#0077a0" Opacity="0.1" />
+          <SolidColorBrush x:Key="light-lightblue" Color="#0077a0" Opacity="1" />
+          <SolidColorBrush x:Key="light-blue-10" Color="#005dba" Opacity="0.1" />
+          <SolidColorBrush x:Key="light-blue" Color="#005dba" Opacity="1" />
+        </Rectangle.Resources>
+        <Rectangle.Fill>
+          <DrawingBrush Stretch="None">
+            <DrawingBrush.Drawing>
+              <DrawingGroup>
+                <DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource canvas}" Geometry="F1M16,16H0V0H16Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource light-lightblue-10}" Geometry="F1M13.5,2.97V11c0,.828-1.791,1.5-4,1.5-.336,0-.658-.02-.97-.049L7.66,11.6A3.916,3.916,0,0,0,8,10,4,4,0,0,0,5.5,6.3V2.97c0-.828,1.791-1.5,4-1.5S13.5,2.142,13.5,2.97Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-lightblue}" Geometry="F1M5,2.97V6.142a3.93,3.93,0,0,1,1,.414V4.261a7.863,7.863,0,0,0,3.5.709A7.863,7.863,0,0,0,13,4.261V11c0,.29-1.227,1-3.5,1a9.3,9.3,0,0,1-1.559-.126l1.134,1.11c.142.005.283.016.425.016,2.236,0,4.5-.687,4.5-2V2.97C14,.343,5,.343,5,2.97Zm4.5,1c-2.273,0-3.5-.71-3.5-1s1.227-1,3.5-1,3.5.71,3.5,1S11.773,3.97,9.5,3.97Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-blue-10}" Geometry="F1M1.5,10A2.5,2.5,0,1,1,4,12.5,2.5,2.5,0,0,1,1.5,10Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-blue}" Geometry="F1M9.85,15.143,6.408,11.772A2.969,2.969,0,0,0,7,10a3.008,3.008,0,1,0-1.306,2.472L9.15,15.857ZM2,10a2,2,0,1,1,2,2A2,2,0,0,1,2,10Z" />
+                </DrawingGroup>
+              </DrawingGroup>
+            </DrawingBrush.Drawing>
+          </DrawingBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+    </Viewbox>
+    
+    <Viewbox x:Key="LookupListIcon" Width="16 " Height="16" x:Shared="False" >
+      <Rectangle Width="16 " Height="16">
+        <Rectangle.Resources>
+          <SolidColorBrush x:Key="canvas" Opacity="0" />
+          <SolidColorBrush x:Key="light-defaultgrey-10" Color="#212121" Opacity="0.1" />
+          <SolidColorBrush x:Key="light-defaultgrey" Color="#212121" Opacity="1" />
+          <SolidColorBrush x:Key="light-blue-10" Color="#005dba" Opacity="0.1" />
+          <SolidColorBrush x:Key="light-blue" Color="#005dba" Opacity="1" />
+          <system:Double x:Key="cls-1">0.75</system:Double>
+        </Rectangle.Resources>
+        <Rectangle.Fill>
+          <DrawingBrush Stretch="None">
+            <DrawingBrush.Drawing>
+              <DrawingGroup>
+                <DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource canvas}" Geometry="F1M16,16H0V0H16Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                  <DrawingGroup Opacity="{DynamicResource cls-1}">
+                    <GeometryDrawing Brush="{DynamicResource light-defaultgrey-10}" Geometry="F1M9.46,5a3.783,3.783,0,0,1-.82,1A4,4,0,0,1,7,6.87,3.657,3.657,0,0,1,6,7a3.925,3.925,0,0,1-1.52-.3L3,8.15l-.5.49V13h13V5Z" />
+                    <GeometryDrawing Brush="{DynamicResource light-defaultgrey}" Geometry="F1M15.5,5H9.46a3.783,3.783,0,0,1-.82,1H11v7H7V6.87A3.657,3.657,0,0,1,6,7v6H3V8.15l-.5.49L2,9.13V13.5l.5.5h13l.5-.5v-8ZM12,13V6h3v7Z" />
+                  </DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey-10}" Geometry="F1M10,3a3.989,3.989,0,0,1-.54,2H15V3Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey}" Geometry="F1M15.5,2H9.87A3.657,3.657,0,0,1,10,3h5V5H9.46a3.783,3.783,0,0,1-.82,1H15.5l.5-.5v-3Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-blue-10}" Geometry="F1M6,5.5A2.5,2.5,0,1,1,8.5,3,2.5,2.5,0,0,1,6,5.5Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-blue}" Geometry="F1M.85,8.857,4.305,5.472a3.078,3.078,0,1,0-.713-.7L.15,8.143ZM6,5A2,2,0,1,1,8,3,2,2,0,0,1,6,5Z" />
+                </DrawingGroup>
+              </DrawingGroup>
+            </DrawingBrush.Drawing>
+          </DrawingBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+    </Viewbox>
+    
+    
+    <Viewbox x:Key="LookupListItemIcon" Width="16 " Height="16" x:Shared="False" >
+      <Rectangle Width="16 " Height="16">
+        <Rectangle.Resources>
+          <SolidColorBrush x:Key="canvas" Opacity="0" />
+          <SolidColorBrush x:Key="light-defaultgrey-10" Color="#212121" Opacity="0.1" />
+          <SolidColorBrush x:Key="light-defaultgrey" Color="#212121" Opacity="1" />
+          <SolidColorBrush x:Key="light-blue-10" Color="#005dba" Opacity="0.1" />
+          <SolidColorBrush x:Key="light-blue" Color="#005dba" Opacity="1" />
+        </Rectangle.Resources>
+        <Rectangle.Fill>
+          <DrawingBrush Stretch="None">
+            <DrawingBrush.Drawing>
+              <DrawingGroup>
+                <DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource canvas}" Geometry="F1M16,16H0V0H16Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey-10}" Geometry="F1M9.56,4.5a3.887,3.887,0,0,1-.25.5A3.98,3.98,0,0,1,5.85,7a3.925,3.925,0,0,1-1.52-.3L2,8.99l-.5.49V12.5h13v-8Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey}" Geometry="F1M4,8V9h8V8ZM4,8V9h8V8ZM14.5,4H9.72a4.162,4.162,0,0,1-.16.5,3.887,3.887,0,0,1-.25.5H14v7H2V8.99L1,9.97V12.5l.5.5h13l.5-.5v-8ZM12,8H4V9h8Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-blue-10}" Geometry="F1M5.85,5.5A2.5,2.5,0,1,1,8.35,3,2.5,2.5,0,0,1,5.85,5.5Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-blue}" Geometry="F1M.7,8.857,4.156,5.472a3.075,3.075,0,1,0-.714-.7L0,8.143ZM5.85,5a2,2,0,1,1,2-2A2,2,0,0,1,5.85,5Z" />
+                </DrawingGroup>
+              </DrawingGroup>
+            </DrawingBrush.Drawing>
+          </DrawingBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+    </Viewbox>
+
+    <Viewbox x:Key="ShowFullHistoryIcon" Width="16 " Height="16" x:Shared="False" >
+      <Rectangle Width="16 " Height="16">
+        <Rectangle.Resources>
+          <SolidColorBrush x:Key="canvas" Opacity="0" />
+          <SolidColorBrush x:Key="light-defaultgrey-10" Color="#212121" Opacity="0.1" />
+          <SolidColorBrush x:Key="light-defaultgrey" Color="#212121" Opacity="1" />
+        </Rectangle.Resources>
+        <Rectangle.Fill>
+          <DrawingBrush Stretch="None">
+            <DrawingBrush.Drawing>
+              <DrawingGroup>
+                <DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource canvas}" Geometry="F1M16,16H0V0H16Z" />
+                </DrawingGroup>
+                <DrawingGroup>
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey-10}" Geometry="F1M14.5,8A6.455,6.455,0,0,1,7,14.415V9H1.585A6.5,6.5,0,1,1,14.5,8Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey}" Geometry="F1M6,11H0V10H6Zm0,1H0v1H6Zm0,2H0v1H6Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey}" Geometry="F1M15,8a7.009,7.009,0,0,1-7,7,6.786,6.786,0,0,1-1-.074v-1.02A5.933,5.933,0,0,0,8,14,6,6,0,1,0,2.829,5H5.5V6h-4L1,5.5v-4H2V4.44A6.983,6.983,0,0,1,15,8Z" />
+                  <GeometryDrawing Brush="{DynamicResource light-defaultgrey}" Geometry="F1M11,8V9H7.5L7,8.5V4H8V8Z" />
+                </DrawingGroup>
+              </DrawingGroup>
+            </DrawingBrush.Drawing>
+          </DrawingBrush>
+        </Rectangle.Fill>
+      </Rectangle>
+    </Viewbox>
+
 
     <Viewbox x:Key="ExportDataIcon" Width="16" Height="16" x:Shared="False" >
         <Rectangle Width="16 " Height="16">

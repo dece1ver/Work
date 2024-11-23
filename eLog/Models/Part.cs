@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using eLog.Infrastructure;
+﻿using eLog.Infrastructure;
 using libeLog;
 using libeLog.Extensions;
 using libeLog.Models;
@@ -35,6 +34,15 @@ namespace eLog.Models
         private DateTime _StartMachiningTime;
         private DateTime _EndMachiningTime;
         private bool _LongSetupNotifySended;
+        private bool _NonConformingWorkpiece;
+        private bool _NoProgram;
+        private bool _NoDocumentation;
+        private bool _LackOfSkills;
+        private bool _InsufficientTools;
+        private bool _InsufficientEquipment;
+        private bool _NeedMasterHelp;
+        private bool _NeedTechnicalHelp;
+        private bool _NeedSeniorHelp;
         private DeepObservableCollection<DownTime> _DownTimes;
         private int _Id;
         private bool _IsSynced;
@@ -46,7 +54,7 @@ namespace eLog.Models
 
         public enum State { Finished, PartialSetup, InProgress }
 
-        public enum PartTaskInfo {NoData, InList, NotInList}
+        public enum PartTaskInfo { NoData, InList, NotInList }
 
         /// <summary> Наименование </summary>
         public string Name
@@ -104,6 +112,69 @@ namespace eLog.Models
             set => Set(ref _LongSetupNotifySended, value);
         }
 
+        /// <summary> Несоответствующая заготовка </summary>
+        public bool NonConformingWorkpiece
+        {
+            get => _NonConformingWorkpiece;
+            set => Set(ref _NonConformingWorkpiece, value);
+        }
+
+        /// <summary> Отсутствует программа </summary>
+        public bool NoProgram
+        {
+            get => _NoProgram;
+            set => Set(ref _NoProgram, value);
+        }
+
+        /// <summary> Отсутствует документация </summary>
+        public bool NoDocumentation
+        {
+            get => _NoDocumentation;
+            set => Set(ref _NoDocumentation, value);
+        }
+
+        /// <summary> Недостаток навыков </summary>
+        public bool LackOfSkills
+        {
+            get => _LackOfSkills;
+            set => Set(ref _LackOfSkills, value);
+        }
+
+        /// <summary> Недостаточно инструментов </summary>
+        public bool InsufficientTools
+        {
+            get => _InsufficientTools;
+            set => Set(ref _InsufficientTools, value);
+        }
+
+        /// <summary> Недостаточно оборудования </summary>
+        public bool InsufficientEquipment
+        {
+            get => _InsufficientEquipment;
+            set => Set(ref _InsufficientEquipment, value);
+        }
+
+        /// <summary> Нужна помощь мастера </summary>
+        public bool NeedMasterHelp
+        {
+            get => _NeedMasterHelp;
+            set => Set(ref _NeedMasterHelp, value);
+        }
+
+        /// <summary> Нужна техническая помощь </summary>
+        public bool NeedTechnicalHelp
+        {
+            get => _NeedTechnicalHelp;
+            set => Set(ref _NeedTechnicalHelp, value);
+        }
+
+        /// <summary> Нужна помощь старшего </summary>
+        public bool NeedSeniorHelp
+        {
+            get => _NeedSeniorHelp;
+            set => Set(ref _NeedSeniorHelp, value);
+        }
+
         /// <summary> Количество выпущено</summary>
         public int FinishedCount
         {
@@ -117,21 +188,21 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(EndDetailInfo));
             }
         }
-        
+
         /// <summary> Информация о наличии детали в списке заданий </summary>
         public PartTaskInfo TaskInfo
         {
             get => _TaskInfo;
-            set 
+            set
             {
-                if (Set(ref _TaskInfo, value)) 
+                if (Set(ref _TaskInfo, value))
                 {
                     OnPropertyChanged(nameof(IsTaskStatusWritten));
                     OnPropertyChanged(nameof(NeedToSyncTask));
                 }
             }
         }
-        
+
         /// <summary> Записан ли статус в список </summary>
         public bool IsTaskStatusWritten
         {
@@ -258,6 +329,8 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(Title));
             }
         }
+
+
 
 
         /// <summary> Информация об окончании наладки </summary>

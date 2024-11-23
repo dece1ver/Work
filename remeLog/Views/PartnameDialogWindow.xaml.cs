@@ -19,12 +19,12 @@ namespace remeLog.Views
     /// </summary>
     public partial class PartnameDialogWindow : Window
     {
-        public static readonly DependencyProperty InputTextProperty =
+        public static readonly DependencyProperty PartNameProperty =
         DependencyProperty.Register(
-            nameof(InputText),
+            nameof(PartName),
             typeof(string),
             typeof(PartnameDialogWindow),
-            new PropertyMetadata(string.Empty, OnInputTextChanged));
+            new PropertyMetadata(string.Empty, OnPartNameChanged));
 
         public static readonly DependencyProperty IsInputValidProperty =
             DependencyProperty.Register(
@@ -33,10 +33,10 @@ namespace remeLog.Views
                 typeof(PartnameDialogWindow),
                 new PropertyMetadata(false));
 
-        public string InputText
+        public string PartName
         {
-            get => (string)GetValue(InputTextProperty);
-            set => SetValue(InputTextProperty, value);
+            get => (string)GetValue(PartNameProperty);
+            set => SetValue(PartNameProperty, value);
         }
 
         public bool IsInputValid
@@ -49,10 +49,10 @@ namespace remeLog.Views
         {
             InitializeComponent();
             DataContext = this;
-            InputText = initialValue;
+            PartName = initialValue;
         }
 
-        private static void OnInputTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnPartNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is PartnameDialogWindow dialog)
             {
@@ -62,7 +62,7 @@ namespace remeLog.Views
 
         private void ValidateInput()
         {
-            IsInputValid = !string.IsNullOrWhiteSpace(InputText);
+            IsInputValid = !string.IsNullOrWhiteSpace(PartName);
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

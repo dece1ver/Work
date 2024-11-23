@@ -433,7 +433,8 @@ namespace eLog.ViewModels
         public ICommand TestCommand { get; }
         private void OnTestCommandExecuted(object p)
         {
-            
+            var dlg = new DifficultiesReportWindow() {Owner = App.Current.MainWindow};
+            dlg.ShowDialog();
         }
         private static bool CanTestCommandExecute(object p) => true;
         #endregion
