@@ -1,21 +1,14 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using libeLog;
+﻿using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Infrastructure;
-using libeLog.Interfaces;
 using libeLog.Models;
-using Microsoft.Win32;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.AccessControl;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
@@ -39,6 +32,7 @@ namespace remeLog.ViewModels
             _DailyReportsDir = new SettingsItem(AppSettings.Instance.DailyReportsDir ?? "");
             _ConnectionString = new SettingsItem(AppSettings.Instance.ConnectionString ?? "");
             _InstantUpdateOnMainWindow = AppSettings.Instance.InstantUpdateOnMainWindow;
+            Role = AppSettings.Instance.User ??= User.Viewer;
 
             _ = CheckSourceAsync();
             _ = CheckReportsAsync();
@@ -48,10 +42,11 @@ namespace remeLog.ViewModels
 
         #region Свойства
 
-        public List<DataSource> DataSourceTypes { get; set; } = new() {
-        new DataSource(DataSource.Types.Database),
-        new DataSource(DataSource.Types.Excel),
-    };
+        public List<DataSource> DataSourceTypes { get; set; } = new() 
+        {
+            new DataSource(DataSource.Types.Database),
+            new DataSource(DataSource.Types.Excel),
+        };
 
         private string _StatusText = string.Empty;
         /// <summary> Текст статусбара </summary>
@@ -136,6 +131,15 @@ namespace remeLog.ViewModels
         }
 
 
+        private User _Role;
+        /// <summary> Роль пользователя </summary>
+        public User Role
+        {
+            get => _Role;
+            set => Set(ref _Role, value);
+        }
+
+
         private bool _InstantUpdateOnMainWindow;
         /// <summary> Описание </summary>
         public bool InstantUpdateOnMainWindow
@@ -186,7 +190,7 @@ namespace remeLog.ViewModels
         private void OnSetDailyReportsDirCommandExecuted(object p)
         {
             FolderBrowserDialog dlg = new();
-                ;
+            ;
             if (dlg.ShowDialog() != DialogResult.OK) return;
             DailyReportsDir.Value = dlg.SelectedPath;
             _ = CheckDailyReportsDirAsync();

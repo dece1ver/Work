@@ -321,6 +321,16 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
+        <DataGridTextColumn x:Key="ProblemsColumn" Header="Проблемы" Binding="{Binding Problems, Mode=OneWay}" Width="230" FontFamily="Calibri">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+
         <DataGridTextColumn x:Key="SetupDowntimesColumn" Header="Простои в наладке" Binding="{Binding SetupDowntimes, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
@@ -909,7 +919,7 @@
                             <TextBlock Text="Отчет по сменам"/>
                         </MenuItem.Header>
                     </MenuItem>
-                    <MenuItem Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource HistoryLayersIcon}"
+                    <MenuItem Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource ShowFullHistoryIcon}"
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
                         ToolTip="Экспорт истории запусков детали" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
@@ -1018,6 +1028,7 @@
                     <StaticResource ResourceKey="ProductionTimeFactColumn"/>
                     <StaticResource ResourceKey="PlanForBatchColumn"/>
                     <StaticResource ResourceKey="OperatorCommentColumn"/>
+                    <StaticResource ResourceKey="ProblemsColumn"/>
                     <StaticResource ResourceKey="SetupDowntimesColumn"/>
                     <StaticResource ResourceKey="MachiningDowntimesColumn"/>
                     <StaticResource ResourceKey="PartialSetupTimeColumn"/>

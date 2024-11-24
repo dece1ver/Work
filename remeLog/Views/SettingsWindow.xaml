@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views"
         xmlns:cmd="clr-namespace:remeLog.Infrastructure.Commands"
+        xmlns:ext="clr-namespace:remeLog.Infrastructure.Extensions"
+        xmlns:types="clr-namespace:remeLog.Infrastructure.Types"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:SettingsWindowViewModel}"
         mc:Ignorable="d"
         Title="Параметры" Height="450" Width="800" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Icon="/Resources/Settings.png">
@@ -53,6 +55,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition />
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
@@ -83,7 +86,7 @@
                 <Button Content="Обзор..." Command="{Binding SetReportsTableCommand}"/>
             </DockPanel>-->
 
-            <TextBlock Grid.Row="3" Grid.Column="0" 
+            <!--<TextBlock Grid.Row="3" Grid.Column="0" 
                        Text="Суточные отчёты" Style="{StaticResource settingLabel}" />
             <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DailyReportsDir.Value}" 
                         d:Text="C:\ProgramData\dece1ver\remeLog\"/>
@@ -91,7 +94,7 @@
                 <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding DailyReportsDir.Tip, UpdateSourceTrigger=PropertyChanged}"
                         Content="{Binding DailyReportsDir.Status, Converter={StaticResource StatusVisibilityConverter}}" />
                 <Button Content="Обзор..." Command="{Binding SetDailyReportsDirCommand}"/>
-            </DockPanel>
+            </DockPanel>-->
 
             <TextBlock x:Name="ConnectionStringTextBlock" Grid.Row="4" Grid.Column="0" 
                        Text="Строка подключения" Style="{StaticResource settingLabel}" PreviewMouseLeftButtonUp="ConnectionStringTextBlock_PreviewMouseLeftButtonUp" />
@@ -103,10 +106,20 @@
                 <Button Content="Проверить" Command="{Binding CheckConnectionStringCommand}"/>
             </DockPanel>
 
-            <CheckBox Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" IsChecked="{Binding InstantUpdateOnMainWindow}" 
-                      Content="Мгновенное обновление информации на главной странице" Margin="4 6"/>
+            <TextBlock Grid.Row="5" Grid.Column="0" 
+                       Text="Роль" Style="{StaticResource settingLabel}" PreviewMouseLeftButtonUp="ConnectionStringTextBlock_PreviewMouseLeftButtonUp" 
+                       VerticalAlignment="Center" TextAlignment="Center"/>
+            <ComboBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Margin="0 0 31 0" 
+                      ItemsSource="{Binding Source={ext:EnumBindingSource {x:Type types:User}, ExcludeValue=Developer}}"
+                      SelectedValue="{Binding Role}" 
+                      DisplayMemberPath="Display"
+                      SelectedValuePath="Value" VerticalContentAlignment="Center"/>
 
-            <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" 
+            <CheckBox Grid.Row="6" Grid.Column="0" IsChecked="{Binding InstantUpdateOnMainWindow}" 
+                      Grid.ColumnSpan="2" 
+                      Content="Мгновенное обновление информации на главной странице" Margin="4 6"/>
+            
+            <StackPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" 
                         Orientation="Horizontal" FlowDirection="RightToLeft">
                 <Button Content="Ok" Width="100" Margin="0 0 5 0" 
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:SettingsWindow}}">

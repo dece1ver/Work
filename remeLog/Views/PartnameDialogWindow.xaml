@@ -5,32 +5,57 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Деталь" 
-        Height="150" 
+        Height="200" 
         Width="300"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
-
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Width" Value="80"/>
             <Setter Property="Height" Value="25"/>
         </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
     </Window.Resources>
-
     <Grid Margin="10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBox x:Name="InputTextBox" d:Text="Корпус клапана АР110-01-001 (под азотацию 666-100500 HRc)"
-                 Grid.Row="0" TextAlignment="Center" 
+        <TextBlock Text="Наименование:" Grid.Row="0"/>
+        <TextBox x:Name="InputTextBox" 
+                 d:Text="Корпус клапана АР110-01-001 (под азотацию 666-100500 HRc)"
+                 Grid.Row="1" 
+                 TextAlignment="Center" 
                  TextWrapping="Wrap" 
                  VerticalContentAlignment="Center"
-                 Margin="0 0 0 10"
+                 Margin="0,0,0,10"
                  Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <UniformGrid Columns="2" Grid.Row="1">
+        <DockPanel Grid.Row="2">
+            <TextBlock Text="Количество заказов:" Grid.Row="2"/>
+            <TextBox x:Name="OrderCountTextBox"
+         TextAlignment="Center"
+         VerticalContentAlignment="Center"
+         Margin="5,0,0,10"
+         Text="{Binding OrderCount, UpdateSourceTrigger=PropertyChanged}">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="True">
+                                <Setter Property="Background" Value="White"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+        </DockPanel>
+
+        <UniformGrid Columns="2" Grid.Row="4">
             <Button Content="Отмена" 
                     IsCancel="True"
                     HorizontalAlignment="Left"/>

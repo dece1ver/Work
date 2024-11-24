@@ -173,6 +173,7 @@ namespace remeLog.ViewModels
                     AppSettings.Instance.DailyReportsDir = settings.DailyReportsDir.Value;
                     AppSettings.Instance.ConnectionString = settings.ConnectionString.Value;
                     AppSettings.Instance.InstantUpdateOnMainWindow = settings.InstantUpdateOnMainWindow;
+                    AppSettings.Instance.User = settings.Role;
                     AppSettings.Save();
                     Status = "Параметры сохранены";
                 }

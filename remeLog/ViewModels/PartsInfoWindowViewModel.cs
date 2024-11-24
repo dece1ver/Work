@@ -772,13 +772,14 @@ namespace remeLog.ViewModels
                 if (p is PartsInfoWindow w) dlg.Owner = w;
                 if (dlg.ShowDialog() != true) return;
                 var path = Util.GetXlsxPath();
-                var partName = dlg.InputText;
+                var partName = dlg.PartName;
+                var oredersCount = dlg.OrderCount;
                 await Task.Run(async () =>
                 {
                     InProgress = true;
                     var cancellationToken = _cancellationTokenSource.Token;
                     var parts = await Task.Run(() => Database.ReadPartsWithConditions(BuildConditionsForPartForAllTime(partName), cancellationToken));
-                    Status = Xl.ExportHistory(parts, path);
+                    Status = Xl.ExportHistory(parts, path, oredersCount);
                 });
                 
                 if (string.IsNullOrEmpty(path))
@@ -1301,10 +1302,10 @@ namespace remeLog.ViewModels
                 sb.AppendFormat("AND Shift = '{0}' ", ShiftFilter.FilterText);
             }
 
-            AppendCondition(sb, "Operator", FormatSearchInput(OperatorFilter));
-            AppendCondition(sb, "PartName", FormatSearchInput(PartNameFilter));
-            AppendCondition(sb, "[Order]", FormatSearchInput(OrderFilter));
-            AppendCondition(sb, "EngineerComment", EngineerCommentFilter, true);
+            AppendCondition(sb, "Operator", OperatorFilter);
+            AppendCondition(sb, "PartName", PartNameFilter);
+            AppendCondition(sb, "[Order]", OrderFilter);
+            AppendCondition(sb, "EngineerComment", EngineerCommentFilter);
 
             if (TryParseComparison(FinishedCountFilter, out var finishedCountOperator, out var finishedCountValue))
                 sb.AppendFormat("AND FinishedCount {0} {1} ", finishedCountOperator, finishedCountValue);
@@ -1343,11 +1344,12 @@ namespace remeLog.ViewModels
         /// <param name="column">Столбец в который будем писать</param>
         /// <param name="value">Значение</param>
         /// <param name="isLike">Примерный поиск, либо точный</param>
-        private void AppendCondition(StringBuilder sb, string column, string value, bool isLike = true)
+        private void AppendCondition(StringBuilder sb, string column, string value)
         {
             if (!string.IsNullOrEmpty(value))
             {
-                sb.AppendFormat("AND {0} {1} '{2}' ", column, isLike ? "LIKE" : "=", isLike ? $"%{value}%" : value);
+                var pattern = new SearchPattern(value);
+                sb.AppendFormat("AND {0} {1} ", column, pattern);
             }
         }
 

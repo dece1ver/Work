@@ -33,6 +33,13 @@ namespace remeLog.Views
                 typeof(PartnameDialogWindow),
                 new PropertyMetadata(false));
 
+        public static readonly DependencyProperty OrderCountProperty =
+        DependencyProperty.Register(
+            nameof(OrderCount),
+            typeof(int),
+            typeof(PartnameDialogWindow),
+            new PropertyMetadata(1, OnInputChanged));
+
         public string PartName
         {
             get => (string)GetValue(PartNameProperty);
@@ -45,11 +52,18 @@ namespace remeLog.Views
             private set => SetValue(IsInputValidProperty, value);
         }
 
+        public int OrderCount
+        {
+            get => (int)GetValue(OrderCountProperty);
+            set => SetValue(OrderCountProperty, value);
+        }
+
         public PartnameDialogWindow(string initialValue)
         {
             InitializeComponent();
             DataContext = this;
             PartName = initialValue;
+            OrderCount = 5;
         }
 
         private static void OnPartNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -60,9 +74,38 @@ namespace remeLog.Views
             }
         }
 
+        private static void OnInputChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is PartnameDialogWindow dialog)
+            {
+                dialog.ValidateInput();
+            }
+        }
+
         private void ValidateInput()
         {
-            IsInputValid = !string.IsNullOrWhiteSpace(PartName);
+            IsInputValid = !string.IsNullOrWhiteSpace(PartName) && OrderCount > 0;
+        }
+
+        private void OrderCountTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !int.TryParse(e.Text, out _);
+        }
+
+        private void OnPasteHandler(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(typeof(string)))
+            {
+                string text = (string)e.DataObject.GetData(typeof(string));
+                if (!int.TryParse(text, out _))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

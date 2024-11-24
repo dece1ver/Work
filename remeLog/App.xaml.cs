@@ -1,4 +1,5 @@
 ﻿using remeLog.Infrastructure;
+using remeLog.Views;
 using System;
 using System.Globalization;
 using System.IO;
@@ -33,6 +34,13 @@ namespace remeLog
             catch (WaitHandleCannotBeOpenedException)
             {
                 AppSettings.Instance.ReadConfig();
+                //if (AppSettings.Instance.User == null)
+                //{
+                //    var dlg = new SetRoleDialog();
+                //    if (dlg.ShowDialog() != true) { return; }
+                //    AppSettings.Instance.User = dlg.SelectedRole;
+                //    AppSettings.Save();
+                //}
                 _EventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
             }
 

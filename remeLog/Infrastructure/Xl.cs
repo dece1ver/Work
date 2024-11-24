@@ -441,10 +441,11 @@ namespace remeLog.Infrastructure
             return $"Файл сохранен в \"{path}\"";
         }
 
-        public static string ExportHistory(ICollection<Part> parts, string path)
+        public static string ExportHistory(ICollection<Part> parts, string path, int ordersCount)
         {
             var wb = new XLWorkbook();
-            var ws = wb.AddWorksheet("Экспорт");
+            var ws = wb.AddWorksheet($"История последних {ordersCount} заказов");
+
             ws.Style.Font.FontSize = 10;
             ws.Style.Alignment.WrapText = true;
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -460,10 +461,10 @@ namespace remeLog.Infrastructure
                 { "finished", (6, "Выполнено") },
                 { "setup", (7, "Установка") },
                 { "setupTimePlan", (8, "Норматив наладки") },
-                { "setupTimeFact", (9, "Фактическая наладка") },
+                { "setupTimeFact", (9, "Факт. наладка") },
                 { "singleProductionTimePlan", (10, "Норматив штучный") },
                 { "machiningTime", (11, "Машинное время") },
-                { "singleProductionTime", (12, "Штучное фактическое") },
+                { "singleProductionTime", (12, "Факт. штучное") },
                 { "operatorComment", (13, "Комментарий оператора") },
                 { "problems", (14, "Типовые проблемы") },
                 { "specifiedDowntimesComment", (15, "Комментарий к простоям") },
@@ -472,74 +473,87 @@ namespace remeLog.Infrastructure
                 { "masterComment", (18, "Комментарий мастера") }
             };
 
-            foreach (var (index, header) in columns.Values)
-            {
-                ws.Cell(1, index).Value = header;
-            }
-            ws.Row(1).Style.Font.Bold = true;
+            ConfigureWorksheetHeader(ws, columns, HeaderRotateOption.Vertical);
 
-            var groupedParts = parts
-                .GroupBy(p => p.Machine)
-                .ToList();
-
-            int row = 2;
-            foreach (var group in groupedParts)
-            {
-                var last5Orders = group
+            int row = 3;
+            var lastOrders = parts
+                    .OrderByDescending(p => p.StartSetupTime)
                     .Select(p => p.Order)
                     .Distinct()
-                    .Take(5)
+                    .Take(ordersCount)
                     .ToList();
 
-                var filteredParts = group
-                    .Where(p => last5Orders.Contains(p.Order))
-                    .OrderBy(p => p.Order)
-                    .ThenByDescending(p => p.ShiftDate)
-                    .ToList();
+            var filteredParts = parts
+                .Where(p => lastOrders.Contains(p.Order) && p.FinishedCountFact > 0)
+                .OrderBy(p => p.Machine)
+                .ThenBy(p => p.StartSetupTime)
+                .ToList();
 
-                foreach (var part in filteredParts)
-                {
-                    ws.Cell(row, columns["machine"].index).SetValue(part.Machine);
-                    ws.Cell(row, columns["date"].index).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
-                    ws.Cell(row, columns["operator"].index).SetValue(part.Operator);
-                    ws.Cell(row, columns["part"].index).SetValue(part.PartName);
-                    ws.Cell(row, columns["order"].index).SetValue(part.Order);
-                    ws.Cell(row, columns["finished"].index).SetValue(part.FinishedCount);
-                    ws.Cell(row, columns["setup"].index).SetValue(part.Setup);
-                    ws.Cell(row, columns["setupTimePlan"].index).SetValue(part.SetupTimePlan);
-                    ws.Cell(row, columns["setupTimeFact"].index).SetValue(part.SetupTimeFact);
-                    ws.Cell(row, columns["singleProductionTimePlan"].index).SetValue(part.SingleProductionTimePlan);
+            foreach (var part in filteredParts)
+            {
+                ws.Cell(row, columns["machine"].index).SetValue(part.Machine);
+                ws.Cell(row, columns["date"].index).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
+                ws.Cell(row, columns["operator"].index).SetValue(part.Operator);
+                ws.Cell(row, columns["part"].index).SetValue(part.PartName);
+                ws.Cell(row, columns["order"].index).SetValue(part.Order);
+                ws.Cell(row, columns["finished"].index).SetValue(part.FinishedCount);
+                ws.Cell(row, columns["setup"].index).SetValue(part.Setup);
+                ws.Cell(row, columns["setupTimePlan"].index).SetValue(part.SetupTimePlan);
+                ws.Cell(row, columns["setupTimeFact"].index).SetValue(part.SetupTimeFact > 0 ? part.SetupTimeFact : "б/н");
+                if (part.SingleProductionTimePlan is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
+                    ws.Cell(row, columns["singleProductionTimePlan"].index).SetValue(part.SingleProductionTimePlan)
+                        .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+                if (part.MachiningTime != TimeSpan.Zero)
                     ws.Cell(row, columns["machiningTime"].index).SetValue(part.MachiningTime);
-                    ws.Cell(row, columns["singleProductionTime"].index).SetValue(part.SingleProductionTime);
-                    ws.Cell(row, columns["operatorComment"].index).SetValue(part.OperatorComment);
-                    ws.Cell(row, columns["problems"].index).SetValue(part.OperatorComment);
-                    ws.Cell(row, columns["specifiedDowntimesComment"].index).SetValue(part.SpecifiedDowntimesComment);
-                    ws.Cell(row, columns["masterSetupComment"].index).SetValue(part.MasterSetupComment);
-                    ws.Cell(row, columns["masterMachiningComment"].index).SetValue(part.MasterMachiningComment);
-                    ws.Cell(row, columns["masterComment"].index).SetValue(part.MasterComment);
-
-                    ws.Range(row, 1, row, columns.Count).Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, columns.Count).Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                    ws.Range(row, 1, row, columns.Count).Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-
-                    row++;
-                }
-                ws.Range(row, 1, row, columns.Count)
-                    .Style.Border.BottomBorder = XLBorderStyleValues.Medium;
+                if (part.SingleProductionTime is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
+                    ws.Cell(row, columns["singleProductionTime"].index).SetValue(part.SingleProductionTime)
+                        .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+                ws.Cell(row, columns["operatorComment"].index).SetValue(part.OperatorComment)
+                    .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                ws.Cell(row, columns["problems"].index).SetValue(part.Problems)
+                    .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                ws.Cell(row, columns["specifiedDowntimesComment"].index).SetValue(part.SpecifiedDowntimesComment);
+                ws.Cell(row, columns["masterSetupComment"].index).SetValue(part.MasterSetupComment);
+                ws.Cell(row, columns["masterMachiningComment"].index).SetValue(part.MasterMachiningComment);
+                ws.Cell(row, columns["masterComment"].index).SetValue(part.MasterComment);
+                row++;
             }
-
             ws.Columns().AdjustToContents();
-            ws.SheetView.FreezeRows(1);
+
+            ws.Column(columns["machine"].index).Width = 16;
+            ws.Column(columns["date"].index).Width = 7;
+            ws.Column(columns["operator"].index).Width = 15; 
+            ws.Column(columns["part"].index).Width = 25;
+            ws.Column(columns["order"].index).Width = 15;
+            ws.Columns(columns["finished"].index, columns["setupTimeFact"].index).Width = 3; 
+            ws.Column(columns["singleProductionTimePlan"].index).Width = 4;
+            ws.Columns(columns["operatorComment"].index, columns["problems"].index).Width = 35;
+            ws.Columns(columns["specifiedDowntimesComment"].index, columns["masterComment"].index).Width = 20;
+
+            ws.PageSetup.PrintAreas.Add(1, 1, row - 1, columns.Count);
+            ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
+            ws.PageSetup.PaperSize = XLPaperSize.A4Paper;
+            ws.PageSetup.FitToPages(1, 0);
+            ws.PageSetup.Margins.SetLeft(0.4);
+            ws.PageSetup.Margins.SetRight(0.4);
+            ws.PageSetup.Margins.SetTop(0.4);
+            ws.PageSetup.Margins.SetBottom(0.4);
+            ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.RangeUsed().Style.Border.BottomBorder = XLBorderStyleValues.Medium;
+            ws.RangeUsed().SetAutoFilter(true);
 
             wb.SaveAs(path);
+
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes)
             {
-                Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
+                Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
             }
 
             return path;
         }
+
 
         public static string ExportPartsInfo(ICollection<Part> parts, string path, DateTime fromDate, DateTime toDate)
         {

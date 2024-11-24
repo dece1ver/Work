@@ -289,6 +289,8 @@ namespace remeLog.Models
             }
         }
 
+        public string Problems => "Тут будут проблемы из списка.\n• Проблема №1\n• Проблема №2\n...";
+
 
         private DateTime _StartSetupTime;
         /// <summary> Начало наладки </summary>
