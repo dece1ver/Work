@@ -566,7 +566,7 @@
                             Visibility="{Binding DataContext.ViewMode, 
                             Source={x:Reference partsInfoWindow}, 
                             Converter={StaticResource UserRoleVisibilityConverter}, 
-                            ConverterParameter='Viewer, Engeneer, Developer'}">
+                            ConverterParameter='Viewer, Engineer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -581,7 +581,7 @@
                             Visibility="{Binding DataContext.ViewMode, 
                             Source={x:Reference partsInfoWindow}, 
                             Converter={StaticResource UserRoleVisibilityConverter}, 
-                            ConverterParameter='Viewer, Engeneer, Developer'}">
+                            ConverterParameter='Viewer, Engineer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -594,7 +594,7 @@
                             Visibility="{Binding DataContext.ViewMode, 
                             Source={x:Reference partsInfoWindow}, 
                             Converter={StaticResource UserRoleVisibilityConverter}, 
-                            ConverterParameter='Viewer, Engeneer, Developer'}">
+                            ConverterParameter='Viewer, Engineer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -607,7 +607,7 @@
                                 Visibility="{Binding DataContext.ViewMode, 
                                 Source={x:Reference partsInfoWindow}, 
                                 Converter={StaticResource UserRoleVisibilityConverter}, 
-                                ConverterParameter='Viewer, Engeneer, Developer'}">
+                                ConverterParameter='Viewer, Engineer, Developer'}">
             <DataGridCheckBoxColumn.ElementStyle>
                 <Style TargetType="CheckBox" BasedOn="{StaticResource TableCheckBox}"/>
             </DataGridCheckBoxColumn.ElementStyle>
