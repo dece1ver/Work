@@ -49,6 +49,7 @@ namespace remeLog.ViewModels
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
             RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
             ChangeCompactViewCommand = new LambdaCommand(OnChangeCompactViewCommandExecuted, CanChangeCompactViewCommandExecute);
+            ChangeRoleCommand = new LambdaCommand(OnChangeRoleCommandExecuted, CanChangeRoleCommandExecute);
             ChangeShowUncheckedCommand = new LambdaCommand(OnChangeShowUncheckedCommandExecuted, CanChangeShowUncheckedCommandExecute);
             ChangeCalcFixedCommand = new LambdaCommand(OnChangeCalcFixedCommandExecuted, CanChangeCalcFixedCommandExecute);
             OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
@@ -74,7 +75,7 @@ namespace remeLog.ViewModels
 
             CalcFixed = Part.CalcFixed;
             PartsInfo = parts;
-            ShiftFilterItems = new Shift[3] { new Shift(ShiftType.All), new Shift(ShiftType.Day), new Shift(ShiftType.Night) };
+            ShiftFilterItems = new Shift[3] { new(ShiftType.All), new(ShiftType.Day), new(ShiftType.Night) };
             _ShiftFilter = ShiftFilterItems.FirstOrDefault();
             _OperatorFilter = "";
             _FinishedCountFilter = "";
@@ -1138,6 +1139,18 @@ namespace remeLog.ViewModels
         public ICommand ChangeCompactViewCommand { get; }
         private void OnChangeCompactViewCommandExecuted(object p) => CompactView = !CompactView;
         private static bool CanChangeCompactViewCommandExecute(object p) => true;
+        #endregion
+
+        #region ChangeRole
+        public ICommand ChangeRoleCommand { get; }
+        private void OnChangeRoleCommandExecuted(object p) 
+        {
+            if (p is string str && Enum.TryParse(str, out User newRole))
+            {
+                ViewMode = newRole;
+            }
+        }
+        private static bool CanChangeRoleCommandExecute(object p) => true;
         #endregion
 
         #region ChangeShowUnchecked

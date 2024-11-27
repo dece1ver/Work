@@ -773,6 +773,9 @@
                             <controls:IncDecControl Grid.Row="0" Grid.Column="5" Grid.RowSpan="2" Value="{Binding SetupFilter, Delay=500, Mode=TwoWay}"/>
                         </Grid>
 
+                        
+
+                        
                         <ComboBox Grid.Column="5" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
                                   ItemsSource="{Binding MachineFilters}" Margin="25 0" Width="180"
                                   HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
@@ -839,6 +842,28 @@
                         <Setter Property="BorderThickness" Value="0"/>
                     </Style>
                 </Menu.Resources>
+                <Menu.Template>
+                    <ControlTemplate TargetType="Menu">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ItemsPresenter Grid.Column="0"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <MenuItem Header="Мастер" Padding="-12" Width="100"
+                                          Command="{Binding ChangeRoleCommand}"
+                                          CommandParameter="Master"/>
+                                <MenuItem Header="Технолог" Padding="-17" Width="100"
+                                          Command="{Binding ChangeRoleCommand}"
+                                          CommandParameter="Engineer"/>
+                                <MenuItem Header="Показать всё" Padding="-28" Width="100"
+                                          Command="{Binding ChangeRoleCommand}"
+                                          CommandParameter="Viewer"/>
+                            </StackPanel>
+                        </Grid>
+                    </ControlTemplate>
+                </Menu.Template>
                 <MenuItem Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД">
                     <MenuItem.Header>
                         <StaticResource ResourceKey="SyncIcon"/>
@@ -859,13 +884,13 @@
                     <MenuItem Command="{Binding SetHorMillMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать горизонтально-фрезерные"/>
                 </MenuItem>
                 <MenuItem Header="Вид">
-                    <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource ConfirmIconFlex}"
+                    <!--<MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource ConfirmIconFlex}"
                               Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}}"
                               ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
                             <TextBlock Text="Компактный" FontWeight="DemiBold"/>
                         </MenuItem.Header>
-                    </MenuItem>
+                    </MenuItem>-->
                     <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource CloseIconFlex}" 
                               Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}}"
                               ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
@@ -963,6 +988,11 @@
                             <TextBlock Text="Текущая выборка"/>
                         </MenuItem.Header>
                     </MenuItem>
+                </MenuItem>
+                <MenuItem HorizontalAlignment="Right" Margin="0,0,10,0">
+                    <MenuItem.Header>
+                        <Border Width="1" Background="LightGray"/>
+                    </MenuItem.Header>
                 </MenuItem>
             </Menu>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
