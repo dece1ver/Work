@@ -354,6 +354,15 @@ namespace remeLog.ViewModels
         }
 
 
+        private User _ViewMode;
+        /// <summary> Режим просмотра </summary>
+        public User ViewMode
+        {
+            get => _ViewMode;
+            set => Set(ref _ViewMode, value);
+        }
+
+
         private bool _ViewUnchecked;
         /// <summary> Описание </summary>
         public bool ViewUnchecked
@@ -361,8 +370,6 @@ namespace remeLog.ViewModels
             get => _ViewUnchecked;
             set => Set(ref _ViewUnchecked, value);
         }
-
-
 
         private Overlay _Overlay = new(false);
 

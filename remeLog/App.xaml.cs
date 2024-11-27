@@ -34,13 +34,7 @@ namespace remeLog
             catch (WaitHandleCannotBeOpenedException)
             {
                 AppSettings.Instance.ReadConfig();
-                //if (AppSettings.Instance.User == null)
-                //{
-                //    var dlg = new SetRoleDialog();
-                //    if (dlg.ShowDialog() != true) { return; }
-                //    AppSettings.Instance.User = dlg.SelectedRole;
-                //    AppSettings.Save();
-                //}
+                
                 _EventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
             }
 
@@ -81,7 +75,6 @@ namespace remeLog
 
         private void SingleInstanceWatcher()
         {
-            // if this instance gets the signal to show the main window
             new Task(() =>
             {
                 while (_EventWaitHandle.WaitOne())

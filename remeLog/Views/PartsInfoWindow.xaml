@@ -124,7 +124,8 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
         
-        <DataGridTextColumn x:Key="ShiftDateColumn" Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy, Converter={StaticResource ShortDateConverter}}" Width="50">
+        <DataGridTextColumn x:Key="ShiftDateColumn" Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy, Converter={StaticResource ShortDateConverter}}" Width="50"
+                            >
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -266,16 +267,6 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="SingleProductionTimeColumn" Header="Штучное фактическое" Binding="{Binding SingleProductionTime, StringFormat=0.#, Mode=OneWay}" 
-                    Width="35" IsReadOnly="True">
-            <DataGridTextColumn.ElementStyle>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-            </DataGridTextColumn.ElementStyle>
-            <DataGridTextColumn.EditingElementStyle>
-                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-            </DataGridTextColumn.EditingElementStyle>
-        </DataGridTextColumn>
-
         <DataGridTextColumn x:Key="PartReplacementTimeColumn" Header="Время замены" Binding="{Binding PartReplacementTime, StringFormat=0.#}" 
             Width="35" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
@@ -285,12 +276,22 @@
                 <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
-
+        
+        <DataGridTextColumn x:Key="SingleProductionTimeColumn" Header="Штучное фактическое" Binding="{Binding SingleProductionTime, StringFormat=0.#, Mode=OneWay}" 
+                    Width="35" IsReadOnly="True">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+        
         <DataGridTextColumn x:Key="ProductionTimeFactColumn" Header="Фактическое изготовление" Binding="{Binding ProductionTimeFact, StringFormat=0.#}" 
                     Width="35" IsReadOnly="True" 
-                    Visibility="{Binding DataContext.CompactView, 
+                    Visibility="{Binding DataContext.ViewMode, 
                     Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource InvertedVisibilityConverter}}">
+                    Converter={StaticResource UserRoleVisibilityConverter}, ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -301,9 +302,10 @@
 
         <DataGridTextColumn x:Key="PlanForBatchColumn" Header="Норматив на партию" Binding="{Binding PlanForBatch, StringFormat=0.#}" 
                             Width="35" IsReadOnly="True" 
-                            Visibility="{Binding DataContext.CompactView, 
+                            Visibility="{Binding DataContext.ViewMode, 
                             Source={x:Reference partsInfoWindow}, 
-                            Converter={StaticResource InvertedVisibilityConverter}}">
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -331,7 +333,11 @@
         </DataGridTextColumn>
 
 
-        <DataGridTextColumn x:Key="SetupDowntimesColumn" Header="Простои в наладке" Binding="{Binding SetupDowntimes, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33">
+        <DataGridTextColumn x:Key="SetupDowntimesColumn" Header="Простои в наладке" Binding="{Binding SetupDowntimes, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Master, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -340,7 +346,11 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="MachiningDowntimesColumn" Header="Простои в изготовлении" Binding="{Binding MachiningDowntimes, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33">
+        <DataGridTextColumn x:Key="MachiningDowntimesColumn" Header="Простои в изготовлении" Binding="{Binding MachiningDowntimes, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Master, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -359,9 +369,10 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="MaintenanceTimeColumn" Header="Обслуживание" Binding="{Binding MaintenanceTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                    Visibility="{Binding DataContext.CompactView, 
+                    Visibility="{Binding DataContext.ViewMode, 
                     Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource InvertedVisibilityConverter}}">
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -371,9 +382,10 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="ToolSearchingTimeColumn" Header="Поиск инструмента" Binding="{Binding ToolSearchingTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                            Visibility="{Binding DataContext.CompactView, 
+                            Visibility="{Binding DataContext.ViewMode, 
                             Source={x:Reference partsInfoWindow}, 
-                            Converter={StaticResource InvertedVisibilityConverter}}">
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -383,9 +395,10 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="ToolChangingTimeColumn" Header="Замена инструмента" Binding="{Binding ToolChangingTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                    Visibility="{Binding DataContext.CompactView, 
+                    Visibility="{Binding DataContext.ViewMode, 
                     Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource InvertedVisibilityConverter}}">
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -395,9 +408,10 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="MentoringTimeColumn" Header="Обучение" Binding="{Binding MentoringTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                    Visibility="{Binding DataContext.CompactView, 
+                    Visibility="{Binding DataContext.ViewMode, 
                     Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource InvertedVisibilityConverter}}">
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -407,9 +421,10 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="ContactingDepartmentsTimeColumn" Header="Другие службы" Binding="{Binding ContactingDepartmentsTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                    Visibility="{Binding DataContext.CompactView, 
+                    Visibility="{Binding DataContext.ViewMode, 
                     Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource InvertedVisibilityConverter}}">
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -419,9 +434,10 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="FixtureMakingTimeColumn" Header="Изготовление оснастки" Binding="{Binding FixtureMakingTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                    Visibility="{Binding DataContext.CompactView, 
+                    Visibility="{Binding DataContext.ViewMode, 
                     Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource InvertedVisibilityConverter}}">
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -431,9 +447,10 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="HardwareFailureTimeColumn" Header="Отказ оборудования" Binding="{Binding HardwareFailureTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                    Visibility="{Binding DataContext.CompactView, 
+                    Visibility="{Binding DataContext.ViewMode, 
                     Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource InvertedVisibilityConverter}}">
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -443,7 +460,11 @@
         </DataGridTextColumn>
 
         <DataGridTextColumn x:Key="SpecifiedDowntimesRatioColumn" Header="Отмеченные простои" Binding="{Binding SpecifiedDowntimesRatio, UpdateSourceTrigger=PropertyChanged, StringFormat=0%}" 
-                    Width="33" IsReadOnly="True">
+                            Width="33" IsReadOnly="True"
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Master, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -452,7 +473,11 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTemplateColumn x:Key="SpecifiedDowntimesCommentColumn" Header="Комментарий к простоям" Width="120">
+        <DataGridTemplateColumn x:Key="SpecifiedDowntimesCommentColumn" Header="Комментарий к простоям" Width="120"
+                                Visibility="{Binding DataContext.ViewMode, 
+                                Source={x:Reference partsInfoWindow}, 
+                                Converter={StaticResource UserRoleVisibilityConverter}, 
+                                ConverterParameter='Viewer, Master, Developer'}">
             <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding SpecifiedDowntimesComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
@@ -534,23 +559,14 @@
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
 
-        <DataGridTextColumn x:Key="SetupTimePlanForReportColumn" Header="Норматив наладки (О)" Binding="{Binding SetupTimePlanForReport, 
-                            UpdateSourceTrigger=Default, 
-                            StringFormat=0.##,
-                            Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
-                            Visibility="{Binding CompactView}">
-            <DataGridTextColumn.ElementStyle>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-            </DataGridTextColumn.ElementStyle>
-            <DataGridTextColumn.EditingElementStyle>
-                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-            </DataGridTextColumn.EditingElementStyle>
-        </DataGridTextColumn>
-        
         <DataGridTextColumn x:Key="FixedSetupTimePlanColumn" Header="Норматив наладки (И)" Binding="{Binding FixedSetupTimePlan, 
                             UpdateSourceTrigger=Default, 
                             StringFormat=0.##,
-                            Converter={StaticResource ExpressionToDoubleConverter}}" Width="36">
+                            Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Engeneer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -561,7 +577,11 @@
 
         <DataGridTextColumn x:Key="FixedProductionTimePlanColumn" Header="Норматив изготовления (И)" Binding="{Binding FixedProductionTimePlan, 
                             UpdateSourceTrigger=Default, StringFormat=0.##, 
-                            Converter={StaticResource ExpressionToDoubleConverter}}" Width="36">
+                            Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Engeneer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -570,7 +590,11 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="EngineerCommentColumn" Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="125">
+        <DataGridTextColumn x:Key="EngineerCommentColumn" Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="125"
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Engeneer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -580,9 +604,10 @@
         </DataGridTextColumn>
 
         <DataGridCheckBoxColumn x:Key="ExcludeFromReportsColumn" Header="Исключить" Binding="{Binding ExcludeFromReports, UpdateSourceTrigger=PropertyChanged}" Width="33"
-            Visibility="{Binding DataContext.CompactView, 
-            Source={x:Reference partsInfoWindow}, 
-            Converter={StaticResource InvertedVisibilityConverter}}">
+                                Visibility="{Binding DataContext.ViewMode, 
+                                Source={x:Reference partsInfoWindow}, 
+                                Converter={StaticResource UserRoleVisibilityConverter}, 
+                                ConverterParameter='Viewer, Engeneer, Developer'}">
             <DataGridCheckBoxColumn.ElementStyle>
                 <Style TargetType="CheckBox" BasedOn="{StaticResource TableCheckBox}"/>
             </DataGridCheckBoxColumn.ElementStyle>
@@ -1023,8 +1048,8 @@
                     <StaticResource ResourceKey="SetupTimeFactColumn"/>
                     <StaticResource ResourceKey="SingleProductionTimePlanColumn"/>
                     <StaticResource ResourceKey="MachiningTimeColumn"/>
-                    <StaticResource ResourceKey="SingleProductionTimeColumn"/>
                     <StaticResource ResourceKey="PartReplacementTimeColumn"/>
+                    <StaticResource ResourceKey="SingleProductionTimeColumn"/>
                     <StaticResource ResourceKey="ProductionTimeFactColumn"/>
                     <StaticResource ResourceKey="PlanForBatchColumn"/>
                     <StaticResource ResourceKey="OperatorCommentColumn"/>

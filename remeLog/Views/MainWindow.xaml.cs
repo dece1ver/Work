@@ -1,4 +1,5 @@
-﻿using System;
+﻿using remeLog.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,17 @@ namespace remeLog.Views
     {
         public MainWindow()
         {
+            if (AppSettings.Instance.User == null)
+            {
+                var dlg = new SetRoleDialog();
+                if (dlg.ShowDialog() != true) 
+                { 
+                    Close();
+                    return;
+                }
+                AppSettings.Instance.User = dlg.SelectedRole;
+                AppSettings.Save();
+            }
             InitializeComponent();
         }
     }
