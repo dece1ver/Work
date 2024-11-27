@@ -23,6 +23,7 @@
             <cnv:ExpressionToDoubleConverter x:Key="ExpressionToDoubleConverter"/>
             <cnv:ExpressionToIntConverter x:Key="ExpressionToIntConverter"/>
             <cnv:RoleButtonConverter x:Key="RoleButtonConverter"/>
+            <cnv:RoleColorConverter x:Key="RoleColorConverter"/>
             <cnv:ShortDateConverter x:Key="ShortDateConverter"/>
             <cnv:UserRoleVisibilityConverter x:Key="UserRoleVisibilityConverter"/>
         </ResourceDictionary>

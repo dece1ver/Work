@@ -853,13 +853,16 @@
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                 <MenuItem Header="Мастер" Padding="-12" Width="100"
                                           Command="{Binding ChangeRoleCommand}"
-                                          CommandParameter="Master"/>
+                                          CommandParameter="Master"
+                                          Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Master}"/>
                                 <MenuItem Header="Технолог" Padding="-17" Width="100"
                                           Command="{Binding ChangeRoleCommand}"
-                                          CommandParameter="Engineer"/>
+                                          CommandParameter="Engineer"
+                                          Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Engineer}"/>
                                 <MenuItem Header="Показать всё" Padding="-28" Width="100"
                                           Command="{Binding ChangeRoleCommand}"
-                                          CommandParameter="Viewer"/>
+                                          CommandParameter="Viewer"
+                                          Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Viewer}"/>
                             </StackPanel>
                         </Grid>
                     </ControlTemplate>
