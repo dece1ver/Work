@@ -88,6 +88,7 @@ namespace remeLog.ViewModels
             _ToDate = PartsInfo.ToDate;
             _MachineFilters = new();
             _MachineFilters.CollectionChanged += MachineFiltersSource_CollectionChanged!;
+            _ViewMode = AppSettings.Instance.User ??= User.Viewer;
 
             _ = Init();
             

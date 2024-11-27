@@ -323,7 +323,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="ProblemsColumn" Header="Проблемы" Binding="{Binding Problems, Mode=OneWay}" Width="230" FontFamily="Calibri">
+        <DataGridTextColumn x:Key="ProblemsColumn" Header="Проблемы" Binding="{Binding Problems, Mode=OneWay}" Width="150" FontFamily="Calibri">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
