@@ -1,4 +1,6 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Wordprocessing;
 using libeLog;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
@@ -54,32 +56,34 @@ namespace remeLog.Infrastructure
             var noOperatorShiftsColId = 3;
             var hrdwRepairShiftsColId = 4;
             var noPowerShifts = 5;
-            var unspecOtherShiftsColId = 6;
-            var setupRatioColId = 7;
-            var productionRatioColId = 8;
-            var setupRatioUnderColId = 9;
-            var productionRatioUnderColId = 10;
-            var setupRatioOverColId = 11;
-            var productionRatioOverColId = 12;
-            var setupUnderOverRatioColId = 13;
-            var productionUnderOverRatioColId = 14;
-            var productionToTotalRatioColId = 15;
-            var productionEffToTotalRatioColId = 16;
-            var avrReplTimeColId = 17;
-            var specDowntimesColId = 18;
-            var maintenanceTimeColId = 19;
-            var toolSrchTimeColId = 20;
-            var mentoringTimeColId = 21;
-            var contactingDepartsTimeColId = 22;
-            var fixtMakingTimeColId = 23;
-            var hardwFailTimeColId = 24;
-            var unspecDownTimesColId = 25;
+            var processRelatedLossShiftsColId = 6;
+            var unspecOtherShiftsColId = 7;
+            var setupRatioColId = 8;
+            var productionRatioColId = 9;
+            var setupRatioUnderColId = 10;
+            var productionRatioUnderColId = 11;
+            var setupRatioOverColId = 12;
+            var productionRatioOverColId = 13;
+            var setupUnderOverRatioColId = 14;
+            var productionUnderOverRatioColId = 15;
+            var productionToTotalRatioColId = 16;
+            var productionEffToTotalRatioColId = 17;
+            var avrReplTimeColId = 18;
+            var specDowntimesColId = 19;
+            var maintenanceTimeColId = 20;
+            var toolSrchTimeColId = 21;
+            var mentoringTimeColId = 22;
+            var contactingDepartsTimeColId = 23;
+            var fixtMakingTimeColId = 24;
+            var hardwFailTimeColId = 25;
+            var unspecDownTimesColId = 26;
 
             ws.Cell(headerRow, machineColId).Value = "Станок";
             ws.Cell(headerRow, workedShiftsColId).Value = "Отработанные смены";
             ws.Cell(headerRow, noOperatorShiftsColId).Value = "Смены без операторов";
             ws.Cell(headerRow, hrdwRepairShiftsColId).Value = "Смены с ремонтом оборудования";
             ws.Cell(headerRow, noPowerShifts).Value = "Смены без электропитания";
+            ws.Cell(headerRow, processRelatedLossShiftsColId).Value = "Организационные потери";
             ws.Cell(headerRow, unspecOtherShiftsColId).Value = "Смены без работы по другим причинам";
             ws.Cell(headerRow, setupRatioColId).Value = "Коэффициент наладки";
             ws.Cell(headerRow, productionRatioColId).Value = "Коэффициент изготовления";
@@ -98,7 +102,7 @@ namespace remeLog.Infrastructure
             ws.Cell(headerRow, mentoringTimeColId).Value = "Обучение";
             ws.Cell(headerRow, contactingDepartsTimeColId).Value = "Другие службы";
             ws.Cell(headerRow, fixtMakingTimeColId).Value = "Изготовление оснастки";
-            ws.Cell(headerRow, hardwFailTimeColId).Value = "Поломка оборудования";
+            ws.Cell(headerRow, hardwFailTimeColId).Value = "Отказ оборудования";
             ws.Cell(headerRow, unspecDownTimesColId).Value = "Неуказанные простои";
 
             var lastCol = unspecDownTimesColId;
@@ -117,6 +121,7 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, noOperatorShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие оператора" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, hrdwRepairShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Ремонт оборудования" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, noPowerShifts).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие электричества" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, processRelatedLossShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, unspecOtherShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
                 ws.Cell(row, setupRatioColId).Value = parts.SetupRatio();
                 ws.Cell(row, productionRatioColId).Value = parts.ProductionRatio();
@@ -185,7 +190,7 @@ namespace remeLog.Infrastructure
             ws.Cell(1, 1).Value = $"Отчёт за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
             ws.Range(1, firstCol, 1, lastCol).Merge();
             ws.Range(1, firstCol, 1, 1).Style.Font.FontSize = 16;
-            ws.Columns(3, lastCol).Width = 8;
+            ws.Columns(2, lastCol).Width = 8;
 
             ws.Cell(row, machineColId).Value = "Соотношение:";
             ws.Cell(row, machineColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
@@ -195,8 +200,9 @@ namespace remeLog.Infrastructure
             ws.Cell(row, noOperatorShiftsColId).FormulaA1 = $"AVERAGE(C{firstDataRow}:C{lastDataRow})/$B${lastDataRow + 2}";
             ws.Cell(row, hrdwRepairShiftsColId).FormulaA1 = $"AVERAGE(D{firstDataRow}:D{lastDataRow})/$B${lastDataRow + 2}";
             ws.Cell(row, noPowerShifts).FormulaA1 = $"AVERAGE(E{firstDataRow}:E{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, unspecOtherShiftsColId).FormulaA1 = $"AVERAGE(F{firstDataRow}:F{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Range(row, workedShiftsColId, row, unspecOtherShiftsColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+            ws.Cell(row, processRelatedLossShiftsColId).FormulaA1 = $"AVERAGE(F{firstDataRow}:F{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Cell(row, unspecOtherShiftsColId).FormulaA1 = $"AVERAGE(G{firstDataRow}:G{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Range(row, workedShiftsColId, row, unspecOtherShiftsColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
             ws.Cell(row, workedShiftsColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, workedShiftsColId).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             row++;
@@ -446,7 +452,7 @@ namespace remeLog.Infrastructure
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet($"История последних {ordersCount} заказов");
 
-            ws.Style.Font.FontSize = 10;
+            ws.Style.Font.FontSize = 8;
             ws.Style.Alignment.WrapText = true;
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -456,24 +462,16 @@ namespace remeLog.Infrastructure
                 { "machine", (1, "Станок") },
                 { "date", (2, "Дата") },
                 { "operator", (3, "Оператор") },
-                { "part", (4, "Деталь") },
-                { "order", (5, "М/Л") },
-                { "finished", (6, "Выполнено") },
-                { "setup", (7, "Установка") },
-                { "setupTimePlan", (8, "Норматив наладки") },
-                { "setupTimeFact", (9, "Факт. наладка") },
-                { "singleProductionTimePlan", (10, "Норматив штучный") },
-                { "machiningTime", (11, "Машинное время") },
-                { "singleProductionTime", (12, "Факт. штучное") },
-                { "operatorComment", (13, "Комментарий оператора") },
-                { "problems", (14, "Типовые проблемы") },
-                { "specifiedDowntimesComment", (15, "Комментарий к простоям") },
-                { "masterSetupComment", (16, "Невыполнение норматива наладки") },
-                { "masterMachiningComment", (17, "Невыполнение норматива изготовления") },
-                { "masterComment", (18, "Комментарий мастера") }
+                { "order", (4, "М/Л") },
+                { "finished", (5, "Выполнено") },
+                { "setup", (6, "Установка") },
+                { "machiningTime", (7, "Машинное время") },
+                { "operatorComment", (8, "Комментарий оператора") },
+                { "problems", (9, "Типовые проблемы") },
+                { "masterComment", (10, "Комментарий мастера") }
             };
 
-            ConfigureWorksheetHeader(ws, columns, HeaderRotateOption.Vertical);
+            ConfigureWorksheetHeader(ws, columns, HeaderRotateOption.Vertical, 65, 8);
 
             int row = 3;
             var lastOrders = parts
@@ -488,61 +486,64 @@ namespace remeLog.Infrastructure
                 .OrderBy(p => p.Machine)
                 .ThenBy(p => p.StartSetupTime)
                 .ToList();
-
+            var currentMachine = "";
             foreach (var part in filteredParts)
             {
                 ws.Cell(row, columns["machine"].index).SetValue(part.Machine);
                 ws.Cell(row, columns["date"].index).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
                 ws.Cell(row, columns["operator"].index).SetValue(part.Operator);
-                ws.Cell(row, columns["part"].index).SetValue(part.PartName);
                 ws.Cell(row, columns["order"].index).SetValue(part.Order);
                 ws.Cell(row, columns["finished"].index).SetValue(part.FinishedCount);
                 ws.Cell(row, columns["setup"].index).SetValue(part.Setup);
-                ws.Cell(row, columns["setupTimePlan"].index).SetValue(part.SetupTimePlan);
-                ws.Cell(row, columns["setupTimeFact"].index).SetValue(part.SetupTimeFact > 0 ? part.SetupTimeFact : "б/н");
-                if (part.SingleProductionTimePlan is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, columns["singleProductionTimePlan"].index).SetValue(part.SingleProductionTimePlan)
-                        .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
                 if (part.MachiningTime != TimeSpan.Zero)
                     ws.Cell(row, columns["machiningTime"].index).SetValue(part.MachiningTime);
-                if (part.SingleProductionTime is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, columns["singleProductionTime"].index).SetValue(part.SingleProductionTime)
-                        .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-                ws.Cell(row, columns["operatorComment"].index).SetValue(part.OperatorComment)
+
+                var comment = part.OperatorComment;
+                if (comment.Contains("Отмеченные простои:\n"))
+                {
+                    comment = comment.Split("Отмеченные простои:\n")[0].Trim();
+                }
+                ws.Cell(row, columns["operatorComment"].index).SetValue(comment)
                     .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                 ws.Cell(row, columns["problems"].index).SetValue(part.Problems)
                     .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                ws.Cell(row, columns["specifiedDowntimesComment"].index).SetValue(part.SpecifiedDowntimesComment);
-                ws.Cell(row, columns["masterSetupComment"].index).SetValue(part.MasterSetupComment);
-                ws.Cell(row, columns["masterMachiningComment"].index).SetValue(part.MasterMachiningComment);
                 ws.Cell(row, columns["masterComment"].index).SetValue(part.MasterComment);
+                var cells = ws.Range(row,1,row,columns.Count);
+                cells.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                cells.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+                cells.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+                cells.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                cells.Style.Border.TopBorder = currentMachine == part.Machine ? XLBorderStyleValues.Thin : XLBorderStyleValues.Medium;
+                currentMachine = part.Machine;
                 row++;
+                
             }
+            
+
             ws.Columns().AdjustToContents();
 
-            ws.Column(columns["machine"].index).Width = 16;
+            ws.Column(columns["machine"].index).Width = 13;
             ws.Column(columns["date"].index).Width = 7;
-            ws.Column(columns["operator"].index).Width = 15; 
-            ws.Column(columns["part"].index).Width = 25;
+            ws.Column(columns["operator"].index).Width = 13; 
             ws.Column(columns["order"].index).Width = 15;
-            ws.Columns(columns["finished"].index, columns["setupTimeFact"].index).Width = 3; 
-            ws.Column(columns["singleProductionTimePlan"].index).Width = 4;
-            ws.Columns(columns["operatorComment"].index, columns["problems"].index).Width = 35;
-            ws.Columns(columns["specifiedDowntimesComment"].index, columns["masterComment"].index).Width = 20;
+            ws.Columns(columns["finished"].index, columns["setup"].index).Width = 3;
+            ws.Column(columns["machiningTime"].index).Width = 7;
+            ws.Columns(columns["operatorComment"].index, columns["problems"].index).Width = 30;
+            ws.Column(columns["masterComment"].index).Width = 20;
 
             ws.PageSetup.PrintAreas.Add(1, 1, row - 1, columns.Count);
             ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
             ws.PageSetup.PaperSize = XLPaperSize.A4Paper;
             ws.PageSetup.FitToPages(1, 0);
-            ws.PageSetup.Margins.SetLeft(0.4);
-            ws.PageSetup.Margins.SetRight(0.4);
+            ws.PageSetup.Margins.SetLeft(0.3);
+            ws.PageSetup.Margins.SetRight(0.2);
             ws.PageSetup.Margins.SetTop(0.4);
-            ws.PageSetup.Margins.SetBottom(0.4);
-            ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.PageSetup.Margins.SetBottom(0.2);
+            ws.Range(2,1,2,columns.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.RangeUsed().Style.Border.BottomBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
-
+            ws.Cell(1, 1).SetValue($"История изготовления").Style.Font.SetFontSize(14).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left).Alignment.SetWrapText(false);
+            ws.Cell(1, columns.Count).SetValue(parts.First().PartName).Style.Font.SetFontSize(14).Font.SetBold().Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right).Alignment.SetWrapText(false);
             wb.SaveAs(path);
 
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
@@ -1003,7 +1004,7 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
         }
 
-        private static void ConfigureWorksheetHeader(IXLWorksheet ws, Dictionary<string, (int index, string header)> columns, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical)
+        private static void ConfigureWorksheetHeader(IXLWorksheet ws, Dictionary<string, (int index, string header)> columns, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
         {
             foreach (var (index, header) in columns.Values)
             {
@@ -1013,10 +1014,10 @@ namespace remeLog.Infrastructure
             var headerRange = ws.Range(2, 1, 2, columns.Count);
             if (headerRotateOption == HeaderRotateOption.Vertical) headerRange.Style.Alignment.TextRotation = 90;
             headerRange.Style.Font.FontName = "Segoe UI Semibold";
-            headerRange.Style.Font.FontSize = 10;
+            headerRange.Style.Font.FontSize = fontSize;
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Row(2).Height = 100;
+            ws.Row(2).Height = height;
         }
 
 
