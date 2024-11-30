@@ -18,17 +18,14 @@ namespace remeLog
 
         public App()
         {
-            
-
+            var key = Environment.GetEnvironmentVariable("SYNCFUSION_LICENSE", EnvironmentVariableTarget.User);
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
             try
             {
-                // try to open it - if another instance is running, it will exist , if not it will throw
                 _EventWaitHandle = EventWaitHandle.OpenExisting(UniqueEventName);
 
-                // Notify other instance so it could bring itself to foreground.
                 _EventWaitHandle.Set();
 
-                // Terminate this instance.
                 Shutdown();
             }
             catch (WaitHandleCannotBeOpenedException)

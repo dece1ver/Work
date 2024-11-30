@@ -6,6 +6,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:remeLog.Views" xmlns:controls="clr-namespace:remeLog.Views.Controls"
         xmlns:ov="clr-namespace:remeLog.Infrastructure.Override"
+        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
         mc:Ignorable="d" xmlns:inf="clr-namespace:remeLog.Infrastructure" xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:remeLog.ViewModels" xmlns:md="clr-namespace:remeLog.Models" 
         d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
@@ -616,6 +617,10 @@
             </DataGridCheckBoxColumn.EditingElementStyle>
         </DataGridCheckBoxColumn>
         <!--#endregion-->
+
+        <!--#region NewColumns -->
+        
+        <!--#endregion-->
     </Window.Resources>
     <Grid>
         <DockPanel>
@@ -842,31 +847,6 @@
                         <Setter Property="BorderThickness" Value="0"/>
                     </Style>
                 </Menu.Resources>
-                <Menu.Template>
-                    <ControlTemplate TargetType="Menu">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <ItemsPresenter Grid.Column="0"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <MenuItem Header="Мастер" Padding="-12" Width="100"
-                                          Command="{Binding ChangeRoleCommand}"
-                                          CommandParameter="Master"
-                                          Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Master}"/>
-                                <MenuItem Header="Технолог" Padding="-17" Width="100"
-                                          Command="{Binding ChangeRoleCommand}"
-                                          CommandParameter="Engineer"
-                                          Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Engineer}"/>
-                                <MenuItem Header="Показать всё" Padding="-28" Width="100"
-                                          Command="{Binding ChangeRoleCommand}"
-                                          CommandParameter="Viewer"
-                                          Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Viewer}"/>
-                            </StackPanel>
-                        </Grid>
-                    </ControlTemplate>
-                </Menu.Template>
                 <MenuItem Command="{Binding RefreshPartsCommand}" ToolTip="Обновить из БД">
                     <MenuItem.Header>
                         <StaticResource ResourceKey="SyncIcon"/>
@@ -887,18 +867,18 @@
                     <MenuItem Command="{Binding SetHorMillMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать горизонтально-фрезерные"/>
                 </MenuItem>
                 <MenuItem Header="Вид">
-                    <!--<MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource ConfirmIconFlex}"
+                    <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource ConfirmIconFlex}"
                               Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}}"
-                              ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
+                              ToolTip="Новый режим вкл/выкл" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Компактный" FontWeight="DemiBold"/>
+                            <TextBlock Text="Новый" FontWeight="DemiBold"/>
                         </MenuItem.Header>
-                    </MenuItem>-->
+                    </MenuItem>
                     <MenuItem Command="{Binding ChangeCompactViewCommand}" Icon="{StaticResource CloseIconFlex}" 
                               Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}}"
-                              ToolTip="Компактный режим вкл/выкл" HorizontalAlignment="Stretch">
+                              ToolTip="Старый режим вкл/выкл" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
-                            <TextBlock Text="Компактный"/>
+                            <TextBlock Text="Старый"/>
                         </MenuItem.Header>
                     </MenuItem>
 
@@ -923,6 +903,18 @@
                             <TextBlock Text="Таблица для архива"/>
                         </MenuItem.Header>
                     </MenuItem>
+                    <MenuItem Header="Мастер" Padding="0"
+                              Command="{Binding ChangeRoleCommand}"
+                              CommandParameter="Master"
+                              Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Master}"/>
+                    <MenuItem Header="Технолог" Padding="0"
+                              Command="{Binding ChangeRoleCommand}"
+                              CommandParameter="Engineer"
+                              Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Engineer}"/>
+                    <MenuItem Header="Показать всё" Padding="0"
+                              Command="{Binding ChangeRoleCommand}"
+                              CommandParameter="Viewer"
+                              Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Viewer}"/>
                 </MenuItem>
                 <MenuItem Header="Расчет">
                     <MenuItem Command="{Binding ChangeCalcFixedCommand}" Icon="{StaticResource ConfirmIconFlex}"
@@ -997,7 +989,63 @@
                         <Border Width="1" Background="LightGray"/>
                     </MenuItem.Header>
                 </MenuItem>
+                
             </Menu>
+
+            <syncfusion:SfDataGrid Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                   ItemsSource="{Binding Parts}" AutoGenerateColumns="False" AllowCollectionView="True"
+                                   AllowFiltering="True" AllowGrouping="True" AllowDeleting="False"
+                                   ShowBusyIndicator="True" ShowGroupDropArea="True" ColumnSizer="Auto">
+                <syncfusion:SfDataGrid.Resources>
+
+                </syncfusion:SfDataGrid.Resources>
+                <syncfusion:SfDataGrid.Columns>
+                    <syncfusion:GridTextColumn HeaderText="Станок" MappingName="Machine" Width="100" TextWrapping="Wrap" AllowResizing="True"/>
+                    <syncfusion:GridDateTimeColumn HeaderText="Дата" MappingName="ShiftDate" Width="100" AllowEditing="True"/>
+                    <syncfusion:GridComboBoxColumn HeaderText="Смена" MappingName="Shift" Width="100" AllowEditing="True" ItemsSource="{x:Static inf:AppSettings.ShiftTypes}"/>
+                    <syncfusion:GridTextColumn HeaderText="Оператор" MappingName="Operator" AllowEditing="True"/>
+                    <syncfusion:GridTextColumn HeaderText="Деталь" MappingName="PartName" AllowEditing="True"/>
+                    <syncfusion:GridTextColumn HeaderText="М/Л" MappingName="Order" AllowEditing="True"/>
+                    <syncfusion:GridNumericColumn HeaderText="Всего по М/Л" MappingName="TotalCount" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Выполнено" MappingName="FinishedCount" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Установка" MappingName="Setup" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridDateTimeColumn HeaderText="Начало наладки" MappingName="StartSetupTime" AllowEditing="True" Pattern="CustomPattern" CustomPattern = "dd.MM.yy hh:mm"/>
+                    <syncfusion:GridDateTimeColumn HeaderText="Начало изготовления" MappingName="StartMachiningTime" AllowEditing="True" Pattern="CustomPattern" CustomPattern = "dd.MM.yy hh:mm"/>
+                    <syncfusion:GridDateTimeColumn HeaderText="Конец изготовления" MappingName="EndMachiningTime" AllowEditing="True" Pattern="CustomPattern" CustomPattern = "dd.MM.yy hh:mm"/>
+                    <syncfusion:GridNumericColumn HeaderText="Норматив наладки" MappingName="SetupTimePlan" AllowEditing="True" NumberDecimalDigits="0" />
+                    <syncfusion:GridNumericColumn HeaderText="Фактическая наладка" MappingName="SetupTimeFact" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Норматив штучный" MappingName="SingleProductionTimePlan" AllowEditing="True"/>
+                    <syncfusion:GridTimeSpanColumn HeaderText="Машинное время" MappingName="MachiningTime" AllowEditing="True" Format="hh:mm:ss"/>
+                    <syncfusion:GridNumericColumn HeaderText="Время замены" MappingName="PartReplacementTime"/>
+                    <syncfusion:GridNumericColumn HeaderText="Штучное фактическое" MappingName="SingleProductionTime"/>
+                    <syncfusion:GridNumericColumn HeaderText="Фактическое изготовление" MappingName="ProductionTimeFact"/>
+                    <syncfusion:GridNumericColumn HeaderText="Норматив на партию" MappingName="PlanForBatch"/>
+                    <syncfusion:GridTextColumn HeaderText="Комментарий оператора" MappingName="OperatorComment" AllowEditing="True"/>
+                    <syncfusion:GridTextColumn HeaderText="Проблемы" MappingName="Problems"/>
+                    <syncfusion:GridNumericColumn HeaderText="Простои в наладке" MappingName="SetupDowntimes" AllowEditing="True"/>
+                    <syncfusion:GridNumericColumn HeaderText="Простои в изготовлении" MappingName="MachiningDowntimes" AllowEditing="True"/>
+                    <syncfusion:GridNumericColumn HeaderText="Частичная наладка" MappingName="PartialSetupTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Обслуживание" MappingName="MaintenanceTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Поиск инструмента" MappingName="ToolSearchingTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Замена инструмента" MappingName="ToolChangingTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Обучение" MappingName="MentoringTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Другие службы" MappingName="ContactingDepartmentsTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Изготовление оснастки" MappingName="FixtureMakingTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Отказ оборудования" MappingName="HardwareFailureTime" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Отмеченные простои" MappingName="SpecifiedDowntimesRatio"/>
+                    <syncfusion:GridComboBoxColumn HeaderText="Комментарий к простоям" MappingName="SpecifiedDowntimesComment" AllowEditing="True"/>
+                    <syncfusion:GridTextColumn HeaderText="Наладка" MappingName="SetupRatioTitle"/>
+                    <!--<syncfusion:GridComboBoxColumn HeaderText="Невыполнение норматива наладки" MappingName="MasterSetupComment" AllowEditing="True" ItemsSource="{Binding DataContext.SetupReasons, Source={x:Reference partsInfoWindow}}" />-->
+                    <syncfusion:GridTextColumn HeaderText="Изготовление" MappingName="ProductionRatioTitle"/>
+                    <!--<syncfusion:GridComboBoxColumn HeaderText="Невыполнение норматива изготовления" MappingName="MasterMachiningComment" AllowEditing="True" ItemsSource="{Binding DataContext.MachiningReasons, Source={x:Reference partsInfoWindow}}" />-->
+                    <syncfusion:GridTextColumn HeaderText="Комментарий мастера" MappingName="MasterComment" AllowEditing="True"/>
+                    <syncfusion:GridNumericColumn HeaderText="Норматив наладки (И)" MappingName="FixedSetupTimePlan" AllowEditing="True" NumberDecimalDigits="0"/>
+                    <syncfusion:GridNumericColumn HeaderText="Норматив изготовления (И)" MappingName="FixedProductionTimePlan" AllowEditing="True"/>
+                    <syncfusion:GridTextColumn HeaderText="Комментарий техотдела" MappingName="EngineerComment" AllowEditing="True"/>
+                    <syncfusion:GridCheckBoxColumn HeaderText="Исключить" MappingName="ExcludeFromReports" AllowEditing="True"/>
+                </syncfusion:SfDataGrid.Columns>
+            </syncfusion:SfDataGrid>
+            
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
                       VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
                       ColumnWidth="SizeToCells" CanUserSortColumns="False" 
@@ -1009,6 +1057,7 @@
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0" SelectedItem="{Binding SelectedPart, UpdateSourceTrigger=PropertyChanged}"
                       AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectedCellsChanged="DataGrid_SelectedCellsChanged" PreviewKeyDown="DataGrid_PreviewKeyDown"
+                      Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
                       >
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">

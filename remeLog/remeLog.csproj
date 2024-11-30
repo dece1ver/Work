@@ -45,6 +45,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="NCalcSync" Version="4.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Syncfusion.SfGrid.WPF" Version="27.2.4" />
+    <PackageReference Include="Syncfusion.Shared.WPF" Version="27.2.4" />
   </ItemGroup>
 
   <ItemGroup>
