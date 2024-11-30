@@ -1016,7 +1016,7 @@
             <syncfusion:SfDataGrid x:Name="SfDataGrid" Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
                                    ItemsSource="{Binding Parts}" AutoGenerateColumns="False" AllowCollectionView="True"
                                    AllowFiltering="True" AllowGrouping="True" AllowDeleting="False"
-                                   ShowBusyIndicator="True" ShowGroupDropArea="True" ColumnSizer="SizeToCells" QueryRowHeight="SfDataGrid_QueryRowHeight"
+                                   ShowBusyIndicator="True" ShowGroupDropArea="True" ColumnSizer="SizeToHeader" QueryRowHeight="SfDataGrid_QueryRowHeight"
                                    AlternatingRowStyleSelector="{StaticResource CustomRowStyleSelector}">
                 <syncfusion:SfDataGrid.Resources>
                 <Style x:Key="rowStyle1" TargetType="syncfusion:VirtualizingCellsControl">
