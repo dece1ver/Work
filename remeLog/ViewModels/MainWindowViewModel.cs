@@ -145,7 +145,7 @@ namespace remeLog.ViewModels
         }
 
 
-        private bool _Debug = false;
+        private bool _Debug = true;
         /// <summary> отладка </summary>
         public bool Debug
         {
@@ -211,9 +211,11 @@ namespace remeLog.ViewModels
         {
             if (p is true)
             {
-                var partsInfoWindow = new PartsInfoWindow(null!) 
+                Parts.Clear(); 
+                var cp = await GenerateMockDataAsync("Hyundai WIA SKT21 №104", DateTime.Today, DateTime.Today);
+                var partsInfoWindow = new PartsInfoWindow(cp) 
                 { 
-                    Owner = Application.Current.MainWindow, DataContext = new PartsInfoWindowViewModel(null!) 
+                    Owner = Application.Current.MainWindow, DataContext = new PartsInfoWindowViewModel(cp) 
                     {
                         UseMockData = true
                     }
@@ -322,16 +324,6 @@ namespace remeLog.ViewModels
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource = new();
             var cancellationToken = _cancellationTokenSource.Token;
-
-            if (Debug)
-            {
-                Parts.Clear();
-                Parts = new ObservableCollection<CombinedParts>
-                {
-                    await GenerateMockDataAsync("Hyundai WIA SKT21 №104", DateTime.Today, DateTime.Today)
-                };
-                return;
-            }
 
             await semaphoreSlim.WaitAsync(cancellationToken);
             ProgressBarVisibility = Visibility.Visible;

@@ -96,6 +96,27 @@
         <Style TargetType="Button">
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
+        
+        <Style TargetType="syncfusion:GridStackedHeaderCellControl">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="syncfusion:GridStackedHeaderCellControl">
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <Grid Margin="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" >
+                                    <ContentPresenter.Content>
+                                        <TextBlock Text="{Binding HeaderText}"  TextWrapping="Wrap"/>
+                                    </ContentPresenter.Content>
+                                </ContentPresenter>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
         <ControlTemplate x:Key="ValidationTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -992,13 +1013,28 @@
                 
             </Menu>
 
-            <syncfusion:SfDataGrid Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
+            <syncfusion:SfDataGrid x:Name="SfDataGrid" Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
                                    ItemsSource="{Binding Parts}" AutoGenerateColumns="False" AllowCollectionView="True"
                                    AllowFiltering="True" AllowGrouping="True" AllowDeleting="False"
-                                   ShowBusyIndicator="True" ShowGroupDropArea="True" ColumnSizer="Auto">
+                                   ShowBusyIndicator="True" ShowGroupDropArea="True" ColumnSizer="SizeToCells" QueryRowHeight="SfDataGrid_QueryRowHeight"
+                                   AlternatingRowStyleSelector="{StaticResource CustomRowStyleSelector}">
                 <syncfusion:SfDataGrid.Resources>
-
-                </syncfusion:SfDataGrid.Resources>
+                <Style x:Key="rowStyle1" TargetType="syncfusion:VirtualizingCellsControl">
+                    <Setter Property="Background" Value="Transparent" />
+                </Style>
+                <Style x:Key="rowStyle2" TargetType="syncfusion:VirtualizingCellsControl">
+                    <Setter Property="Background" Value="#01D3D3D3" />
+                </Style>
+            </syncfusion:SfDataGrid.Resources>
+                <syncfusion:SfDataGrid.RowStyle>
+                    <Style TargetType="syncfusion:VirtualizingCellsControl">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding NeedUpdate, UpdateSourceTrigger=PropertyChanged}" Value="True">
+                                <Setter Property="Foreground" Value="Blue"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </syncfusion:SfDataGrid.RowStyle>
                 <syncfusion:SfDataGrid.Columns>
                     <syncfusion:GridTextColumn HeaderText="Станок" MappingName="Machine" Width="100" TextWrapping="Wrap" AllowResizing="True"/>
                     <syncfusion:GridDateTimeColumn HeaderText="Дата" MappingName="ShiftDate" Width="100" AllowEditing="True"/>

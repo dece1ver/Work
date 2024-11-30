@@ -1,5 +1,6 @@
 ﻿using remeLog.Models;
 using remeLog.ViewModels;
+using Syncfusion.UI.Xaml.Grid;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using SelectionChangedEventArgs = System.Windows.Controls.SelectionChangedEventArgs;
 
 namespace remeLog.Views
 {
@@ -20,6 +22,9 @@ namespace remeLog.Views
         {
             None, Numeric, TimeSpan
         }
+
+        GridRowSizingOptions gridRowResizingOptions = new GridRowSizingOptions();
+        double autoHeight;
 
         public PartsInfoWindow(CombinedParts parts)
         {
@@ -301,6 +306,18 @@ namespace remeLog.Views
             //        e.Handled = true;
             //    }
             //}
+        }
+
+        private void SfDataGrid_QueryRowHeight(object sender, Syncfusion.UI.Xaml.Grid.QueryRowHeightEventArgs e)
+        {
+            if (SfDataGrid.GridColumnSizer.GetAutoRowHeight(e.RowIndex, gridRowResizingOptions, out autoHeight))
+            {
+                if (autoHeight > 24)
+                {
+                    e.Height = autoHeight;
+                    e.Handled = true;
+                }
+            }
         }
     }
 }
