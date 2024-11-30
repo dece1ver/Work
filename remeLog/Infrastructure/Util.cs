@@ -4,6 +4,7 @@ using libeLog.Infrastructure;
 using remeLog.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -62,5 +63,60 @@ namespace remeLog.Infrastructure
 
         public static int GetWorkDaysBeetween(DateTime start, DateTime end) 
             => (int)(end - start).TotalDays + 1 - Constants.Dates.Holidays.Count(d => d >= start && d <= end);
+
+        public static async Task<ObservableCollection<Part>> GenerateMockPartsAsync()
+        {
+            return await Task.Run(() =>
+            {
+                var random = new Random();
+                var mockParts = Enumerable.Range(1, 50).Select(i =>
+                {
+                    var shiftDate = DateTime.Today;
+                    return new Part(
+                        Guid.NewGuid(),
+                        $"Machine_{random.Next(1, 5)}",
+                        random.Next(0, 2) == 0 ? "День" : "Ночь",
+                        shiftDate,
+                        $"Operator_{random.Next(1, 10)}",
+                        $"Part_{random.Next(1, 20)}",
+                        $"Order_{random.Next(1, 100)}",
+                        random.Next(0, 2),
+                        random.Next(1, 100),
+                        random.Next(101, 200),
+                        shiftDate.AddHours(random.Next(1, 8)),
+                        shiftDate.AddHours(random.Next(8, 16)),
+                        random.NextDouble() * 10,
+                        shiftDate.AddHours(random.Next(16, 24)),
+                        random.NextDouble() * 10,
+                        random.NextDouble() * 10,
+                        random.NextDouble() * 10,
+                        random.NextDouble(),
+                        TimeSpan.FromMinutes(random.Next(10, 200)),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        $"Operator Comment {i}",
+                        $"Master Setup Comment {i}",
+                        $"Master Machining Comment {i}",
+                        $"Specified Downtime {i}",
+                        $"Unspecified Downtime {i}",
+                        $"Master Comment {i}",
+                        random.NextDouble(),
+                        random.NextDouble(),
+                        $"Engineer Comment {i}",
+                        random.Next(0, 2) == 1
+                    );
+                }).ToList();
+
+                return new ObservableCollection<Part>(mockParts); // Возвращаем результат
+            });
+        }
     }
 }

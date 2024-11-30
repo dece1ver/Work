@@ -82,8 +82,17 @@
                         </StackPanel>
                     </GroupBox.Header>
                     <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Отладка" FontSize="16" Padding="10 0" 
+                                Margin="5 -7 -3 -5" Width="137" Command="{Binding LoadPartsInfoCommand}" CommandParameter="{Binding Debug}"
+                                Visibility="{Binding Debug, Converter={StaticResource VisibilityConverter}}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="2"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
                         <Button DockPanel.Dock="Right" Content="Сформировать" FontSize="16" Padding="10 0" 
-                                Margin="-3 -7 -3 -5" Width="137" Command="{Binding LoadPartsInfoCommand}">
+                            Margin="-3 -7 -3 -5" Width="137" Command="{Binding LoadPartsInfoCommand}">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="2"/>

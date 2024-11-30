@@ -498,6 +498,18 @@ namespace remeLog.ViewModels
             }
         }
 
+
+        private bool _UseMockData = false;
+        /// <summary>
+        /// Фиктивные данные для отладки
+        /// </summary>
+        public bool UseMockData
+        {
+            get => _UseMockData;
+            set => Set(ref _UseMockData, value);
+        }
+
+
         public bool MachineVisibility => MachineFilters.Count(m => m.Filter == true) == 1;
 
         #region IncreaseDateCommand
@@ -916,8 +928,7 @@ namespace remeLog.ViewModels
                 {
                     InProgress = true;
                     Status = Xl.ExportDataset(Parts, path);
-                }
-                );
+                });
 
             }
             catch (Exception ex)
@@ -1270,6 +1281,14 @@ namespace remeLog.ViewModels
                 InProgress = true;
                 Status = "Получение информации...";
                 if (!first) await Task.Delay(1000, cancellationToken);
+
+                if (UseMockData)
+                {
+                    Parts = await Util.GenerateMockPartsAsync();
+                    InProgress = false;
+                    return true;
+                }
+
                 var isValidFinishedCountFilter = TryParseComparison(FinishedCountFilter, out string finishedCountOperator, out int finishedCountValue);
                 var isValidTotalCountFilter = TryParseComparison(TotalCountFilter, out string totalCountOperator, out int totalCountValue);
                 var partNameStartStar = PartNameFilter.StartsWith('*');
@@ -1436,6 +1455,8 @@ namespace remeLog.ViewModels
         {
             lockUpdate = false;
             _ = LoadPartsAsync(first);
-        }        
+        }
+
+        
     }   
 }

@@ -144,6 +144,16 @@ namespace remeLog.ViewModels
             set => Set(ref _Machines, value);
         }
 
+
+        private bool _Debug = false;
+        /// <summary> отладка </summary>
+        public bool Debug
+        {
+            get => _Debug;
+            set => Set(ref _Debug, value);
+        }
+
+
         private bool IsSingleShift => FromDate == ToDate;
 
 
@@ -199,6 +209,18 @@ namespace remeLog.ViewModels
         public ICommand LoadPartsInfoCommand { get; }
         private async void OnLoadPartsInfoCommandExecuted(object p)
         {
+            if (p is true)
+            {
+                var partsInfoWindow = new PartsInfoWindow(null!) 
+                { 
+                    Owner = Application.Current.MainWindow, DataContext = new PartsInfoWindowViewModel(null!) 
+                    {
+                        UseMockData = true
+                    }
+                };
+                partsInfoWindow.ShowDialog();
+                return;
+            }
             await LoadPartsAsync(true);
         }
         private static bool CanLoadPartsInfoCommandExecute(object p) => true;
@@ -300,6 +322,17 @@ namespace remeLog.ViewModels
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource = new();
             var cancellationToken = _cancellationTokenSource.Token;
+
+            if (Debug)
+            {
+                Parts.Clear();
+                Parts = new ObservableCollection<CombinedParts>
+                {
+                    await GenerateMockDataAsync("Hyundai WIA SKT21 №104", DateTime.Today, DateTime.Today)
+                };
+                return;
+            }
+
             await semaphoreSlim.WaitAsync(cancellationToken);
             ProgressBarVisibility = Visibility.Visible;
             Status = "Получение списка станков...";
@@ -446,6 +479,18 @@ namespace remeLog.ViewModels
         {
             lockUpdate = false;
             _ = LoadPartsAsync();
+        }
+
+        public static async Task<CombinedParts> GenerateMockDataAsync(string machine, DateTime fromDate, DateTime toDate)
+        {
+            Random random = new();
+            var combinedParts = new CombinedParts(machine, fromDate, toDate)
+            {
+                IsReportExist = (CombinedParts.ReportState)random.Next(0, 3),
+                IsReportChecked = random.NextDouble() > 0.5,
+                Parts = await Util.GenerateMockPartsAsync()
+            };
+            return combinedParts;
         }
 
         private void BackgroundWorker()
