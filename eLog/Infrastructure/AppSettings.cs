@@ -250,6 +250,13 @@ namespace eLog.Infrastructure
             set => Set(ref _NotSendedToolComments, value);
         }
 
+        private List<HelpCase> _NotSendedHelpCases;
+        /// <summary> Не отправленные уведомления о помощи мастера </summary>
+        public List<HelpCase> NotSendedHelpCasets
+        {
+            get => _NotSendedHelpCases;
+            set => Set(ref _NotSendedHelpCases, value);
+        }
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode

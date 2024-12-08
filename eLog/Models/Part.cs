@@ -4,6 +4,7 @@ using libeLog.Extensions;
 using libeLog.Models;
 using Newtonsoft.Json;
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -186,6 +187,8 @@ namespace eLog.Models
                 OnPropertyChanged(nameof(IsStarted));
                 OnPropertyChanged(nameof(InProduction));
                 OnPropertyChanged(nameof(EndDetailInfo));
+                OnPropertyChanged(nameof(NeedMasterAttention));
+                OnPropertyChanged(nameof(MasterIsHelping));
             }
         }
 
@@ -258,8 +261,42 @@ namespace eLog.Models
                     OnPropertyChanged(nameof(DownTimesIsClosed));
                     OnPropertyChanged(nameof(EndSetupInfo));
                     OnPropertyChanged(nameof(EndDetailInfo));
+                    OnPropertyChanged(nameof(NeedMasterAttention));
+                    OnPropertyChanged(nameof(MasterIsHelping));
                 }
             }
+        }
+
+
+        private ObservableCollection<HelpCase> _HelpCases;
+        /// <summary> Коллекция случаев помощи </summary>
+        public ObservableCollection<HelpCase> HelpCases
+        {
+            get => _HelpCases;
+            set 
+            { 
+                if (Set(ref _HelpCases, value)) 
+                { 
+
+                }
+            }
+        }
+
+
+        private bool _NeedMasterAttention;
+        /// <summary> Описание </summary>
+        public bool NeedMasterAttention
+        {
+            get => _NeedMasterAttention;
+            set => Set(ref _NeedMasterAttention, value);
+        }
+
+        private bool _MasterIsHelping;
+        /// <summary> Описание </summary>
+        public bool MasterIsHelping
+        {
+            get => _MasterIsHelping;
+            set => Set(ref _MasterIsHelping, value);
         }
 
         /// <summary> Id присваивается после записи в таблицу. Нужен для поиска в таблице при редактировании.</summary>

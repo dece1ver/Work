@@ -17,6 +17,16 @@ namespace eLog.Views.Windows.Dialogs
 
         private void passwordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            if (!string.IsNullOrEmpty(PasswordBox.Password))
+            {
+                PasswordPlaceholder.Visibility = Visibility.Collapsed;
+                PasswordBox.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PasswordPlaceholder.Visibility = Visibility.Visible;
+                PasswordBox.Visibility = Visibility.Collapsed;
+            }
             if (DataContext != null)
             { ((dynamic)DataContext).Password = ((PasswordBox)sender).Password; }
         }

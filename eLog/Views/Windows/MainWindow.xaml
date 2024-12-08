@@ -265,6 +265,18 @@
                                                         Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
                                                         CommandParameter="{Binding}">
                                                     <Button.Content>
+                                                        <StackPanel>
+                                                            <TextBlock Text="🚑" TextWrapping="WrapWithOverflow" TextAlignment="Center" Padding="0" FontSize="22"/>
+                                                            <TextBlock Text="Ожидайте" TextWrapping="WrapWithOverflow" TextAlignment="Center" Padding="0"/>
+                                                            <TextBlock Text="🏃‍" TextWrapping="WrapWithOverflow" TextAlignment="Center" Padding="0" FontSize="22"/>
+                                                        </StackPanel>
+                                                    </Button.Content>
+                                                </Button>
+                                                <Button Style="{StaticResource LvButton}" 
+                                                        Visibility="{Binding DownTimesIsClosed, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}"
+                                                        Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Content>
                                                         <TextBlock Text="Начать простой" TextWrapping="WrapWithOverflow" TextAlignment="Center" Padding="4"/>
                                                     </Button.Content>
                                                 </Button>

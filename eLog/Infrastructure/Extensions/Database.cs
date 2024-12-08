@@ -14,7 +14,7 @@ namespace eLog.Infrastructure.Extensions
 
 
         /// <summary>
-        /// Запись информации о детали в БЖ
+        /// Запись информации о детали в БД
         /// </summary>
         /// <param name="part">Деталь</param>
         /// <param name="passive">Нужно ли присваивать Id, false используется для одновременной работы с двумя источниками, тогда Id назначается при записи в XL</param>

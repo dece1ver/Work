@@ -22,14 +22,59 @@ namespace remeLog.Infrastructure
         const double Coefficient1 = 1.2;
         const double Coefficient2 = 1.4;
 
+        /// <summary>
+        /// Типы экспорта отчетов операторов.
+        /// </summary>
         public enum ExportOperatorReportType
         {
-            Under, Below
+            /// <summary>
+            /// Отчет по выполнению норм, где операторы выполнили план ниже нормы.
+            /// </summary>
+            Under,
+
+            /// <summary>
+            /// Отчет по выполнению норм, где операторы выполнили план значительно ниже нормы.
+            /// (например, на уровне критической точки).
+            /// </summary>
+            Below
         }
 
+        /// <summary>
+        /// Варианты ориентации заголовков.
+        /// </summary>
         public enum HeaderRotateOption
         {
-            Horizontal, Vertical
+            /// <summary>
+            /// Горизонтальная ориентация заголовков.
+            /// </summary>
+            Horizontal,
+
+            /// <summary>
+            /// Вертикальная ориентация заголовков.
+            /// </summary>
+            Vertical
+        }
+
+
+        /// <summary>
+        /// Перечисление, которое определяет полужирность для левого и правого заголовков.
+        /// </summary>
+        public enum BoldOption
+        {
+            /// <summary>
+            /// Левый заголовок выделен полужирным, правый — нет.
+            /// </summary>
+            Left,
+
+            /// <summary>
+            /// Правый заголовок выделен полужирным, левый — нет.
+            /// </summary>
+            Right,
+
+            /// <summary>
+            /// Оба заголовка выделены полужирным.
+            /// </summary>
+            Both
         }
 
         /// <summary>
@@ -1321,27 +1366,6 @@ namespace remeLog.Infrastructure
                 .Font.SetBold(bold == BoldOption.Right || bold == BoldOption.Both)
                 .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left)
                 .Alignment.SetWrapText(false);
-        }
-
-        /// <summary>
-        /// Перечисление, которое определяет полужирность для левого и правого заголовков.
-        /// </summary>
-        public enum BoldOption
-        {
-            /// <summary>
-            /// Левый заголовок выделен полужирным, правый — нет.
-            /// </summary>
-            Left,
-
-            /// <summary>
-            /// Правый заголовок выделен полужирным, левый — нет.
-            /// </summary>
-            Right,
-
-            /// <summary>
-            /// Оба заголовка выделены полужирным.
-            /// </summary>
-            Both
         }
 
         private static void FillTotalMachinesWorksheetData(IXLWorksheet ws, IEnumerable<IGrouping<string, Part>> machinesGroup, Dictionary<string, (int index, string header)> columns, List<Part> tempParts)

@@ -41,10 +41,15 @@ namespace eLog.ViewModels
             StartShiftCommand = new LambdaCommand(OnStartShiftCommandExecuted, CanStartShiftCommandExecute);
             EndShiftCommand = new LambdaCommand(OnEndShiftCommandExecuted, CanEndShiftCommandExecute);
 
-            StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
             EndSetupCommand = new LambdaCommand(OnEndSetupCommandExecuted, CanEndSetupCommandExecute);
+
             SetDownTimeCommand = new LambdaCommand(OnSetDownTimeCommandExecuted, CanSetDownTimeCommandExecute);
             EndDownTimeCommand = new LambdaCommand(OnEndDownTimeCommandExecuted, CanEndDownTimeCommandExecute);
+
+            StartHelpCaseCommand = new LambdaCommand(OnStartHelpCaseCommandExecuted, CanStartHelpCaseCommandExecute);
+            EndHelpCaseCommand = new LambdaCommand(OnEndHelpCaseCommandExecuted, CanEndHelpCaseCommandExecute);
+
+            StartDetailCommand = new LambdaCommand(OnStartDetailCommandExecuted, CanStartDetailCommandExecute);
             EditDetailCommand = new LambdaCommand(OnEditDetailCommandExecuted, CanEditDetailCommandExecute);
             EndDetailCommand = new LambdaCommand(OnEndDetailCommandExecuted, CanEndDetailCommandExecute);
 
@@ -697,6 +702,30 @@ namespace eLog.ViewModels
         private static bool CanEndDetailCommandExecute(object p) => true;
         #endregion
 
+        #region StartHelpCase
+        public ICommand StartHelpCaseCommand { get; }
+        private void OnStartHelpCaseCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                var dlg = new GetPasswordDialogWindow();
+            }
+        }
+        private static bool CanStartHelpCaseCommandExecute(object p) => true;
+        #endregion
+
+        #region EndHelpCase
+        public ICommand EndHelpCaseCommand { get; }
+        private void OnEndHelpCaseCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                
+            }
+        }
+        private static bool CanEndHelpCaseCommandExecute(object p) => true;
+        #endregion
+
         #endregion
 
         private void NotifyWatcher()
@@ -705,10 +734,11 @@ namespace eLog.ViewModels
             {
                 try
                 {
+                    // комментарии по инструменту
                     AppSettings.Instance.NotSendedToolComments ??= new();
                     if (AppSettings.Instance.NotSendedToolComments.Any()) 
                     {
-                        AppSettings.ToolSearchMailRecievers = GetMailReceivers(Util.ReceiversType.ToolSearch);
+                        AppSettings.ToolSearchMailRecievers = GetMailReceivers(ReceiversType.ToolSearch);
                         if (Parts.Any())
                         {
                             var tempList = AppSettings.Instance.NotSendedToolComments.ToList();
@@ -717,6 +747,25 @@ namespace eLog.ViewModels
                                 if (Email.SendToolSearchComment(Parts[0], item))
                                 {
                                     AppSettings.Instance.NotSendedToolComments.Remove(item);
+                                }
+                            }
+                        }
+                    }
+
+                    // уведомления об оказанной помощи
+                    AppSettings.Instance.NotSendedHelpCasets ??= new();
+                    if (AppSettings.Instance.NotSendedHelpCasets.Any())
+                    {
+                        AppSettings.ToolSearchMailRecievers = GetMailReceivers(ReceiversType.ToolSearch);
+                        AppSettings.LongSetupsMailRecievers = GetMailReceivers(ReceiversType.LongSetup);
+                        if (Parts.Any())
+                        {
+                            var tempList = AppSettings.Instance.NotSendedHelpCasets.ToList();
+                            foreach (var item in tempList)
+                            {
+                                if (Email.SendHelpCaseComment(item))
+                                {
+                                    AppSettings.Instance.NotSendedHelpCasets.Remove(item);
                                 }
                             }
                         }
@@ -770,8 +819,12 @@ namespace eLog.ViewModels
                         var factSetupTime = setupTimeWithoutDowntime - breaks;
                         if (factSetupTime > TimeSpan.FromMinutes(limit))
                         {
-                            AppSettings.LongSetupsMailRecievers = GetMailReceivers(Util.ReceiversType.LongSetup);
-                            if (Email.SendLongSetupNotify(Parts[0], limit)) Parts[0].LongSetupNotifySended = true;
+                            AppSettings.LongSetupsMailRecievers = GetMailReceivers(ReceiversType.LongSetup);
+                            if (Email.SendLongSetupNotify(Parts[0], limit))
+                            {
+                                Parts[0].LongSetupNotifySended = true;
+                                Parts[0].NeedMasterAttention = true;
+                            }
                         }
                     }
                 }
