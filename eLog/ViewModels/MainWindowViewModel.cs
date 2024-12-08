@@ -732,7 +732,7 @@ namespace eLog.ViewModels
                         int limit;
                         if (Parts[0].SetupTimePlan > 0)
                         {
-                            var (result, setupCoefficient) = AppSettings.Instance.Machine.Name.GetMachineSetupCoefficient();
+                            var (result, setupCoefficient, error) = AppSettings.Instance.Machine.Name.GetMachineSetupCoefficient();
                             if (result == DbResult.Ok && setupCoefficient.HasValue)
                             {
                                 limit = (int)(setupCoefficient.Value * Parts[0].SetupTimePlan);
@@ -740,10 +740,11 @@ namespace eLog.ViewModels
                             else
                             {
                                 limit = AppSettings.Instance.TimerForNotify * 60;
+                                WriteLog(error);
                             }
                         } else
                         {
-                            var (result, setupLimit) = AppSettings.Instance.Machine.Name.GetMachineSetupLimit();
+                            var (result, setupLimit, error) = AppSettings.Instance.Machine.Name.GetMachineSetupLimit();
                             if (result == DbResult.Ok && setupLimit.HasValue)
                             {
                                 limit = setupLimit.Value;
@@ -751,6 +752,7 @@ namespace eLog.ViewModels
                             else
                             {
                                 limit = AppSettings.Instance.TimerForNotify * 60;
+                                WriteLog(error);
                             }
                         }
                         var tempDowntimes = new List<DownTime>();

@@ -1,4 +1,5 @@
 ﻿using eLog.Models;
+using libeLog.Infrastructure;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using System;
@@ -444,92 +445,30 @@ namespace eLog.Infrastructure.Extensions
             }
         }
 
-        public static (DbResult Result, int? SetupLimit) GetMachineSetupLimit(this string machine)
-        {
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
-                {
-                    connection.Open();
-                    string query = "SELECT SetupLimit FROM cnc_machines WHERE Name = @Name";
-                    using (SqlCommand command = new SqlCommand(query, connection))
-                    {
-                        command.Parameters.AddWithValue("@Name", machine);
+        /// <summary>
+        /// Получает лимит наладки для заданного станка, используя строку подключения из настроек приложения.
+        /// </summary>
+        /// <param name="machine">Имя станка для получения лимита наладки.</param>
+        /// <returns>
+        /// Кортеж, состоящий из:
+        /// - <see cref="DbResult"/>: результат выполнения запроса.
+        /// - SetupLimit: лимит наладки для станка (nullable int), может быть null, если данных нет.
+        /// - Error: строка с описанием ошибки, если она произошла.
+        /// </returns>
+        public static (DbResult Result, int? SetupLimit, string Error) GetMachineSetupLimit(this string machine)
+            => machine.GetMachineSetupLimit(AppSettings.Instance.ConnectionString);
 
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                int setupLimit = reader.GetInt32(0);
-                                return (DbResult.Ok, setupLimit);
-                            }
-                        }
-                    }
-                }
-
-                return (DbResult.NotFound, null);
-            }
-            catch (SqlException sqlEx)
-            {
-                switch (sqlEx.Number)
-                {
-                    case 18456:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
-                        return (DbResult.AuthError, null);
-                    default:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
-                        return (DbResult.Error, null);
-                }
-            }
-            catch (Exception ex)
-            {
-                Util.WriteLog(ex);
-                return (DbResult.Error, null);
-            }
-        }
-
-        public static (DbResult Result, double? SetupCoefficient) GetMachineSetupCoefficient(this string machine)
-        {
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
-                {
-                    connection.Open();
-                    string query = "SELECT SetupCoefficient FROM cnc_machines WHERE Name = @Name";
-                    using (SqlCommand command = new SqlCommand(query, connection))
-                    {
-                        command.Parameters.AddWithValue("@Name", machine);
-
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                double setupCoefficient = reader.GetDouble(0);
-                                return (DbResult.Ok, setupCoefficient);
-                            }
-                        }
-                    }
-                }
-
-                return (DbResult.NotFound, null);
-            }
-            catch (SqlException sqlEx)
-            {
-                switch (sqlEx.Number)
-                {
-                    case 18456:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
-                        return (DbResult.AuthError, null);
-                    default:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
-                        return (DbResult.Error, null);
-                }
-            }
-            catch (Exception ex)
-            {
-                Util.WriteLog(ex);
-                return (DbResult.Error, null);
-            }
-        }
+        /// <summary>
+        /// Получает коэффициент наладки для заданного станка, используя строку подключения из настроек приложения.
+        /// </summary>
+        /// <param name="machine">Имя станка для получения коэффициента наладки.</param>
+        /// <returns>
+        /// Кортеж, состоящий из:
+        /// - <see cref="DbResult"/>: результат выполнения запроса.
+        /// - SetupCoefficient: коэффициент наладки для станка (nullable double), может быть null, если данных нет.
+        /// - Error: строка с описанием ошибки, если она произошла.
+        /// </returns>
+        public static (DbResult Result, double? SetupCoefficient, string Error) GetMachineSetupCoefficient(this string machine) 
+            => machine.GetMachineSetupCoefficient(AppSettings.Instance.ConnectionString);
     }
 }

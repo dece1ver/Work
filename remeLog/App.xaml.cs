@@ -18,8 +18,7 @@ namespace remeLog
 
         public App()
         {
-            var key = Environment.GetEnvironmentVariable("SYNCFUSION_LICENSE", EnvironmentVariableTarget.User);
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
+           
             try
             {
                 _EventWaitHandle = EventWaitHandle.OpenExisting(UniqueEventName);
@@ -31,7 +30,15 @@ namespace remeLog
             catch (WaitHandleCannotBeOpenedException)
             {
                 AppSettings.Instance.ReadConfig();
-                
+
+                var key = Environment.GetEnvironmentVariable("SYNCFUSION_LICENSE", EnvironmentVariableTarget.User);
+                if (string.IsNullOrEmpty(key))
+                {
+                    key = Database.GetLicenseKey("syncfusion");
+                    Environment.SetEnvironmentVariable("SYNCFUSION_LICENSE", key, EnvironmentVariableTarget.User);
+                }
+                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
+
                 _EventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
             }
 

@@ -131,7 +131,7 @@
                         IsEnabled="{Binding CanEndShift, UpdateSourceTrigger=PropertyChanged}"
                         Command="{Binding EndShiftCommand}" Style="{StaticResource GeneralButton}" Width="250"/>
                 <Button DockPanel.Dock="Right" Content="-TEST-" Style="{StaticResource GeneralButton}"
-                        Visibility="Visible" Command="{Binding TestCommand}"/>
+                        Visibility="Collapsed" Command="{Binding TestCommand}"/>
                 <Button DockPanel.Dock="Top" Content="Запустить деталь" Margin="4 0" Style="{StaticResource GeneralButton}"
                         Command="{Binding StartDetailCommand}" IsEnabled="{Binding CanAddPart}"/>
                 

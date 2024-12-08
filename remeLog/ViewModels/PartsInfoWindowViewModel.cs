@@ -58,10 +58,11 @@ namespace remeLog.ViewModels
             ExportShiftsInfoReportCommand = new LambdaCommand(OnExportShiftsInfoReportCommandExecuted, CanExportShiftsInfoReportCommandExecute);
             ExportVerevkinReportCommand = new LambdaCommand(OnExportVerevkinReportCommandExecuted, CanExportVerevkinReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
+            ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
             OperatorsShiftsReportToExcelCommand = new LambdaCommand(OnOperatorsShiftsReportToExcelCommandExecuted, CanOperatorsShiftsReportToExcelCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
-            ExportReportToExcelCommand = new LambdaCommand(OnExportReportToExcelCommandExecuted, CanExportReportToExcelCommandExecute);
+            ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
             ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
@@ -88,10 +89,27 @@ namespace remeLog.ViewModels
             _ToDate = PartsInfo.ToDate;
             _MachineFilters = new();
             _MachineFilters.CollectionChanged += MachineFiltersSource_CollectionChanged!;
+            _Parts.CollectionChanged += _Parts_CollectionChanged;
             _ViewMode = AppSettings.Instance.User ??= User.Viewer;
-
+            foreach (Part part in _Parts)
+            {
+                PropertyChanged += Part_PropertyChanged!;
+            }
+            UpdateHasErrors();
+            OnPropertyChanged(nameof(HasErrors));
             _ = Init();
             
+        }
+
+        private void _Parts_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach (Part item in e.NewItems)
+                    item.PropertyChanged += Part_PropertyChanged!;
+
+            if (e.OldItems != null)
+                foreach (Part item in e.OldItems)
+                    item.PropertyChanged -= Part_PropertyChanged!;
         }
 
         async Task Init()
@@ -104,6 +122,11 @@ namespace remeLog.ViewModels
             }
 
             lockUpdate = false;
+        }
+
+        private void Part_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            UpdateHasErrors();
         }
 
         private void MachineFiltersSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -122,6 +145,21 @@ namespace remeLog.ViewModels
             OnPropertyChanged(nameof(MachineVisibility));
             if (e.PropertyName == "Filter")
                 await LoadPartsAsync();
+        }
+
+
+        private bool _HasErrors;
+        /// <summary> Есть ли ошибки валидации </summary>
+        public bool HasErrors
+        {
+            get => _HasErrors;
+            set 
+            {
+                if (Set(ref _HasErrors, value))
+                {
+                    OnPropertyChanged(nameof(HasErrors));
+                }
+            }
         }
 
         public Shift[] ShiftFilterItems { get; set; }
@@ -783,6 +821,34 @@ namespace remeLog.ViewModels
         private static bool CanExportReportToExcelCommandExecute(object p) => true;
         #endregion
 
+        #region ExportLongSetups
+        public ICommand ExportLongSetupsCommand { get; }
+        private async void OnExportLongSetupsCommandExecuted(object p)
+        {
+            try
+            {
+
+                var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                await Task.Run(() =>
+                {
+                    InProgress = true;
+                    Status = Xl.ExportLongSetups(Parts, path);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportLongSetupsCommandExecute(object p) => true;
+        #endregion
+
         #region ExportHistoryToExcel
         public ICommand ExportHistoryToExcelCommand { get; }
         private async void OnExportHistoryToExcelCommandExecuted(object p)
@@ -1253,7 +1319,7 @@ namespace remeLog.ViewModels
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (Parts.Any(x => !string.IsNullOrEmpty(x.Error)))
+            if (HasErrors)
             {
                 MessageBox.Show("Не всё заполнено корректно.", "Предупреждение.",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -1439,6 +1505,7 @@ namespace remeLog.ViewModels
             return false;
         }
 
+
         public static string FormatSearchInput(string input)
         {
             if (string.IsNullOrEmpty(input)) return input;
@@ -1457,6 +1524,9 @@ namespace remeLog.ViewModels
             _ = LoadPartsAsync(first);
         }
 
-        
+        private void UpdateHasErrors()
+        {
+            HasErrors = Parts.Any(x => !string.IsNullOrEmpty(x.Error));
+        }
     }   
 }

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using libeLog.Extensions;
+using libeLog.Models;
+using libeLog;
 
 
 namespace remeLog.Infrastructure.Extensions
@@ -73,6 +75,14 @@ namespace remeLog.Infrastructure.Extensions
             return sum;
         }
 
+        /// <summary>
+        /// Вычисляет суммарное время простоев для указанных деталей в заданном временном интервале и смене.
+        /// </summary>
+        /// <param name="parts">Коллекция деталей.</param>
+        /// <param name="fromDate">Дата начала интервала.</param>
+        /// <param name="toDate">Дата окончания интервала.</param>
+        /// <param name="shiftType">Тип смены (например, дневная, ночная или все смены).</param>
+        /// <returns>Суммарное время простоев в минутах.</returns>
         public static double SpecifiedDowntimes(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
         {
             double sum = 0;
@@ -348,6 +358,52 @@ namespace remeLog.Infrastructure.Extensions
             var end = parts.Max(p => p.EndMachiningTime);
             var breaks = TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(start, end));
             return sum - breaks;
+        }
+
+        /// <summary>
+        /// Вычисляет ограничение на время наладки для заданной детали на основе планового времени наладки, коэффициента и запасного лимита.
+        /// </summary>
+        /// <param name="part">Деталь, для которой вычисляется ограничение на время наладки.</param>
+        /// <param name="coefficient">Необязательный коэффициент для корректировки времени наладки.</param>
+        /// <param name="limit">Запасной лимит, если плановое время наладки и коэффициент не заданы.</param>
+        /// <returns>Вычисленное ограничение на время наладки.</returns>
+        /// <exception cref="InvalidOperationException">Выбрасывается, если не выполнены условия для вычисления ограничения.</exception>
+        public static (double Value, string Info) SetupLimit(this Models.Part part, double? coefficient, int? limit)
+        {
+            if (part.SetupTimePlanForCalc > 0 && coefficient.HasValue)
+            {
+                return (part.SetupTimePlanForCalc * coefficient.Value, $"От норматива:\n{GetCoefficientDescription(part.SetupTimePlanForCalc, coefficient.Value)}");
+            }
+            else if (part.SetupTimePlanForCalc <= 0 && limit.HasValue)
+            {
+                return ((double)limit, $"Предустановленный лимит на станок:\n{limit} мин");
+            }
+            throw new InvalidOperationException($"Невозможно вычислить ограничение на время наладки для детали {part.PartName} {part.Order} {part.Setup} уст. от {part.StartSetupTime.ToString(Constants.DateTimeFormat)}");
+
+            static string GetCoefficientDescription(double originalValue, double coefficient)
+            {
+                double result = originalValue * coefficient;
+
+                double difference = result - originalValue;
+                string description;
+
+                if (Math.Abs(difference) < 0.001)
+                {
+                    description = $"{originalValue} мин без изменений";
+                }
+                else if (difference > 0)
+                {
+                    double percentage = (difference / originalValue) * 100;
+                    description = $"{originalValue} мин + {percentage:F0}%";
+                }
+                else
+                {
+                    double percentage = (Math.Abs(difference) / originalValue) * 100;
+                    description = $"{originalValue} мин - {percentage:F0}%";
+                }
+
+                return description;
+            }
         }
     }
 }

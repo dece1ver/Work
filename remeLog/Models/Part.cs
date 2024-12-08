@@ -1025,23 +1025,7 @@ namespace remeLog.Models
             return fixedDateTime;
         }
 
-        public string Error
-        {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(this[nameof(SpecifiedDowntimesComment)]) &&
-                    string.IsNullOrWhiteSpace(this[nameof(MasterSetupComment)]) &&
-                    string.IsNullOrWhiteSpace(this[nameof(MasterMachiningComment)]) &&
-                    string.IsNullOrWhiteSpace(this[nameof(MasterComment)]))
-                {
-                    return null!; 
-                }
-                else
-                {
-                    return "Ошибка валидации";
-                }
-            }
-        }
+        
 
         public Dictionary<string, bool> SetupReasonsRequireComment =>
             AppSettings.Instance.SetupReasons.ToDictionary(x => x.Reason, x => x.RequireComment);
@@ -1053,6 +1037,24 @@ namespace remeLog.Models
             return !string.IsNullOrWhiteSpace(comment) &&
                    reasonsDict.TryGetValue(comment, out bool requiresComment) &&
                    requiresComment;
+        }
+
+        public string Error
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(this[nameof(SpecifiedDowntimesComment)]) &&
+                    string.IsNullOrWhiteSpace(this[nameof(MasterSetupComment)]) &&
+                    string.IsNullOrWhiteSpace(this[nameof(MasterMachiningComment)]) &&
+                    string.IsNullOrWhiteSpace(this[nameof(MasterComment)]))
+                {
+                    return null!;
+                }
+                else
+                {
+                    return "Ошибка валидации";
+                }
+            }
         }
 
         public string this[string columnName]

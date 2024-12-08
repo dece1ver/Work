@@ -27,8 +27,7 @@
             <cnv:RoleColorConverter x:Key="RoleColorConverter"/>
             <cnv:ShortDateConverter x:Key="ShortDateConverter"/>
             <cnv:UserRoleVisibilityConverter x:Key="UserRoleVisibilityConverter"/>
-            
-            
+            <cnv:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
             <stl:CustomRowStyleSelector x:Key="CustomRowStyleSelector"/>
         </ResourceDictionary>
     </Application.Resources>

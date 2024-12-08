@@ -97,26 +97,6 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
         
-        <Style TargetType="syncfusion:GridStackedHeaderCellControl">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="syncfusion:GridStackedHeaderCellControl">
-                        <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                            <Grid Margin="{TemplateBinding Padding}">
-                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" >
-                                    <ContentPresenter.Content>
-                                        <TextBlock Text="{Binding HeaderText}"  TextWrapping="Wrap"/>
-                                    </ContentPresenter.Content>
-                                </ContentPresenter>
-                            </Grid>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
         <ControlTemplate x:Key="ValidationTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -638,10 +618,6 @@
             </DataGridCheckBoxColumn.EditingElementStyle>
         </DataGridCheckBoxColumn>
         <!--#endregion-->
-
-        <!--#region NewColumns -->
-        
-        <!--#endregion-->
     </Window.Resources>
     <Grid>
         <DockPanel>
@@ -653,10 +629,19 @@
             <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="True"
                  Visibility="{Binding InProgress, Converter={StaticResource VisibilityConverter}, ConverterParameter=h}" Height="2" />
             <DockPanel DockPanel.Dock="Bottom">
-                <Button DockPanel.Dock="Right" Margin="1 10 1 1" Width="100" 
+                <!--<Button DockPanel.Dock="Right" Content="!" IsEnabled="False" Visibility="{Binding HasErrors, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+                    Foreground="Red" FontWeight="Bold" Background="Transparent" BorderThickness="0">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="2"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>-->
+                <Button DockPanel.Dock="Right" Margin="1 10 1 1" Width="100"
+                        IsEnabled="{Binding HasErrors, Converter={StaticResource InvertedBoolConverter}, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
                 Command="{Binding OpenDailyReportWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
                     <Button.Content>
-                        <TextBlock Text="Сформировать отчет за смену" TextWrapping="Wrap"/>
+                        <TextBlock Text="Сформировать отчет за смену" TextWrapping="Wrap" />
                     </Button.Content>
                     <Button.Resources>
                         <Style TargetType="Border">
@@ -671,6 +656,7 @@
                         </Style>
                     </Button.Resources>
                 </Button>
+                
                 <StackPanel Orientation="Horizontal">
                     <GroupBox Header="{Binding Parts.Count}" HeaderStringFormat="Итог по выборке (элементов: {0})" d:Header="0">
                         <Grid>
@@ -954,37 +940,50 @@
                     </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Экспорт">
-                    <MenuItem Command="{Binding OperatorReportToExcelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" Icon="{StaticResource OperatorsIcon}"
-                              ToolTip="Выработка по операторам" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Выработка по операторам"/>
-                        </MenuItem.Header>
+                    <MenuItem Header="Операторы" Icon="{StaticResource OperatorsIcon}">
+                        <MenuItem Command="{Binding OperatorReportToExcelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
+                                  ToolTip="Выработка по операторам" HorizontalAlignment="Stretch">
+                            <MenuItem.Header>
+                                <TextBlock Text="Выработка по операторам"/>
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <MenuItem Command="{Binding OperatorsShiftsReportToExcelCommand}"
+                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
+                                  ToolTip="Операторы-смены" HorizontalAlignment="Stretch">
+                            <MenuItem.Header>
+                                <TextBlock Text="Операторы-смены"/>
+                            </MenuItem.Header>
+                        </MenuItem>
                     </MenuItem>
-                    <MenuItem Command="{Binding OperatorsShiftsReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
-                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
-                              ToolTip="Операторы-смены" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Операторы-смены"/>
-                        </MenuItem.Header>
+
+                    <MenuItem Header="Станки" Icon="{StaticResource CalendarIcon}">
+                        <MenuItem Command="{Binding ExportReportToExcelCommand}"
+                                  ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch">
+                            <MenuItem.Header>
+                                <TextBlock Text="Отчёт за период"/>
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <MenuItem Command="{Binding ExportPartsReportToExcelCommand}" 
+                                  ToolTip="Экспорт отчёта по деталям" HorizontalAlignment="Stretch">
+                            <MenuItem.Header>
+                                <TextBlock Text="Отчёт по деталям"/>
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <MenuItem Command="{Binding ExportLongSetupsCommand}"
+                                  ToolTip="Экспорт отчёта по длительным наладкам" HorizontalAlignment="Stretch">
+                            <MenuItem.Header>
+                                <TextBlock Text="Отчет по длительным наладкам"/>
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <MenuItem Command="{Binding ExportShiftsInfoReportCommand}"
+                                  ToolTip="Экспорт отчёта по сменам" HorizontalAlignment="Stretch">
+                            <MenuItem.Header>
+                                <TextBlock Text="Отчет по сменам"/>
+                            </MenuItem.Header>
+                        </MenuItem>
                     </MenuItem>
-                    <MenuItem Command="{Binding ExportReportToExcelCommand}" Icon="{StaticResource CalendarIcon}"
-                              ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Отчёт за период"/>
-                        </MenuItem.Header>
-                    </MenuItem>
-                    <MenuItem Command="{Binding ExportPartsReportToExcelCommand}" Icon="{StaticResource DataTableIcon}"
-                              ToolTip="Экспорт отчёта по деталям" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Отчёт по деталям"/>
-                        </MenuItem.Header>
-                    </MenuItem>
-                    <MenuItem Command="{Binding ExportShiftsInfoReportCommand}" Icon="{StaticResource CalendarIcon}"
-                        ToolTip="Экспорт отчёта по сменам" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Отчет по сменам"/>
-                        </MenuItem.Header>
-                    </MenuItem>
+
+
                     <MenuItem Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource ShowFullHistoryIcon}"
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
                         ToolTip="Экспорт истории запусков детали" HorizontalAlignment="Stretch">

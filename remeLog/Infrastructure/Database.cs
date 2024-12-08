@@ -1,4 +1,5 @@
 ﻿using libeLog.Extensions;
+using libeLog.Infrastructure;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using remeLog.Infrastructure.Extensions;
@@ -6,6 +7,7 @@ using remeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +18,27 @@ namespace remeLog.Infrastructure
 {
     public static class Database
     {
+        public static string GetLicenseKey(string licenseName)
+        {
+            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            {
+                connection.Open();
+                string query = $"SELECT license_key FROM licensing where license_name = '{licenseName}';";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            return reader.GetString(0);
+                            
+                        }
+                    }
+                }
+            }
+            return string.Empty;
+        }
+
         public static List<OperatorInfo> GetOperators()
         {
             List<OperatorInfo> operators = new();
@@ -929,6 +952,40 @@ namespace remeLog.Infrastructure
                 Util.WriteLogAsync(ex);
                 return DbResult.Error;
             }
+        }
+
+        /// <summary>
+        /// Получает лимит наладки для заданного станка, используя строку подключения из настроек приложения.
+        /// </summary>
+        /// <param name="machine">Имя станка для получения лимита наладки.</param>
+        /// <returns>
+        /// Кортеж, состоящий из:
+        /// - <see cref="DbResult"/>: результат выполнения запроса.
+        /// - SetupLimit: лимит наладки для станка (nullable int), может быть null, если данных нет.
+        /// - Error: строка с описанием ошибки, если она произошла.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">Выбрасывается, если строка подключения отсутствует в настройках приложения.</exception>
+        public static (DbResult Result, int? SetupLimit, string Error) GetMachineSetupLimit(this string machine)
+        {
+            if (AppSettings.Instance.ConnectionString == null) throw new InvalidOperationException("Невозомжно получить лимит наладки т.к. отсуствтует строка подключения");
+            return machine.GetMachineSetupLimit(AppSettings.Instance.ConnectionString);
+        }
+
+        /// <summary>
+        /// Получает коэффициент наладки для заданного станка, используя строку подключения из настроек приложения.
+        /// </summary>
+        /// <param name="machine">Имя станка для получения коэффициента наладки.</param>
+        /// <returns>
+        /// Кортеж, состоящий из:
+        /// - <see cref="DbResult"/>: результат выполнения запроса (например, <c>Ok</c>, <c>NotFound</c>, <c>Error</c>).
+        /// - SetupCoefficient: коэффициент наладки для станка (nullable double), может быть null, если данных нет.
+        /// - Error: строка с описанием ошибки, если она произошла.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">Выбрасывается, если строка подключения отсутствует в настройках приложения.</exception>
+        public static (DbResult Result, double? SetupCoefficient, string Error) GetMachineSetupCoefficient(this string machine) 
+        {
+            if (AppSettings.Instance.ConnectionString == null) throw new InvalidOperationException("Невозомжно получить коэффициент лимита наладки т.к. отсуствтует строка подключения");
+            return machine.GetMachineSetupCoefficient(AppSettings.Instance.ConnectionString);
         }
     }
 }
