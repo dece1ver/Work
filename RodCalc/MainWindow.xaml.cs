@@ -1,17 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace RodCalc
 {
@@ -22,17 +13,33 @@ namespace RodCalc
             InitializeComponent();
         }
 
+        private string GetCalculationFormula(int partLength, int leftover, int maxRodLength, int partCount, int bestPartsPerRod = 0, int bestRodCount = 0)
+        {
+            StringBuilder formula = new StringBuilder();
+            formula.AppendLine("\n\nПуть расчета:");
+            formula.AppendLine($"{partLength} × n + {leftover} ≤ {maxRodLength} (где n - количество деталей на прут)");
+            formula.AppendLine($"{partLength} × n ≤ {maxRodLength - leftover}");
+            formula.AppendLine($"N ≤ {(maxRodLength - leftover) / (double)partLength:0.###}");
+            formula.AppendLine($"Максимум деталей на прут: n = {(maxRodLength - leftover) / partLength:0.###}");
+
+            if (bestPartsPerRod > 0 && bestRodCount > 0)
+            {
+                formula.AppendLine($"Для равномерного распределения: {bestPartsPerRod} деталей на прут");
+                formula.AppendLine($"Количество прутов: {partCount}/{bestPartsPerRod} = {bestRodCount}");
+            }
+
+            return formula.ToString();
+        }
+
         private void Calculate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Ввод данных
                 int maxRodLength = string.IsNullOrWhiteSpace(MaxRodLengthTextBox.Text) ? 500 : int.Parse(MaxRodLengthTextBox.Text);
                 int leftover = string.IsNullOrWhiteSpace(LeftoverTextBox.Text) ? 30 : int.Parse(LeftoverTextBox.Text);
                 int partCount = string.IsNullOrWhiteSpace(PartCountTextBox.Text) ? 0 : int.Parse(PartCountTextBox.Text);
                 int partLength = int.Parse(PartLengthTextBox.Text);
 
-                // Проверка на корректность ввода
                 if (maxRodLength <= leftover + partLength)
                 {
                     Variant1TextBox.Text = "Ошибка: длина прута слишком мала для заданных условий.";
@@ -40,18 +47,21 @@ namespace RodCalc
                     return;
                 }
 
+                string calculationFormula = GetCalculationFormula(partLength, leftover, maxRodLength, partCount);
+
                 // Если количество партии не указано, расчет идет на один полный прут
                 if (partCount == 0)
                 {
                     int maxPartsPerRod = (maxRodLength - leftover) / partLength;
                     int totalRodLength = maxPartsPerRod * partLength + leftover;
 
-                    Variant1TextBox.Text = $"Вариант 1:\n" +
-                                           $"- 1 прут: {totalRodLength} мм ({maxPartsPerRod} деталей с прута)\n" +
-                                           $"Общий расход материала: {totalRodLength} мм\n" +
-                                           $"Общий остаток: {leftover} мм";
+                    string result = $"- 1 прут: {totalRodLength} мм ({maxPartsPerRod} {GetPartWord(maxPartsPerRod)} с прута)\n" +
+                                  $"Общий расход материала: {totalRodLength} мм\n" +
+                                  $"Общий остаток: {leftover} мм" +
+                                  calculationFormula;
 
-                    Variant2TextBox.Text = Variant1TextBox.Text; // Для одного прута варианты совпадают
+                    Variant1TextBox.Text = result;
+                    Variant2TextBox.Text = result;
                     return;
                 }
 
@@ -61,44 +71,74 @@ namespace RodCalc
                 int remainingPartsVariant1 = partCount % maxPartsPerRodVariant1;
 
                 int totalRodsVariant1 = fullRodsCountVariant1 + (remainingPartsVariant1 > 0 ? 1 : 0);
-                int totalLengthUsedVariant1 = fullRodsCountVariant1 * maxPartsPerRodVariant1 * partLength + remainingPartsVariant1 * partLength;
-                int totalLeftoverVariant1 = totalRodsVariant1 * leftover;
+                int totalLengthUsedVariant1 = (fullRodsCountVariant1 * maxPartsPerRodVariant1 + remainingPartsVariant1) * partLength;
+                int totalLeftoverVariant1 = (fullRodsCountVariant1 * leftover) + (remainingPartsVariant1 > 0 ? leftover : 0);
 
-                string variant1Details = fullRodsCountVariant1 > 0
-                    ? $"- {fullRodsCountVariant1} {GetRodWord(fullRodsCountVariant1)} по {maxPartsPerRodVariant1 * partLength + leftover} мм ({maxPartsPerRodVariant1} {GetPartWord(maxPartsPerRodVariant1)} с прута)\n"
-                    : string.Empty;
-
-                if (remainingPartsVariant1 > 0)
+                string variant1Details;
+                if (totalRodsVariant1 == 1)
                 {
-                    variant1Details += $"- Последний прут: {remainingPartsVariant1 * partLength + leftover} мм ({remainingPartsVariant1} {GetPartWord(remainingPartsVariant1)} с прута)\n";
-                }
-
-                // Вариант 2: Равномерное распределение партии
-                int optimalPartsPerRodVariant2 = (int)Math.Ceiling((double)partCount / Math.Ceiling((double)partCount / maxPartsPerRodVariant1));
-
-                if (optimalPartsPerRodVariant2 * partLength + leftover > maxRodLength)
-                {
-                    Variant2TextBox.Text = "Вариант 2:\nНевозможно равномерно распределить детали по заданным условиям.";
+                    variant1Details = $"- 1 прут: {partCount * partLength + leftover} мм ({partCount} {GetPartWord(partCount)} с прута)\n";
                 }
                 else
                 {
-                    int totalRodsVariant2 = (int)Math.Ceiling((double)partCount / optimalPartsPerRodVariant2);
-                    int totalLengthUsedVariant2 = totalRodsVariant2 * optimalPartsPerRodVariant2 * partLength;
-                    int totalLeftoverVariant2 = totalRodsVariant2 * leftover;
+                    variant1Details = fullRodsCountVariant1 > 0
+                        ? $"- {fullRodsCountVariant1} {GetRodWord(fullRodsCountVariant1)} по {maxPartsPerRodVariant1 * partLength + leftover} мм ({maxPartsPerRodVariant1} {GetPartWord(maxPartsPerRodVariant1)} с прута)\n"
+                        : string.Empty;
 
-                    string variant2Details = $"- {totalRodsVariant2} {GetRodWord(totalRodsVariant2)} по {optimalPartsPerRodVariant2 * partLength + leftover} мм ({optimalPartsPerRodVariant2} {GetPartWord(optimalPartsPerRodVariant2)} с прута)";
-
-                    Variant2TextBox.Text = $"Вариант 2:\n" +
-                                           variant2Details + "\n" +
-                                           $"Общий расход материала: {totalLengthUsedVariant2 + totalLeftoverVariant2} мм\n" +
-                                           $"Общий остаток: {totalLeftoverVariant2} мм";
+                    if (remainingPartsVariant1 > 0)
+                    {
+                        variant1Details += $"- 1 прут: {remainingPartsVariant1 * partLength + leftover} мм ({remainingPartsVariant1} {GetPartWord(remainingPartsVariant1)} с прута)\n";
+                    }
                 }
 
-                // Результаты варианта 1
+                // Вариант 2: Равномерное распределение
+                int bestPartsPerRod = 0;
+                int bestRodCount = int.MaxValue;
+
+                for (int partsPerRod = 1; partsPerRod <= maxPartsPerRodVariant1; partsPerRod++)
+                {
+                    if (partsPerRod * partLength + leftover <= maxRodLength)
+                    {
+                        int neededRods = (int)Math.Ceiling((double)partCount / partsPerRod);
+
+                        if (neededRods * partsPerRod == partCount)
+                        {
+                            if (neededRods < bestRodCount ||
+                                (neededRods == bestRodCount && partsPerRod > bestPartsPerRod))
+                            {
+                                bestRodCount = neededRods;
+                                bestPartsPerRod = partsPerRod;
+                            }
+                        }
+                    }
+                }
+
+                if (bestPartsPerRod > 0)
+                {
+                    int totalLength = bestPartsPerRod * partLength + leftover;
+                    int totalMaterial = bestRodCount * totalLength;
+                    int totalLeftover = bestRodCount * leftover;
+
+                    string variant2Formula = GetCalculationFormula(partLength, leftover, maxRodLength, partCount, bestPartsPerRod, bestRodCount);
+
+                    Variant2TextBox.Text = $"- {bestRodCount} {GetRodWord(bestRodCount)} по {totalLength} мм ({bestPartsPerRod} {GetPartWord(bestPartsPerRod)} с прута)\n" +
+                                         $"Общий расход материала: {totalMaterial} мм\n" +
+                                         $"Общий остаток: {totalLeftover} мм" +
+                                         variant2Formula;
+                }
+                else
+                {
+                    Variant2TextBox.Text = "Вариант 2:\n" +
+                                         "Невозможно равномерно распределить детали по прутам.\n" +
+                                         "Рекомендуется использовать Вариант 1." +
+                                         calculationFormula;
+                }
+
                 Variant1TextBox.Text = $"Вариант 1:\n" +
-                                       variant1Details +
-                                       $"Общий расход материала: {totalLengthUsedVariant1 + totalLeftoverVariant1} мм\n" +
-                                       $"Общий остаток: {totalLeftoverVariant1} мм";
+                                      variant1Details +
+                                      $"Общий расход материала: {totalLengthUsedVariant1 + totalLeftoverVariant1} мм\n" +
+                                      $"Общий остаток: {totalLeftoverVariant1} мм" +
+                                      calculationFormula;
             }
             catch (Exception ex)
             {
@@ -106,6 +146,8 @@ namespace RodCalc
                 Variant2TextBox.Text = string.Empty;
             }
         }
+
+
 
         private void CopyToClipboard(object sender, RoutedEventArgs e)
         {
