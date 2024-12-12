@@ -509,7 +509,7 @@ namespace remeLog.Infrastructure
                 .Add(ColumnManager.Machine)
                 .Add(ColumnManager.Date)
                 .Add(ColumnManager.Operator)
-                .Add(ColumnManager.Order)
+                .Add(ColumnManager.Part)
                 .Add(ColumnManager.Finished)
                 .Add(ColumnManager.Setup)
                 .Add(ColumnManager.MachiningTime)
@@ -592,6 +592,7 @@ namespace remeLog.Infrastructure
                     ws.Cell(row, ci[ColumnManager.Machine]).SetValue(part.Machine);
                     ws.Cell(row, ci[ColumnManager.Date]).SetValue(part.ShiftDate);
                     ws.Cell(row, ci[ColumnManager.Operator]).SetValue(part.Operator);
+                    ws.Cell(row, ci[ColumnManager.Part]).SetValue(part.PartName);
                     ws.Cell(row, ci[ColumnManager.Finished]).SetValue(part.FinishedCount);
                     ws.Cell(row, ci[ColumnManager.Setup]).SetValue(part.Setup);
 
@@ -623,7 +624,7 @@ namespace remeLog.Infrastructure
             ws.Column(ci[ColumnManager.Machine]).Width = 13;
             ws.Column(ci[ColumnManager.Date]).Width = 8;
             ws.Column(ci[ColumnManager.Operator]).Width = 13; 
-            ws.Column(ci[ColumnManager.Order]).Width = 15;
+            ws.Column(ci[ColumnManager.Part]).Width = 15;
             ws.Columns(ci[ColumnManager.Finished], ci[ColumnManager.Setup]).Width = 3;
             ws.Column(ci[ColumnManager.MachiningTime]).Width = 7;
             ws.Columns(ci[ColumnManager.OperatorComment], ci[ColumnManager.Problems]).Width = 30;
