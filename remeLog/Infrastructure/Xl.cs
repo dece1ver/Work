@@ -96,67 +96,40 @@ namespace remeLog.Infrastructure
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet("Отчет за период");
             ws.Style.Font.FontSize = 12;
-
+            var cm = new ColumnManager.Builder()
+                .Add(ColumnManager.Machine)
+                .Add(ColumnManager.WorkedShifts)
+                .Add(ColumnManager.NoOperatorShifts)
+                .Add(ColumnManager.HardwareRepairShifts)
+                .Add(ColumnManager.NoPowerShifts)
+                .Add(ColumnManager.ProcessRelatedLossShifts)
+                .Add(ColumnManager.UnspecifiedOtherShifts)
+                .Add(ColumnManager.SetupRatio)
+                .Add(ColumnManager.ProductionRatio)
+                .Add(ColumnManager.SetupRatioUnder)
+                .Add(ColumnManager.ProductionRatioUnder)
+                .Add(ColumnManager.SetupRatioOver)
+                .Add(ColumnManager.ProductionRatioOver)
+                .Add(ColumnManager.SetupUnderOverRatio)
+                .Add(ColumnManager.ProductionUnderOverRatio)
+                .Add(ColumnManager.ProductionToTotalRatio)
+                .Add(ColumnManager.ProductionEfficiencyToTotalRatio)
+                .Add(ColumnManager.AveragePartsCount)
+                .Add(ColumnManager.AverageReplacementTime)
+                .Add(ColumnManager.SpecifiedDowntimes)
+                .Add(ColumnManager.MaintenanceTime)
+                .Add(ColumnManager.ToolSearchingTime)
+                .Add(ColumnManager.ToolChangingTime)
+                .Add(ColumnManager.MentoringTime)
+                .Add(ColumnManager.ContactingDepartmentsTime)
+                .Add(ColumnManager.FixtureMakingTime)
+                .Add(ColumnManager.HardwareFailureTime)
+                .Add(ColumnManager.UnspecifiedDowntimes)
+                .Build();
             var headerRow = 2;
+            var ci = cm.GetIndexes();
 
-            var machineColId = 1;
-            var workedShiftsColId = 2;
-            var noOperatorShiftsColId = 3;
-            var hrdwRepairShiftsColId = 4;
-            var noPowerShifts = 5;
-            var processRelatedLossShiftsColId = 6;
-            var unspecOtherShiftsColId = 7;
-            var setupRatioColId = 8;
-            var productionRatioColId = 9;
-            var setupRatioUnderColId = 10;
-            var productionRatioUnderColId = 11;
-            var setupRatioOverColId = 12;
-            var productionRatioOverColId = 13;
-            var setupUnderOverRatioColId = 14;
-            var productionUnderOverRatioColId = 15;
-            var productionToTotalRatioColId = 16;
-            var productionEffToTotalRatioColId = 17;
-            var avrReplTimeColId = 18;
-            var specDowntimesColId = 19;
-            var maintenanceTimeColId = 20;
-            var toolSrchTimeColId = 21;
-            var mentoringTimeColId = 22;
-            var contactingDepartsTimeColId = 23;
-            var fixtMakingTimeColId = 24;
-            var hardwFailTimeColId = 25;
-            var unspecDownTimesColId = 26;
-
-            ws.Cell(headerRow, machineColId).Value = "Станок";
-            ws.Cell(headerRow, workedShiftsColId).Value = "Отработанные смены";
-            ws.Cell(headerRow, noOperatorShiftsColId).Value = "Смены без операторов";
-            ws.Cell(headerRow, hrdwRepairShiftsColId).Value = "Смены с ремонтом оборудования";
-            ws.Cell(headerRow, noPowerShifts).Value = "Смены без электропитания";
-            ws.Cell(headerRow, processRelatedLossShiftsColId).Value = "Организационные потери";
-            ws.Cell(headerRow, unspecOtherShiftsColId).Value = "Смены без работы по другим причинам";
-            ws.Cell(headerRow, setupRatioColId).Value = "Коэффициент наладки";
-            ws.Cell(headerRow, productionRatioColId).Value = "Коэффициент изготовления";
-            ws.Cell(headerRow, setupRatioUnderColId).Value = "Коэффициент наладки на штучке";
-            ws.Cell(headerRow, productionRatioUnderColId).Value = "Коэффициент изготовления на штучке";
-            ws.Cell(headerRow, setupRatioOverColId).Value = "Коэффициент наладки на серийке";
-            ws.Cell(headerRow, productionRatioOverColId).Value = "Коэффициент изготовления на серийке";
-            ws.Cell(headerRow, setupUnderOverRatioColId).Value = "Соотношение штучки к серийке при наладке";
-            ws.Cell(headerRow, productionUnderOverRatioColId).Value = "Соотношение штучки к серийке при изготовлении";
-            ws.Cell(headerRow, productionToTotalRatioColId).Value = "Отношение изготовления к общему времени";
-            ws.Cell(headerRow, productionEffToTotalRatioColId).Value = "Отношение нормативов к общему времени";
-            ws.Cell(headerRow, avrReplTimeColId).Value = "Среднее время замены детали (серия)";
-            ws.Cell(headerRow, specDowntimesColId).Value = "Отмеченные простои";
-            ws.Cell(headerRow, maintenanceTimeColId).Value = "Обслуживание";
-            ws.Cell(headerRow, toolSrchTimeColId).Value = "Поиск инструмента";
-            ws.Cell(headerRow, mentoringTimeColId).Value = "Обучение";
-            ws.Cell(headerRow, contactingDepartsTimeColId).Value = "Другие службы";
-            ws.Cell(headerRow, fixtMakingTimeColId).Value = "Изготовление оснастки";
-            ws.Cell(headerRow, hardwFailTimeColId).Value = "Отказ оборудования";
-            ws.Cell(headerRow, unspecDownTimesColId).Value = "Неуказанные простои";
-
-            var lastCol = unspecDownTimesColId;
-            var firstCol = machineColId;
-
-            var headerRange = ws.Range(2, firstCol, 2, lastCol);
+            var headerRange = ws.Range(2, 1, 2, cm.Count);
             var row = 3;
             var firstDataRow = row;
 
@@ -164,41 +137,44 @@ namespace remeLog.Infrastructure
             {
                 parts = partGroup.ToList();
                 totalWorkedMinutes = parts.FullWorkedTime().TotalMinutes;
-                ws.Cell(row, machineColId).Value = partGroup.Key;
-                ws.Cell(row, workedShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s is not ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
-                ws.Cell(row, noOperatorShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие оператора" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, hrdwRepairShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Ремонт оборудования" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, noPowerShifts).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие электричества" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, processRelatedLossShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, unspecOtherShiftsColId).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
-                ws.Cell(row, setupRatioColId).Value = parts.SetupRatio();
-                ws.Cell(row, productionRatioColId).Value = parts.ProductionRatio();
+                ws.Cell(row, ci[ColumnManager.Machine]).Value = partGroup.Key;
+                ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s is not ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
+                ws.Cell(row, ci[ColumnManager.NoOperatorShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие оператора" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[ColumnManager.HardwareRepairShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Ремонт оборудования" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[ColumnManager.NoPowerShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие электричества" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[ColumnManager.ProcessRelatedLossShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[ColumnManager.UnspecifiedOtherShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
+                ws.Cell(row, ci[ColumnManager.SetupRatio]).Value = parts.SetupRatio();
+                ws.Cell(row, ci[ColumnManager.ProductionRatio]).Value = parts.ProductionRatio();
                 var setupUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).AverageSetupRatio();
-                ws.Cell(row, setupRatioUnderColId).Value = setupUnderRatio;
+                ws.Cell(row, ci[ColumnManager.SetupRatioUnder]).Value = setupUnderRatio;
                 var productionUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).ProductionRatio();
-                ws.Cell(row, productionRatioUnderColId).Value = productionUnderRatio;
+                ws.Cell(row, ci[ColumnManager.ProductionRatioUnder]).Value = productionUnderRatio;
                 var setupOverRatio = parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageSetupRatio();
-                ws.Cell(row, setupRatioOverColId).Value = setupOverRatio;
+                ws.Cell(row, ci[ColumnManager.SetupRatioOver]).Value = setupOverRatio;
                 var productionOverRatio = parts.Where(p => p.FinishedCountFact >= underOverBorder).ProductionRatio();
-                ws.Cell(row, productionRatioOverColId).Value = productionOverRatio;
-                ws.Cell(row, setupUnderOverRatioColId).Value = setupUnderRatio == 0 ? 0 : setupOverRatio / setupUnderRatio;
-                ws.Cell(row, productionUnderOverRatioColId).Value = productionUnderRatio == 0 ? 0 : productionOverRatio / productionUnderRatio;
+                ws.Cell(row, ci[ColumnManager.ProductionRatioOver]).Value = productionOverRatio;
+                ws.Cell(row, ci[ColumnManager.SetupUnderOverRatio]).Value = setupUnderRatio == 0 ? 0 : setupOverRatio / setupUnderRatio;
+                ws.Cell(row, ci[ColumnManager.ProductionUnderOverRatio]).Value = productionUnderRatio == 0 ? 0 : productionOverRatio / productionUnderRatio;
                 var prodTimeFactSum = parts.Sum(p => p.ProductionTimeFact);
-                ws.Cell(row, productionToTotalRatioColId).Value = prodTimeFactSum / totalWorkedMinutes;
+                ws.Cell(row, ci[ColumnManager.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
                 var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
-                ws.Cell(row, productionEffToTotalRatioColId).Value = prodTimePlanSum / totalWorkedMinutes;
-                ws.Range(row, setupRatioColId, row, productionEffToTotalRatioColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, avrReplTimeColId).Value = parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageReplacementTimeRatio();
-                ws.Cell(row, avrReplTimeColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-                ws.Cell(row, specDowntimesColId).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
-                ws.Cell(row, maintenanceTimeColId).Value = parts.SpecifiedDowntimeRatio(Downtime.Maintenance);
-                ws.Cell(row, toolSrchTimeColId).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolSearching);
-                ws.Cell(row, mentoringTimeColId).Value = parts.SpecifiedDowntimeRatio(Downtime.Mentoring);
-                ws.Cell(row, contactingDepartsTimeColId).Value = parts.SpecifiedDowntimeRatio(Downtime.ContactingDepartments);
-                ws.Cell(row, fixtMakingTimeColId).Value = parts.SpecifiedDowntimeRatio(Downtime.FixtureMaking);
-                ws.Cell(row, hardwFailTimeColId).Value = parts.SpecifiedDowntimeRatio(Downtime.HardwareFailure);
-                ws.Cell(row, unspecDownTimesColId).Value = parts.UnspecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
-                ws.Range(row, specDowntimesColId, row, unspecDownTimesColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
+                ws.Cell(row, ci[ColumnManager.AveragePartsCount]).Value = parts.GroupBy(p => new { p.PartName, p.Order })
+                    .Select(g => g.First()).Average(p => p.TotalCount);
+                ws.Range(row, ci[ColumnManager.SetupRatio], row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, ci[ColumnManager.AverageReplacementTime]).Value = parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageReplacementTimeRatio();
+                ws.Cell(row, ci[ColumnManager.AverageReplacementTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+                ws.Cell(row, ci[ColumnManager.SpecifiedDowntimes]).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
+                ws.Cell(row, ci[ColumnManager.MaintenanceTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Maintenance);
+                ws.Cell(row, ci[ColumnManager.ToolSearchingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolSearching);
+                ws.Cell(row, ci[ColumnManager.ToolChangingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolChanging);
+                ws.Cell(row, ci[ColumnManager.MentoringTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Mentoring);
+                ws.Cell(row, ci[ColumnManager.ContactingDepartmentsTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ContactingDepartments);
+                ws.Cell(row, ci[ColumnManager.FixtureMakingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.FixtureMaking);
+                ws.Cell(row, ci[ColumnManager.HardwareFailureTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.HardwareFailure);
+                ws.Cell(row, ci[ColumnManager.UnspecifiedDowntimes]).Value = parts.UnspecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
+                ws.Range(row, ci[ColumnManager.SpecifiedDowntimes], row, ci[ColumnManager.SpecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
 
                 row++;
@@ -210,19 +186,19 @@ namespace remeLog.Infrastructure
             dataRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
 
-            ws.Range(headerRow, machineColId, lastDataRow, machineColId).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, setupRatioColId, lastDataRow, productionRatioColId).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, setupRatioColId, lastDataRow, productionRatioColId).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.8);
-            ws.Range(headerRow, setupRatioUnderColId, lastDataRow, productionRatioUnderColId).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent2, 0.8);
-            ws.Range(headerRow, setupRatioOverColId, lastDataRow, productionRatioOverColId).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, setupRatioOverColId, lastDataRow, productionRatioOverColId).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent3, 0.8);
-            ws.Range(headerRow, setupUnderOverRatioColId, lastDataRow, productionUnderOverRatioColId).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent4, 0.8);
-            ws.Range(headerRow, productionToTotalRatioColId, lastDataRow, productionEffToTotalRatioColId).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, productionToTotalRatioColId, lastDataRow, productionEffToTotalRatioColId).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
-            ws.Range(headerRow, specDowntimesColId, lastDataRow, unspecDownTimesColId).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, specDowntimesColId, lastDataRow, unspecDownTimesColId).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent6, 0.8);
-            ws.Range(firstDataRow, workedShiftsColId, lastDataRow, workedShiftsColId).Style.Font.FontColor = XLColor.Red;
-            ws.Range(firstDataRow, workedShiftsColId, lastDataRow, workedShiftsColId).AddConditionalFormat().WhenEquals($"=$B${lastDataRow + 2}").Font.FontColor = XLColor.Green;
+            ws.Range(headerRow, ci[ColumnManager.Machine], lastDataRow, ci[ColumnManager.Machine]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[ColumnManager.SetupRatio], lastDataRow, ci[ColumnManager.ProductionRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[ColumnManager.SetupRatio], lastDataRow, ci[ColumnManager.ProductionRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.8);
+            ws.Range(headerRow, ci[ColumnManager.SetupRatioUnder], lastDataRow, ci[ColumnManager.ProductionRatioUnder]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent2, 0.8);
+            ws.Range(headerRow, ci[ColumnManager.SetupRatioOver], lastDataRow, ci[ColumnManager.ProductionRatioOver]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[ColumnManager.SetupRatioOver], lastDataRow, ci[ColumnManager.ProductionRatioOver]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent3, 0.8);
+            ws.Range(headerRow, ci[ColumnManager.SetupUnderOverRatio], lastDataRow, ci[ColumnManager.ProductionUnderOverRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent4, 0.8);
+            ws.Range(headerRow, ci[ColumnManager.ProductionToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[ColumnManager.ProductionToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
+            ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent6, 0.8);
+            ws.Range(firstDataRow, ci[ColumnManager.WorkedShifts], lastDataRow, ci[ColumnManager.WorkedShifts]).Style.Font.FontColor = XLColor.Red;
+            ws.Range(firstDataRow, ci[ColumnManager.WorkedShifts], lastDataRow, ci[ColumnManager.WorkedShifts]).AddConditionalFormat().WhenEquals($"=$B${lastDataRow + 2}").Font.FontColor = XLColor.Green;
             dataRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             dataRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             dataRange.SetAutoFilter(true);
@@ -236,30 +212,30 @@ namespace remeLog.Infrastructure
             ws.RowsUsed().Height = 20;
             ws.Row(2).Height = 130;
             ws.Cell(1, 1).Value = $"Отчёт за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
-            ws.Range(1, firstCol, 1, lastCol).Merge();
-            ws.Range(1, firstCol, 1, 1).Style.Font.FontSize = 16;
-            ws.Columns(2, lastCol).Width = 8;
+            ws.Range(1, 1, 1, cm.Count).Merge();
+            ws.Range(1, 1, 1, 1).Style.Font.FontSize = 16;
+            ws.Columns(2, cm.Count).Width = 8;
 
-            ws.Cell(row, machineColId).Value = "Соотношение:";
-            ws.Cell(row, machineColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-            ws.Range(row, machineColId, row, unspecOtherShiftsColId).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Range(row, noOperatorShiftsColId, row, unspecOtherShiftsColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, workedShiftsColId).FormulaA1 = $"AVERAGE(B{firstDataRow}:B{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, noOperatorShiftsColId).FormulaA1 = $"AVERAGE(C{firstDataRow}:C{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, hrdwRepairShiftsColId).FormulaA1 = $"AVERAGE(D{firstDataRow}:D{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, noPowerShifts).FormulaA1 = $"AVERAGE(E{firstDataRow}:E{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, processRelatedLossShiftsColId).FormulaA1 = $"AVERAGE(F{firstDataRow}:F{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, unspecOtherShiftsColId).FormulaA1 = $"AVERAGE(G{firstDataRow}:G{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Range(row, workedShiftsColId, row, unspecOtherShiftsColId).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
-            ws.Cell(row, workedShiftsColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, workedShiftsColId).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Cell(row, ci[ColumnManager.Machine]).Value = "Соотношение:";
+            ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            ws.Range(row, ci[ColumnManager.Machine], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Range(row, ci[ColumnManager.NoOperatorShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, ci[ColumnManager.WorkedShifts]).FormulaA1 = $"AVERAGE(B{firstDataRow}:B{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Cell(row, ci[ColumnManager.NoOperatorShifts]).FormulaA1 = $"AVERAGE(C{firstDataRow}:C{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Cell(row, ci[ColumnManager.HardwareRepairShifts]).FormulaA1 = $"AVERAGE(D{firstDataRow}:D{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Cell(row, ci[ColumnManager.NoPowerShifts]).FormulaA1 = $"AVERAGE(E{firstDataRow}:E{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Cell(row, ci[ColumnManager.ProcessRelatedLossShifts]).FormulaA1 = $"AVERAGE(F{firstDataRow}:F{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Cell(row, ci[ColumnManager.UnspecifiedOtherShifts]).FormulaA1 = $"AVERAGE(G{firstDataRow}:G{lastDataRow})/$B${lastDataRow + 2}";
+            ws.Range(row, ci[ColumnManager.WorkedShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
+            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             row++;
-            ws.Cell(row, machineColId).Value = "Рабочих смен:";
-            ws.Cell(row, machineColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-            ws.Cell(row, machineColId).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Cell(row, workedShiftsColId).Value = totalDays * 2;
-            ws.Cell(row, workedShiftsColId).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, workedShiftsColId).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Cell(row, ci[ColumnManager.Machine]).Value = "Рабочих смен:";
+            ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = totalDays * 2;
+            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
@@ -524,50 +500,11 @@ namespace remeLog.Infrastructure
 
             int row = 3;
             var lastOrders = parts
-                .OrderBy(p => p.StartSetupTime) // Сортировка заказов от старых к новым
+                .OrderBy(p => p.StartSetupTime)
                 .Select(p => p.Order)
                 .Distinct()
                 .Take(ordersCount)
                 .ToList();
-
-            //var filteredParts = parts
-            //    .Where(p => lastOrders.Contains(p.Order) && p.FinishedCount > 0)
-            //    .OrderBy(p => p.Machine)
-            //    .ThenBy(p => p.StartSetupTime)
-            //    .ToList();
-            //var currentMachine = "";
-            //var ci = cm.GetIndexes();
-
-            //foreach (var part in filteredParts)
-            //{
-            //    ws.Cell(row, ci["machine"]).SetValue(part.Machine);
-            //    ws.Cell(row, ci["date"]).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
-            //    ws.Cell(row, ci["operator"]).SetValue(part.Operator);
-            //    ws.Cell(row, ci["order"]).SetValue(part.Order);
-            //    ws.Cell(row, ci["finished"]).SetValue(part.FinishedCount);
-            //    ws.Cell(row, ci["setup"]).SetValue(part.Setup);
-            //    if (part.MachiningTime != TimeSpan.Zero)
-            //        ws.Cell(row, ci["machiningTime"]).SetValue(part.MachiningTime);
-
-            //    var comment = part.OperatorComment;
-            //    if (comment.Contains("Отмеченные простои:\n"))
-            //    {
-            //        comment = comment.Split("Отмеченные простои:\n")[0].Trim();
-            //    }
-            //    ws.Cell(row, ci["operatorComment"]).SetValue(comment)
-            //        .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            //    ws.Cell(row, ci["problems"]).SetValue(part.Problems)
-            //        .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-            //    ws.Cell(row, ci["masterComment"]).SetValue(part.MasterComment);
-            //    var cells = ws.Range(row,1,row, cm.Count);
-            //    cells.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            //    cells.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-            //    cells.Style.Border.RightBorder = XLBorderStyleValues.Thin;
-            //    cells.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-            //    cells.Style.Border.TopBorder = currentMachine == part.Machine ? XLBorderStyleValues.Thin : XLBorderStyleValues.Medium;
-            //    currentMachine = part.Machine;
-            //    row++;
-            //}
 
             var filteredParts = parts
                 .Where(p => lastOrders.Contains(p.Order) && p.FinishedCount > 0)
@@ -580,7 +517,8 @@ namespace remeLog.Infrastructure
             foreach (var order in lastOrders)
             {
                 ws.Cell(row, 1).SetValue($"{order}");
-                ws.Range(row, 1, row, cm.Count).Merge().Style.Font.SetBold(true)
+                ws.Range(row, 1, row, cm.Count).Merge().Style.Font
+                    .SetBold(true)
                     .Border.SetLeftBorder(XLBorderStyleValues.Thin)
                     .Border.SetRightBorder(XLBorderStyleValues.Thin)
                     .Border.SetTopBorder(XLBorderStyleValues.Medium)

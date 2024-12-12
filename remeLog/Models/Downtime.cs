@@ -10,6 +10,7 @@ namespace remeLog.Models
     {
         Maintenance, 
         ToolSearching,
+        ToolChanging,
         Mentoring,
         ContactingDepartments,
         FixtureMaking,

@@ -147,6 +147,9 @@ namespace remeLog.Infrastructure.Extensions
                     case Downtime.ToolSearching:
                         sum += part.ToolSearchingTime;
                         break;
+                    case Downtime.ToolChanging:
+                        sum += part.ToolChangingTime;
+                        break;
                     case Downtime.Mentoring:
                         sum += part.MentoringTime;
                         break;
@@ -189,6 +192,8 @@ namespace remeLog.Infrastructure.Extensions
                 if (excludeDowntimeType != Downtime.Maintenance)
                     sum += part.MaintenanceTime;
                 if (excludeDowntimeType != Downtime.ToolSearching)
+                    sum += part.ToolSearchingTime;
+                if (excludeDowntimeType != Downtime.ToolChanging)
                     sum += part.ToolSearchingTime;
                 if (excludeDowntimeType != Downtime.Mentoring)
                     sum += part.MentoringTime;

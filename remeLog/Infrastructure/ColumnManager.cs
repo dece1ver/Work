@@ -238,7 +238,7 @@ namespace remeLog.Infrastructure
         public const string SpecifiedDowntimesComment = "specifiedDowntimesComment";
 
         /// <summary>
-        /// Наладка
+        /// Наладка или Б/Н
         /// </summary>
         public const string SetupRatioTitle = "setupRatioTitle";
 
@@ -248,7 +248,7 @@ namespace remeLog.Infrastructure
         public const string MasterSetupComment = "masterSetupComment";
 
         /// <summary>
-        /// Изготовление
+        /// Изготовление или Б/И
         /// </summary>
         public const string ProductionRatioTitle = "productionRatioTitle";
 
@@ -276,6 +276,114 @@ namespace remeLog.Infrastructure
         /// Комментарий техотдела
         /// </summary>
         public const string EngineerComment = "engineerComment";
+
+        /// <summary>
+        /// Средний размер партии
+        /// </summary>
+        public const string AveragePartsCount = "averagePartsCount";
+
+        /// <summary>
+        /// Доля штучных изготовлений
+        /// </summary>
+        public const string SingleToSeriesProductionRatio = "singleToSeriesProductionRatio";
+
+        /// <summary>
+        /// Отработано смен
+        /// </summary>
+        public const string WorkedShifts = "workedShifts";
+
+        /// <summary>
+
+        /// <summary>
+        /// Смены без операторов
+        /// </summary>
+        public const string NoOperatorShifts = "noOperatorShifts";
+
+        /// <summary>
+        /// Смены с ремонтом оборудования
+        /// </summary>
+        public const string HardwareRepairShifts = "hardwareRepairShifts";
+
+        /// <summary>
+        /// Смены без электропитания
+        /// </summary>
+        public const string NoPowerShifts = "noPowerShifts";
+
+        /// <summary>
+        /// Организационные потери
+        /// </summary>
+        public const string ProcessRelatedLossShifts = "processRelatedLossShifts";
+
+        /// <summary>
+        /// Смены без работы по другим причинам
+        /// </summary>
+        public const string UnspecifiedOtherShifts = "unspecifiedOtherShifts";
+
+        /// <summary>
+        /// Коэффициент наладки
+        /// </summary>
+        public const string SetupRatio = "setupRatio";
+
+        /// <summary>
+        /// Коэффициент изготовления
+        /// </summary>
+        public const string ProductionRatio = "productionRatio";
+
+        /// <summary>
+        /// Коэффициент наладки на штучке
+        /// </summary>
+        public const string SetupRatioUnder = "setupRatioUnder";
+
+        /// <summary>
+        /// Коэффициент изготовления на штучке
+        /// </summary>
+        public const string ProductionRatioUnder = "productionRatioUnder";
+
+        /// <summary>
+        /// Коэффициент наладки на серийке
+        /// </summary>
+        public const string SetupRatioOver = "setupRatioOver";
+
+        /// <summary>
+        /// Коэффициент изготовления на серийке
+        /// </summary>
+        public const string ProductionRatioOver = "productionRatioOver";
+
+        /// <summary>
+        /// Соотношение штучки к серийке при наладке
+        /// </summary>
+        public const string SetupUnderOverRatio = "setupUnderOverRatio";
+
+        /// <summary>
+        /// Соотношение штучки к серийке при изготовлении
+        /// </summary>
+        public const string ProductionUnderOverRatio = "productionUnderOverRatio";
+
+        /// <summary>
+        /// Отношение изготовления к общему времени
+        /// </summary>
+        public const string ProductionToTotalRatio = "productionToTotalRatio";
+
+        /// <summary>
+        /// Отношение нормативов к общему времени
+        /// </summary>
+        public const string ProductionEfficiencyToTotalRatio = "productionEfficiencyToTotalRatio";
+
+        /// <summary>
+        /// Среднее время замены детали
+        /// </summary>
+        public const string AverageReplacementTime = "averageReplacementTime";
+
+        /// <summary>
+        /// Отмеченные простои
+        /// </summary>
+        public const string SpecifiedDowntimes = "specifiedDowntimes";
+
+        /// <summary>
+        /// Неуказанные простои
+        /// </summary>
+        public const string UnspecifiedDowntimes = "unspecifiedDowntimes";
+
 
         private static readonly Dictionary<string, string> _descriptions = new()
         {
@@ -322,7 +430,34 @@ namespace remeLog.Infrastructure
             { MasterComment, "Комментарий мастера" },
             { FixedSetupTimePlan, "Норматив наладки (И)" },
             { FixedProductionTimePlan, "Норматив изготовления (И)" },
-            { EngineerComment, "Комментарий техотдела" }
+            { EngineerComment, "Комментарий техотдела" },
+            { AveragePartsCount, "Средняя партия" },
+            { SingleToSeriesProductionRatio, $"Доля штучных{Environment.NewLine}изготовлений" },
+            { WorkedShifts, "Отработанные смены" },
+            { NoOperatorShifts, "Смены без операторов" },
+            { HardwareRepairShifts, "Смены с ремонтом оборудования" },
+            { NoPowerShifts, "Смены без электропитания" },
+            { ProcessRelatedLossShifts, "Организационные потери" },
+            { UnspecifiedOtherShifts, "Смены без работы по другим причинам" },
+            { SetupRatio, "Коэффициент наладки" },
+            { ProductionRatio, "Коэффициент изготовления" },
+            { SetupRatioUnder, "Коэффициент наладки на штучке" },
+            { ProductionRatioUnder, "Коэффициент изготовления на штучке" },
+            { SetupRatioOver, "Коэффициент наладки на серийке" },
+            { ProductionRatioOver, "Коэффициент изготовления на серийке" },
+            { SetupUnderOverRatio, "Соотношение штучки к серийке при наладке" },
+            { ProductionUnderOverRatio, "Соотношение штучки к серийке при изготовлении" },
+            { ProductionToTotalRatio, "Отношение изготовления к общему времени" },
+            { ProductionEfficiencyToTotalRatio, "Отношение нормативов к общему времени" },
+            { AverageReplacementTime, "Среднее время замены детали" },
+            { SpecifiedDowntimes, "Отмеченные простои" },
+            { MaintenanceTime, "Обслуживание" },
+            { ToolSearchingTime, "Поиск инструмента" },
+            { MentoringTime, "Обучение" },
+            { ContactingDepartmentsTime, "Другие службы" },
+            { FixtureMakingTime, "Изготовление оснастки" },
+            { HardwareFailureTime, "Отказ оборудования" },
+            { UnspecifiedDowntimes, "Неуказанные простои" }
         };
 
         /// <summary>
