@@ -55,7 +55,7 @@ namespace remeLog.Infrastructure
         /// <summary>
         /// Возвращает количество колонок.
         /// </summary>
-        public int Length => _columns.Count;
+        public int Count => _columns.Count;
 
         /// <summary>
         /// GUID
@@ -171,6 +171,11 @@ namespace remeLog.Infrastructure
         /// Комментарий оператора
         /// </summary>
         public const string OperatorComment = "operatorComment";
+
+        /// <summary>
+        /// Типовые проблемы
+        /// </summary>
+        public const string Problems = "problems";
 
         /// <summary>
         /// Простои в наладке
@@ -297,6 +302,7 @@ namespace remeLog.Infrastructure
             { ProductionTimeFact, $"Фактическое{Environment.NewLine}изготовление" },
             { PlanForBatch, $"Норматив{Environment.NewLine}на партию" },
             { OperatorComment, $"Комментарий{Environment.NewLine}оператора" },
+            { Problems, $"Типовые{Environment.NewLine}проблемы" },
             { SetupDowntimes, $"Простои{Environment.NewLine}в наладке" },
             { MachiningDowntimes, $"Простои{Environment.NewLine}в изготовлении" },
             { PartialSetupTime, "Частичная наладка" },
@@ -327,6 +333,56 @@ namespace remeLog.Infrastructure
         static string GetDescription(string key)
         {
             return _descriptions.TryGetValue(key, out var description) ? description : "Н/Д";
+        }
+
+
+        /// <summary>
+        /// Билдер для создания экземпляров ColumnManager.
+        /// </summary>
+        public class Builder
+        {
+            private readonly List<(string Key, string Header)> _columns = new();
+
+            public Builder Add(string key)
+            {
+                var description = GetDescription(key);
+                _columns.Add((key, description));
+                return this;
+            }
+
+            public Builder Add(string key, string header)
+            {
+                _columns.Add((key, header));
+                return this;
+            }
+
+            public Builder AddRange(IEnumerable<string> keys)
+            {
+                foreach (var key in keys)
+                {
+                    Add(key);
+                }
+                return this;
+            }
+
+            public Builder AddRange(IEnumerable<(string Key, string Header)> columns)
+            {
+                foreach (var column in columns)
+                {
+                    Add(column.Key, column.Header);
+                }
+                return this;
+            }
+
+            public ColumnManager Build()
+            {
+                var manager = new ColumnManager();
+                foreach (var column in _columns)
+                {
+                    manager.Add(column.Key, column.Header);
+                }
+                return manager;
+            }
         }
     }
 }

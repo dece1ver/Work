@@ -505,81 +505,131 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            var columns = new Dictionary<string, (int index, string header)>
-            {
-                { "machine", (1, "Станок") },
-                { "date", (2, "Дата") },
-                { "operator", (3, "Оператор") },
-                { "order", (4, "М/Л") },
-                { "finished", (5, "Выполнено") },
-                { "setup", (6, "Установка") },
-                { "machiningTime", (7, "Машинное время") },
-                { "operatorComment", (8, "Комментарий оператора") },
-                { "problems", (9, "Типовые проблемы") },
-                { "masterComment", (10, "Комментарий мастера") }
-            };
+            var cm = new ColumnManager.Builder()
+                .Add(ColumnManager.Machine)
+                .Add(ColumnManager.Date)
+                .Add(ColumnManager.Operator)
+                .Add(ColumnManager.Order)
+                .Add(ColumnManager.Finished)
+                .Add(ColumnManager.Setup)
+                .Add(ColumnManager.MachiningTime)
+                .Add(ColumnManager.OperatorComment)
+                .Add(ColumnManager.Problems)
+                .Add(ColumnManager.MasterComment)
+                .Build();
 
-            ConfigureWorksheetHeader(ws, columns, HeaderRotateOption.Vertical, 65, 8);
+            ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 65, 8);
+
+            ws.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
 
             int row = 3;
             var lastOrders = parts
-                    .OrderByDescending(p => p.StartSetupTime)
-                    .Select(p => p.Order)
-                    .Distinct()
-                    .Take(ordersCount)
-                    .ToList();
+                .OrderBy(p => p.StartSetupTime) // Сортировка заказов от старых к новым
+                .Select(p => p.Order)
+                .Distinct()
+                .Take(ordersCount)
+                .ToList();
+
+            //var filteredParts = parts
+            //    .Where(p => lastOrders.Contains(p.Order) && p.FinishedCount > 0)
+            //    .OrderBy(p => p.Machine)
+            //    .ThenBy(p => p.StartSetupTime)
+            //    .ToList();
+            //var currentMachine = "";
+            //var ci = cm.GetIndexes();
+
+            //foreach (var part in filteredParts)
+            //{
+            //    ws.Cell(row, ci["machine"]).SetValue(part.Machine);
+            //    ws.Cell(row, ci["date"]).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
+            //    ws.Cell(row, ci["operator"]).SetValue(part.Operator);
+            //    ws.Cell(row, ci["order"]).SetValue(part.Order);
+            //    ws.Cell(row, ci["finished"]).SetValue(part.FinishedCount);
+            //    ws.Cell(row, ci["setup"]).SetValue(part.Setup);
+            //    if (part.MachiningTime != TimeSpan.Zero)
+            //        ws.Cell(row, ci["machiningTime"]).SetValue(part.MachiningTime);
+
+            //    var comment = part.OperatorComment;
+            //    if (comment.Contains("Отмеченные простои:\n"))
+            //    {
+            //        comment = comment.Split("Отмеченные простои:\n")[0].Trim();
+            //    }
+            //    ws.Cell(row, ci["operatorComment"]).SetValue(comment)
+            //        .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            //    ws.Cell(row, ci["problems"]).SetValue(part.Problems)
+            //        .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            //    ws.Cell(row, ci["masterComment"]).SetValue(part.MasterComment);
+            //    var cells = ws.Range(row,1,row, cm.Count);
+            //    cells.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            //    cells.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+            //    cells.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+            //    cells.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            //    cells.Style.Border.TopBorder = currentMachine == part.Machine ? XLBorderStyleValues.Thin : XLBorderStyleValues.Medium;
+            //    currentMachine = part.Machine;
+            //    row++;
+            //}
 
             var filteredParts = parts
                 .Where(p => lastOrders.Contains(p.Order) && p.FinishedCount > 0)
-                .OrderBy(p => p.Machine)
+                .OrderBy(p => p.Order)
                 .ThenBy(p => p.StartSetupTime)
                 .ToList();
-            var currentMachine = "";
-            foreach (var part in filteredParts)
-            {
-                ws.Cell(row, columns["machine"].index).SetValue(part.Machine);
-                ws.Cell(row, columns["date"].index).SetValue(part.ShiftDate).Style.DateFormat.Format = "dd.MM.yy";
-                ws.Cell(row, columns["operator"].index).SetValue(part.Operator);
-                ws.Cell(row, columns["order"].index).SetValue(part.Order);
-                ws.Cell(row, columns["finished"].index).SetValue(part.FinishedCount);
-                ws.Cell(row, columns["setup"].index).SetValue(part.Setup);
-                if (part.MachiningTime != TimeSpan.Zero)
-                    ws.Cell(row, columns["machiningTime"].index).SetValue(part.MachiningTime);
 
-                var comment = part.OperatorComment;
-                if (comment.Contains("Отмеченные простои:\n"))
-                {
-                    comment = comment.Split("Отмеченные простои:\n")[0].Trim();
-                }
-                ws.Cell(row, columns["operatorComment"].index).SetValue(comment)
-                    .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                ws.Cell(row, columns["problems"].index).SetValue(part.Problems)
-                    .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                ws.Cell(row, columns["masterComment"].index).SetValue(part.MasterComment);
-                var cells = ws.Range(row,1,row,columns.Count);
-                cells.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                cells.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
-                cells.Style.Border.RightBorder = XLBorderStyleValues.Thin;
-                cells.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                cells.Style.Border.TopBorder = currentMachine == part.Machine ? XLBorderStyleValues.Thin : XLBorderStyleValues.Medium;
-                currentMachine = part.Machine;
+            var ci = cm.GetIndexes();
+
+            foreach (var order in lastOrders)
+            {
+                ws.Cell(row, 1).SetValue($"{order}");
+                ws.Range(row, 1, row, cm.Count).Merge().Style.Font.SetBold(true)
+                    .Border.SetLeftBorder(XLBorderStyleValues.Thin)
+                    .Border.SetRightBorder(XLBorderStyleValues.Thin)
+                    .Border.SetTopBorder(XLBorderStyleValues.Medium)
+                    .Border.SetBottomBorder(XLBorderStyleValues.Medium);
                 row++;
-                
+
+                foreach (var part in filteredParts.Where(p => p.Order == order))
+                {
+                    ws.Cell(row, ci[ColumnManager.Machine]).SetValue(part.Machine);
+                    ws.Cell(row, ci[ColumnManager.Date]).SetValue(part.ShiftDate);
+                    ws.Cell(row, ci[ColumnManager.Operator]).SetValue(part.Operator);
+                    ws.Cell(row, ci[ColumnManager.Finished]).SetValue(part.FinishedCount);
+                    ws.Cell(row, ci[ColumnManager.Setup]).SetValue(part.Setup);
+
+                    if (part.MachiningTime != TimeSpan.Zero)
+                        ws.Cell(row, ci[ColumnManager.MachiningTime]).SetValue(part.MachiningTime);
+
+                    var comment = part.OperatorComment;
+                    if (comment.Contains("Отмеченные простои:\n"))
+                    {
+                        comment = comment.Split("Отмеченные простои:\n")[0].Trim();
+                    }
+
+                    ws.Cell(row, ci[ColumnManager.OperatorComment]).SetValue(comment)
+                        .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                    var cells = ws.Range(row, 1, row, cm.Count).Style
+                        .Border.SetLeftBorder(XLBorderStyleValues.Medium)
+                        .Border.SetRightBorder(XLBorderStyleValues.Medium)
+                        .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                    row++;
+                }
+
+                //ws.Range(row - filteredParts.Count(p => p.Order == order) - 1, 1, row - 1, cm.Count)
+                //    .Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             }
-            
 
             ws.Columns().AdjustToContents();
 
-            ws.Column(columns["machine"].index).Width = 13;
-            ws.Column(columns["date"].index).Width = 7;
-            ws.Column(columns["operator"].index).Width = 13; 
-            ws.Column(columns["order"].index).Width = 15;
-            ws.Columns(columns["finished"].index, columns["setup"].index).Width = 3;
-            ws.Column(columns["machiningTime"].index).Width = 7;
-            ws.Columns(columns["operatorComment"].index, columns["problems"].index).Width = 30;
-            ws.Column(columns["masterComment"].index).Width = 20;
+            ws.Column(ci[ColumnManager.Machine]).Width = 13;
+            ws.Column(ci[ColumnManager.Date]).Width = 8;
+            ws.Column(ci[ColumnManager.Operator]).Width = 13; 
+            ws.Column(ci[ColumnManager.Order]).Width = 15;
+            ws.Columns(ci[ColumnManager.Finished], ci[ColumnManager.Setup]).Width = 3;
+            ws.Column(ci[ColumnManager.MachiningTime]).Width = 7;
+            ws.Columns(ci[ColumnManager.OperatorComment], ci[ColumnManager.Problems]).Width = 30;
+            ws.Column(ci[ColumnManager.MasterComment]).Width = 20;
 
-            ws.PageSetup.PrintAreas.Add(1, 1, row - 1, columns.Count);
+            ws.PageSetup.PrintAreas.Add(1, 1, row - 1, cm.Count);
             ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
             ws.PageSetup.PaperSize = XLPaperSize.A4Paper;
             ws.PageSetup.FitToPages(1, 0);
@@ -587,10 +637,10 @@ namespace remeLog.Infrastructure
             ws.PageSetup.Margins.SetRight(0.2);
             ws.PageSetup.Margins.SetTop(0.4);
             ws.PageSetup.Margins.SetBottom(0.2);
-            ws.Range(2,1,2,columns.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(2,1,2, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.Range(row -1, 1, row - 1, cm.Count).Style.Border.BottomBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
-            SetTitle(ws, columns.Count, "История изготовления", parts.First().PartName, 14, BoldOption.Right);
+            SetTitle(ws, ci.Count, "История изготовления", parts.Last().PartName, 14, BoldOption.Right);
             wb.SaveAs(path);
 
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
@@ -1032,7 +1082,7 @@ namespace remeLog.Infrastructure
             {
                 ws.Column(ci[col]).Hide();
             }
-            SetTitle(ws, cm.Length, $"Отчёт по длительным наладкам: {cnt} из {totalSetups} ({((double)cnt / (double)totalSetups)*100:N2}%) за период от {parts.Min(p => p.ShiftDate).ToString(Constants.ShortDateFormat)} до {parts.Max(p => p.ShiftDate).ToString(Constants.ShortDateFormat)}");
+            SetTitle(ws, cm.Count, $"Отчёт по длительным наладкам: {cnt} из {totalSetups} ({((double)cnt / (double)totalSetups)*100:N2}%) за период от {parts.Min(p => p.ShiftDate).ToString(Constants.ShortDateFormat)} до {parts.Max(p => p.ShiftDate).ToString(Constants.ShortDateFormat)}");
             ws.SheetView.FreezeRows(2);
 
             wb.SaveAs(path);
@@ -1050,47 +1100,48 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            var cm = new ColumnManager();
-            cm.Add(ColumnManager.Machine);
-            cm.Add(ColumnManager.Date);
-            cm.Add(ColumnManager.Shift);
-            cm.Add(ColumnManager.Operator);
-            cm.Add(ColumnManager.Part);
-            cm.Add(ColumnManager.Order);
-            cm.Add(ColumnManager.TotalByOrder);
-            cm.Add(ColumnManager.Finished);
-            cm.Add(ColumnManager.Setup);
-            cm.Add(ColumnManager.StartSetupTime);
-            cm.Add(ColumnManager.StartMachiningTime);
-            cm.Add(ColumnManager.EndMachiningTime);
-            cm.Add(ColumnManager.SetupTimePlan);
-            cm.Add(ColumnManager.SetupTimeFact);
-            cm.Add(ColumnManager.SingleProductionTimePlan);
-            cm.Add(ColumnManager.MachiningTime);
-            cm.Add(ColumnManager.SingleProductionTime);
-            cm.Add(ColumnManager.PartReplacementTime);
-            cm.Add(ColumnManager.ProductionTimeFact);
-            cm.Add(ColumnManager.PlanForBatch);
-            cm.Add(ColumnManager.OperatorComment);
-            cm.Add(ColumnManager.SetupDowntimes);
-            cm.Add(ColumnManager.MachiningDowntimes);
-            cm.Add(ColumnManager.PartialSetupTime);
-            cm.Add(ColumnManager.MaintenanceTime);
-            cm.Add(ColumnManager.ToolSearchingTime);
-            cm.Add(ColumnManager.MentoringTime);
-            cm.Add(ColumnManager.ContactingDepartmentsTime);
-            cm.Add(ColumnManager.FixtureMakingTime);
-            cm.Add(ColumnManager.HardwareFailureTime);
-            cm.Add(ColumnManager.SpecifiedDowntimesRatio);
-            cm.Add(ColumnManager.SpecifiedDowntimesComment);
-            cm.Add(ColumnManager.SetupRatioTitle);
-            cm.Add(ColumnManager.MasterSetupComment);
-            cm.Add(ColumnManager.ProductionRatioTitle);
-            cm.Add(ColumnManager.MasterProductionComment);
-            cm.Add(ColumnManager.MasterComment);
-            cm.Add(ColumnManager.FixedSetupTimePlan);
-            cm.Add(ColumnManager.FixedProductionTimePlan);
-            cm.Add(ColumnManager.EngineerComment);
+            var cm = new ColumnManager.Builder()
+                .Add(ColumnManager.Machine)
+                .Add(ColumnManager.Date)
+                .Add(ColumnManager.Shift)
+                .Add(ColumnManager.Operator)
+                .Add(ColumnManager.Part)
+                .Add(ColumnManager.Order)
+                .Add(ColumnManager.TotalByOrder)
+                .Add(ColumnManager.Finished)
+                .Add(ColumnManager.Setup)
+                .Add(ColumnManager.StartSetupTime)
+                .Add(ColumnManager.StartMachiningTime)
+                .Add(ColumnManager.EndMachiningTime)
+                .Add(ColumnManager.SetupTimePlan)
+                .Add(ColumnManager.SetupTimeFact)
+                .Add(ColumnManager.SingleProductionTimePlan)
+                .Add(ColumnManager.MachiningTime)
+                .Add(ColumnManager.SingleProductionTime)
+                .Add(ColumnManager.PartReplacementTime)
+                .Add(ColumnManager.ProductionTimeFact)
+                .Add(ColumnManager.PlanForBatch)
+                .Add(ColumnManager.OperatorComment)
+                .Add(ColumnManager.SetupDowntimes)
+                .Add(ColumnManager.MachiningDowntimes)
+                .Add(ColumnManager.PartialSetupTime)
+                .Add(ColumnManager.MaintenanceTime)
+                .Add(ColumnManager.ToolSearchingTime)
+                .Add(ColumnManager.MentoringTime)
+                .Add(ColumnManager.ContactingDepartmentsTime)
+                .Add(ColumnManager.FixtureMakingTime)
+                .Add(ColumnManager.HardwareFailureTime)
+                .Add(ColumnManager.SpecifiedDowntimesRatio)
+                .Add(ColumnManager.SpecifiedDowntimesComment)
+                .Add(ColumnManager.SetupRatioTitle)
+                .Add(ColumnManager.MasterSetupComment)
+                .Add(ColumnManager.ProductionRatioTitle)
+                .Add(ColumnManager.MasterProductionComment)
+                .Add(ColumnManager.MasterComment)
+                .Add(ColumnManager.FixedSetupTimePlan)
+                .Add(ColumnManager.FixedProductionTimePlan)
+                .Add(ColumnManager.EngineerComment)
+                .Build();
 
             ConfigureWorksheetHeader(ws, cm);
 
@@ -1364,7 +1415,7 @@ namespace remeLog.Infrastructure
             var rightCell = ws.Cell(1, columnsCount).SetValue(right)
                 .Style.Font.SetFontSize(fontSize)
                 .Font.SetBold(bold == BoldOption.Right || bold == BoldOption.Both)
-                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left)
+                .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right)
                 .Alignment.SetWrapText(false);
         }
 
