@@ -283,16 +283,24 @@ namespace remeLog.Infrastructure
         public const string AveragePartsCount = "averagePartsCount";
 
         /// <summary>
+        /// Среднее количество изготовленных деталей
+        /// </summary>
+        public const string AverageFinishedCount = "averageFinishedCount";
+
+        /// <summary>
+        /// Доля штучных партий
+        /// </summary>
+        public const string SmallSeriesRatio = "smallSeriesRatio";
+
+        /// <summary>
         /// Доля штучных изготовлений
         /// </summary>
-        public const string SingleToSeriesProductionRatio = "singleToSeriesProductionRatio";
+        public const string SmallProductionsRatio = "smallProductionsRatio";
 
         /// <summary>
         /// Отработано смен
         /// </summary>
         public const string WorkedShifts = "workedShifts";
-
-        /// <summary>
 
         /// <summary>
         /// Смены без операторов
@@ -432,31 +440,27 @@ namespace remeLog.Infrastructure
             { FixedProductionTimePlan, "Норматив изготовления (И)" },
             { EngineerComment, "Комментарий техотдела" },
             { AveragePartsCount, "Средняя партия" },
-            { SingleToSeriesProductionRatio, $"Доля штучных{Environment.NewLine}изготовлений" },
+            { AverageFinishedCount, "Среднее изготовление" },
+            { SmallSeriesRatio, $"Доля штучных{Environment.NewLine}партий" },
+            { SmallProductionsRatio, $"Доля штучных{Environment.NewLine}изготовлений" },
             { WorkedShifts, "Отработанные смены" },
             { NoOperatorShifts, "Смены без операторов" },
-            { HardwareRepairShifts, "Смены с ремонтом оборудования" },
+            { HardwareRepairShifts, $"Смены с ремонтом{Environment.NewLine}оборудования" },
             { NoPowerShifts, "Смены без электропитания" },
             { ProcessRelatedLossShifts, "Организационные потери" },
-            { UnspecifiedOtherShifts, "Смены без работы по другим причинам" },
+            { UnspecifiedOtherShifts, $"Смены без работы{Environment.NewLine}по другим причинам" },
             { SetupRatio, "Коэффициент наладки" },
             { ProductionRatio, "Коэффициент изготовления" },
-            { SetupRatioUnder, "Коэффициент наладки на штучке" },
-            { ProductionRatioUnder, "Коэффициент изготовления на штучке" },
-            { SetupRatioOver, "Коэффициент наладки на серийке" },
-            { ProductionRatioOver, "Коэффициент изготовления на серийке" },
-            { SetupUnderOverRatio, "Соотношение штучки к серийке при наладке" },
-            { ProductionUnderOverRatio, "Соотношение штучки к серийке при изготовлении" },
-            { ProductionToTotalRatio, "Отношение изготовления к общему времени" },
-            { ProductionEfficiencyToTotalRatio, "Отношение нормативов к общему времени" },
-            { AverageReplacementTime, "Среднее время замены детали" },
+            { SetupRatioUnder, $"Коэффициент наладки{Environment.NewLine}на штучке" },
+            { ProductionRatioUnder, $"Коэффициент изготовления{Environment.NewLine}на штучке" },
+            { SetupRatioOver, $"Коэффициент наладки{Environment.NewLine}на серийке" },
+            { ProductionRatioOver, $"Коэффициент изготовления{Environment.NewLine}на серийке" },
+            { SetupUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при наладке" },
+            { ProductionUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при изготовлении" },
+            { ProductionToTotalRatio, $"Отношение изготовления{Environment.NewLine}к общему времени" },
+            { ProductionEfficiencyToTotalRatio, $"Отношение нормативов{Environment.NewLine}к общему времени" },
+            { AverageReplacementTime, $"Среднее время{Environment.NewLine}замены детали" },
             { SpecifiedDowntimes, "Отмеченные простои" },
-            { MaintenanceTime, "Обслуживание" },
-            { ToolSearchingTime, "Поиск инструмента" },
-            { MentoringTime, "Обучение" },
-            { ContactingDepartmentsTime, "Другие службы" },
-            { FixtureMakingTime, "Изготовление оснастки" },
-            { HardwareFailureTime, "Отказ оборудования" },
             { UnspecifiedDowntimes, "Неуказанные простои" }
         };
 

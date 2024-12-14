@@ -114,7 +114,10 @@ namespace remeLog.Infrastructure
                 .Add(ColumnManager.ProductionUnderOverRatio)
                 .Add(ColumnManager.ProductionToTotalRatio)
                 .Add(ColumnManager.ProductionEfficiencyToTotalRatio)
+                .Add(ColumnManager.AverageFinishedCount)
                 .Add(ColumnManager.AveragePartsCount)
+                .Add(ColumnManager.SmallSeriesRatio)
+                .Add(ColumnManager.SmallProductionsRatio)
                 .Add(ColumnManager.AverageReplacementTime)
                 .Add(ColumnManager.SpecifiedDowntimes)
                 .Add(ColumnManager.MaintenanceTime)
@@ -128,6 +131,7 @@ namespace remeLog.Infrastructure
                 .Build();
             var headerRow = 2;
             var ci = cm.GetIndexes();
+            ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 65, 8);
 
             var headerRange = ws.Range(2, 1, 2, cm.Count);
             var row = 3;
@@ -160,8 +164,30 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[ColumnManager.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
                 var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
                 ws.Cell(row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
-                ws.Cell(row, ci[ColumnManager.AveragePartsCount]).Value = parts.GroupBy(p => new { p.PartName, p.Order })
-                    .Select(g => g.First()).Average(p => p.TotalCount);
+                var uniqueParts = parts.GroupBy(p => new { p.PartName, p.Order }).Select(g => g.First()).ToList();
+
+                var averageFinishedCount = parts.Average(p => p.FinishedCountFact);
+                var averagePartsCount = uniqueParts.Average(p => p.TotalCount);
+                var smallProductionsRatio = (double)parts.Count(p => p.TotalCount < underOverBorder) / parts.Count;
+                var smallSeriesRatio = (double)uniqueParts.Count(p => p.TotalCount < underOverBorder) / uniqueParts.Count;
+
+                ws.Cell(row, ci[ColumnManager.AverageFinishedCount])
+                    .SetValue(averageFinishedCount)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+
+
+                ws.Cell(row, ci[ColumnManager.AveragePartsCount])
+                    .SetValue(averagePartsCount)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
+
+                ws.Cell(row, ci[ColumnManager.SmallProductionsRatio])
+                    .SetValue(smallProductionsRatio)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                ws.Cell(row, ci[ColumnManager.SmallSeriesRatio])
+                    .SetValue(smallSeriesRatio)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
                 ws.Range(row, ci[ColumnManager.SetupRatio], row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
                 ws.Cell(row, ci[ColumnManager.AverageReplacementTime]).Value = parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageReplacementTimeRatio();
                 ws.Cell(row, ci[ColumnManager.AverageReplacementTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
@@ -175,7 +201,6 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[ColumnManager.HardwareFailureTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.HardwareFailure);
                 ws.Cell(row, ci[ColumnManager.UnspecifiedDowntimes]).Value = parts.UnspecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
                 ws.Range(row, ci[ColumnManager.SpecifiedDowntimes], row, ci[ColumnManager.SpecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-
 
                 row++;
             }
@@ -197,6 +222,7 @@ namespace remeLog.Infrastructure
             ws.Range(headerRow, ci[ColumnManager.ProductionToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
             ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent6, 0.8);
+            ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
             ws.Range(firstDataRow, ci[ColumnManager.WorkedShifts], lastDataRow, ci[ColumnManager.WorkedShifts]).Style.Font.FontColor = XLColor.Red;
             ws.Range(firstDataRow, ci[ColumnManager.WorkedShifts], lastDataRow, ci[ColumnManager.WorkedShifts]).AddConditionalFormat().WhenEquals($"=$B${lastDataRow + 2}").Font.FontColor = XLColor.Green;
             dataRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -204,10 +230,6 @@ namespace remeLog.Infrastructure
             dataRange.SetAutoFilter(true);
             ws.Column(1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
             ws.Range(1, 1, 2, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            headerRange.Style.Font.FontName = "Segoe UI Semibold";
-            headerRange.Style.Font.FontSize = 10;
-            headerRange.Style.Alignment.TextRotation = 90;
-            headerRange.Style.Alignment.WrapText = true;
             ws.Columns().AdjustToContents();
             ws.RowsUsed().Height = 20;
             ws.Row(2).Height = 130;
@@ -236,6 +258,8 @@ namespace remeLog.Infrastructure
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = totalDays * 2;
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            ws.Columns(ci[ColumnManager.SetupUnderOverRatio], ci[ColumnManager.ProductionUnderOverRatio]).Hide();
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
