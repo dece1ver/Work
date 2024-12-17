@@ -20,23 +20,32 @@ namespace remeLog.Infrastructure
     {
         public static string GetLicenseKey(string licenseName)
         {
-            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            try
             {
-                connection.Open();
-                string query = $"SELECT license_key FROM licensing where license_name = '{licenseName}';";
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    connection.Open();
+                    string query = $"SELECT license_key FROM licensing where license_name = '{licenseName}';";
+                    using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        while (reader.Read())
+                        using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            return reader.GetString(0);
-                            
+                            while (reader.Read())
+                            {
+                                return reader.GetString(0);
+
+                            }
                         }
                     }
                 }
+                return string.Empty;
             }
-            return string.Empty;
+            catch (Exception ex) 
+            {
+                Util.WriteLogAsync(ex);
+                MessageBox.Show(ex.Message);
+                return string.Empty;
+            }
         }
 
         public static List<OperatorInfo> GetOperators()
@@ -783,7 +792,7 @@ namespace remeLog.Infrastructure
             }
         }
 
-        public static DbResult GetShiftsByPeriod(string[] machines, DateTime fromDate, DateTime toDate, out List<ShiftInfo> shifts)
+        public static DbResult GetShiftsByPeriod(ICollection<string> machines, DateTime fromDate, DateTime toDate, out List<ShiftInfo> shifts)
         {
             shifts = new List<ShiftInfo>();
             try

@@ -185,6 +185,7 @@ namespace remeLog.ViewModels
                     AppSettings.Instance.InstantUpdateOnMainWindow = settings.InstantUpdateOnMainWindow;
                     AppSettings.Instance.User = settings.Role;
                     AppSettings.Save();
+                    Util.TrySetupSyncfusionLicense();
                     Status = "Параметры сохранены";
                 }
             }
@@ -257,6 +258,7 @@ namespace remeLog.ViewModels
         public ICommand ShowPartsInfoCommand { get; }
         private void OnShowPartsInfoCommandExecuted(object p)
         {
+            
             using (Overlay = new())
             {
                 var partsInfo = (CombinedParts)p;
@@ -320,6 +322,11 @@ namespace remeLog.ViewModels
 
         private async Task LoadPartsAsync(bool first = false)
         {
+            if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString))
+            {
+                MessageBox.Show("Перейдите в параметры приложения и настройте строку подключения к базе данных.", "Приложение не настроено.", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             if (lockUpdate) return;
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource = new();

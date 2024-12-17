@@ -31,13 +31,7 @@ namespace remeLog
             {
                 AppSettings.Instance.ReadConfig();
 
-                var key = Environment.GetEnvironmentVariable("SYNCFUSION_LICENSE", EnvironmentVariableTarget.User);
-                if (string.IsNullOrEmpty(key))
-                {
-                    key = Database.GetLicenseKey("syncfusion");
-                    Environment.SetEnvironmentVariable("SYNCFUSION_LICENSE", key, EnvironmentVariableTarget.User);
-                }
-                Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
+                Util.TrySetupSyncfusionLicense();
 
                 _EventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
             }

@@ -42,8 +42,7 @@ namespace libeLog.Infrastructure
                 {
                     await semaphore.WaitAsync();
                     if (File.Exists(path)) CheckLogSize(path);
-                    var version = GetVersion();
-                    await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: " +
+                    await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)} v{GetVersion()}]: " +
                                                             $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
                                                             $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
                                                             $"{exception.GetType()}\n" +
@@ -71,9 +70,9 @@ namespace libeLog.Infrastructure
                 var exe = Environment.ProcessPath;
                 var date = exe is null ? string.Empty : $" от {File.GetLastWriteTime(exe).ToString(Constants.DateTimeFormat)}";
                 var ver = Assembly.GetExecutingAssembly().GetName().Version!;
-                return $"v{ver.Major}.{ver.Minor}.{ver.Build}{date}";
+                return $"{ver.Major}.{ver.Minor}.{ver.Build}{date}";
             }
-            catch { return "N/A"; }
+            catch { return ":N/A"; }
         }
 
         /// <summary>
@@ -89,7 +88,7 @@ namespace libeLog.Infrastructure
                 {
                     await semaphore.WaitAsync();
                     if (File.Exists(path)) CheckLogSize(path);
-                    await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: {message}\n\n");
+                    await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)} v{GetVersion()}]: {message}\n\n");
                     if (!string.IsNullOrWhiteSpace(copyDir)) await Task.Run(() => TryCopyLog(path, copyDir));
                     semaphore.Release();
                     return;

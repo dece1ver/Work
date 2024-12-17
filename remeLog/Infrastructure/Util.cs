@@ -5,6 +5,7 @@ using remeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -21,6 +22,21 @@ namespace remeLog.Infrastructure
 
         public static async void WriteLogAsync(Exception exception, string additionalMessage = "")
             => await Logs.Write(AppSettings.LogFile, exception, additionalMessage, GetCopyDir());
+
+        public static void WriteLog(string message)
+        {
+
+        }
+
+        public static void WriteLog(Exception exception, string additionMessage = "")
+        {
+            var message = $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)}]: " +
+                $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
+                $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
+                $"{exception.GetType()}\n" +
+                $"{exception.StackTrace}\n\n";
+
+        }
 
         /// <summary>
         /// Получает директорию для копирования логов, которой является директория таблицы.
@@ -117,6 +133,17 @@ namespace remeLog.Infrastructure
 
                 return new ObservableCollection<Part>(mockParts); // Возвращаем результат
             });
+        }
+
+        internal static void TrySetupSyncfusionLicense()
+        {
+            var key = Environment.GetEnvironmentVariable("SYNCFUSION_LICENSE", EnvironmentVariableTarget.User);
+            if (string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
+            {
+                key = Database.GetLicenseKey("syncfusion");
+                Environment.SetEnvironmentVariable("SYNCFUSION_LICENSE", key, EnvironmentVariableTarget.User);
+            }
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
         }
     }
 }

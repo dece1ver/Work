@@ -41,10 +41,12 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.102.2" />
+    <PackageReference Include="EPPlus" Version="7.5.2" />
     <PackageReference Include="FilterDataGrid" Version="1.2.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="NCalcSync" Version="4.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="OfficeOpenXml.Core.ExcelPackage" Version="1.0.0" />
     <PackageReference Include="Syncfusion.SfGrid.WPF" Version="27.2.4" />
     <PackageReference Include="Syncfusion.Shared.WPF" Version="27.2.4" />
   </ItemGroup>

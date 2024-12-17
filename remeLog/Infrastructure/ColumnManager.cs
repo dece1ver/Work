@@ -288,14 +288,14 @@ namespace remeLog.Infrastructure
         public const string AverageFinishedCount = "averageFinishedCount";
 
         /// <summary>
-        /// Доля штучных партий
-        /// </summary>
-        public const string SmallSeriesRatio = "smallSeriesRatio";
-
-        /// <summary>
         /// Доля штучных изготовлений
         /// </summary>
         public const string SmallProductionsRatio = "smallProductionsRatio";
+
+        /// <summary>
+        /// Доля штучных партий
+        /// </summary>
+        public const string SmallSeriesRatio = "smallSeriesRatio";
 
         /// <summary>
         /// Отработано смен
@@ -366,6 +366,11 @@ namespace remeLog.Infrastructure
         /// Соотношение штучки к серийке при изготовлении
         /// </summary>
         public const string ProductionUnderOverRatio = "productionUnderOverRatio";
+
+        /// <summary>
+        /// Отношение наладки к общему времени
+        /// </summary>
+        public const string SetupToTotalRatio = "setupToTotalRatio";
 
         /// <summary>
         /// Отношение изготовления к общему времени
@@ -441,8 +446,8 @@ namespace remeLog.Infrastructure
             { EngineerComment, "Комментарий техотдела" },
             { AveragePartsCount, "Средняя партия" },
             { AverageFinishedCount, "Среднее изготовление" },
-            { SmallSeriesRatio, $"Доля штучных{Environment.NewLine}партий" },
             { SmallProductionsRatio, $"Доля штучных{Environment.NewLine}изготовлений" },
+            { SmallSeriesRatio, $"Доля штучных{Environment.NewLine}партий" },
             { WorkedShifts, "Отработанные смены" },
             { NoOperatorShifts, "Смены без операторов" },
             { HardwareRepairShifts, $"Смены с ремонтом{Environment.NewLine}оборудования" },
@@ -457,7 +462,8 @@ namespace remeLog.Infrastructure
             { ProductionRatioOver, $"Коэффициент изготовления{Environment.NewLine}на серийке" },
             { SetupUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при наладке" },
             { ProductionUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при изготовлении" },
-            { ProductionToTotalRatio, $"Отношение изготовления{Environment.NewLine}к общему времени" },
+            { SetupToTotalRatio, $"Изготовление" },
+            { ProductionToTotalRatio, $"Изготовление" },
             { ProductionEfficiencyToTotalRatio, $"Отношение нормативов{Environment.NewLine}к общему времени" },
             { AverageReplacementTime, $"Среднее время{Environment.NewLine}замены детали" },
             { SpecifiedDowntimes, "Отмеченные простои" },

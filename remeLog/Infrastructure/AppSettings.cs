@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using JsonException = System.Text.Json.JsonException;
 
@@ -77,7 +78,17 @@ namespace remeLog.Infrastructure
         {
             if (File.Exists(ConfigFilePath)) File.Delete(ConfigFilePath);
             if (File.Exists(ConfigBackupPath)) File.Delete(ConfigBackupPath);
-            if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
+            if (!Directory.Exists(BasePath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(BasePath);
+                }
+                catch (Exception ex)
+                {
+                    Util.WriteLogAsync(ex, "Не удалось создать директорию для данных приложения.");
+                }
+            }
             DataSource = new DataSource(DataSource.Types.Database);
             InstantUpdateOnMainWindow = false;
             QualificationSourcePath = "";
@@ -85,7 +96,9 @@ namespace remeLog.Infrastructure
             DailyReportsDir = "";
             ConnectionString = "";
             User = null;
+            Util.WriteLog("Параметры заполнены, сохранение.");
             Save();
+            Util.WriteLog("Сохранение завершено.");
         }
 
         /// <summary>
@@ -95,10 +108,19 @@ namespace remeLog.Infrastructure
         {
             if (!File.Exists(ConfigFilePath) && File.Exists(ConfigBackupPath))
             {
-                File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                Util.WriteLog("Основной файл конфигурации отсутствует, копирование из резервного.");
+                try
+                {
+                    File.Copy(ConfigBackupPath, ConfigFilePath, true);
+                } 
+                catch (Exception ex) 
+                {
+                    Util.WriteLogAsync(ex, "Не удалось скопировать резервный файл конфигурации.");
+                }
             }
             else if (!File.Exists(ConfigFilePath) && !File.Exists(ConfigBackupPath))
             {
+                Util.WriteLog("Файл конфигурации отсутствует, создание нового.");
                 CreateBaseConfig();
             }
             var json = File.ReadAllText(ConfigFilePath);

@@ -811,6 +811,7 @@ namespace remeLog.ViewModels
                 {
                     InProgress = true;
                     Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
+                    Xl.AddDiagramToReportForPeriod(path);
                 });
             }
             catch (Exception ex)
@@ -1439,7 +1440,7 @@ namespace remeLog.ViewModels
 
             sb.AppendFormat("ShiftDate BETWEEN '{0}' AND '{1}' ", new DateTime(2023, 1, 1), DateTime.Today);
 
-            AppendCondition(sb, "PartName", FormatSearchInput(partName));
+            AppendCondition(sb, "PartName", partName);
 
             return sb.ToString();
         }
@@ -1450,7 +1451,6 @@ namespace remeLog.ViewModels
         /// <param name="sb">StringBuilder в котором формируется строка запроса</param>
         /// <param name="column">Столбец в который будем писать</param>
         /// <param name="value">Значение</param>
-        /// <param name="isLike">Примерный поиск, либо точный</param>
         private void AppendCondition(StringBuilder sb, string column, string value)
         {
             if (!string.IsNullOrEmpty(value))

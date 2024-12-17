@@ -3,6 +3,9 @@ using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using libeLog;
+using OfficeOpenXml;
+using OfficeOpenXml.Drawing.Chart;
+using OfficeOpenXml.Style;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
@@ -88,7 +91,8 @@ namespace remeLog.Infrastructure
         public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int? underOverBorder)
         {
             underOverBorder ??= 10;
-            var machines = parts.Where(p => !p.ExcludeFromReports).Select(p => p.Machine).Distinct().ToArray();
+            var machines = new List<string>();
+            var res = machines.ReadMachines();
             Database.GetShiftsByPeriod(machines, fromDate, toDate, out List<ShiftInfo> shifts);
             var totalDays = Util.GetWorkDaysBeetween(fromDate, toDate);
             double totalWorkedMinutes;
@@ -112,6 +116,7 @@ namespace remeLog.Infrastructure
                 .Add(ColumnManager.ProductionRatioOver)
                 .Add(ColumnManager.SetupUnderOverRatio)
                 .Add(ColumnManager.ProductionUnderOverRatio)
+                .Add(ColumnManager.SetupToTotalRatio)
                 .Add(ColumnManager.ProductionToTotalRatio)
                 .Add(ColumnManager.ProductionEfficiencyToTotalRatio)
                 .Add(ColumnManager.AverageFinishedCount)
@@ -160,6 +165,8 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[ColumnManager.ProductionRatioOver]).Value = productionOverRatio;
                 ws.Cell(row, ci[ColumnManager.SetupUnderOverRatio]).Value = setupUnderRatio == 0 ? 0 : setupOverRatio / setupUnderRatio;
                 ws.Cell(row, ci[ColumnManager.ProductionUnderOverRatio]).Value = productionUnderRatio == 0 ? 0 : productionOverRatio / productionUnderRatio;
+                var setupTimeFactSum = parts.Sum(p => p.SetupTimeFact + p.PartialSetupTime);
+                ws.Cell(row, ci[ColumnManager.SetupToTotalRatio]).Value = setupTimeFactSum / totalWorkedMinutes;
                 var prodTimeFactSum = parts.Sum(p => p.ProductionTimeFact);
                 ws.Cell(row, ci[ColumnManager.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
                 var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
@@ -260,10 +267,54 @@ namespace remeLog.Infrastructure
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
             ws.Columns(ci[ColumnManager.SetupUnderOverRatio], ci[ColumnManager.ProductionUnderOverRatio]).Hide();
+
             wb.SaveAs(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
             return $"Файл сохранен в \"{path}\"";
+        }
+
+        /// <summary>
+        /// Отчёт за период с использованием EPPlus
+        /// </summary>
+        /// <param name="parts"></param>
+        /// <param name="fromDate"></param>
+        /// <param name="toDate"></param>
+        /// <param name="path"></param>
+        /// <param name="underOverBorder"></param>
+        /// <returns></returns>
+        public static void AddDiagramToReportForPeriod(string path)
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            FileInfo fileInfo = new FileInfo(path);
+            using (var package = new ExcelPackage(fileInfo))
+            {
+                var ws = package.Workbook.Worksheets[0];
+                var range = ws.Cells["B18:G18"];
+                var headers = ws.Cells["B2:G2"];
+
+                var chart = ws.Drawings.AddChart("Эффективность работы", eChartType.PieExploded) as ExcelPieChart;
+                var series = chart?.Series.Add(range, headers);
+                chart!.DataLabel.ShowPercent = false;
+                chart!.DataLabel.Format = "0.00%";
+                chart!.DataLabel.ShowBubbleSize = true;
+                chart!.DataLabel.ShowLegendKey = false;
+                chart!.DataLabel.Position = eLabelPosition.BestFit;
+                chart!.DataLabel.ShowSeriesName = false;
+                chart!.DataLabel.ShowLeaderLines = true;
+                chart!.DataLabel.SourceLinked = true;
+                chart!.DataLabel.ShowCategory = true;
+                chart!.DataLabel.ShowValue = true;
+                chart.SetPosition(20, 0, 0, 0); 
+                chart.SetSize(600, 400);
+
+                // Заголовок диаграммы
+                chart.Title.Text = "Работа оборудования";
+
+                // Сохраняем изменения
+                package.Save();
+            }
+
         }
 
         /// <summary>
@@ -1295,6 +1346,19 @@ namespace remeLog.Infrastructure
         }
 
         /// <summary>
+        /// Настраивает заголовки на рабочем листе Excel EPPlus на основе словаря колонок.
+        /// </summary>
+        /// <param name="ws">Рабочий лист Excel.</param>
+        /// <param name="columns">Словарь колонок, где ключ — идентификатор, значение — пара (индекс, заголовок).</param>
+        /// <param name="headerRotateOption">Опция вращения заголовков (по умолчанию вертикально).</param>
+        /// <param name="height">Высота строки заголовков (по умолчанию 90).</param>
+        /// <param name="fontSize">Размер шрифта заголовков (по умолчанию 10).</param>
+        private static void ConfigureWorksheetHeader(ExcelWorksheet ws, Dictionary<string, (int index, string header)> columns, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
+        {
+            ConfigureWorksheetHeaderInternal(ws, columns.Select(c => (c.Value.index, c.Value.header)).ToList(), headerRotateOption, height, fontSize);
+        }
+
+        /// <summary>
         /// Настраивает заголовки на рабочем листе Excel на основе объекта ColumnManager.
         /// </summary>
         /// <param name="ws">Рабочий лист Excel.</param>
@@ -1303,6 +1367,19 @@ namespace remeLog.Infrastructure
         /// <param name="height">Высота строки заголовков (по умолчанию 90).</param>
         /// <param name="fontSize">Размер шрифта заголовков (по умолчанию 10).</param>
         private static void ConfigureWorksheetHeader(IXLWorksheet ws, ColumnManager cm, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
+        {
+            ConfigureWorksheetHeaderInternal(ws, cm.GetIndexedHeaders().ToList(), headerRotateOption, height, fontSize);
+        }
+
+        /// <summary>
+        /// Настраивает заголовки на рабочем листе Excel на основе объекта ColumnManager.
+        /// </summary>
+        /// <param name="ws">Рабочий лист Excel.</param>
+        /// <param name="cm">Объект ColumnManager, содержащий информацию о колонках.</param>
+        /// <param name="headerRotateOption">Опция вращения заголовков (по умолчанию вертикально).</param>
+        /// <param name="height">Высота строки заголовков (по умолчанию 90).</param>
+        /// <param name="fontSize">Размер шрифта заголовков (по умолчанию 10).</param>
+        private static void ConfigureWorksheetHeader(ExcelWorksheet ws, ColumnManager cm, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
         {
             ConfigureWorksheetHeaderInternal(ws, cm.GetIndexedHeaders().ToList(), headerRotateOption, height, fontSize);
         }
@@ -1330,6 +1407,41 @@ namespace remeLog.Infrastructure
             headerRange.Style.Font.FontSize = fontSize;
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Row(2).Height = height;
+        }
+
+        /// <summary>
+        /// Конфигурирует заголовок таблицы Excel с использованием EPPlus.
+        /// </summary>
+        /// <param name="ws">Лист Excel.</param>
+        /// <param name="columns">Список заголовков и их индексов.</param>
+        /// <param name="headerRotateOption">Опция поворота заголовка.</param>
+        /// <param name="height">Высота строки заголовка.</param>
+        /// <param name="fontSize">Размер шрифта заголовка.</param>
+        private static void ConfigureWorksheetHeaderInternal(ExcelWorksheet ws, List<(int index, string header)> columns, HeaderRotateOption headerRotateOption, int height, int fontSize)
+        {
+            // Установка заголовков
+            foreach (var (index, header) in columns)
+            {
+                ws.Cells[2, index].Value = header; // Установка значения для ячейки
+            }
+
+            // Определение диапазона заголовков
+            var headerRange = ws.Cells[2, 1, 2, columns.Count];
+
+            // Поворот текста заголовка
+            if (headerRotateOption == HeaderRotateOption.Vertical)
+            {
+                headerRange.Style.TextRotation = 90; // Вертикальный текст
+            }
+
+            // Настройка шрифта и выравнивания
+            headerRange.Style.Font.Name = "Segoe UI Semibold";
+            headerRange.Style.Font.Size = fontSize;
+            headerRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            headerRange.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+
+            // Установка высоты строки заголовка
             ws.Row(2).Height = height;
         }
 
