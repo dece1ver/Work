@@ -35,29 +35,36 @@ namespace libeLog.Infrastructure
         /// <param name="additionMessage"></param>
         public static async Task Write(string path, Exception exception, string additionMessage = "", string copyDir = "")
         {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+            if (string.IsNullOrEmpty(path)) return;
+            if (!File.Exists(path)) File.Create(path).Dispose();
+
             for (int i = 0; i < 3; i++)
             {
                 try
                 {
                     await semaphore.WaitAsync();
-                    if (File.Exists(path)) CheckLogSize(path);
-                    await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)} v{GetVersion()}]: " +
-                                                            $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
-                                                            $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
-                                                            $"{exception.GetType()}\n" +
-                                                            $"{exception.StackTrace}\n\n");
-                    if (!string.IsNullOrWhiteSpace(copyDir)) await Task.Run(() => TryCopyLog(path, copyDir));
-                    semaphore.Release();
-                    return;
+                    try
+                    {
+                        CheckLogSize(path);
+                        await File.AppendAllTextAsync(path, $"[{DateTime.Now.ToString(Constants.DateTimeWithSecsFormat)} v{GetVersion()}]: " +
+                                                                $"{(string.IsNullOrEmpty(additionMessage) ? string.Empty : $"{additionMessage}\n")}" +
+                                                                $"{exception.Message}{(exception.TargetSite is null ? string.Empty : $"\n\tCaller: {exception.TargetSite}")}\n" +
+                                                                $"{exception.GetType()}\n" +
+                                                                $"{exception.StackTrace}\n\n");
+                        if (!string.IsNullOrWhiteSpace(copyDir))
+                            await Task.Run(() => TryCopyLog(path, copyDir));
+                        return;
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
                 }
                 catch (Exception e)
                 {
                     if (i == 2)
                     {
                         MessageBox.Show($"Отправь этот текст разработчику:\n{e.GetBaseException()}", $"{e.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
-                        semaphore.Release();
-                        return;
                     }
                     await Task.Delay(1000);
                 }

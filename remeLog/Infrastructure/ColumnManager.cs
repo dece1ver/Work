@@ -462,7 +462,7 @@ namespace remeLog.Infrastructure
             { ProductionRatioOver, $"Коэффициент изготовления{Environment.NewLine}на серийке" },
             { SetupUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при наладке" },
             { ProductionUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при изготовлении" },
-            { SetupToTotalRatio, $"Изготовление" },
+            { SetupToTotalRatio, $"Наладка" },
             { ProductionToTotalRatio, $"Изготовление" },
             { ProductionEfficiencyToTotalRatio, $"Отношение нормативов{Environment.NewLine}к общему времени" },
             { AverageReplacementTime, $"Среднее время{Environment.NewLine}замены детали" },

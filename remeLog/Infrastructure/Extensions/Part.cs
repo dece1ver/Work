@@ -356,13 +356,9 @@ namespace remeLog.Infrastructure.Extensions
             var sum = new TimeSpan();
             foreach (var part in parts)
             {
-                sum += part.EndMachiningTime - part.StartSetupTime;
+                sum += part.EndMachiningTime - part.StartSetupTime - (TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(part.StartSetupTime, part.EndMachiningTime)));
             }
-            if (!parts.Any()) return sum;
-            var start = parts.Min(p => p.StartSetupTime);
-            var end = parts.Max(p => p.EndMachiningTime);
-            var breaks = TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(start, end));
-            return sum - breaks;
+            return sum;
         }
 
         /// <summary>

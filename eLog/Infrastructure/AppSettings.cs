@@ -307,7 +307,13 @@ namespace eLog.Infrastructure
             PathToRecievers = "";
             NotWritedShiftHandovers = new();
             NotSendedToolComments = new();
-            Save();
+            var settings = new JsonSerializerSettings()
+            {
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                ObjectCreationHandling = ObjectCreationHandling.Replace
+            };
+            var json = JsonConvert.SerializeObject(Instance, settings);
+            File.WriteAllText(ConfigFilePath, json);
         }
 
         /// <summary>

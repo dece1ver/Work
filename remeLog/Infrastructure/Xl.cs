@@ -121,8 +121,8 @@ namespace remeLog.Infrastructure
                 .Add(ColumnManager.ProductionEfficiencyToTotalRatio)
                 .Add(ColumnManager.AverageFinishedCount)
                 .Add(ColumnManager.AveragePartsCount)
-                .Add(ColumnManager.SmallSeriesRatio)
                 .Add(ColumnManager.SmallProductionsRatio)
+                .Add(ColumnManager.SmallSeriesRatio)
                 .Add(ColumnManager.AverageReplacementTime)
                 .Add(ColumnManager.SpecifiedDowntimes)
                 .Add(ColumnManager.MaintenanceTime)
@@ -165,9 +165,9 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[ColumnManager.ProductionRatioOver]).Value = productionOverRatio;
                 ws.Cell(row, ci[ColumnManager.SetupUnderOverRatio]).Value = setupUnderRatio == 0 ? 0 : setupOverRatio / setupUnderRatio;
                 ws.Cell(row, ci[ColumnManager.ProductionUnderOverRatio]).Value = productionUnderRatio == 0 ? 0 : productionOverRatio / productionUnderRatio;
-                var setupTimeFactSum = parts.Sum(p => p.SetupTimeFact + p.PartialSetupTime);
-                ws.Cell(row, ci[ColumnManager.SetupToTotalRatio]).Value = setupTimeFactSum / totalWorkedMinutes;
+                var setupTimeFactSum = parts.Sum(p => p.SetupTimeFact);
                 var prodTimeFactSum = parts.Sum(p => p.ProductionTimeFact);
+                ws.Cell(row, ci[ColumnManager.SetupToTotalRatio]).Value = 1 - prodTimeFactSum / totalWorkedMinutes - parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
                 ws.Cell(row, ci[ColumnManager.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
                 var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
                 ws.Cell(row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
@@ -175,13 +175,12 @@ namespace remeLog.Infrastructure
 
                 var averageFinishedCount = parts.Average(p => p.FinishedCountFact);
                 var averagePartsCount = uniqueParts.Average(p => p.TotalCount);
-                var smallProductionsRatio = (double)parts.Count(p => p.TotalCount < underOverBorder) / parts.Count;
-                var smallSeriesRatio = (double)uniqueParts.Count(p => p.TotalCount < underOverBorder) / uniqueParts.Count;
+                var smallProductionsRatio = (double)parts.Count(p => p.FinishedCount <= underOverBorder && p.FinishedCount > 0) / parts.Count;
+                var smallSeriesRatio = (double)uniqueParts.Count(p => p.TotalCount <= underOverBorder) / uniqueParts.Count;
 
                 ws.Cell(row, ci[ColumnManager.AverageFinishedCount])
                     .SetValue(averageFinishedCount)
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-
 
                 ws.Cell(row, ci[ColumnManager.AveragePartsCount])
                     .SetValue(averagePartsCount)
@@ -225,8 +224,8 @@ namespace remeLog.Infrastructure
             ws.Range(headerRow, ci[ColumnManager.SetupRatioOver], lastDataRow, ci[ColumnManager.ProductionRatioOver]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.Range(headerRow, ci[ColumnManager.SetupRatioOver], lastDataRow, ci[ColumnManager.ProductionRatioOver]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent3, 0.8);
             ws.Range(headerRow, ci[ColumnManager.SetupUnderOverRatio], lastDataRow, ci[ColumnManager.ProductionUnderOverRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent4, 0.8);
-            ws.Range(headerRow, ci[ColumnManager.ProductionToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[ColumnManager.ProductionToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
+            ws.Range(headerRow, ci[ColumnManager.SetupToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[ColumnManager.SetupToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
             ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent6, 0.8);
             ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
@@ -269,6 +268,7 @@ namespace remeLog.Infrastructure
             ws.Columns(ci[ColumnManager.SetupUnderOverRatio], ci[ColumnManager.ProductionUnderOverRatio]).Hide();
 
             wb.SaveAs(path);
+            AddDiagramToReportForPeriod(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
             return $"Файл сохранен в \"{path}\"";
@@ -295,18 +295,17 @@ namespace remeLog.Infrastructure
 
                 var chart = ws.Drawings.AddChart("Эффективность работы", eChartType.PieExploded) as ExcelPieChart;
                 var series = chart?.Series.Add(range, headers);
-                chart!.DataLabel.ShowPercent = false;
+                chart!.Legend.Position = eLegendPosition.Left;
                 chart!.DataLabel.Format = "0.00%";
-                chart!.DataLabel.ShowBubbleSize = true;
-                chart!.DataLabel.ShowLegendKey = false;
-                chart!.DataLabel.Position = eLabelPosition.BestFit;
-                chart!.DataLabel.ShowSeriesName = false;
-                chart!.DataLabel.ShowLeaderLines = true;
-                chart!.DataLabel.SourceLinked = true;
-                chart!.DataLabel.ShowCategory = true;
                 chart!.DataLabel.ShowValue = true;
+                chart!.DataLabel.ShowCategory = true;
+                chart!.DataLabel.ShowLegendKey = true;
+                chart!.DataLabel.Position = eLabelPosition.BestFit;
+                chart!.DataLabel.ShowLeaderLines = true;
+                chart!.DataLabel.SourceLinked = false;
+               
                 chart.SetPosition(20, 0, 0, 0); 
-                chart.SetSize(600, 400);
+                chart.SetSize(1000, 800);
 
                 // Заголовок диаграммы
                 chart.Title.Text = "Работа оборудования";

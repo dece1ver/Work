@@ -811,7 +811,6 @@ namespace remeLog.ViewModels
                 {
                     InProgress = true;
                     Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
-                    Xl.AddDiagramToReportForPeriod(path);
                 });
             }
             catch (Exception ex)

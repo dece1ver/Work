@@ -892,7 +892,17 @@ namespace eLog.ViewModels
                     }
 
 
-                    await SetPartsTaskInfo();
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await SetPartsTaskInfo();
+                        }
+                        catch (Exception ex)
+                        {
+                            await WriteLogAsync(ex);
+                        }
+                    });
 
 
                     //await WriteTasksStatuses();
@@ -995,7 +1005,7 @@ namespace eLog.ViewModels
                     {
                         var inProgress = part.IsFinished == Part.State.InProgress || (part.IsFinished == Part.State.PartialSetup && part.FinishedCount == 0);
 
-                        GoogleSheets.UpdateCellValue(partPosition, inProgress ? $"(уст {part.Setup}) в работе" : $"(уст {part.Setup}) готово", gProgress).Wait();
+                        GoogleSheets.UpdateCellValue(partPosition, inProgress ? $"(уст {part.Setup}) в работе" : $"(уст {part.Setup}) готово", gProgress).GetAwaiter().GetResult();
                     }
                     if (gStatus == 1) part.IsTaskStatusWritten = true;
                     part.NotifyTaskStatus();
