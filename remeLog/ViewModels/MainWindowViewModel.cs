@@ -10,6 +10,7 @@ using remeLog.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,8 +45,8 @@ namespace remeLog.ViewModels
             SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
             _Machines = new();
             if (AppSettings.Instance.InstantUpdateOnMainWindow) { _ = LoadPartsAsync(true); }
-            // var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
-            // backgroundWorker.Start();
+            var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
+            backgroundWorker.Start();
         }
 
 
@@ -494,9 +495,25 @@ namespace remeLog.ViewModels
 
         private void BackgroundWorker()
         {
+            var showed = false;
             while (true)
             {
-
+                if (File.Exists($"./update/{Path.GetFileName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName)}") && !showed)
+                {
+                    using (Overlay = new())
+                    {
+                        if (MessageBox.Show(
+                        "Для обновления закройте приложение и подождите 5-10 минут.\nЗакрыть сейчас?",
+                        "Доступно обновление электронного журнала",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            App.Current.Dispatcher.InvokeShutdown();
+                        }
+                    }
+                    showed = true;
+                }
+                Thread.Sleep(1000);
             }
         }
     }
