@@ -1,5 +1,6 @@
 ﻿using libeLog;
 using libeLog.Base;
+using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
@@ -28,6 +29,8 @@ namespace remeLog.ViewModels
         private readonly object lockObject = new();
         private bool lockUpdate = false;
         private CancellationTokenSource _cancellationTokenSource = new();
+        private CancellationTokenSource _bgCts = new();
+        private int _showed;
         private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
 
         public MainWindowViewModel()
@@ -45,10 +48,14 @@ namespace remeLog.ViewModels
             SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
             _Machines = new();
             if (AppSettings.Instance.InstantUpdateOnMainWindow) { _ = LoadPartsAsync(true); }
-            var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
-            backgroundWorker.Start();
+            //var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
+            //backgroundWorker.Start();
         }
 
+        public async Task InitializeAsync()
+        {
+            // await BackgroundWorkerAsync();
+        }
 
         private Overlay _Overlay = new(false);
 
@@ -213,11 +220,12 @@ namespace remeLog.ViewModels
         {
             if (p is true)
             {
-                Parts.Clear(); 
+                Parts.Clear();
                 var cp = await GenerateMockDataAsync("Hyundai WIA SKT21 №104", DateTime.Today, DateTime.Today);
-                var partsInfoWindow = new PartsInfoWindow(cp) 
-                { 
-                    Owner = Application.Current.MainWindow, DataContext = new PartsInfoWindowViewModel(cp) 
+                var partsInfoWindow = new PartsInfoWindow(cp)
+                {
+                    Owner = Application.Current.MainWindow,
+                    DataContext = new PartsInfoWindowViewModel(cp)
                     {
                         UseMockData = true
                     }
@@ -259,7 +267,7 @@ namespace remeLog.ViewModels
         public ICommand ShowPartsInfoCommand { get; }
         private void OnShowPartsInfoCommandExecuted(object p)
         {
-            
+
             using (Overlay = new())
             {
                 var partsInfo = (CombinedParts)p;
@@ -495,26 +503,107 @@ namespace remeLog.ViewModels
 
         private void BackgroundWorker()
         {
+            var current = Path.GetFileName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName);
+            if (current == null) return;
+
+            var update = Path.Combine("./update", current);
             var showed = false;
+            using var watcher = new FileSystemWatcher("./update")
+            {
+                Filter = current,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
+                EnableRaisingEvents = true
+            };
+
+            watcher.Changed += (sender, e) =>
+            {
+                if (!showed && File.Exists(update) && update.IsFileNewerThan(current))
+                {
+                    showed = true;
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        using (Overlay = new())
+                        {
+                            if (MessageBox.Show(
+                                "Для обновления закройте приложение и подождите 5-10 минут.\nЗакрыть сейчас?",
+                                "Доступно обновление электронного журнала",
+                                MessageBoxButton.YesNo,
+                                MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            {
+                                App.Current.Dispatcher.InvokeShutdown();
+                            }
+                        }
+                    });
+                }
+            };
+
             while (true)
             {
-                if (File.Exists($"./update/{Path.GetFileName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName)}") && !showed)
-                {
-                    using (Overlay = new())
-                    {
-                        if (MessageBox.Show(
-                        "Для обновления закройте приложение и подождите 5-10 минут.\nЗакрыть сейчас?",
-                        "Доступно обновление электронного журнала",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question) == MessageBoxResult.Yes)
-                        {
-                            App.Current.Dispatcher.InvokeShutdown();
-                        }
-                    }
-                    showed = true;
-                }
                 Thread.Sleep(1000);
             }
+        }
+
+        private async Task BackgroundWorkerAsync()
+        {
+            try
+            {
+                var current = Path.GetFileName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName);
+                if (current == null) return;
+
+                var updatePath = Path.Combine("./update", current);
+
+                using var watcher = new FileSystemWatcher("./update")
+                {
+                    Filter = current,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
+                    EnableRaisingEvents = true
+                };
+
+                watcher.Changed += async (sender, e) =>
+                {
+                    try
+                    {
+                        if (Interlocked.CompareExchange(ref _showed, 1, 0) == 0
+                            && File.Exists(updatePath)
+                            && updatePath.IsFileNewerThan(current))
+                        {
+                            await App.Current.Dispatcher.InvokeAsync(async () =>
+                            {
+                                using (Overlay = new())
+                                {
+                                    if (MessageBox.Show(
+                                        "Для обновления закройте приложение и подождите 5-10 минут.\nЗакрыть сейчас?",
+                                        "Доступно обновление электронного журнала",
+                                        MessageBoxButton.YesNo,
+                                        MessageBoxImage.Question) == MessageBoxResult.Yes)
+                                    {
+                                        App.Current.Dispatcher.InvokeShutdown();
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Логирование ошибки
+                    }
+                };
+
+                await Task.Delay(Timeout.Infinite, _bgCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Нормальное завершение работы
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLogAsync(ex);
+            }
+        }
+
+        public void StopBackgroundWorker()
+        {
+            _bgCts.Cancel();
         }
     }
 }

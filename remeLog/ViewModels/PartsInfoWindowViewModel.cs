@@ -63,7 +63,7 @@ namespace remeLog.ViewModels
             OperatorsShiftsReportToExcelCommand = new LambdaCommand(OnOperatorsShiftsReportToExcelCommandExecuted, CanOperatorsShiftsReportToExcelCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
             ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
-            ExportReportToExcelCommand = new LambdaCommand(OnExportReportToExcelCommandExecuted, CanExportReportToExcelCommandExecute);
+            ExportReportForPeriodToExcelCommand = new LambdaCommand(OnExportReportForPeriodToExcelCommandExecuted, CanExportReportForPeriodToExcelCommandExecute);
             ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
@@ -794,9 +794,9 @@ namespace remeLog.ViewModels
         private static bool CanExportPartsReportToExcelCommandExecute(object p) => true;
         #endregion
 
-        #region ExportReportToExcel
-        public ICommand ExportReportToExcelCommand { get; }
-        private async void OnExportReportToExcelCommandExecuted(object p)
+        #region ExportReportForPeriodToExcel
+        public ICommand ExportReportForPeriodToExcelCommand { get; }
+        private async void OnExportReportForPeriodToExcelCommandExecuted(object p)
         {
             try
             {
@@ -819,7 +819,7 @@ namespace remeLog.ViewModels
             }
             finally { InProgress = false; }
         }
-        private static bool CanExportReportToExcelCommandExecute(object p) => true;
+        private static bool CanExportReportForPeriodToExcelCommandExecute(object p) => true;
         #endregion
 
         #region ExportLongSetups

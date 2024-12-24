@@ -1,6 +1,8 @@
-﻿using remeLog.Infrastructure;
+﻿using libeLog.Extensions;
+using remeLog.Infrastructure;
 using remeLog.Views;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -13,26 +15,44 @@ namespace remeLog
 {
     public partial class App : Application
     {
-        private const string UniqueEventName = "{55AE85A3-A40C-48E0-8E83-FD55D28FBCF5}";
+        private readonly string UniqueEventName = GetUniqueEventName();
         private readonly EventWaitHandle _EventWaitHandle;
 
         public App()
         {
-           
+            var currentFile = Process.GetCurrentProcess().MainModule?.FileName;
+            if (currentFile != null)
+            {
+                var current = Path.GetFileName(currentFile);
+                var updatePath = Path.Combine("./update", current);
+
+                if (File.Exists(updatePath) && updatePath.IsFileNewerThan(current))
+                {
+                    try
+                    {
+                        var process = Process.Start(updatePath);
+
+                        if (process != null)
+                        {
+                            process.WaitForExit(5000);
+                            Shutdown();
+                            return;
+                        }
+                    }
+                    catch { }
+                }
+            }
+
             try
             {
                 _EventWaitHandle = EventWaitHandle.OpenExisting(UniqueEventName);
-
                 _EventWaitHandle.Set();
-
                 Shutdown();
             }
             catch (WaitHandleCannotBeOpenedException)
             {
                 AppSettings.Instance.ReadConfig();
-
                 Util.TrySetupSyncfusionLicense();
-
                 _EventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, UniqueEventName);
             }
 
@@ -106,6 +126,13 @@ namespace remeLog
             culture.NumberFormat.NaNSymbol = "-";
             CultureInfo.CurrentCulture = culture;
             CultureInfo.CurrentUICulture = culture;
+        }
+
+        private static string GetUniqueEventName()
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            var dateTimeStamp = DateTime.Now.ToString("yyMMddHHmm");
+            return $"remeLog-{version!.Major}.{version.Minor}.{version.Build}.{dateTimeStamp}";
         }
     }
 }

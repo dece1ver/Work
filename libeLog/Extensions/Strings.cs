@@ -233,35 +233,35 @@ namespace libeLog.Extensions
         }
 
         /// <summary>
-        /// Определяет, является ли файл по указанному пути оригинального файла новее, чем файл для сравнения.
+        /// Определяет, является ли исходный файл новее целевого файла.
         /// </summary>
-        /// <param name="originalFilePath">Путь к оригинальному файлу.</param>
-        /// <param name="comparedFilePath">Путь к файлу для сравнения.</param>
-        /// <returns>Возвращает <c>true</c>, если оригинальный файл новее файла для сравнения; иначе <c>false</c>.</returns>
+        /// <param name="sourceFilePath">Путь к исходному файлу (source).</param>
+        /// <param name="targetFilePath">Путь к целевому файлу (target).</param>
+        /// <returns>Возвращает <c>true</c>, если исходный файл новее целевого файла; иначе <c>false</c>.</returns>
         /// <exception cref="ArgumentNullException">
-        /// Возникает, если <paramref name="originalFilePath"/> или <paramref name="comparedFilePath"/> равны <c>null</c> или содержат только пробельные символы.
+        /// Возникает, если <paramref name="sourceFilePath"/> или <paramref name="targetFilePath"/> равны <c>null</c> или содержат только пробельные символы.
         /// </exception>
         /// <exception cref="FileNotFoundException">
-        /// Возникает, если файл, указанный в <paramref name="originalFilePath"/> или <paramref name="comparedFilePath"/>, не существует.
+        /// Возникает, если файл, указанный в <paramref name="sourceFilePath"/> или <paramref name="targetFilePath"/>, не существует.
         /// </exception>
-        public static bool IsFileNewerThan(this string originalFilePath, string comparedFilePath)
+        public static bool IsFileNewerThan(this string sourceFilePath, string targetFilePath)
         {
-            if (string.IsNullOrWhiteSpace(originalFilePath))
-                throw new ArgumentNullException(nameof(originalFilePath), "Путь к файлу не может быть null или пустым.");
+            if (string.IsNullOrWhiteSpace(sourceFilePath))
+                throw new ArgumentNullException(nameof(sourceFilePath), "Путь к файлу не может быть null или пустым.");
 
-            if (string.IsNullOrWhiteSpace(comparedFilePath))
-                throw new ArgumentNullException(nameof(comparedFilePath), "Путь к файлу не может быть null или пустым.");
+            if (string.IsNullOrWhiteSpace(targetFilePath))
+                throw new ArgumentNullException(nameof(targetFilePath), "Путь к файлу не может быть null или пустым.");
 
-            if (!File.Exists(originalFilePath))
-                throw new FileNotFoundException("Файл не существует.", originalFilePath);
+            if (!File.Exists(sourceFilePath))
+                throw new FileNotFoundException("Файл не существует.", sourceFilePath);
 
-            if (!File.Exists(comparedFilePath))
-                throw new FileNotFoundException("Файл не существует.", comparedFilePath);
+            if (!File.Exists(targetFilePath))
+                throw new FileNotFoundException("Файл не существует.", targetFilePath);
 
-            FileInfo originalFileInfo = new(originalFilePath);
-            FileInfo comparedFileInfo = new(comparedFilePath);
+            FileInfo sourceFileInfo = new(sourceFilePath);
+            FileInfo targetFileInfo = new(targetFilePath);
 
-            return originalFileInfo.LastWriteTime > comparedFileInfo.LastWriteTime;
+            return sourceFileInfo.LastWriteTime > targetFileInfo.LastWriteTime;
         }
     }
 }

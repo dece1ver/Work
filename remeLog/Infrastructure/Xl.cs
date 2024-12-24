@@ -268,7 +268,7 @@ namespace remeLog.Infrastructure
             ws.Columns(ci[ColumnManager.SetupUnderOverRatio], ci[ColumnManager.ProductionUnderOverRatio]).Hide();
 
             wb.SaveAs(path);
-            AddDiagramToReportForPeriod(path);
+            //AddDiagramToReportForPeriod(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
             return $"Файл сохранен в \"{path}\"";

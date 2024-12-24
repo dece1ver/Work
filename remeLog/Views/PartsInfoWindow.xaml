@@ -957,7 +957,7 @@
                     </MenuItem>
 
                     <MenuItem Header="Станки" Icon="{StaticResource CalendarIcon}">
-                        <MenuItem Command="{Binding ExportReportToExcelCommand}"
+                        <MenuItem Command="{Binding ExportReportForPeriodToExcelCommand}"
                                   ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch">
                             <MenuItem.Header>
                                 <TextBlock Text="Отчёт за период"/>
