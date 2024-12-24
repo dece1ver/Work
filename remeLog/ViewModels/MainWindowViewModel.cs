@@ -54,7 +54,7 @@ namespace remeLog.ViewModels
 
         public async Task InitializeAsync()
         {
-            // await BackgroundWorkerAsync();
+            await BackgroundWorkerAsync();
         }
 
         private Overlay _Overlay = new(false);
@@ -501,48 +501,6 @@ namespace remeLog.ViewModels
             return combinedParts;
         }
 
-        private void BackgroundWorker()
-        {
-            var current = Path.GetFileName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName);
-            if (current == null) return;
-
-            var update = Path.Combine("./update", current);
-            var showed = false;
-            using var watcher = new FileSystemWatcher("./update")
-            {
-                Filter = current,
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
-                EnableRaisingEvents = true
-            };
-
-            watcher.Changed += (sender, e) =>
-            {
-                if (!showed && File.Exists(update) && update.IsFileNewerThan(current))
-                {
-                    showed = true;
-                    App.Current.Dispatcher.Invoke(() =>
-                    {
-                        using (Overlay = new())
-                        {
-                            if (MessageBox.Show(
-                                "Для обновления закройте приложение и подождите 5-10 минут.\nЗакрыть сейчас?",
-                                "Доступно обновление электронного журнала",
-                                MessageBoxButton.YesNo,
-                                MessageBoxImage.Question) == MessageBoxResult.Yes)
-                            {
-                                App.Current.Dispatcher.InvokeShutdown();
-                            }
-                        }
-                    });
-                }
-            };
-
-            while (true)
-            {
-                Thread.Sleep(1000);
-            }
-        }
-
         private async Task BackgroundWorkerAsync()
         {
             try
@@ -585,7 +543,7 @@ namespace remeLog.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        // Логирование ошибки
+                        Util.WriteLogAsync(ex);
                     }
                 };
 
