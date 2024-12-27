@@ -22,8 +22,11 @@ namespace remeLog
         {
             _uniqueEventName = CreateUniqueEventName();
 
+            Util.WriteLogAsync("Создан экземпляр приложения. Уникальное имя события: " + _uniqueEventName);
+
             try
             {
+                Util.WriteLogAsync("Начало обработки запуска приложения");
                 HandleApplicationStart();
             }
             catch (Exception ex)
@@ -37,22 +40,25 @@ namespace remeLog
 
         private void HandleApplicationStart()
         {
+            Util.WriteLogAsync("Проверка на наличие уже запущенных экземпляров");
             bool isAlreadyRunning = TryConnectToExistingInstance();
             if (isAlreadyRunning)
             {
-                Util.WriteLogAsync("Приложение уже запущено, активируем существующее окно");
+                Util.WriteLogAsync("Обнаружен запущенный экземпляр приложения. Активируем окно и завершаем текущий процесс.");
                 _eventWaitHandle?.Set();
                 Shutdown();
                 return;
             }
 
+            Util.WriteLogAsync("Проверка обновлений приложения");
             if (CheckForUpdate())
             {
-                Util.WriteLogAsync("Запуск обновленной версии");
+                Util.WriteLogAsync("Обновление найдено и успешно запущено. Завершаем текущий процесс.");
                 Shutdown();
                 return;
             }
 
+            Util.WriteLogAsync("Начало инициализации приложения");
             InitializeApplication();
         }
 
@@ -60,11 +66,14 @@ namespace remeLog
         {
             try
             {
+                Util.WriteLogAsync($"Попытка открыть событие с именем: {_uniqueEventName}");
                 _eventWaitHandle = EventWaitHandle.OpenExisting(_uniqueEventName);
+                Util.WriteLogAsync("Событие найдено. Другой экземпляр уже запущен.");
                 return true;
             }
             catch (WaitHandleCannotBeOpenedException)
             {
+                Util.WriteLogAsync("Событие не найдено. Создаем новое.");
                 _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, _uniqueEventName);
                 return false;
             }
@@ -79,15 +88,24 @@ namespace remeLog
         {
             try
             {
+                Util.WriteLogAsync("Получение текущего пути исполняемого файла");
                 var currentFile = Process.GetCurrentProcess().MainModule?.FileName;
-                if (currentFile == null) return false;
+                if (currentFile == null)
+                {
+                    Util.WriteLogAsync("Не удалось получить путь текущего файла. Обновление не требуется.");
+                    return false;
+                }
 
                 var currentExeName = Path.GetFileName(currentFile);
                 var updatePath = Path.Combine("./update", currentExeName);
+                Util.WriteLogAsync($"Проверка файла обновления по пути: {updatePath}");
                 if (File.Exists(updatePath) && updatePath.IsFileNewerThan(currentFile))
                 {
+                    Util.WriteLogAsync("Обновленный файл найден. Запуск обновления...");
                     return TryStartUpdate(updatePath);
                 }
+
+                Util.WriteLogAsync("Обновление не требуется.");
                 return false;
             }
             catch (Exception ex)
@@ -135,41 +153,73 @@ namespace remeLog
 
         private void InitializeApplication()
         {
-            Util.WriteLogAsync("Инициализация приложения");
-
+            Util.WriteLogAsync("Инициализация настроек приложения");
             AppSettings.Instance.ReadConfig();
+
+            Util.WriteLogAsync("Настройка лицензии Syncfusion");
             Util.TrySetupSyncfusionLicense();
+
+            Util.WriteLogAsync("Запуск наблюдателя активации окна");
             StartWindowActivationWatcher();
+
+            Util.WriteLogAsync("Загрузка необходимых DLL");
             LoadRequiredDlls();
+
+            Util.WriteLogAsync("Настройка культуры приложения");
             ConfigureCulture();
+
+            Util.WriteLogAsync("Инициализация завершена");
         }
 
         private void StartWindowActivationWatcher()
         {
+            Util.WriteLogAsync("Запуск наблюдателя активации окна");
+
             Task.Factory.StartNew(() =>
             {
+                Util.WriteLogAsync("Наблюдатель активации запущен");
+                
                 while (_eventWaitHandle?.WaitOne() ?? false)
                 {
+                    Util.WriteLogAsync("Получен сигнал активации");
+
                     try
                     {
-                        Dispatcher.BeginInvoke(ActivateMainWindow);
+                        if (!Dispatcher.CheckAccess())
+                        {
+                            throw new InvalidOperationException("Попытка использовать Dispatcher из другого потока.");
+                        }
+                        Dispatcher.BeginInvoke(() =>
+                        {
+                            Util.WriteLogAsync("Вызов метода ActivateMainWindow через Dispatcher");
+                            ActivateMainWindow();
+                        });
                     }
                     catch (Exception ex)
                     {
                         Util.WriteLogAsync(ex, "Ошибка при активации окна");
                     }
                 }
+
+                Util.WriteLogAsync("Наблюдатель активации завершил работу");
             }, TaskCreationOptions.LongRunning);
         }
 
         private static void ActivateMainWindow()
         {
+            Util.WriteLogAsync("Попытка активации главного окна");
+
             var mainWindow = Current.MainWindow;
-            if (mainWindow == null) return;
+            if (mainWindow == null)
+            {
+                Util.WriteLogAsync("Главное окно не найдено. Завершаем активацию.");
+                return;
+            }
 
             if (mainWindow.WindowState == WindowState.Minimized ||
                 mainWindow.Visibility != Visibility.Visible)
             {
+                Util.WriteLogAsync("Окно свернуто или скрыто. Приводим его в нормальное состояние.");
                 mainWindow.Show();
                 mainWindow.WindowState = WindowState.Maximized;
             }
@@ -178,9 +228,11 @@ namespace remeLog
             mainWindow.Topmost = true;
             mainWindow.Topmost = false;
             mainWindow.Focus();
+
+            Util.WriteLogAsync("Главное окно активировано.");
         }
 
-        private void LoadRequiredDlls()
+        private static void LoadRequiredDlls()
         {
             var requiredDlls = new[]
             {
@@ -196,7 +248,7 @@ namespace remeLog
             }
         }
 
-        private void ExtractAndLoadDll(string dllName)
+        private static void ExtractAndLoadDll(string dllName)
         {
             try
             {
@@ -242,10 +294,10 @@ namespace remeLog
             CultureInfo.CurrentUICulture = culture;
         }
 
-        private static string CreateUniqueEventName()
+        public static string CreateUniqueEventName()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0);
-            var timestamp = DateTime.Now.ToString("yyMMddHHmm");
+            var timestamp = File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location).ToString("yyMMddHHmm");
             return $"remeLog-{version.Major}.{version.Minor}.{version.Build}.{timestamp}";
         }
 
@@ -256,6 +308,12 @@ namespace remeLog
         {
             base.OnStartup(e);
             ConfigureCulture();
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            _eventWaitHandle?.Close();
+            base.OnExit(e);
         }
     }
 }

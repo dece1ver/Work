@@ -7,7 +7,7 @@
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Resources\remeLog.ico</ApplicationIcon>
     <UseWindowsForms>True</UseWindowsForms>
-    <Description />
+	<AssemblyTitle>Электронный журнал (Отчёты)</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>

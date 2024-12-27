@@ -257,7 +257,7 @@ namespace remeLog.ViewModels
         {
             using (Overlay = new())
             {
-                MessageBox.Show("О программе.");
+                MessageBox.Show($"Тут могла быть ваша реклама.\n\n\t{App.CreateUniqueEventName()}", "О программе", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         private static bool CanShowAboutCommandExecute(object p) => true;
