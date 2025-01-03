@@ -7,12 +7,13 @@
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Resources\remeLog.ico</ApplicationIcon>
     <UseWindowsForms>True</UseWindowsForms>
+	<Title>Электронный журнал (Отчёты)</Title>
+	<Description/>
 	<AssemblyTitle>Электронный журнал (Отчёты)</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="fwlib0DN64.dll" />
-    <None Remove="Fwlib32.dll" />
     <None Remove="Fwlib64.dll" />
     <None Remove="fwlibe64.dll" />
     <None Remove="fwlibNCG64.dll" />
@@ -27,7 +28,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="fwlib0DN64.dll" />
-    <EmbeddedResource Include="Fwlib32.dll" />
     <EmbeddedResource Include="Fwlib64.dll">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

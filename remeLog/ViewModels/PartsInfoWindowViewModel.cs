@@ -523,7 +523,7 @@ namespace remeLog.ViewModels
 
 
         private int? _AdditionalDescreaseValue = null;
-        /// <summary> Описание </summary>
+        /// <summary> Время для дополнительного вычитания в калькуляторе времени, также используется как разделитель для серийности в отчёте за период </summary>
         public int? AdditionalDescreaseValue
         {
             get => _AdditionalDescreaseValue;
@@ -800,7 +800,20 @@ namespace remeLog.ViewModels
         {
             try
             {
-
+                int? runCount = null;
+                if (MessageBox.Show("Задать фильтр по запуску?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    var dialog = new PartSelectionFilterWindow(2)
+                    {
+                        Owner = p as PartsInfoWindow
+                    };
+                    if (dialog.ShowDialog() != true)
+                    {
+                        Status = "Отмена";
+                        return;
+                    }
+                    runCount = dialog.RunCount;
+                }
                 var path = Util.GetXlsxPath();
                 if (string.IsNullOrEmpty(path))
                 {
@@ -810,7 +823,7 @@ namespace remeLog.ViewModels
                 await Task.Run(() =>
                 {
                     InProgress = true;
-                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, path, AdditionalDescreaseValue);
+                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, path, AdditionalDescreaseValue, runCount);
                 });
             }
             catch (Exception ex)

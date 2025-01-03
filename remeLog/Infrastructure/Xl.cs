@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using Part = remeLog.Models.Part;
 
@@ -88,9 +89,10 @@ namespace remeLog.Infrastructure
         /// <param name="toDate"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int? underOverBorder)
+        public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int? underOverBorder, int? runCount)
         {
             underOverBorder ??= 10;
+            runCount ??= 1;
             var machines = new List<string>();
             var res = machines.ReadMachines();
             Database.GetShiftsByPeriod(machines, fromDate, toDate, out List<ShiftInfo> shifts);
@@ -141,8 +143,9 @@ namespace remeLog.Infrastructure
             var headerRange = ws.Range(2, 1, 2, cm.Count);
             var row = 3;
             var firstDataRow = row;
+            var filteredParts = parts.Where(p => !p.ExcludeFromReports).GroupBy(p => new { p.PartName, p.Order }).Where(pg => pg.Count() >= runCount).SelectMany(pg => pg);
 
-            foreach (var partGroup in parts.Where(p => !p.ExcludeFromReports).GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
+            foreach (var partGroup in filteredParts.GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
             {
                 parts = partGroup.ToList();
                 totalWorkedMinutes = parts.FullWorkedTime().TotalMinutes;
@@ -248,13 +251,24 @@ namespace remeLog.Infrastructure
             ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
             ws.Range(row, ci[ColumnManager.Machine], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             ws.Range(row, ci[ColumnManager.NoOperatorShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, ci[ColumnManager.WorkedShifts]).FormulaA1 = $"AVERAGE(B{firstDataRow}:B{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, ci[ColumnManager.NoOperatorShifts]).FormulaA1 = $"AVERAGE(C{firstDataRow}:C{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, ci[ColumnManager.HardwareRepairShifts]).FormulaA1 = $"AVERAGE(D{firstDataRow}:D{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, ci[ColumnManager.NoPowerShifts]).FormulaA1 = $"AVERAGE(E{firstDataRow}:E{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, ci[ColumnManager.ProcessRelatedLossShifts]).FormulaA1 = $"AVERAGE(F{firstDataRow}:F{lastDataRow})/$B${lastDataRow + 2}";
-            ws.Cell(row, ci[ColumnManager.UnspecifiedOtherShifts]).FormulaA1 = $"AVERAGE(G{firstDataRow}:G{lastDataRow})/$B${lastDataRow + 2}";
+            for (int col = ci[ColumnManager.WorkedShifts]; col <= ci[ColumnManager.UnspecifiedOtherShifts]; col++)
+            {
+                string colLetter = ws.Column(col).ColumnLetter();
+                ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})/$B${lastDataRow + 2}";
+            } 
+            for (int col = ci[ColumnManager.SetupRatio]; col <= ci[ColumnManager.ProductionEfficiencyToTotalRatio]; col++)
+            {
+                string colLetter = ws.Column(col).ColumnLetter();
+                ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+            }
+            for (int col = ci[ColumnManager.SpecifiedDowntimes]; col <= ci[ColumnManager.UnspecifiedDowntimes]; col++)
+            {
+                string colLetter = ws.Column(col).ColumnLetter();
+                ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+            }
             ws.Range(row, ci[ColumnManager.WorkedShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
+            ws.Range(row, ci[ColumnManager.SetupRatio], row, ci[ColumnManager.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             row++;
@@ -303,8 +317,8 @@ namespace remeLog.Infrastructure
                 chart!.DataLabel.Position = eLabelPosition.BestFit;
                 chart!.DataLabel.ShowLeaderLines = true;
                 chart!.DataLabel.SourceLinked = false;
-               
-                chart.SetPosition(20, 0, 0, 0); 
+
+                chart.SetPosition(20, 0, 0, 0);
                 chart.SetSize(1000, 800);
 
                 // Заголовок диаграммы
@@ -635,7 +649,7 @@ namespace remeLog.Infrastructure
 
             ws.Column(ci[ColumnManager.Machine]).Width = 13;
             ws.Column(ci[ColumnManager.Date]).Width = 8;
-            ws.Column(ci[ColumnManager.Operator]).Width = 13; 
+            ws.Column(ci[ColumnManager.Operator]).Width = 13;
             ws.Column(ci[ColumnManager.Part]).Width = 15;
             ws.Columns(ci[ColumnManager.Finished], ci[ColumnManager.Setup]).Width = 3;
             ws.Column(ci[ColumnManager.MachiningTime]).Width = 7;
@@ -650,8 +664,8 @@ namespace remeLog.Infrastructure
             ws.PageSetup.Margins.SetRight(0.2);
             ws.PageSetup.Margins.SetTop(0.4);
             ws.PageSetup.Margins.SetBottom(0.2);
-            ws.Range(2,1,2, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            ws.Range(row -1, 1, row - 1, cm.Count).Style.Border.BottomBorder = XLBorderStyleValues.Medium;
+            ws.Range(2, 1, 2, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.Range(row - 1, 1, row - 1, cm.Count).Style.Border.BottomBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
             SetTitle(ws, ci.Count, "История изготовления", parts.Last().PartName, 14, BoldOption.Right);
             wb.SaveAs(path);
@@ -939,9 +953,9 @@ namespace remeLog.Infrastructure
 
             var totalSetups = parts
                 .Where(p => p.SetupTimePlanForCalc > 0 || p.PartialSetupTime > 0)
-                .GroupBy(p => (p.PartName, p.Order, p.Setup)) 
-                .SelectMany(g => g.Distinct()) 
-                .Count(); 
+                .GroupBy(p => (p.PartName, p.Order, p.Setup))
+                .SelectMany(g => g.Distinct())
+                .Count();
 
             var cm = new ColumnManager();
             cm.Add(ColumnManager.Machine);
@@ -1095,7 +1109,7 @@ namespace remeLog.Infrastructure
             {
                 ws.Column(ci[col]).Hide();
             }
-            SetTitle(ws, cm.Count, $"Отчёт по длительным наладкам: {cnt} из {totalSetups} ({((double)cnt / (double)totalSetups)*100:N2}%) за период от {parts.Min(p => p.ShiftDate).ToString(Constants.ShortDateFormat)} до {parts.Max(p => p.ShiftDate).ToString(Constants.ShortDateFormat)}");
+            SetTitle(ws, cm.Count, $"Отчёт по длительным наладкам: {cnt} из {totalSetups} ({((double)cnt / (double)totalSetups) * 100:N2}%) за период от {parts.Min(p => p.ShiftDate).ToString(Constants.ShortDateFormat)} до {parts.Max(p => p.ShiftDate).ToString(Constants.ShortDateFormat)}");
             ws.SheetView.FreezeRows(2);
 
             wb.SaveAs(path);

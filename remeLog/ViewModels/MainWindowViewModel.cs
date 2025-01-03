@@ -508,9 +508,9 @@ namespace remeLog.ViewModels
                 var current = Path.GetFileName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName);
                 if (current == null) return;
 
-                var updatePath = Path.Combine("./update", current);
-
-                using var watcher = new FileSystemWatcher("./update")
+                var updatePath = Path.Combine("update", current);
+                if (!Directory.Exists(updatePath)) { Directory.CreateDirectory("update"); }
+                using var watcher = new FileSystemWatcher("update")
                 {
                     Filter = current,
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
@@ -525,7 +525,7 @@ namespace remeLog.ViewModels
                             && File.Exists(updatePath)
                             && updatePath.IsFileNewerThan(current))
                         {
-                            await App.Current.Dispatcher.InvokeAsync(async () =>
+                            await App.Current.Dispatcher.InvokeAsync(() =>
                             {
                                 using (Overlay = new())
                                 {

@@ -297,7 +297,16 @@ namespace remeLog
         public static string CreateUniqueEventName()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 0);
-            var timestamp = File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location).ToString("yyMMddHHmm");
+            string timestamp;
+            try
+            {
+                timestamp = File.GetLastWriteTime(Process.GetCurrentProcess().MainModule?.FileName!).ToString("yyMMddHHmm");
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLogAsync(ex, "Исключение при получении даты изменения");
+                timestamp = "";
+            }
             return $"remeLog-{version.Major}.{version.Minor}.{version.Build}.{timestamp}";
         }
 
@@ -308,12 +317,49 @@ namespace remeLog
         {
             base.OnStartup(e);
             ConfigureCulture();
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            DispatcherUnhandledException += OnDispatcherUnhandledException;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
             _eventWaitHandle?.Close();
             base.OnExit(e);
+        }
+
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = e.ExceptionObject as Exception;
+            string message = exception != null
+                ? $"Необработанное исключение: {exception.Message}\n{exception.StackTrace}"
+                : $"Необработанное исключение. Тип: {e.ExceptionObject?.GetType()}";
+
+            Util.WriteLogAsync(message);
+
+            MessageBox.Show("Произошла критическая ошибка. Приложение будет закрыто.",
+                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            Shutdown(1);
+        }
+
+        private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            string message = $"Необработанное исключение в UI потоке: {e.Exception.Message}\n{e.Exception.StackTrace}";
+            Util.WriteLogAsync(message);
+
+            MessageBox.Show("Произошла ошибка в пользовательском интерфейсе. Приложение будет закрыто.",
+                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            e.Handled = true; 
+        }
+
+        private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+        {
+            string message = $"Необработанное исключение в задаче: {e.Exception?.Message}\n{e.Exception?.StackTrace}";
+            Util.WriteLogAsync(message);
+
+            e.SetObserved();
         }
     }
 }
