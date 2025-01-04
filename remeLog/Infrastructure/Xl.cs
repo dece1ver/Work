@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using libeLog;
+using libeLog.Extensions;
 using OfficeOpenXml;
 using OfficeOpenXml.Drawing.Chart;
 using OfficeOpenXml.Style;
@@ -89,13 +90,13 @@ namespace remeLog.Infrastructure
         /// <param name="toDate"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int? underOverBorder, int? runCount)
+        public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, Shift shift, string path, int? underOverBorder, int? runCount, bool countRunsPerMachine)
         {
             underOverBorder ??= 10;
             runCount ??= 1;
             var machines = new List<string>();
             var res = machines.ReadMachines();
-            Database.GetShiftsByPeriod(machines, fromDate, toDate, out List<ShiftInfo> shifts);
+            Database.GetShiftsByPeriod(machines, fromDate, toDate, shift, out List<ShiftInfo> shifts);
             var totalDays = Util.GetWorkDaysBeetween(fromDate, toDate);
             double totalWorkedMinutes;
 
@@ -143,7 +144,17 @@ namespace remeLog.Infrastructure
             var headerRange = ws.Range(2, 1, 2, cm.Count);
             var row = 3;
             var firstDataRow = row;
-            var filteredParts = parts.Where(p => !p.ExcludeFromReports).GroupBy(p => new { p.PartName, p.Order }).Where(pg => pg.Count() >= runCount).SelectMany(pg => pg);
+            var filteredParts = countRunsPerMachine
+                ? parts
+                    .Where(p => !p.ExcludeFromReports)
+                    .GroupBy(p => new { p.PartName, p.Order, p.Machine })
+                    .Where(pg => pg.Count() >= runCount)
+                    .SelectMany(pg => pg)
+                : parts
+                    .Where(p => !p.ExcludeFromReports)
+                    .GroupBy(p => new { p.PartName, p.Order })
+                    .Where(pg => pg.Count() >= runCount)
+                    .SelectMany(pg => pg);
 
             foreach (var partGroup in filteredParts.GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
             {
@@ -242,7 +253,19 @@ namespace remeLog.Infrastructure
             ws.Columns().AdjustToContents();
             ws.RowsUsed().Height = 20;
             ws.Row(2).Height = 130;
-            ws.Cell(1, 1).Value = $"Отчёт за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
+            var title = $"Отчёт за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
+            switch (shift.Type)
+            {
+                case ShiftType.Day:
+                    title += " за дневные смены";
+                    break;
+                case ShiftType.Night:
+                    title += " за дневные смены";
+                    break;
+            }
+            if (runCount > 1) title += $" по серии от {runCount.Value.FormattedLaunches(true)}";
+            if (runCount > 1 && countRunsPerMachine) title += " индивидуально по станкам";
+            ws.Cell(1, 1).Value = title;
             ws.Range(1, 1, 1, cm.Count).Merge();
             ws.Range(1, 1, 1, 1).Style.Font.FontSize = 16;
             ws.Columns(2, cm.Count).Width = 8;
@@ -275,7 +298,7 @@ namespace remeLog.Infrastructure
             ws.Cell(row, ci[ColumnManager.Machine]).Value = "Рабочих смен:";
             ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
             ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = totalDays * 2;
+            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = shift.Type == ShiftType.All ? totalDays * 2 : totalDays;
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
@@ -795,7 +818,7 @@ namespace remeLog.Infrastructure
 
             ConfigureWorksheetHeader(wsTotal, columns);
 
-            switch (Database.GetShiftsByPeriod(machines, fromDate, toDate, out var shifts))
+            switch (Database.GetShiftsByPeriod(machines, fromDate, toDate, new Shift(ShiftType.All), out var shifts))
             {
                 case libeLog.Models.DbResult.AuthError:
                     MessageBox.Show("AuthError");

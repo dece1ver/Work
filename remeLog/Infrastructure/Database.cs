@@ -792,7 +792,7 @@ namespace remeLog.Infrastructure
             }
         }
 
-        public static DbResult GetShiftsByPeriod(ICollection<string> machines, DateTime fromDate, DateTime toDate, out List<ShiftInfo> shifts)
+        public static DbResult GetShiftsByPeriod(ICollection<string> machines, DateTime fromDate, DateTime toDate, Shift shift, out List<ShiftInfo> shifts)
         {
             shifts = new List<ShiftInfo>();
             try
@@ -804,6 +804,7 @@ namespace remeLog.Infrastructure
                     string machinesNames = string.Join(", ", machines.Select(m => $"'{m}'"));
 
                     string query = $"SELECT * FROM cnc_shifts WHERE ShiftDate BETWEEN @FromDate AND @ToDate AND Machine IN ({machinesNames})";
+                    if (shift.Type != Types.ShiftType.All) query += $" AND Shift = '{shift.Name}'";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("FromDate", fromDate);

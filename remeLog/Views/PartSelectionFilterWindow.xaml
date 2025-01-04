@@ -5,18 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views"
         mc:Ignorable="d"
-        Title="Дополнительный отбор" Height="113" Width="320">
+        Title="Дополнительный отбор" Height="130" Width="320">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Width" Value="80"/>
             <Setter Property="Height" Value="25"/>
         </Style>
         <Style TargetType="TextBlock">
-            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="Margin" Value="0 0 0 5"/>
         </Style>
     </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -27,7 +28,7 @@
             <TextBox x:Name="OrderCountTextBox"
                      TextAlignment="Center"
                      VerticalContentAlignment="Center"
-                     Margin="5,0,0,10"
+                     Margin="5 0 0 5"
                      Text="{Binding RunCount, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}">
                 <TextBox.Style>
                     <Style TargetType="TextBox">
@@ -40,8 +41,11 @@
                 </TextBox.Style>
             </TextBox>
         </DockPanel>
+        
+        <CheckBox Grid.Row="1" Content="Индивидуально по станкам" Margin="-1 0 0 7"
+                  IsChecked="{Binding CountRunsPerMachine, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"/>
 
-        <UniformGrid Columns="2" Grid.Row="4">
+        <UniformGrid Columns="2" Grid.Row="3">
             <Button Content="Отмена" 
                     IsCancel="True"
                     HorizontalAlignment="Left"/>

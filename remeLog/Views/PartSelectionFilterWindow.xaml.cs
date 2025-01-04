@@ -33,6 +33,13 @@ namespace remeLog.Views
                 typeof(PartSelectionFilterWindow),
                 new PropertyMetadata(false));
 
+        public static readonly DependencyProperty CountRunsPerMachineProperty =
+            DependencyProperty.Register(
+                nameof(CountRunsPerMachine),
+                typeof(bool),
+                typeof(PartSelectionFilterWindow),
+                new PropertyMetadata(false));
+
         public int RunCount
         {
             get => (int)GetValue(RunCountProperty);
@@ -45,11 +52,18 @@ namespace remeLog.Views
             private set => SetValue(IsInputValidProperty, value);
         }
 
-        public PartSelectionFilterWindow(int initialValue)
+        public bool CountRunsPerMachine
+        {
+            get => (bool)GetValue(CountRunsPerMachineProperty);
+            private set => SetValue(CountRunsPerMachineProperty, value);
+        }
+
+        public PartSelectionFilterWindow(int initialValue, bool countRunsPerMachine)
         {
             InitializeComponent();
             DataContext = this;
             RunCount = initialValue;
+            CountRunsPerMachine = countRunsPerMachine;
         }
 
         private static void OnRunCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

@@ -801,9 +801,10 @@ namespace remeLog.ViewModels
             try
             {
                 int? runCount = null;
+                bool countRunsPerMachine = true;
                 if (MessageBox.Show("Задать фильтр по запуску?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    var dialog = new PartSelectionFilterWindow(2)
+                    var dialog = new PartSelectionFilterWindow(2, true)
                     {
                         Owner = p as PartsInfoWindow
                     };
@@ -813,6 +814,7 @@ namespace remeLog.ViewModels
                         return;
                     }
                     runCount = dialog.RunCount;
+                    countRunsPerMachine = dialog.CountRunsPerMachine;
                 }
                 var path = Util.GetXlsxPath();
                 if (string.IsNullOrEmpty(path))
@@ -823,7 +825,7 @@ namespace remeLog.ViewModels
                 await Task.Run(() =>
                 {
                     InProgress = true;
-                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, path, AdditionalDescreaseValue, runCount);
+                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, ShiftFilter, path, AdditionalDescreaseValue, runCount, countRunsPerMachine);
                 });
             }
             catch (Exception ex)
@@ -1380,7 +1382,7 @@ namespace remeLog.ViewModels
                     return false;
                 }
 
-                var tempParts = await Task.Run(() => Database.ReadPartsWithConditions(BuildConditions(), cancellationToken));
+                var tempParts = await Database.ReadPartsWithConditions(BuildConditions(), cancellationToken);
 
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
