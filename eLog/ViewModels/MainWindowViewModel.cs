@@ -178,7 +178,6 @@ namespace eLog.ViewModels
             set => Set(ref _ProductionTasksIsLoading, value);
         }
 
-
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { };
         public bool CanStartShift => CurrentOperator is { } && !string.IsNullOrEmpty(CurrentShift);

@@ -136,6 +136,7 @@ namespace remeLog.Infrastructure
                 .Add(ColumnManager.FixtureMakingTime)
                 .Add(ColumnManager.HardwareFailureTime)
                 .Add(ColumnManager.UnspecifiedDowntimes)
+                .Add(ColumnManager.CountPerMachine)
                 .Build();
             var headerRow = 2;
             var ci = cm.GetIndexes();
@@ -144,17 +145,15 @@ namespace remeLog.Infrastructure
             var headerRange = ws.Range(2, 1, 2, cm.Count);
             var row = 3;
             var firstDataRow = row;
-            var filteredParts = countRunsPerMachine
-                ? parts
-                    .Where(p => !p.ExcludeFromReports)
-                    .GroupBy(p => new { p.PartName, p.Order, p.Machine })
-                    .Where(pg => pg.Count() >= runCount)
-                    .SelectMany(pg => pg)
-                : parts
-                    .Where(p => !p.ExcludeFromReports)
-                    .GroupBy(p => new { p.PartName, p.Order })
-                    .Where(pg => pg.Count() >= runCount)
-                    .SelectMany(pg => pg);
+            var filteredParts = parts
+                .Where(p => !p.ExcludeFromReports) 
+                .GroupBy(p => p.Machine)          
+                .SelectMany(machineGroup =>
+                    machineGroup                 
+                        .GroupBy(p => new { p.PartName, p.Order }) 
+                        .Where(partGroup => partGroup.Count() > runCount) 
+                        .SelectMany(partGroup => partGroup))
+                .OrderBy(p => p.Machine);
 
             foreach (var partGroup in filteredParts.GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
             {
@@ -220,6 +219,7 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[ColumnManager.FixtureMakingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.FixtureMaking);
                 ws.Cell(row, ci[ColumnManager.HardwareFailureTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.HardwareFailure);
                 ws.Cell(row, ci[ColumnManager.UnspecifiedDowntimes]).Value = parts.UnspecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
+                ws.Cell(row, ci[ColumnManager.CountPerMachine]).Value = parts.Count;
                 ws.Range(row, ci[ColumnManager.SpecifiedDowntimes], row, ci[ColumnManager.SpecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
                 row++;

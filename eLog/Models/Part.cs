@@ -41,7 +41,6 @@ namespace eLog.Models
         private bool _LackOfSkills;
         private bool _InsufficientTools;
         private bool _InsufficientEquipment;
-        private bool _NeedMasterHelp;
         private bool _NeedTechnicalHelp;
         private bool _NeedSeniorHelp;
         private DeepObservableCollection<DownTime> _DownTimes;
@@ -153,13 +152,6 @@ namespace eLog.Models
         {
             get => _InsufficientEquipment;
             set => Set(ref _InsufficientEquipment, value);
-        }
-
-        /// <summary> Нужна помощь мастера </summary>
-        public bool NeedMasterHelp
-        {
-            get => _NeedMasterHelp;
-            set => Set(ref _NeedMasterHelp, value);
         }
 
         /// <summary> Нужна техническая помощь </summary>
@@ -292,7 +284,7 @@ namespace eLog.Models
         }
 
         private bool _MasterIsHelping;
-        /// <summary> Описание </summary>
+        /// <summary> Мастер помогает </summary>
         public bool MasterIsHelping
         {
             get => _MasterIsHelping;
@@ -367,6 +359,14 @@ namespace eLog.Models
             }
         }
 
+
+        private ObservableCollection<MasterReaction> _MasterReactions;
+        /// <summary> Реакции мастера </summary>
+        public ObservableCollection<MasterReaction> MasterReactions
+        {
+            get => _MasterReactions;
+            set => Set(ref _MasterReactions, value);
+        }
 
 
 

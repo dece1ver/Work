@@ -397,6 +397,11 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string UnspecifiedDowntimes = "unspecifiedDowntimes";
 
+        /// <summary>
+        /// Количество по станку
+        /// </summary>
+        public const string CountPerMachine = "countPerMachine";
+
 
         private static readonly Dictionary<string, string> _descriptions = new()
         {
@@ -467,7 +472,8 @@ namespace remeLog.Infrastructure
             { ProductionEfficiencyToTotalRatio, $"Отношение нормативов{Environment.NewLine}к общему времени" },
             { AverageReplacementTime, $"Среднее время{Environment.NewLine}замены детали" },
             { SpecifiedDowntimes, "Отмеченные простои" },
-            { UnspecifiedDowntimes, "Неуказанные простои" }
+            { UnspecifiedDowntimes, "Неуказанные простои" },
+            { CountPerMachine, $"Количество{Environment.NewLine}по станку" }
         };
 
         /// <summary>

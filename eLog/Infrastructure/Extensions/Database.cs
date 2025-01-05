@@ -148,6 +148,21 @@ namespace eLog.Infrastructure.Extensions
                                 part.Id = (int)countCmd.ExecuteScalar();
                             }
                         }
+
+                        foreach (var reaction in part.MasterReactions)
+                        {
+                            string insertReactionQuery = "INSERT INTO cnc_master_reactions (PartID, Master, StartTime, EndDate, Comment) " +
+                                "VALUES (@PartID, @Master, @StartTime, @EndDate, @Comment)";
+                            using (SqlCommand reactionCmd = new SqlCommand(insertReactionQuery, connection))
+                            {
+                                reactionCmd.Parameters.AddWithValue("@PartID", part.Guid);
+                                reactionCmd.Parameters.AddWithValue("@Master", reaction.Master);
+                                reactionCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
+                                reactionCmd.Parameters.AddWithValue("@EndDate", reaction.EndDate);
+                                reactionCmd.Parameters.AddWithValue("@Comment", reaction.Comment);
+                                await reactionCmd.ExecuteNonQueryAsync();
+                            }
+                        }
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}\n{(passive ? "Оставлен" : "Присвоен")} Id: {part.Id}");
                     }
                     connection.Close();
@@ -281,6 +296,33 @@ namespace eLog.Infrastructure.Extensions
                         {
                             Util.WriteLog("Деталь не найдена, добавение новой.");
                             return await WritePartAsync(part, passive);
+                        }
+                        foreach (var reaction in part.MasterReactions)
+                        {
+                            // Проверка на существующую запись о реакции
+                            string checkQuery = "SELECT COUNT(*) FROM cnc_master_reactions WHERE PartID = @PartID AND Master = @Master AND StartTime = @StartTime";
+                            using (SqlCommand checkCmd = new SqlCommand(checkQuery, connection))
+                            {
+                                checkCmd.Parameters.AddWithValue("@PartID", part.Guid);
+                                checkCmd.Parameters.AddWithValue("@Master", reaction.Master);
+                                checkCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
+                                var existingCount = await checkCmd.ExecuteScalarAsync();
+
+                                if (existingCount is int i && i == 0)
+                                {
+                                    string insertReactionQuery = "INSERT INTO cnc_master_reactions (PartID, Master, StartTime, EndDate, Comment) " +
+                                        "VALUES (@PartID, @Master, @StartTime, @EndDate, @Comment)";
+                                    using (SqlCommand reactionCmd = new SqlCommand(insertReactionQuery, connection))
+                                    {
+                                        reactionCmd.Parameters.AddWithValue("@PartID", part.Guid);
+                                        reactionCmd.Parameters.AddWithValue("@Master", reaction.Master);
+                                        reactionCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
+                                        reactionCmd.Parameters.AddWithValue("@EndDate", reaction.EndDate);
+                                        reactionCmd.Parameters.AddWithValue("@Comment", reaction.Comment);
+                                        await reactionCmd.ExecuteNonQueryAsync();
+                                    }
+                                }
+                            }
                         }
                     }
                     connection.Close();

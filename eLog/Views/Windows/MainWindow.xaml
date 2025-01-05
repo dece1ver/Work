@@ -261,7 +261,7 @@
                                             <StackPanel Margin="0" Orientation="Horizontal" HorizontalAlignment="Right" 
                                                 Visibility="{Binding IsStarted, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}">
                                                 <Button Style="{StaticResource LvButton}" 
-                                                        Visibility="{Binding DownTimesIsClosed, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}"
+                                                        Visibility="{Binding NeedMasterAttention, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource VisibilityConverter}}"
                                                         Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.SetDownTimeCommand}"
                                                         CommandParameter="{Binding}">
                                                     <Button.Content>
