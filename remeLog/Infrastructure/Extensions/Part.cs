@@ -8,6 +8,7 @@ using System.Linq;
 using libeLog.Extensions;
 using libeLog.Models;
 using libeLog;
+using System.Security;
 
 
 namespace remeLog.Infrastructure.Extensions
@@ -292,7 +293,7 @@ namespace remeLog.Infrastructure.Extensions
             {
                 sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
             }
-            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
+            var totalWorkMinutes = Util.GetWorkDaysBeetween(fromDate, toDate) * shift.Minutes;
             return (totalWorkMinutes - sum) / totalWorkMinutes;
         }
 
@@ -312,35 +313,25 @@ namespace remeLog.Infrastructure.Extensions
             {
                 sum += part.SetupTimeFact + part.ProductionTimeFact + part.SetupDowntimes + part.MachiningDowntimes + part.PartialSetupTime;
             }
-            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
+            var totalWorkMinutes = Util.GetWorkDaysBeetween(fromDate, toDate) * (int)shiftType;
             return (totalWorkMinutes - sum) / totalWorkMinutes;
         }
 
         /// <summary>
-        /// Получение времени наладки для отчета один раз на партию, пока не работает нормально на граничных значениях, как вариант надо дергать из БД всю партию и по ней уже смотреть.
+        /// Вычисляет общее время настройки для отчета, суммируя планируемое время настройки для уникальных комбинаций
+        /// <paramref name="PartName"/> и <paramref name="Order"/>, при условии, что есть хоть какое-то время наладки.
         /// </summary>
-        /// <param name="parts"></param>
-        /// <returns></returns>
+        /// <param name="parts">Коллекция деталей, для которых будет вычисляться время настройки.</param>
+        /// <returns>Общее планируемое время настройки для отчета.</returns>
         public static double SetupTimePlanForReport(this IEnumerable<Models.Part> parts)
         {
             var sum = 0.0;
-            Models.Part prevPart = null!;
-            foreach (var partsGroup in parts.GroupBy(p => p.Machine))
+            HashSet<(string, string)> counted = new();
+            foreach (var part in parts)
             {
-                foreach (var part in partsGroup.ToList())
+                if (part.SetupTimeFact + part.PartialSetupTime > 0 && counted.Add((part.PartName, part.Order)))
                 {
-                    var setupValue = prevPart != null ?
-                                    (prevPart.Setup == part.Setup && prevPart.Order == part.Order && prevPart.PartName == part.PartName ? 0 : part.SetupTimePlanForCalc) :
-                                    (part.PartialSetupTime == 0 && part.SetupTimeFact == 0 ? 0 : part.SetupTimePlanForCalc);
-
-                    // раскоментировать для учета без нормативов
-                    //if (setupValue == 0 && part.SetupTimePlanForCalc == 0)
-                    //{
-                    //    setupValue = part.SetupTimeFact + part.PartialSetupTime;
-                    //}
-
-                    sum += setupValue;
-                    prevPart = part;
+                    sum += part.SetupTimePlan;
                 }
             }
             return sum;
@@ -359,6 +350,46 @@ namespace remeLog.Infrastructure.Extensions
                 sum += part.EndMachiningTime - part.StartSetupTime - (TimeSpan.FromMinutes(DateTimes.GetPartialBreakBetween(part.StartSetupTime, part.EndMachiningTime)));
             }
             return sum;
+        }
+
+        /// <summary>
+        /// Рассчитывает суммарное фактическое время наладки для коллекции деталей (включая частичные).
+        /// </summary>
+        /// <param name="parts">Коллекция деталей, для которых выполняется расчет.</param>
+        /// <returns>Суммарное фактическое время настройки <see cref="SetupTimeFact"/> всех деталей в коллекции.</returns>
+        public static TimeSpan TotalSetupTime(this IEnumerable<Models.Part> parts)
+        {
+            return TimeSpan.FromMinutes(parts.Sum(p => p.SetupTimeFact + p.PartialSetupTime));
+        }
+
+        /// <summary>
+        /// Рассчитывает суммарное фактическое время производства для коллекции деталей.
+        /// </summary>
+        /// <param name="parts">Коллекция деталей, для которых выполняется расчет.</param>
+        /// <returns>Суммарное фактическое время производства <see cref="ProductionTimeFact"/> всех деталей в коллекции.</returns>
+        public static TimeSpan TotalProductionTime(this IEnumerable<Models.Part> parts)
+        {
+            return TimeSpan.FromMinutes(parts.Sum(p => p.ProductionTimeFact));
+        }
+
+        /// <summary>
+        /// Рассчитывает суммарное фактическое время простоев для коллекции деталей.
+        /// </summary>
+        /// <param name="parts">Коллекция деталей, для которых выполняется расчет.</param>
+        /// <returns>Суммарное фактическое время простоев в изготовлении <see cref="MachiningDowntimes"/> и в наладке <see cref="SetupDowntimes"/> всех деталей в коллекции.</returns>
+        public static TimeSpan TotalDowntimesTime(this IEnumerable<Models.Part> parts)
+        {
+            return TimeSpan.FromMinutes(parts.Sum(p => p.MachiningDowntimes + p.SetupDowntimes));
+        }
+
+        /// <summary>
+        /// Рассчитывает среднее время наладки для коллекции деталей (без частичных наладок).
+        /// </summary>
+        /// <param name="parts">Коллекция деталей, для которых выполняется расчет.</param>
+        /// <returns>Среднее арифметическое время в наладке <see cref="SetupDowntimes"/> тех деталей в коллекции, где осуществлялась полноценная наладка.</returns>
+        public static TimeSpan AverageSetupTime(this IEnumerable<Models.Part> parts)
+        {
+            return TimeSpan.FromMinutes(parts.Where(p => p.SetupTimeFact > 0).Average(p => p.SetupTimeFact));
         }
 
         /// <summary>

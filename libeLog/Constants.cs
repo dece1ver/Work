@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace libeLog
 {
@@ -15,6 +16,10 @@ namespace libeLog
         public const string HHmmssFormat = "HH:mm:ss";
         public const string DateTimeWithSecsFormat = "dd.MM.yyyy HH:mm:ss";
         public const string TimeSpanFormat = @"hh\:mm\:ss";
+        public static readonly HashSet<string> ComparisonOperators = new()
+        {
+            "<=", "<", ">=", "=", ">", "!="
+        };
 
         public class StatusTips
         {
@@ -96,7 +101,6 @@ namespace libeLog
                 new(2024, 12, 31),
                 new(2025, 01, 01),
                 new(2025, 01, 02),
-                new(2025, 01, 03),
                 new(2025, 05, 09),
             };
         }

@@ -505,14 +505,17 @@ namespace remeLog.ViewModels
         {
             try
             {
-                var current = Path.GetFileName(System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName);
-                if (current == null) return;
+                var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                if (string.IsNullOrEmpty(currentProcessPath)) return;
 
-                var updatePath = Path.Combine("update", current);
+                var parentDirectory = Directory.GetParent(currentProcessPath);
+                if (parentDirectory?.Name.Equals("update", StringComparison.OrdinalIgnoreCase) == true) return;
+
+                var updatePath = Path.Combine("update", currentProcessPath);
                 if (!Directory.Exists(updatePath)) { Directory.CreateDirectory("update"); }
                 using var watcher = new FileSystemWatcher("update")
                 {
-                    Filter = current,
+                    Filter = currentProcessPath,
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
                     EnableRaisingEvents = true
                 };
@@ -523,7 +526,7 @@ namespace remeLog.ViewModels
                     {
                         if (Interlocked.CompareExchange(ref _showed, 1, 0) == 0
                             && File.Exists(updatePath)
-                            && updatePath.IsFileNewerThan(current))
+                            && updatePath.IsFileNewerThan(currentProcessPath))
                         {
                             await App.Current.Dispatcher.InvokeAsync(() =>
                             {

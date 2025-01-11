@@ -90,10 +90,25 @@ namespace remeLog.Infrastructure
         /// <param name="toDate"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, Shift shift, string path, int? underOverBorder, int? runCount, bool countRunsPerMachine)
+        public static string ExportReportForPeroid(ICollection<Part> parts, DateTime fromDate, DateTime toDate, Shift shift, string path, int? underOverBorder, string runCountFilter, bool addSheetPerMachine, IProgress<string> progress)
         {
+            progress?.Report("Начало экспорта...");
             underOverBorder ??= 10;
-            runCount ??= 1;
+
+            string comparisonOperator = ">=";
+            int comparisonValue = 0;
+
+            var runCountCondition = Util.TryParseComparison(runCountFilter, out comparisonOperator, out comparisonValue)
+                ? Util.CreateComparisonFunc(comparisonOperator, comparisonValue)
+                : (count => count >= comparisonValue);
+
+            var tempParts = new List<Part>();
+
+            foreach (var p in parts)
+            {
+                tempParts.Add(p);
+            }
+
             var machines = new List<string>();
             var res = machines.ReadMachines();
             Database.GetShiftsByPeriod(machines, fromDate, toDate, shift, out List<ShiftInfo> shifts);
@@ -122,6 +137,11 @@ namespace remeLog.Infrastructure
                 .Add(ColumnManager.SetupToTotalRatio)
                 .Add(ColumnManager.ProductionToTotalRatio)
                 .Add(ColumnManager.ProductionEfficiencyToTotalRatio)
+                .Add(ColumnManager.AverageSetupTime)
+                .Add(ColumnManager.TotalSetupTime)
+                .Add(ColumnManager.TotalProductionTime)
+                .Add(ColumnManager.TotalDowntimesTime)
+                .Add(ColumnManager.TotalTime)
                 .Add(ColumnManager.AverageFinishedCount)
                 .Add(ColumnManager.AveragePartsCount)
                 .Add(ColumnManager.SmallProductionsRatio)
@@ -145,23 +165,21 @@ namespace remeLog.Infrastructure
             var headerRange = ws.Range(2, 1, 2, cm.Count);
             var row = 3;
             var firstDataRow = row;
+            progress?.Report("Подготовка данных...");
             var filteredParts = parts
                 .Where(p => !p.ExcludeFromReports)
                 .GroupBy(p => p.Machine)
                 .SelectMany(machineGroup =>
                     machineGroup
                         .GroupBy(p => p.PartName)
-                        .Where(partGroup =>
-                            partGroup
-                                .GroupBy(p => p.Order)
-                                .Count() >= runCount
-                        )
+                        .Where(partGroup => runCountFilter == null ||
+                            runCountCondition(partGroup.GroupBy(p => p.Order).Count()))
                         .SelectMany(partGroup => partGroup))
                 .OrderBy(p => p.Machine);
-
+            progress?.Report("Формирование общего листа...");
             foreach (var partGroup in filteredParts.GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
             {
-                parts = partGroup.ToList();
+                parts = partGroup.OrderBy(p => p.StartSetupTime).ToList();
                 totalWorkedMinutes = parts.FullWorkedTime().TotalMinutes;
                 ws.Cell(row, ci[ColumnManager.Machine]).Value = partGroup.Key;
                 ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s is not ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
@@ -170,7 +188,7 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[ColumnManager.NoPowerShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие электричества" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, ci[ColumnManager.ProcessRelatedLossShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, ci[ColumnManager.UnspecifiedOtherShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
-                ws.Cell(row, ci[ColumnManager.SetupRatio]).Value = parts.SetupRatio();
+                ws.Cell(row, ci[ColumnManager.SetupRatio]).Value = parts.AverageSetupRatio();
                 ws.Cell(row, ci[ColumnManager.ProductionRatio]).Value = parts.ProductionRatio();
                 var setupUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).AverageSetupRatio();
                 ws.Cell(row, ci[ColumnManager.SetupRatioUnder]).Value = setupUnderRatio;
@@ -188,9 +206,16 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[ColumnManager.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
                 var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
                 ws.Cell(row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
+
+                ws.Cell(row, ci[ColumnManager.AverageSetupTime]).SetValue(parts.AverageSetupTime().TotalHours);
+                ws.Cell(row, ci[ColumnManager.TotalSetupTime]).SetValue(parts.TotalSetupTime().TotalHours);
+                ws.Cell(row, ci[ColumnManager.TotalProductionTime]).SetValue(parts.TotalProductionTime().TotalHours);
+                ws.Cell(row, ci[ColumnManager.TotalDowntimesTime]).SetValue(parts.TotalDowntimesTime().TotalHours);
+                ws.Cell(row, ci[ColumnManager.TotalTime]).SetValue(totalWorkedMinutes / 60);
+
                 var uniqueParts = parts.GroupBy(p => new { p.PartName, p.Order }).Select(g => g.First()).ToList();
 
-                var averageFinishedCount = parts.Average(p => p.FinishedCountFact);
+                var averageFinishedCount = parts.Where(p => p.FinishedCount > 0).Average(p => p.FinishedCountFact);
                 var averagePartsCount = uniqueParts.Average(p => p.TotalCount);
                 var smallProductionsRatio = (double)parts.Count(p => p.FinishedCount <= underOverBorder && p.FinishedCount > 0) / parts.Count;
                 var smallSeriesRatio = (double)uniqueParts.Count(p => p.TotalCount <= underOverBorder) / uniqueParts.Count;
@@ -212,8 +237,11 @@ namespace remeLog.Infrastructure
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
                 ws.Range(row, ci[ColumnManager.SetupRatio], row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, ci[ColumnManager.AverageReplacementTime]).Value = parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageReplacementTimeRatio();
-                ws.Cell(row, ci[ColumnManager.AverageReplacementTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+
+                ws.Cell(row, ci[ColumnManager.AverageReplacementTime])
+                    .SetValue(parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageReplacementTimeRatio())
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+
                 ws.Cell(row, ci[ColumnManager.SpecifiedDowntimes]).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
                 ws.Cell(row, ci[ColumnManager.MaintenanceTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Maintenance);
                 ws.Cell(row, ci[ColumnManager.ToolSearchingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolSearching);
@@ -264,17 +292,16 @@ namespace remeLog.Infrastructure
                     title += " за дневные смены";
                     break;
                 case ShiftType.Night:
-                    title += " за дневные смены";
+                    title += " за ночные смены";
                     break;
             }
-            if (runCount > 1) title += $" по серии от {runCount.Value.FormattedLaunches(true)}";
-            if (runCount > 1 && countRunsPerMachine) title += " индивидуально по станкам";
+            if (comparisonValue > 1) title += $" ( {Util.GetOperatorSymbol(comparisonOperator)}{comparisonValue.FormattedLaunches(true)} )";
             ws.Cell(1, 1).Value = title;
             ws.Range(1, 1, 1, cm.Count).Merge();
             ws.Range(1, 1, 1, 1).Style.Font.FontSize = 16;
             ws.Columns(2, cm.Count).Width = 8;
 
-            ws.Cell(row, ci[ColumnManager.Machine]).Value = "Соотношение:";
+            ws.Cell(row, ci[ColumnManager.Machine]).Value = "Итог:";
             ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
             ws.Range(row, ci[ColumnManager.Machine], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             ws.Range(row, ci[ColumnManager.NoOperatorShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -283,10 +310,15 @@ namespace remeLog.Infrastructure
                 string colLetter = ws.Column(col).ColumnLetter();
                 ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})/$B${lastDataRow + 2}";
             } 
-            for (int col = ci[ColumnManager.SetupRatio]; col <= ci[ColumnManager.ProductionEfficiencyToTotalRatio]; col++)
+            for (int col = ci[ColumnManager.SetupRatio]; col <= ci[ColumnManager.AverageSetupTime]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
                 ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+            }
+            for (int col = ci[ColumnManager.TotalSetupTime]; col <= ci[ColumnManager.TotalTime]; col++)
+            {
+                string colLetter = ws.Column(col).ColumnLetter();
+                ws.Cell(row, col).FormulaA1 = $"SUM({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
             for (int col = ci[ColumnManager.SpecifiedDowntimes]; col <= ci[ColumnManager.UnspecifiedDowntimes]; col++)
             {
@@ -295,6 +327,7 @@ namespace remeLog.Infrastructure
             }
             ws.Range(row, ci[ColumnManager.WorkedShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
             ws.Range(row, ci[ColumnManager.SetupRatio], row, ci[ColumnManager.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+            ws.Range(firstDataRow, ci[ColumnManager.AverageSetupTime], row, ci[ColumnManager.TotalTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
 
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -310,9 +343,7 @@ namespace remeLog.Infrastructure
 
             var partsByMachine = filteredParts.GroupBy(p => p.Machine).ToDictionary(g => g.Key, g => g.ToList());
 
-            foreach (var machine in partsByMachine.Keys)
-            {
-                var mcm = new ColumnManager.Builder()
+            var mcm = new ColumnManager.Builder()
                         .Add(ColumnManager.Date)
                         .Add(ColumnManager.Shift)
                         .Add(ColumnManager.Operator)
@@ -353,16 +384,24 @@ namespace remeLog.Infrastructure
                         .Add(ColumnManager.FixedProductionTimePlan)
                         .Add(ColumnManager.EngineerComment)
                         .Build();
-                ConfigureMachineSheetForPeriod(wb, partsByMachine[machine], machine, mcm);
-
+            if (addSheetPerMachine)
+            {
+                foreach (var machine in partsByMachine.Keys)
+                {
+                    progress?.Report($"Формирование листа по станку {machine}...");
+                    ConfigureMachineSheetForPeriod(wb, partsByMachine[machine], machine, mcm);
+                }
             }
-
+            progress?.Report("Формирование завершено, сохранение файла...");
             wb.SaveAs(path);
+            progress?.Report("Формирование завершено, выберите ответ в диалоговом окне");
             //AddDiagramToReportForPeriod(path);
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
                 == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
             return $"Файл сохранен в \"{path}\"";
         }
+
+        
 
         private static void ConfigureMachineSheetForPeriod(XLWorkbook wb, IEnumerable<Part> parts, string machine, ColumnManager cm)
         {

@@ -402,6 +402,31 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string CountPerMachine = "countPerMachine";
 
+        /// <summary>
+        /// Среднее время наладки
+        /// </summary>
+        public const string AverageSetupTime = "averageSetupTime";
+
+        /// <summary>
+        /// Время в наладке
+        /// </summary>
+        public const string TotalSetupTime = "setupTime";
+
+        /// <summary>
+        /// Вермя изготовления
+        /// </summary>
+        public const string TotalProductionTime = "productionTime";
+
+        /// <summary>
+        /// Вермя простоев
+        /// </summary>
+        public const string TotalDowntimesTime = "downtimesTime";
+
+        /// <summary>
+        /// Вермя общее
+        /// </summary>
+        public const string TotalTime = "totalTime";
+
 
         private static readonly Dictionary<string, string> _descriptions = new()
         {
@@ -459,21 +484,26 @@ namespace remeLog.Infrastructure
             { NoPowerShifts, "Смены без электропитания" },
             { ProcessRelatedLossShifts, "Организационные потери" },
             { UnspecifiedOtherShifts, $"Смены без работы{Environment.NewLine}по другим причинам" },
-            { SetupRatio, "Коэффициент наладки" },
-            { ProductionRatio, "Коэффициент изготовления" },
-            { SetupRatioUnder, $"Коэффициент наладки{Environment.NewLine}на штучке" },
-            { ProductionRatioUnder, $"Коэффициент изготовления{Environment.NewLine}на штучке" },
-            { SetupRatioOver, $"Коэффициент наладки{Environment.NewLine}на серийке" },
-            { ProductionRatioOver, $"Коэффициент изготовления{Environment.NewLine}на серийке" },
+            { SetupRatio, $"Выполнение норматива{Environment.NewLine}наладки (взв.)" },
+            { ProductionRatio, $"Выполнение норматива{Environment.NewLine}изготовления" },
+            { SetupRatioUnder, $"Выполнение норматива{Environment.NewLine}наладки на штучке" },
+            { ProductionRatioUnder, $"Выполнение норматива{Environment.NewLine}изготовления на штучке" },
+            { SetupRatioOver, $"Выполнение норматива{Environment.NewLine}наладки на серийке" },
+            { ProductionRatioOver, $"Выполнение норматива{Environment.NewLine}изготовления на серийке" },
             { SetupUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при наладке" },
             { ProductionUnderOverRatio, $"Соотношение штучки{Environment.NewLine}к серийке при изготовлении" },
-            { SetupToTotalRatio, $"Наладка" },
-            { ProductionToTotalRatio, $"Изготовление" },
+            { SetupToTotalRatio, $"Доля наладок" },
+            { ProductionToTotalRatio, $"Доля изготовлений" },
             { ProductionEfficiencyToTotalRatio, $"Отношение нормативов{Environment.NewLine}к общему времени" },
             { AverageReplacementTime, $"Среднее время{Environment.NewLine}замены детали" },
             { SpecifiedDowntimes, "Отмеченные простои" },
             { UnspecifiedDowntimes, "Неуказанные простои" },
-            { CountPerMachine, $"Количество{Environment.NewLine}по станку" }
+            { CountPerMachine, $"Количество{Environment.NewLine}по станку" },
+            { AverageSetupTime, $"Среднее время наладки" },
+            { TotalSetupTime, $"Время наладки" },
+            { TotalProductionTime, $"Время изготовления" },
+            { TotalDowntimesTime, $"Время простоев" },
+            { TotalTime, $"Отмеченное общее время" }
         };
 
         /// <summary>

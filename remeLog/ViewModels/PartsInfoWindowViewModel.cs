@@ -31,7 +31,6 @@ namespace remeLog.ViewModels
         private static readonly SemaphoreSlim semaphoreSlim = new(1, 1);
         private CancellationTokenSource _cancellationTokenSource = new();
         private static bool lockUpdate;
-        private static readonly string[] supportedComparisonOperators = { "<=", "<", ">=", "=", ">", "!=" };
 
         public PartsInfoWindowViewModel(CombinedParts parts)
         {
@@ -800,11 +799,11 @@ namespace remeLog.ViewModels
         {
             try
             {
-                int? runCount = null;
-                bool countRunsPerMachine = true;
-                if (MessageBox.Show("Задать фильтр по запуску?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                string runCountFilter = "";
+                bool addSheetPerMachine = true;
+                if (MessageBox.Show("Задать фильтр по количеству запусков?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    var dialog = new PartSelectionFilterWindow(2, true)
+                    var dialog = new PartSelectionFilterWindow("", true)
                     {
                         Owner = p as PartsInfoWindow
                     };
@@ -813,8 +812,8 @@ namespace remeLog.ViewModels
                         Status = "Отмена";
                         return;
                     }
-                    runCount = dialog.RunCount;
-                    countRunsPerMachine = dialog.CountRunsPerMachine;
+                    runCountFilter = dialog.RunCountFilter;
+                    addSheetPerMachine = dialog.AddSheetPerMachine;
                 }
                 var path = Util.GetXlsxPath();
                 if (string.IsNullOrEmpty(path))
@@ -822,10 +821,15 @@ namespace remeLog.ViewModels
                     Status = "Выбор файла отменён";
                     return;
                 }
+                var progress = new Progress<string>(message =>
+                {
+                    Status = message;
+                });
+
                 await Task.Run(() =>
                 {
                     InProgress = true;
-                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, ShiftFilter, path, AdditionalDescreaseValue, runCount, countRunsPerMachine);
+                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, ShiftFilter, path, AdditionalDescreaseValue, runCountFilter, addSheetPerMachine, progress);
                 });
             }
             catch (Exception ex)
@@ -1278,7 +1282,7 @@ namespace remeLog.ViewModels
             {
                 switch (columnName)
                 {
-                    case nameof(FinishedCountFilter) when !TryParseComparison(FinishedCountFilter, out _, out _) && !string.IsNullOrWhiteSpace(FinishedCountFilter):
+                    case nameof(FinishedCountFilter) when !Util.TryParseComparison(FinishedCountFilter, out _, out _) && !string.IsNullOrWhiteSpace(FinishedCountFilter):
                         return "Неверно указан фильтр по количеству изготовленных деталей.";
 
                     default:
@@ -1371,8 +1375,8 @@ namespace remeLog.ViewModels
                     return true;
                 }
 
-                var isValidFinishedCountFilter = TryParseComparison(FinishedCountFilter, out string finishedCountOperator, out int finishedCountValue);
-                var isValidTotalCountFilter = TryParseComparison(TotalCountFilter, out string totalCountOperator, out int totalCountValue);
+                var isValidFinishedCountFilter = Util.TryParseComparison(FinishedCountFilter, out string finishedCountOperator, out int finishedCountValue);
+                var isValidTotalCountFilter = Util.TryParseComparison(TotalCountFilter, out string totalCountOperator, out int totalCountValue);
                 var partNameStartStar = PartNameFilter.StartsWith('*');
 
                 if (!MachineFilters.Any(mf => mf.Filter == true))
@@ -1429,10 +1433,10 @@ namespace remeLog.ViewModels
             AppendCondition(sb, "[Order]", OrderFilter);
             AppendCondition(sb, "EngineerComment", EngineerCommentFilter);
 
-            if (TryParseComparison(FinishedCountFilter, out var finishedCountOperator, out var finishedCountValue))
+            if (Util.TryParseComparison(FinishedCountFilter, out var finishedCountOperator, out var finishedCountValue))
                 sb.AppendFormat("AND FinishedCount {0} {1} ", finishedCountOperator, finishedCountValue);
 
-            if (TryParseComparison(TotalCountFilter, out var totalCountOperator, out var totalCountValue))
+            if (Util.TryParseComparison(TotalCountFilter, out var totalCountOperator, out var totalCountValue))
                 sb.AppendFormat("AND totalCount {0} {1} ", totalCountOperator, totalCountValue);
 
             if (SetupFilter != null)
@@ -1487,38 +1491,7 @@ namespace remeLog.ViewModels
             return true;
         }
 
-        public static bool TryParseComparison(string input, out string comparisonOperator, out int comparisonValue)
-        {
-            comparisonOperator = null!;
-            comparisonValue = 0;
-
-            if (string.IsNullOrWhiteSpace(input))
-                return false;
-
-            if (int.TryParse(input, out int res))
-            {
-                comparisonOperator = "=";
-                comparisonValue = res;
-                return true;
-            }
-
-            foreach (string op in supportedComparisonOperators)
-            {
-                if (input.Contains(op))
-                {
-                    comparisonOperator = op;
-                    string[] parts = input.Split(new[] { op }, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length != 1)
-                        return false;
-
-                    if (!int.TryParse(parts[0].Trim(), out comparisonValue))
-                        return false;
-                    return true;
-                }
-            }
-
-            return false;
-        }
+        
 
 
         public static string FormatSearchInput(string input)

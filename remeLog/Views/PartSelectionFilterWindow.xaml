@@ -29,7 +29,7 @@
                      TextAlignment="Center"
                      VerticalContentAlignment="Center"
                      Margin="5 0 0 5"
-                     Text="{Binding RunCount, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}">
+                     Text="{Binding RunCountFilter, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}">
                 <TextBox.Style>
                     <Style TargetType="TextBox">
                         <Style.Triggers>
@@ -43,7 +43,7 @@
         </DockPanel>
         
         <CheckBox Grid.Row="1" Content="Индивидуально по станкам" Margin="-1 0 0 7"
-                  IsChecked="{Binding CountRunsPerMachine, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"/>
+                  IsChecked="{Binding AddSheetPerMachine, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay}"/>
 
         <UniformGrid Columns="2" Grid.Row="3">
             <Button Content="Отмена" 

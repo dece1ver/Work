@@ -1,4 +1,5 @@
-﻿using System;
+﻿using remeLog.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,31 +20,31 @@ namespace remeLog.Views
     /// </summary>
     public partial class PartSelectionFilterWindow : Window
     {
-        public static readonly DependencyProperty RunCountProperty =
-            DependencyProperty.Register(
-                nameof(RunCount),
-                typeof(int),
-                typeof(PartSelectionFilterWindow),
-                new PropertyMetadata(0, OnRunCountChanged));
+        public static readonly DependencyProperty RunCountFilterProperty =
+    DependencyProperty.Register(
+        nameof(RunCountFilter),
+        typeof(string),
+        typeof(PartSelectionFilterWindow),
+        new PropertyMetadata(string.Empty, OnRunCountFilterChanged));
 
         public static readonly DependencyProperty IsInputValidProperty =
+    DependencyProperty.Register(
+        nameof(IsInputValid),
+        typeof(bool),
+        typeof(PartSelectionFilterWindow),
+        new PropertyMetadata(false));
+
+        public static readonly DependencyProperty AddSheetPerMachineProperty =
             DependencyProperty.Register(
-                nameof(IsInputValid),
+                nameof(AddSheetPerMachine),
                 typeof(bool),
                 typeof(PartSelectionFilterWindow),
                 new PropertyMetadata(false));
 
-        public static readonly DependencyProperty CountRunsPerMachineProperty =
-            DependencyProperty.Register(
-                nameof(CountRunsPerMachine),
-                typeof(bool),
-                typeof(PartSelectionFilterWindow),
-                new PropertyMetadata(false));
-
-        public int RunCount
+        public string RunCountFilter
         {
-            get => (int)GetValue(RunCountProperty);
-            set => SetValue(RunCountProperty, value);
+            get => (string)GetValue(RunCountFilterProperty);
+            set => SetValue(RunCountFilterProperty, value);
         }
 
         public bool IsInputValid
@@ -52,31 +53,42 @@ namespace remeLog.Views
             private set => SetValue(IsInputValidProperty, value);
         }
 
-        public bool CountRunsPerMachine
+        public bool AddSheetPerMachine
         {
-            get => (bool)GetValue(CountRunsPerMachineProperty);
-            private set => SetValue(CountRunsPerMachineProperty, value);
+            get => (bool)GetValue(AddSheetPerMachineProperty);
+            private set => SetValue(AddSheetPerMachineProperty, value);
         }
 
-        public PartSelectionFilterWindow(int initialValue, bool countRunsPerMachine)
+        public PartSelectionFilterWindow(string initialValue, bool addSheetPerMachine)
         {
             InitializeComponent();
             DataContext = this;
-            RunCount = initialValue;
-            CountRunsPerMachine = countRunsPerMachine;
+            RunCountFilter = initialValue;
+            AddSheetPerMachine = addSheetPerMachine;
         }
 
-        private static void OnRunCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnRunCountFilterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is PartSelectionFilterWindow dialog)
             {
                 dialog.ValidateInput();
             }
         }
-
         private void ValidateInput()
         {
-            IsInputValid = RunCount > 0;
+            if (string.IsNullOrWhiteSpace(RunCountFilter))
+            {
+                IsInputValid = true;
+                return;
+            }
+
+            if (Util.TryParseComparison(RunCountFilter, out var op, out var value))
+            {
+                IsInputValid = value > 0;
+                return;
+            }
+
+            IsInputValid = int.TryParse(RunCountFilter, out var simpleValue) && simpleValue > 0;
         }
 
         private void RunCountTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
