@@ -132,7 +132,7 @@ namespace remeLog.Models
         public double AverageProductionRatio => Parts.AverageProductionRatio();
         public double SetupTimeRatio => Parts.SetupRatio();
         public double ProductionTimeRatio => Parts.ProductionRatio();
-        public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(FromDate, ToDate, new Shift(ShiftType.All));
+        public double SpecifiedDowntimesRatio => Parts.SpecifiedDowntimesRatio(new Shift(ShiftType.All));
         public double UnspecifiedDowntimesRatio => Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, new Shift(ShiftType.All));
 
         public bool SpecifiedDowntimesRatioNeedAttention => SpecifiedDowntimesRatio is > 0.1 or < -0.1;

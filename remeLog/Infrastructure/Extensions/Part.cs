@@ -84,7 +84,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Дата окончания интервала.</param>
         /// <param name="shiftType">Тип смены (например, дневная, ночная или все смены).</param>
         /// <returns>Суммарное время простоев в минутах.</returns>
-        public static double SpecifiedDowntimes(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        public static double SpecifiedDowntimes(this IEnumerable<Models.Part> parts, ShiftType shiftType)
         {
             double sum = 0;
             var filteredParts = shiftType is ShiftType.All ? parts : parts.Where(p => p.Shift == new Shift(shiftType).Name);
@@ -92,7 +92,6 @@ namespace remeLog.Infrastructure.Extensions
             {
                 sum += part.SetupDowntimes + part.MachiningDowntimes;
             }
-            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * (int)shiftType;
             return sum;
         }
 
@@ -104,7 +103,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shift">Фильтр по смене</param>
         /// <returns></returns>
-        public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, Shift shift) 
+        public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, Shift shift) 
         {
             double sum = 0;
             var filteredParts = shift.Type is ShiftType.All ? parts : parts.Where(p => p.Shift == shift.Name);
@@ -112,7 +111,6 @@ namespace remeLog.Infrastructure.Extensions
             {
                 sum += part.SetupDowntimes + part.MachiningDowntimes;
             }
-            var totalWorkMinutes = (toDate.AddDays(1) - fromDate).TotalDays * shift.Minutes;
             return sum / parts.FullWorkedTime().TotalMinutes;
         }
 
@@ -124,9 +122,9 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="toDate">Конечная дата</param>
         /// <param name="shiftType">Фильтр по смене</param>
         /// <returns></returns>
-        public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, DateTime fromDate, DateTime toDate, ShiftType shiftType)
+        public static double SpecifiedDowntimesRatio(this IEnumerable<Models.Part> parts, ShiftType shiftType)
         {
-            return parts.SpecifiedDowntimesRatio(fromDate, toDate, new Shift(shiftType));
+            return parts.SpecifiedDowntimesRatio(new Shift(shiftType));
         }
 
         /// <summary>
@@ -195,7 +193,7 @@ namespace remeLog.Infrastructure.Extensions
                 if (excludeDowntimeType != Downtime.ToolSearching)
                     sum += part.ToolSearchingTime;
                 if (excludeDowntimeType != Downtime.ToolChanging)
-                    sum += part.ToolSearchingTime;
+                    sum += part.ToolChangingTime;
                 if (excludeDowntimeType != Downtime.Mentoring)
                     sum += part.MentoringTime;
                 if (excludeDowntimeType != Downtime.ContactingDepartments)

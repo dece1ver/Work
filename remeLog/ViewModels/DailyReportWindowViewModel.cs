@@ -247,17 +247,17 @@ namespace remeLog.ViewModels
 
         public double UnspecifiedDayDowntimes => Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Day);
         public double UnspecifiedNightDowntimes => Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Night);
-        public double SpecifiedDayDowntimes => Parts.SpecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Day);
-        public double SpecifiedNightDowntimes => Parts.SpecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Night);
+        public double SpecifiedDayDowntimes => Parts.SpecifiedDowntimes(ShiftType.Day);
+        public double SpecifiedNightDowntimes => Parts.SpecifiedDowntimes(ShiftType.Night);
         public double UnspecifiedDayDowntimesRatio => Parts.UnspecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Day);
         public double UnspecifiedNightDowntimesRatio => Parts.UnspecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Night);
-        public double SpecifiedDayDowntimesRatio => Parts.SpecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Day);
+        public double SpecifiedDayDowntimesRatio => Parts.SpecifiedDowntimesRatio(ShiftType.Day);
         public double DayPartialSetup => Parts.PartialSetup(ShiftDate, ShiftDate, ShiftType.Day);
         public double NightPartialSetup => Parts.PartialSetup(ShiftDate, ShiftDate, ShiftType.Night);
         public double DayPartialSetupRatio => Parts.PartialSetupRatio(ShiftDate, ShiftDate, ShiftType.Day);
         public double NightPartialSetupRatio => Parts.PartialSetupRatio(ShiftDate, ShiftDate, ShiftType.Night);
 
-        public double SpecifiedNightDowntimesRatio => Parts.SpecifiedDowntimesRatio(ShiftDate, ShiftDate, ShiftType.Night);
+        public double SpecifiedNightDowntimesRatio => Parts.SpecifiedDowntimesRatio(ShiftType.Night);
         public double TotalWorkedDayTime => (int)ShiftType.Day - Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Day);
         public double TotalWorkedNightTime => (int)ShiftType.Night - Parts.UnspecifiedDowntimes(ShiftDate, ShiftDate, ShiftType.Night);
 

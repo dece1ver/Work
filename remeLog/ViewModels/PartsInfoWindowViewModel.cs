@@ -427,27 +427,27 @@ namespace remeLog.ViewModels
             AppSettings.Instance.MachiningReasons.ToDictionary(x => x.Reason, x => x.RequireComment);
 
         public double AverageSetupRatio =>
-            MachineFilters.Count(f => f.Filter) > 0
+            MachineFilters.Any(f => f.Filter)
             ? Parts.AverageSetupRatio()
             : double.NaN;
         public double AverageProductionRatio =>
-            MachineFilters.Count(f => f.Filter) > 0
+            MachineFilters.Any(f => f.Filter)
             ? Parts.AverageProductionRatio()
             : double.NaN;
         public double SetupTimeRatio =>
-            MachineFilters.Count(f => f.Filter) > 0
+            MachineFilters.Any(f => f.Filter)
             ? Parts.SetupRatio()
             : double.NaN;
         public double ProductionTimeRatio =>
-            MachineFilters.Count(f => f.Filter) > 0
+            MachineFilters.Any(f => f.Filter)
             ? Parts.ProductionRatio()
             : double.NaN;
         public double SpecifiedDowntimesRatio =>
-            MachineFilters.Count(f => f.Filter) > 0
-            ? Parts.SpecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter)
+            MachineFilters.Any(f => f.Filter)
+            ? Parts.SpecifiedDowntimesRatio(ShiftFilter)
             : double.NaN;
         public double UnspecifiedDowntimesRatio =>
-            MachineFilters.Count(f => f.Filter) > 0
+            MachineFilters.Any(f => f.Filter)
             ? Parts.UnspecifiedDowntimesRatio(FromDate, ToDate, ShiftFilter)
             : double.NaN;
 

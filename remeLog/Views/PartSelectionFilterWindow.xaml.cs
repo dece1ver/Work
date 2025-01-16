@@ -1,63 +1,69 @@
-﻿using remeLog.Infrastructure;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+﻿using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System.Windows;
+using System;
+using remeLog;
+using remeLog.Infrastructure;
+using libeLog.Extensions;
 
 namespace remeLog.Views
 {
-    /// <summary>
-    /// Логика взаимодействия для PartSelectionFilterWindow.xaml
-    /// </summary>
     public partial class PartSelectionFilterWindow : Window
     {
-        public static readonly DependencyProperty RunCountFilterProperty =
-    DependencyProperty.Register(
-        nameof(RunCountFilter),
-        typeof(string),
-        typeof(PartSelectionFilterWindow),
-        new PropertyMetadata(string.Empty, OnRunCountFilterChanged));
+        private static class Props
+        {
+            public static readonly DependencyProperty RunCountFilter = DependencyProperty.Register(
+                nameof(PartSelectionFilterWindow.RunCountFilter),
+                typeof(string),
+                typeof(PartSelectionFilterWindow),
+                new PropertyMetadata(string.Empty, OnRunCountFilterChanged));
 
-        public static readonly DependencyProperty IsInputValidProperty =
-    DependencyProperty.Register(
-        nameof(IsInputValid),
-        typeof(bool),
-        typeof(PartSelectionFilterWindow),
-        new PropertyMetadata(false));
-
-        public static readonly DependencyProperty AddSheetPerMachineProperty =
-            DependencyProperty.Register(
-                nameof(AddSheetPerMachine),
+            public static readonly DependencyProperty IsInputValid = DependencyProperty.Register(
+                nameof(PartSelectionFilterWindow.IsInputValid),
                 typeof(bool),
                 typeof(PartSelectionFilterWindow),
                 new PropertyMetadata(false));
 
+            public static readonly DependencyProperty AddSheetPerMachine = DependencyProperty.Register(
+                nameof(PartSelectionFilterWindow.AddSheetPerMachine),
+                typeof(bool),
+                typeof(PartSelectionFilterWindow),
+                new PropertyMetadata(false));
+
+            public static readonly DependencyProperty Status = DependencyProperty.Register(
+                nameof(PartSelectionFilterWindow.Status),
+                typeof(string),
+                typeof(PartSelectionFilterWindow),
+                new PropertyMetadata(string.Empty));
+        }
+
         public string RunCountFilter
         {
-            get => (string)GetValue(RunCountFilterProperty);
-            set => SetValue(RunCountFilterProperty, value);
+            get => (string)GetValue(Props.RunCountFilter);
+            set => SetValue(Props.RunCountFilter, value);
         }
 
         public bool IsInputValid
         {
-            get => (bool)GetValue(IsInputValidProperty);
-            private set => SetValue(IsInputValidProperty, value);
+            get => (bool)GetValue(Props.IsInputValid);
+            private set => SetValue(Props.IsInputValid, value);
         }
 
         public bool AddSheetPerMachine
         {
-            get => (bool)GetValue(AddSheetPerMachineProperty);
-            private set => SetValue(AddSheetPerMachineProperty, value);
+            get => (bool)GetValue(Props.AddSheetPerMachine);
+            private set => SetValue(Props.AddSheetPerMachine, value);
         }
+
+        public string Status
+        {
+            get => (string)GetValue(Props.Status);
+            private set => SetValue(Props.Status, value);
+        }
+
+        private readonly DebounceDispatcher _debouncer = new(TimeSpan.FromMilliseconds(300));
 
         public PartSelectionFilterWindow(string initialValue, bool addSheetPerMachine)
         {
@@ -65,48 +71,65 @@ namespace remeLog.Views
             DataContext = this;
             RunCountFilter = initialValue;
             AddSheetPerMachine = addSheetPerMachine;
+            ValidateInput();
         }
 
         private static void OnRunCountFilterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is PartSelectionFilterWindow dialog)
             {
-                dialog.ValidateInput();
+                dialog._debouncer.Debounce(() => dialog.ValidateInput());
             }
         }
+
         private void ValidateInput()
         {
             if (string.IsNullOrWhiteSpace(RunCountFilter))
             {
-                IsInputValid = true;
+                UpdateValidationStatus(true, "Будут выбраны все изготовления");
                 return;
             }
 
             if (Util.TryParseComparison(RunCountFilter, out var op, out var value))
             {
-                IsInputValid = value > 0;
+                UpdateValidationStatus(
+                    value > 0,
+                    value > 0 ? $"Выбрано: {Util.GetOperatorSymbol(op)} {value.FormattedLaunches(Util.ShouldUseGenitive(op))}" : string.Empty
+                );
                 return;
             }
 
-            IsInputValid = int.TryParse(RunCountFilter, out var simpleValue) && simpleValue > 0;
+            UpdateValidationStatus(
+                int.TryParse(RunCountFilter, out var simpleValue) && simpleValue > 0,
+                string.Empty
+            );
+        }
+
+        private void UpdateValidationStatus(bool isValid, string status)
+        {
+            IsInputValid = isValid;
+            Status = status;
         }
 
         private void RunCountTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            e.Handled = !int.TryParse(e.Text, out _);
+            // Разрешаем ввод операторов сравнения
+            e.Handled = !(int.TryParse(e.Text, out _) || IsComparisonOperator(e.Text));
         }
+
+        private static bool IsComparisonOperator(string text) =>
+            text is ">" or "<" or "=" or "≥" or "≤";
 
         private void OnPasteHandler(object sender, DataObjectPastingEventArgs e)
         {
-            if (e.DataObject.GetDataPresent(typeof(string)))
+            if (!e.DataObject.GetDataPresent(typeof(string)))
             {
-                string text = (string)e.DataObject.GetData(typeof(string));
-                if (!int.TryParse(text, out _))
-                {
-                    e.CancelCommand();
-                }
+                e.CancelCommand();
+                return;
             }
-            else
+
+            var text = (string)e.DataObject.GetData(typeof(string));
+            if (!text.All(c => char.IsDigit(c) || IsComparisonOperator(c.ToString())))
             {
                 e.CancelCommand();
             }
@@ -116,6 +139,33 @@ namespace remeLog.Views
         {
             DialogResult = true;
             Close();
+        }
+    }
+
+    // Вспомогательный класс для дебаунсинга
+    public class DebounceDispatcher
+    {
+        private readonly TimeSpan _interval;
+        private System.Threading.Timer? _timer;
+
+        public DebounceDispatcher(TimeSpan interval)
+        {
+            _interval = interval;
+        }
+
+        public void Debounce(Action action)
+        {
+            _timer?.Dispose();
+            _timer = new System.Threading.Timer(
+                _ =>
+                {
+                    App.Current.Dispatcher.Invoke(action);
+                    _timer?.Dispose();
+                },
+                null,
+                _interval,
+                Timeout.InfiniteTimeSpan
+            );
         }
     }
 }

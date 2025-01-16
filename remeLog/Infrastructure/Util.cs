@@ -8,8 +8,11 @@ using System.Collections.ObjectModel;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection.Metadata;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -132,6 +135,19 @@ namespace remeLog.Infrastructure
         }
 
         /// <summary>
+        /// Определяет, нужно ли использовать родительный падеж для оператора сравнения.
+        /// </summary>
+        /// <param name="op">Оператор сравнения.</param>
+        /// <returns>true для операторов, требующих родительного падежа (>, ≥, &lt;, ≤); 
+        /// false для операторов равенства (=, !=)</returns>
+        public static bool ShouldUseGenitive(string op) => op switch
+        {
+            ">" or ">=" or "<" or "<=" => true,
+            "=" or "!=" => false,
+            _ => false 
+        };
+
+        /// <summary>
         /// Пытается разобрать строку как оператор сравнения и значение.
         /// </summary>
         /// <param name="input">Строка для анализа (например, ">10").</param>
@@ -251,6 +267,76 @@ namespace remeLog.Infrastructure
                 return new ObservableCollection<Part>(mockParts); // Возвращаем результат
             });
         }
+
+        public static async Task<string> SearchInWindchill(string searchQuery)
+        {
+            using var handler = new HttpClientHandler { UseDefaultCredentials = true };
+            using var client = new HttpClient(handler);
+            
+
+            client.DefaultRequestHeaders.Add("Accept", "text/javascript, text/html, application/xml, text/xml, */*");
+            client.DefaultRequestHeaders.Add("X-Prototype-Version", "1.6.1");
+            client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");            
+
+            var parameters = new Dictionary<string, string>
+            {
+                ["null___keywordkeywordField_SearchTextBox___textbox"] = searchQuery,
+                ["WCTYPE|wt.epm.EPMDocument|local.areopag.DefaultEPMDocument"] = "on",
+                ["searchType"] = "WCTYPE|wt.epm.EPMDocument|local.areopag.DefaultEPMDocument",
+                ["all_contexts"] = "on",
+                ["pageCounter"] = "1",
+                ["maxPageCont"] = "100"
+            };
+
+            var content = new FormUrlEncodedContent(parameters);
+
+            var response = await client.PostAsync(
+                "http://kbserv.areopag.local/Windchill/ptc1/searchResultsComp",
+                content);
+
+            return await response.Content.ReadAsStringAsync();
+        
+        }
+
+        public static List<WncObject> ExtractWncObjects(string inputString, string searchTerm)
+        {
+            var objects = new List<WncObject>();
+            var server = "";
+            if (server.GetWncServer() != libeLog.Models.DbResult.Ok)
+            {
+                MessageBox.Show("Не удалось выполнить поиск в Windchill из-за ошибки");
+                return objects;
+            }
+
+            // Расширенный паттерн для захвата всех необходимых данных
+            var pattern = @"""number"":\s*{[^}]*""label"":\s*""([^""]+)""[^}]*}.*?""name"":\s*""([^""]+)"".*?ContainerOid=([^&]+)&amp;oid=([^&]+)&amp;u8=(\d+)";
+            var regex = new Regex(pattern, RegexOptions.Singleline);
+
+            var matches = regex.Matches(inputString);
+
+            foreach (Match match in matches)
+            {
+                var partNumber = match.Groups[1].Value;
+                var partName = match.Groups[2].Value;
+
+                if (partNumber.Contains(searchTerm) || partName.Contains(searchTerm))
+                {
+                    var containerOid = match.Groups[3].Value;
+                    var oid = match.Groups[4].Value;
+                    var u8 = match.Groups[5].Value;
+
+                    // Заменяем &amp; на &
+                    containerOid = containerOid.Replace("&amp;", "&");
+                    oid = oid.Replace("&amp;", "&");
+
+                    var link = $"{server}/Windchill/app/#ptc1/tcomp/infoPage?ContainerOid={containerOid}&oid={oid}&u8={u8}";
+
+                    objects.Add(new WncObject(partName, partNumber, link));
+                }
+            }
+            return objects;
+        }
+
 
         /// <summary>
         /// Настраивает лицензию Syncfusion, используя переменную окружения или данные из базы данных.

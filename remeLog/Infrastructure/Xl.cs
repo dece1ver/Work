@@ -19,6 +19,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using Part = remeLog.Models.Part;
+using CM = remeLog.Infrastructure.ColumnManager;
 
 namespace remeLog.Infrastructure
 {
@@ -82,6 +83,7 @@ namespace remeLog.Infrastructure
             Both
         }
 
+
         /// <summary>
         /// Отчёт за период
         /// </summary>
@@ -95,10 +97,8 @@ namespace remeLog.Infrastructure
             progress?.Report("Начало экспорта...");
             underOverBorder ??= 10;
 
-            string comparisonOperator = ">=";
-            int comparisonValue = 0;
 
-            var runCountCondition = Util.TryParseComparison(runCountFilter, out comparisonOperator, out comparisonValue)
+            var runCountCondition = Util.TryParseComparison(runCountFilter, out var comparisonOperator, out var comparisonValue)
                 ? Util.CreateComparisonFunc(comparisonOperator, comparisonValue)
                 : (count => count >= comparisonValue);
 
@@ -118,45 +118,45 @@ namespace remeLog.Infrastructure
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet("Отчет за период");
             ws.Style.Font.FontSize = 12;
-            var cm = new ColumnManager.Builder()
-                .Add(ColumnManager.Machine)
-                .Add(ColumnManager.WorkedShifts)
-                .Add(ColumnManager.NoOperatorShifts)
-                .Add(ColumnManager.HardwareRepairShifts)
-                .Add(ColumnManager.NoPowerShifts)
-                .Add(ColumnManager.ProcessRelatedLossShifts)
-                .Add(ColumnManager.UnspecifiedOtherShifts)
-                .Add(ColumnManager.SetupRatio)
-                .Add(ColumnManager.ProductionRatio)
-                .Add(ColumnManager.SetupRatioUnder)
-                .Add(ColumnManager.ProductionRatioUnder)
-                .Add(ColumnManager.SetupRatioOver)
-                .Add(ColumnManager.ProductionRatioOver)
-                .Add(ColumnManager.SetupUnderOverRatio)
-                .Add(ColumnManager.ProductionUnderOverRatio)
-                .Add(ColumnManager.SetupToTotalRatio)
-                .Add(ColumnManager.ProductionToTotalRatio)
-                .Add(ColumnManager.ProductionEfficiencyToTotalRatio)
-                .Add(ColumnManager.AverageSetupTime)
-                .Add(ColumnManager.TotalSetupTime)
-                .Add(ColumnManager.TotalProductionTime)
-                .Add(ColumnManager.TotalDowntimesTime)
-                .Add(ColumnManager.TotalTime)
-                .Add(ColumnManager.AverageFinishedCount)
-                .Add(ColumnManager.AveragePartsCount)
-                .Add(ColumnManager.SmallProductionsRatio)
-                .Add(ColumnManager.SmallSeriesRatio)
-                .Add(ColumnManager.AverageReplacementTime)
-                .Add(ColumnManager.SpecifiedDowntimes)
-                .Add(ColumnManager.MaintenanceTime)
-                .Add(ColumnManager.ToolSearchingTime)
-                .Add(ColumnManager.ToolChangingTime)
-                .Add(ColumnManager.MentoringTime)
-                .Add(ColumnManager.ContactingDepartmentsTime)
-                .Add(ColumnManager.FixtureMakingTime)
-                .Add(ColumnManager.HardwareFailureTime)
-                .Add(ColumnManager.UnspecifiedDowntimes)
-                .Add(ColumnManager.CountPerMachine)
+            var cm = new CM.Builder()
+                .Add(CM.Machine)
+                .Add(CM.WorkedShifts)
+                .Add(CM.NoOperatorShifts)
+                .Add(CM.HardwareRepairShifts)
+                .Add(CM.NoPowerShifts)
+                .Add(CM.ProcessRelatedLossShifts)
+                .Add(CM.UnspecifiedOtherShifts)
+                .Add(CM.SetupRatio)
+                .Add(CM.ProductionRatio)
+                .Add(CM.SetupRatioUnder)
+                .Add(CM.ProductionRatioUnder)
+                .Add(CM.SetupRatioOver)
+                .Add(CM.ProductionRatioOver)
+                .Add(CM.SetupUnderOverRatio)
+                .Add(CM.ProductionUnderOverRatio)
+                .Add(CM.SetupToTotalRatio)
+                .Add(CM.ProductionToTotalRatio)
+                .Add(CM.ProductionEfficiencyToTotalRatio)
+                .Add(CM.AverageSetupTime)
+                .Add(CM.TotalSetupTime)
+                .Add(CM.TotalProductionTime)
+                .Add(CM.TotalDowntimesTime)
+                .Add(CM.TotalTime)
+                .Add(CM.AverageFinishedCount)
+                .Add(CM.AveragePartsCount)
+                .Add(CM.SmallProductionsRatio)
+                .Add(CM.SmallSeriesRatio)
+                .Add(CM.AverageReplacementTime)
+                .Add(CM.SpecifiedDowntimes)
+                .Add(CM.MaintenanceTime)
+                .Add(CM.ToolSearchingTime)
+                .Add(CM.ToolChangingTime)
+                .Add(CM.MentoringTime)
+                .Add(CM.ContactingDepartmentsTime)
+                .Add(CM.FixtureMakingTime)
+                .Add(CM.HardwareFailureTime)
+                .Add(CM.UnspecifiedDowntimes)
+                .Add(CM.CountPerMachine)
                 .Build();
             var headerRow = 2;
             var ci = cm.GetIndexes();
@@ -166,6 +166,18 @@ namespace remeLog.Infrastructure
             var row = 3;
             var firstDataRow = row;
             progress?.Report("Подготовка данных...");
+            var totalUnique = parts
+                .Select(p => new
+                {
+                    Part = p,
+                    NormalizedName = NormalizePartName(p.PartName)
+                })
+                .GroupBy(x => x.NormalizedName)
+                .Where(group => runCountFilter == null ||
+                       runCountCondition(group.Select(x => x.Part.Order).Distinct().Count()))
+                .Select(group => group.First().Part)
+                .ToList();
+
             var filteredParts = parts
                 .Where(p => !p.ExcludeFromReports)
                 .GroupBy(p => p.Machine)
@@ -177,82 +189,85 @@ namespace remeLog.Infrastructure
                         .SelectMany(partGroup => partGroup))
                 .OrderBy(p => p.Machine);
             progress?.Report("Формирование общего листа...");
+            var totalFinished = filteredParts.DistinctBy(p => p.Order).Sum(p => p.TotalCount);
+            var uniqueParts = filteredParts.DistinctBy(p => p.PartName).ToList();
+
             foreach (var partGroup in filteredParts.GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
             {
                 parts = partGroup.OrderBy(p => p.StartSetupTime).ToList();
                 totalWorkedMinutes = parts.FullWorkedTime().TotalMinutes;
-                ws.Cell(row, ci[ColumnManager.Machine]).Value = partGroup.Key;
-                ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s is not ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
-                ws.Cell(row, ci[ColumnManager.NoOperatorShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие оператора" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, ci[ColumnManager.HardwareRepairShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Ремонт оборудования" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, ci[ColumnManager.NoPowerShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие электричества" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, ci[ColumnManager.ProcessRelatedLossShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
-                ws.Cell(row, ci[ColumnManager.UnspecifiedOtherShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
-                ws.Cell(row, ci[ColumnManager.SetupRatio]).Value = parts.AverageSetupRatio();
-                ws.Cell(row, ci[ColumnManager.ProductionRatio]).Value = parts.ProductionRatio();
+                ws.Cell(row, ci[CM.Machine]).Value = partGroup.Key;
+                ws.Cell(row, ci[CM.WorkedShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s is not ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
+                ws.Cell(row, ci[CM.NoOperatorShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие оператора" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[CM.HardwareRepairShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Ремонт оборудования" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[CM.NoPowerShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие электричества" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[CM.ProcessRelatedLossShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
+                ws.Cell(row, ci[CM.UnspecifiedOtherShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
+                ws.Cell(row, ci[CM.SetupRatio]).Value = parts.AverageSetupRatio();
+                ws.Cell(row, ci[CM.ProductionRatio]).Value = parts.ProductionRatio();
                 var setupUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).AverageSetupRatio();
-                ws.Cell(row, ci[ColumnManager.SetupRatioUnder]).Value = setupUnderRatio;
+                ws.Cell(row, ci[CM.SetupRatioUnder]).Value = setupUnderRatio;
                 var productionUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).ProductionRatio();
-                ws.Cell(row, ci[ColumnManager.ProductionRatioUnder]).Value = productionUnderRatio;
+                ws.Cell(row, ci[CM.ProductionRatioUnder]).Value = productionUnderRatio;
                 var setupOverRatio = parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageSetupRatio();
-                ws.Cell(row, ci[ColumnManager.SetupRatioOver]).Value = setupOverRatio;
+                ws.Cell(row, ci[CM.SetupRatioOver]).Value = setupOverRatio;
                 var productionOverRatio = parts.Where(p => p.FinishedCountFact >= underOverBorder).ProductionRatio();
-                ws.Cell(row, ci[ColumnManager.ProductionRatioOver]).Value = productionOverRatio;
-                ws.Cell(row, ci[ColumnManager.SetupUnderOverRatio]).Value = setupUnderRatio == 0 ? 0 : setupOverRatio / setupUnderRatio;
-                ws.Cell(row, ci[ColumnManager.ProductionUnderOverRatio]).Value = productionUnderRatio == 0 ? 0 : productionOverRatio / productionUnderRatio;
+                ws.Cell(row, ci[CM.ProductionRatioOver]).Value = productionOverRatio;
+                ws.Cell(row, ci[CM.SetupUnderOverRatio]).Value = setupUnderRatio == 0 ? 0 : setupOverRatio / setupUnderRatio;
+                ws.Cell(row, ci[CM.ProductionUnderOverRatio]).Value = productionUnderRatio == 0 ? 0 : productionOverRatio / productionUnderRatio;
                 var setupTimeFactSum = parts.Sum(p => p.SetupTimeFact);
                 var prodTimeFactSum = parts.Sum(p => p.ProductionTimeFact);
-                ws.Cell(row, ci[ColumnManager.SetupToTotalRatio]).Value = 1 - prodTimeFactSum / totalWorkedMinutes - parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
-                ws.Cell(row, ci[ColumnManager.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
+                ws.Cell(row, ci[CM.SetupToTotalRatio]).Value = 1 - prodTimeFactSum / totalWorkedMinutes - parts.SpecifiedDowntimesRatio(ShiftType.All);
+                ws.Cell(row, ci[CM.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
                 var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
-                ws.Cell(row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
+                ws.Cell(row, ci[CM.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
 
-                ws.Cell(row, ci[ColumnManager.AverageSetupTime]).SetValue(parts.AverageSetupTime().TotalHours);
-                ws.Cell(row, ci[ColumnManager.TotalSetupTime]).SetValue(parts.TotalSetupTime().TotalHours);
-                ws.Cell(row, ci[ColumnManager.TotalProductionTime]).SetValue(parts.TotalProductionTime().TotalHours);
-                ws.Cell(row, ci[ColumnManager.TotalDowntimesTime]).SetValue(parts.TotalDowntimesTime().TotalHours);
-                ws.Cell(row, ci[ColumnManager.TotalTime]).SetValue(totalWorkedMinutes / 60);
+                ws.Cell(row, ci[CM.AverageSetupTime]).SetValue(parts.AverageSetupTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalSetupTime]).SetValue(parts.TotalSetupTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalProductionTime]).SetValue(parts.TotalProductionTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalDowntimesTime]).SetValue(parts.TotalDowntimesTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalTime]).SetValue(totalWorkedMinutes / 60);
 
-                var uniqueParts = parts.GroupBy(p => new { p.PartName, p.Order }).Select(g => g.First()).ToList();
+                var uniquePartsPerMachine = parts.DistinctBy(p => p.PartName).ToList();
 
                 var averageFinishedCount = parts.Where(p => p.FinishedCount > 0).Average(p => p.FinishedCountFact);
-                var averagePartsCount = uniqueParts.Average(p => p.TotalCount);
+                var averagePartsCount = uniquePartsPerMachine.Average(p => p.TotalCount);
                 var smallProductionsRatio = (double)parts.Count(p => p.FinishedCount <= underOverBorder && p.FinishedCount > 0) / parts.Count;
-                var smallSeriesRatio = (double)uniqueParts.Count(p => p.TotalCount <= underOverBorder) / uniqueParts.Count;
+                var smallSeriesRatio = (double)uniquePartsPerMachine.Count(p => p.TotalCount <= underOverBorder) / uniquePartsPerMachine.Count;
 
-                ws.Cell(row, ci[ColumnManager.AverageFinishedCount])
+                ws.Cell(row, ci[CM.AverageFinishedCount])
                     .SetValue(averageFinishedCount)
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
 
-                ws.Cell(row, ci[ColumnManager.AveragePartsCount])
+                ws.Cell(row, ci[CM.AveragePartsCount])
                     .SetValue(averagePartsCount)
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
 
-                ws.Cell(row, ci[ColumnManager.SmallProductionsRatio])
+                ws.Cell(row, ci[CM.SmallProductionsRatio])
                     .SetValue(smallProductionsRatio)
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                ws.Cell(row, ci[ColumnManager.SmallSeriesRatio])
+                ws.Cell(row, ci[CM.SmallSeriesRatio])
                     .SetValue(smallSeriesRatio)
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                ws.Range(row, ci[ColumnManager.SetupRatio], row, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Range(row, ci[CM.SetupRatio], row, ci[CM.ProductionEfficiencyToTotalRatio]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                ws.Cell(row, ci[ColumnManager.AverageReplacementTime])
+                ws.Cell(row, ci[CM.AverageReplacementTime])
                     .SetValue(parts.Where(p => p.FinishedCountFact >= underOverBorder).AverageReplacementTimeRatio())
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
 
-                ws.Cell(row, ci[ColumnManager.SpecifiedDowntimes]).Value = parts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
-                ws.Cell(row, ci[ColumnManager.MaintenanceTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Maintenance);
-                ws.Cell(row, ci[ColumnManager.ToolSearchingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolSearching);
-                ws.Cell(row, ci[ColumnManager.ToolChangingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolChanging);
-                ws.Cell(row, ci[ColumnManager.MentoringTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Mentoring);
-                ws.Cell(row, ci[ColumnManager.ContactingDepartmentsTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ContactingDepartments);
-                ws.Cell(row, ci[ColumnManager.FixtureMakingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.FixtureMaking);
-                ws.Cell(row, ci[ColumnManager.HardwareFailureTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.HardwareFailure);
-                ws.Cell(row, ci[ColumnManager.UnspecifiedDowntimes]).Value = parts.UnspecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
-                ws.Cell(row, ci[ColumnManager.CountPerMachine]).Value = parts.Count;
-                ws.Range(row, ci[ColumnManager.SpecifiedDowntimes], row, ci[ColumnManager.SpecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, ci[CM.SpecifiedDowntimes]).Value = parts.SpecifiedDowntimesRatio(ShiftType.All);
+                ws.Cell(row, ci[CM.MaintenanceTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Maintenance);
+                ws.Cell(row, ci[CM.ToolSearchingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolSearching);
+                ws.Cell(row, ci[CM.ToolChangingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ToolChanging);
+                ws.Cell(row, ci[CM.MentoringTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Mentoring);
+                ws.Cell(row, ci[CM.ContactingDepartmentsTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.ContactingDepartments);
+                ws.Cell(row, ci[CM.FixtureMakingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.FixtureMaking);
+                ws.Cell(row, ci[CM.HardwareFailureTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.HardwareFailure);
+                ws.Cell(row, ci[CM.UnspecifiedDowntimes]).Value = parts.UnspecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
+                ws.Cell(row, ci[CM.CountPerMachine]).Value = parts.Count;
+                ws.Range(row, ci[CM.SpecifiedDowntimes], row, ci[CM.SpecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
                 row++;
             }
@@ -263,20 +278,20 @@ namespace remeLog.Infrastructure
             dataRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
 
-            ws.Range(headerRow, ci[ColumnManager.Machine], lastDataRow, ci[ColumnManager.Machine]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[ColumnManager.SetupRatio], lastDataRow, ci[ColumnManager.ProductionRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[ColumnManager.SetupRatio], lastDataRow, ci[ColumnManager.ProductionRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.8);
-            ws.Range(headerRow, ci[ColumnManager.SetupRatioUnder], lastDataRow, ci[ColumnManager.ProductionRatioUnder]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent2, 0.8);
-            ws.Range(headerRow, ci[ColumnManager.SetupRatioOver], lastDataRow, ci[ColumnManager.ProductionRatioOver]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[ColumnManager.SetupRatioOver], lastDataRow, ci[ColumnManager.ProductionRatioOver]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent3, 0.8);
-            ws.Range(headerRow, ci[ColumnManager.SetupUnderOverRatio], lastDataRow, ci[ColumnManager.ProductionUnderOverRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent4, 0.8);
-            ws.Range(headerRow, ci[ColumnManager.SetupToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[ColumnManager.SetupToTotalRatio], lastDataRow, ci[ColumnManager.ProductionEfficiencyToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
-            ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent6, 0.8);
-            ws.Range(headerRow, ci[ColumnManager.SpecifiedDowntimes], lastDataRow, ci[ColumnManager.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-            ws.Range(firstDataRow, ci[ColumnManager.WorkedShifts], lastDataRow, ci[ColumnManager.WorkedShifts]).Style.Font.FontColor = XLColor.Red;
-            ws.Range(firstDataRow, ci[ColumnManager.WorkedShifts], lastDataRow, ci[ColumnManager.WorkedShifts]).AddConditionalFormat().WhenEquals($"=$B${lastDataRow + 2}").Font.FontColor = XLColor.Green;
+            ws.Range(headerRow, ci[CM.Machine], lastDataRow, ci[CM.Machine]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.8);
+            ws.Range(headerRow, ci[CM.SetupRatioUnder], lastDataRow, ci[CM.ProductionRatioUnder]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent2, 0.8);
+            ws.Range(headerRow, ci[CM.SetupRatioOver], lastDataRow, ci[CM.ProductionRatioOver]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SetupRatioOver], lastDataRow, ci[CM.ProductionRatioOver]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent3, 0.8);
+            ws.Range(headerRow, ci[CM.SetupUnderOverRatio], lastDataRow, ci[CM.ProductionUnderOverRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent4, 0.8);
+            ws.Range(headerRow, ci[CM.SetupToTotalRatio], lastDataRow, ci[CM.ProductionEfficiencyToTotalRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SetupToTotalRatio], lastDataRow, ci[CM.ProductionEfficiencyToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
+            ws.Range(headerRow, ci[CM.SpecifiedDowntimes], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SpecifiedDowntimes], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent6, 0.8);
+            ws.Range(headerRow, ci[CM.SpecifiedDowntimes], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+            ws.Range(firstDataRow, ci[CM.WorkedShifts], lastDataRow, ci[CM.WorkedShifts]).Style.Font.FontColor = XLColor.Red;
+            ws.Range(firstDataRow, ci[CM.WorkedShifts], lastDataRow, ci[CM.WorkedShifts]).AddConditionalFormat().WhenEquals($"=$B${lastDataRow + 2}").Font.FontColor = XLColor.Green;
             dataRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             dataRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             dataRange.SetAutoFilter(true);
@@ -301,88 +316,88 @@ namespace remeLog.Infrastructure
             ws.Range(1, 1, 1, 1).Style.Font.FontSize = 16;
             ws.Columns(2, cm.Count).Width = 8;
 
-            ws.Cell(row, ci[ColumnManager.Machine]).Value = "Итог:";
-            ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-            ws.Range(row, ci[ColumnManager.Machine], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Range(row, ci[ColumnManager.NoOperatorShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            for (int col = ci[ColumnManager.WorkedShifts]; col <= ci[ColumnManager.UnspecifiedOtherShifts]; col++)
+            ws.Cell(row, ci[CM.Machine]).Value = "Итог:";
+            ws.Cell(row, ci[CM.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            ws.Range(row, ci[CM.Machine], row, ci[CM.UnspecifiedOtherShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Range(row, ci[CM.NoOperatorShifts], row, ci[CM.UnspecifiedOtherShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            for (int col = ci[CM.WorkedShifts]; col <= ci[CM.UnspecifiedOtherShifts]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
                 ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})/$B${lastDataRow + 2}";
             } 
-            for (int col = ci[ColumnManager.SetupRatio]; col <= ci[ColumnManager.AverageSetupTime]; col++)
+            for (int col = ci[CM.SetupRatio]; col <= ci[CM.AverageSetupTime]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
                 ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
-            for (int col = ci[ColumnManager.TotalSetupTime]; col <= ci[ColumnManager.TotalTime]; col++)
+            for (int col = ci[CM.TotalSetupTime]; col <= ci[CM.TotalTime]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
                 ws.Cell(row, col).FormulaA1 = $"SUM({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
-            for (int col = ci[ColumnManager.SpecifiedDowntimes]; col <= ci[ColumnManager.UnspecifiedDowntimes]; col++)
+            for (int col = ci[CM.SpecifiedDowntimes]; col <= ci[CM.UnspecifiedDowntimes]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
                 ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
-            ws.Range(row, ci[ColumnManager.WorkedShifts], row, ci[ColumnManager.UnspecifiedOtherShifts]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
-            ws.Range(row, ci[ColumnManager.SetupRatio], row, ci[ColumnManager.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-            ws.Range(firstDataRow, ci[ColumnManager.AverageSetupTime], row, ci[ColumnManager.TotalTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+            ws.Range(row, ci[CM.WorkedShifts], row, ci[CM.UnspecifiedOtherShifts]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
+            ws.Range(row, ci[CM.SetupRatio], row, ci[CM.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+            ws.Range(firstDataRow, ci[CM.AverageSetupTime], row, ci[CM.TotalTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
 
-            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             row++;
-            ws.Cell(row, ci[ColumnManager.Machine]).Value = "Рабочих смен:";
-            ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-            ws.Cell(row, ci[ColumnManager.Machine]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Value = shift.Type == ShiftType.All ? totalDays * 2 : totalDays;
-            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, ci[ColumnManager.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Cell(row, ci[CM.Machine]).Value = "Рабочих смен:";
+            ws.Cell(row, ci[CM.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            ws.Cell(row, ci[CM.Machine]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Cell(row, ci[CM.WorkedShifts]).Value = shift.Type == ShiftType.All ? totalDays * 2 : totalDays;
+            ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            ws.Columns(ci[ColumnManager.SetupUnderOverRatio], ci[ColumnManager.ProductionUnderOverRatio]).Hide();
+            ws.Columns(ci[CM.SetupUnderOverRatio], ci[CM.ProductionUnderOverRatio]).Hide();
 
             var partsByMachine = filteredParts.GroupBy(p => p.Machine).ToDictionary(g => g.Key, g => g.ToList());
 
-            var mcm = new ColumnManager.Builder()
-                        .Add(ColumnManager.Date)
-                        .Add(ColumnManager.Shift)
-                        .Add(ColumnManager.Operator)
-                        .Add(ColumnManager.Part)
-                        .Add(ColumnManager.Order)
-                        .Add(ColumnManager.TotalByOrder)
-                        .Add(ColumnManager.Finished)
-                        .Add(ColumnManager.Setup)
-                        .Add(ColumnManager.StartSetupTime)
-                        .Add(ColumnManager.StartMachiningTime)
-                        .Add(ColumnManager.EndMachiningTime)
-                        .Add(ColumnManager.SetupTimePlan)
-                        .Add(ColumnManager.SetupTimeFact)
-                        .Add(ColumnManager.SingleProductionTimePlan)
-                        .Add(ColumnManager.MachiningTime)
-                        .Add(ColumnManager.SingleProductionTime)
-                        .Add(ColumnManager.PartReplacementTime)
-                        .Add(ColumnManager.ProductionTimeFact)
-                        .Add(ColumnManager.PlanForBatch)
-                        .Add(ColumnManager.OperatorComment)
-                        .Add(ColumnManager.SetupDowntimes)
-                        .Add(ColumnManager.MachiningDowntimes)
-                        .Add(ColumnManager.PartialSetupTime)
-                        .Add(ColumnManager.MaintenanceTime)
-                        .Add(ColumnManager.ToolSearchingTime)
-                        .Add(ColumnManager.MentoringTime)
-                        .Add(ColumnManager.ContactingDepartmentsTime)
-                        .Add(ColumnManager.FixtureMakingTime)
-                        .Add(ColumnManager.HardwareFailureTime)
-                        .Add(ColumnManager.SpecifiedDowntimesRatio)
-                        .Add(ColumnManager.SpecifiedDowntimesComment)
-                        .Add(ColumnManager.SetupRatioTitle)
-                        .Add(ColumnManager.MasterSetupComment)
-                        .Add(ColumnManager.ProductionRatioTitle)
-                        .Add(ColumnManager.MasterProductionComment)
-                        .Add(ColumnManager.MasterComment)
-                        .Add(ColumnManager.FixedSetupTimePlan)
-                        .Add(ColumnManager.FixedProductionTimePlan)
-                        .Add(ColumnManager.EngineerComment)
+            var mcm = new CM.Builder()
+                        .Add(CM.Date)
+                        .Add(CM.Shift)
+                        .Add(CM.Operator)
+                        .Add(CM.Part)
+                        .Add(CM.Order)
+                        .Add(CM.TotalByOrder)
+                        .Add(CM.Finished)
+                        .Add(CM.Setup)
+                        .Add(CM.StartSetupTime)
+                        .Add(CM.StartMachiningTime)
+                        .Add(CM.EndMachiningTime)
+                        .Add(CM.SetupTimePlan)
+                        .Add(CM.SetupTimeFact)
+                        .Add(CM.SingleProductionTimePlan)
+                        .Add(CM.MachiningTime)
+                        .Add(CM.SingleProductionTime)
+                        .Add(CM.PartReplacementTime)
+                        .Add(CM.ProductionTimeFact)
+                        .Add(CM.PlanForBatch)
+                        .Add(CM.OperatorComment)
+                        .Add(CM.SetupDowntimes)
+                        .Add(CM.MachiningDowntimes)
+                        .Add(CM.PartialSetupTime)
+                        .Add(CM.MaintenanceTime)
+                        .Add(CM.ToolSearchingTime)
+                        .Add(CM.MentoringTime)
+                        .Add(CM.ContactingDepartmentsTime)
+                        .Add(CM.FixtureMakingTime)
+                        .Add(CM.HardwareFailureTime)
+                        .Add(CM.SpecifiedDowntimesRatio)
+                        .Add(CM.SpecifiedDowntimesComment)
+                        .Add(CM.SetupRatioTitle)
+                        .Add(CM.MasterSetupComment)
+                        .Add(CM.ProductionRatioTitle)
+                        .Add(CM.MasterProductionComment)
+                        .Add(CM.MasterComment)
+                        .Add(CM.FixedSetupTimePlan)
+                        .Add(CM.FixedProductionTimePlan)
+                        .Add(CM.EngineerComment)
                         .Build();
             if (addSheetPerMachine)
             {
@@ -391,6 +406,40 @@ namespace remeLog.Infrastructure
                     progress?.Report($"Формирование листа по станку {machine}...");
                     ConfigureMachineSheetForPeriod(wb, partsByMachine[machine], machine, mcm);
                 }
+
+                var tcm = new CM
+                    .Builder()
+                    .Add(CM.Part)
+                    .Add(CM.Order)
+                    .Build();
+
+                var wst = wb.AddWorksheet("Общий список");
+                ConfigureWorksheetHeader(wst, tcm);
+                wst.Style.Font.FontSize = 10;
+                wst.Style.Alignment.WrapText = true;
+                wst.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                wst.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                ci = tcm.GetIndexes();
+                int rowt = 3;
+                progress?.Report($"Формирование общего списка номенклатуры...");
+                foreach (var part in totalUnique)
+                {
+                    wst.Cell(rowt, ci[CM.Part]).SetValue(part.PartName);
+                    wst.Cell(rowt, ci[CM.Order]).SetValue(part.Order);
+                    rowt++;
+                }
+                wst.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                wst.Columns().AdjustToContents();
+
+
+                wst.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                wst.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+                wst.RangeUsed().Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                wst.RangeUsed().SetAutoFilter(true);
+                wst.Columns().AdjustToContents();
+                wst.Row(1).Delete();
+                wst.SheetView.FreezeRows(1);
+
             }
             progress?.Report("Формирование завершено, сохранение файла...");
             wb.SaveAs(path);
@@ -401,9 +450,10 @@ namespace remeLog.Infrastructure
             return $"Файл сохранен в \"{path}\"";
         }
 
-        
+        private static string NormalizePartName(string name) =>
+            name.ToLower().Replace("\"", "");
 
-        private static void ConfigureMachineSheetForPeriod(XLWorkbook wb, IEnumerable<Part> parts, string machine, ColumnManager cm)
+        private static void ConfigureMachineSheetForPeriod(XLWorkbook wb, IEnumerable<Part> parts, string machine, CM cm)
         {
             var ws = wb.AddWorksheet(machine);
             ConfigureWorksheetHeader(ws, cm);
@@ -416,64 +466,64 @@ namespace remeLog.Infrastructure
 
             foreach (var part in parts.Where(p => p.Machine == machine))
             {
-                ws.Cell(row, ci[ColumnManager.Date])
+                ws.Cell(row, ci[CM.Date])
                     .SetValue(part.ShiftDate)
                     .Style.DateFormat.Format = "dd.MM.yy";
-                ws.Cell(row, ci[ColumnManager.Shift]).SetValue(part.Shift);
-                ws.Cell(row, ci[ColumnManager.Operator]).SetValue(part.Operator);
-                ws.Cell(row, ci[ColumnManager.Part]).SetValue(part.PartName);
-                ws.Cell(row, ci[ColumnManager.Order]).SetValue(part.Order);
-                ws.Cell(row, ci[ColumnManager.TotalByOrder]).SetValue(part.TotalCount);
-                ws.Cell(row, ci[ColumnManager.Finished]).SetValue(part.FinishedCount);
-                ws.Cell(row, ci[ColumnManager.Setup]).SetValue(part.Setup);
-                ws.Cell(row, ci[ColumnManager.StartSetupTime])
+                ws.Cell(row, ci[CM.Shift]).SetValue(part.Shift);
+                ws.Cell(row, ci[CM.Operator]).SetValue(part.Operator);
+                ws.Cell(row, ci[CM.Part]).SetValue(part.PartName);
+                ws.Cell(row, ci[CM.Order]).SetValue(part.Order);
+                ws.Cell(row, ci[CM.TotalByOrder]).SetValue(part.TotalCount);
+                ws.Cell(row, ci[CM.Finished]).SetValue(part.FinishedCount);
+                ws.Cell(row, ci[CM.Setup]).SetValue(part.Setup);
+                ws.Cell(row, ci[CM.StartSetupTime])
                     .SetValue(part.StartSetupTime)
                     .Style.DateFormat.Format = "HH:mm";
-                ws.Cell(row, ci[ColumnManager.StartMachiningTime])
+                ws.Cell(row, ci[CM.StartMachiningTime])
                     .SetValue(part.StartMachiningTime)
                     .Style.DateFormat.Format = "HH:mm";
-                ws.Cell(row, ci[ColumnManager.EndMachiningTime])
+                ws.Cell(row, ci[CM.EndMachiningTime])
                     .SetValue(part.EndMachiningTime)
                     .Style.DateFormat.Format = "HH:mm";
-                ws.Cell(row, ci[ColumnManager.SetupTimePlan]).SetValue(part.SetupTimePlan);
-                ws.Cell(row, ci[ColumnManager.SetupTimeFact]).SetValue(part.SetupTimeFact);
-                ws.Cell(row, ci[ColumnManager.SingleProductionTimePlan]).SetValue(part.SingleProductionTimePlan);
-                ws.Cell(row, ci[ColumnManager.MachiningTime]).SetValue(part.MachiningTime);
+                ws.Cell(row, ci[CM.SetupTimePlan]).SetValue(part.SetupTimePlan);
+                ws.Cell(row, ci[CM.SetupTimeFact]).SetValue(part.SetupTimeFact);
+                ws.Cell(row, ci[CM.SingleProductionTimePlan]).SetValue(part.SingleProductionTimePlan);
+                ws.Cell(row, ci[CM.MachiningTime]).SetValue(part.MachiningTime);
                 if (part.SingleProductionTime is double spt && spt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.SingleProductionTime])
+                    ws.Cell(row, ci[CM.SingleProductionTime])
                         .SetValue(spt)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
                 if (part.PartReplacementTime is double prt && prt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.PartReplacementTime])
+                    ws.Cell(row, ci[CM.PartReplacementTime])
                         .SetValue(prt)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-                ws.Cell(row, ci[ColumnManager.ProductionTimeFact]).SetValue(part.ProductionTimeFact);
-                ws.Cell(row, ci[ColumnManager.PlanForBatch]).SetValue(part.PlanForBatch);
-                ws.Cell(row, ci[ColumnManager.OperatorComment])
+                ws.Cell(row, ci[CM.ProductionTimeFact]).SetValue(part.ProductionTimeFact);
+                ws.Cell(row, ci[CM.PlanForBatch]).SetValue(part.PlanForBatch);
+                ws.Cell(row, ci[CM.OperatorComment])
                     .SetValue(part.OperatorComment)
                     .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                ws.Cell(row, ci[ColumnManager.SetupDowntimes]).SetValue(part.SetupDowntimes);
-                ws.Cell(row, ci[ColumnManager.MachiningDowntimes]).SetValue(part.MachiningDowntimes);
-                ws.Cell(row, ci[ColumnManager.PartialSetupTime]).SetValue(part.PartialSetupTime);
-                ws.Cell(row, ci[ColumnManager.MaintenanceTime]).SetValue(part.MaintenanceTime);
-                ws.Cell(row, ci[ColumnManager.ToolSearchingTime]).SetValue(part.ToolSearchingTime);
-                ws.Cell(row, ci[ColumnManager.MentoringTime]).SetValue(part.MentoringTime);
-                ws.Cell(row, ci[ColumnManager.ContactingDepartmentsTime]).SetValue(part.ContactingDepartmentsTime);
-                ws.Cell(row, ci[ColumnManager.FixtureMakingTime]).SetValue(part.FixtureMakingTime);
-                ws.Cell(row, ci[ColumnManager.HardwareFailureTime]).SetValue(part.HardwareFailureTime);
+                ws.Cell(row, ci[CM.SetupDowntimes]).SetValue(part.SetupDowntimes);
+                ws.Cell(row, ci[CM.MachiningDowntimes]).SetValue(part.MachiningDowntimes);
+                ws.Cell(row, ci[CM.PartialSetupTime]).SetValue(part.PartialSetupTime);
+                ws.Cell(row, ci[CM.MaintenanceTime]).SetValue(part.MaintenanceTime);
+                ws.Cell(row, ci[CM.ToolSearchingTime]).SetValue(part.ToolSearchingTime);
+                ws.Cell(row, ci[CM.MentoringTime]).SetValue(part.MentoringTime);
+                ws.Cell(row, ci[CM.ContactingDepartmentsTime]).SetValue(part.ContactingDepartmentsTime);
+                ws.Cell(row, ci[CM.FixtureMakingTime]).SetValue(part.FixtureMakingTime);
+                ws.Cell(row, ci[CM.HardwareFailureTime]).SetValue(part.HardwareFailureTime);
                 if (part.SpecifiedDowntimesRatio is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.SpecifiedDowntimesRatio])
+                    ws.Cell(row, ci[CM.SpecifiedDowntimesRatio])
                         .SetValue(part.SpecifiedDowntimesRatio)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, ci[ColumnManager.SpecifiedDowntimesComment]).SetValue(part.SpecifiedDowntimesComment);
-                ws.Cell(row, ci[ColumnManager.SetupRatioTitle]).SetValue(part.SetupRatioTitle);
-                ws.Cell(row, ci[ColumnManager.MasterSetupComment]).SetValue(part.MasterSetupComment);
-                ws.Cell(row, ci[ColumnManager.ProductionRatioTitle]).SetValue(part.ProductionRatioTitle);
-                ws.Cell(row, ci[ColumnManager.MasterProductionComment]).SetValue(part.MasterMachiningComment);
-                ws.Cell(row, ci[ColumnManager.MasterComment]).SetValue(part.MasterComment);
-                ws.Cell(row, ci[ColumnManager.FixedSetupTimePlan]).SetValue(part.FixedSetupTimePlan);
-                ws.Cell(row, ci[ColumnManager.FixedProductionTimePlan]).SetValue(part.FixedProductionTimePlan);
-                ws.Cell(row, ci[ColumnManager.EngineerComment]).SetValue(part.EngineerComment);
+                ws.Cell(row, ci[CM.SpecifiedDowntimesComment]).SetValue(part.SpecifiedDowntimesComment);
+                ws.Cell(row, ci[CM.SetupRatioTitle]).SetValue(part.SetupRatioTitle);
+                ws.Cell(row, ci[CM.MasterSetupComment]).SetValue(part.MasterSetupComment);
+                ws.Cell(row, ci[CM.ProductionRatioTitle]).SetValue(part.ProductionRatioTitle);
+                ws.Cell(row, ci[CM.MasterProductionComment]).SetValue(part.MasterMachiningComment);
+                ws.Cell(row, ci[CM.MasterComment]).SetValue(part.MasterComment);
+                ws.Cell(row, ci[CM.FixedSetupTimePlan]).SetValue(part.FixedSetupTimePlan);
+                ws.Cell(row, ci[CM.FixedProductionTimePlan]).SetValue(part.FixedProductionTimePlan);
+                ws.Cell(row, ci[CM.EngineerComment]).SetValue(part.EngineerComment);
                 row++;
             }
             ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
@@ -486,18 +536,18 @@ namespace remeLog.Infrastructure
             ws.RangeUsed().SetAutoFilter(true);
             ws.Columns().AdjustToContents();
 
-            ws.Column(ci[ColumnManager.Operator]).Width = 15;
+            ws.Column(ci[CM.Operator]).Width = 15;
 
-            ws.Column(ci[ColumnManager.Part]).Width = 25;
+            ws.Column(ci[CM.Part]).Width = 25;
 
-            ws.Range(3, ci[ColumnManager.OperatorComment], row, ci[ColumnManager.OperatorComment])
+            ws.Range(3, ci[CM.OperatorComment], row, ci[CM.OperatorComment])
                .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-            ws.Column(ci[ColumnManager.OperatorComment]).Width = 35;
+            ws.Column(ci[CM.OperatorComment]).Width = 35;
 
-            ws.Column(ci[ColumnManager.MasterSetupComment]).Width = 20;
-            ws.Column(ci[ColumnManager.MasterProductionComment]).Width = 20;
-            ws.Column(ci[ColumnManager.MasterComment]).Width = 20;
+            ws.Column(ci[CM.MasterSetupComment]).Width = 20;
+            ws.Column(ci[CM.MasterProductionComment]).Width = 20;
+            ws.Column(ci[CM.MasterComment]).Width = 20;
             ws.Row(1).Delete();
             ws.SheetView.FreezeRows(1);
         }
@@ -617,7 +667,7 @@ namespace remeLog.Infrastructure
                 .OrderBy(g => g.Key.Machine)
                 .ThenBy(g => g.Key.Operator))
             {
-                if (partGroup.Key.Operator == "Ученик") continue;
+                if (partGroup.Key.Operator.ToLower() == "ученик") continue;
                 var filteredParts = partGroup.ToList();
 
                 ws.Cell(row, columns["operator"].index)
@@ -662,7 +712,7 @@ namespace remeLog.Infrastructure
                   .SetValue(filteredParts.Sum(p => p.HardwareFailureTime));
 
                 ws.Cell(row, columns["specDowntimes"].index)
-                  .SetValue(filteredParts.SpecifiedDowntimesRatio(fromDate, toDate, ShiftType.All))
+                  .SetValue(filteredParts.SpecifiedDowntimesRatio(ShiftType.All))
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
                 var specDowntimesEx = filteredParts.SpecifiedDowntimesRatioExcluding(Downtime.HardwareFailure);
@@ -783,17 +833,17 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            var cm = new ColumnManager.Builder()
-                .Add(ColumnManager.Machine)
-                .Add(ColumnManager.Date)
-                .Add(ColumnManager.Operator)
-                .Add(ColumnManager.Part)
-                .Add(ColumnManager.Finished)
-                .Add(ColumnManager.Setup)
-                .Add(ColumnManager.MachiningTime)
-                .Add(ColumnManager.OperatorComment)
-                .Add(ColumnManager.Problems)
-                .Add(ColumnManager.MasterComment)
+            var cm = new CM.Builder()
+                .Add(CM.Machine)
+                .Add(CM.Date)
+                .Add(CM.Operator)
+                .Add(CM.Part)
+                .Add(CM.Finished)
+                .Add(CM.Setup)
+                .Add(CM.MachiningTime)
+                .Add(CM.OperatorComment)
+                .Add(CM.Problems)
+                .Add(CM.MasterComment)
                 .Build();
 
             ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 65, 8);
@@ -829,15 +879,15 @@ namespace remeLog.Infrastructure
 
                 foreach (var part in filteredParts.Where(p => p.Order == order))
                 {
-                    ws.Cell(row, ci[ColumnManager.Machine]).SetValue(part.Machine);
-                    ws.Cell(row, ci[ColumnManager.Date]).SetValue(part.ShiftDate);
-                    ws.Cell(row, ci[ColumnManager.Operator]).SetValue(part.Operator);
-                    ws.Cell(row, ci[ColumnManager.Part]).SetValue(part.PartName);
-                    ws.Cell(row, ci[ColumnManager.Finished]).SetValue(part.FinishedCount);
-                    ws.Cell(row, ci[ColumnManager.Setup]).SetValue(part.Setup);
+                    ws.Cell(row, ci[CM.Machine]).SetValue(part.Machine);
+                    ws.Cell(row, ci[CM.Date]).SetValue(part.ShiftDate);
+                    ws.Cell(row, ci[CM.Operator]).SetValue(part.Operator);
+                    ws.Cell(row, ci[CM.Part]).SetValue(part.PartName);
+                    ws.Cell(row, ci[CM.Finished]).SetValue(part.FinishedCount);
+                    ws.Cell(row, ci[CM.Setup]).SetValue(part.Setup);
 
                     if (part.MachiningTime != TimeSpan.Zero)
-                        ws.Cell(row, ci[ColumnManager.MachiningTime]).SetValue(part.MachiningTime);
+                        ws.Cell(row, ci[CM.MachiningTime]).SetValue(part.MachiningTime);
 
                     var comment = part.OperatorComment;
                     if (comment.Contains("Отмеченные простои:\n"))
@@ -845,7 +895,7 @@ namespace remeLog.Infrastructure
                         comment = comment.Split("Отмеченные простои:\n")[0].Trim();
                     }
 
-                    ws.Cell(row, ci[ColumnManager.OperatorComment]).SetValue(comment)
+                    ws.Cell(row, ci[CM.OperatorComment]).SetValue(comment)
                         .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
                     var cells = ws.Range(row, 1, row, cm.Count).Style
@@ -861,14 +911,14 @@ namespace remeLog.Infrastructure
 
             ws.Columns().AdjustToContents();
 
-            ws.Column(ci[ColumnManager.Machine]).Width = 13;
-            ws.Column(ci[ColumnManager.Date]).Width = 8;
-            ws.Column(ci[ColumnManager.Operator]).Width = 13;
-            ws.Column(ci[ColumnManager.Part]).Width = 15;
-            ws.Columns(ci[ColumnManager.Finished], ci[ColumnManager.Setup]).Width = 3;
-            ws.Column(ci[ColumnManager.MachiningTime]).Width = 7;
-            ws.Columns(ci[ColumnManager.OperatorComment], ci[ColumnManager.Problems]).Width = 30;
-            ws.Column(ci[ColumnManager.MasterComment]).Width = 20;
+            ws.Column(ci[CM.Machine]).Width = 13;
+            ws.Column(ci[CM.Date]).Width = 8;
+            ws.Column(ci[CM.Operator]).Width = 13;
+            ws.Column(ci[CM.Part]).Width = 15;
+            ws.Columns(ci[CM.Finished], ci[CM.Setup]).Width = 3;
+            ws.Column(ci[CM.MachiningTime]).Width = 7;
+            ws.Columns(ci[CM.OperatorComment], ci[CM.Problems]).Width = 30;
+            ws.Column(ci[CM.MasterComment]).Width = 20;
 
             ws.PageSetup.PrintAreas.Add(1, 1, row - 1, cm.Count);
             ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;
@@ -1171,44 +1221,44 @@ namespace remeLog.Infrastructure
                 .SelectMany(g => g.Distinct())
                 .Count();
 
-            var cm = new ColumnManager();
-            cm.Add(ColumnManager.Machine);
-            cm.Add(ColumnManager.Date);
-            cm.Add(ColumnManager.Shift);
-            cm.Add(ColumnManager.Operator);
-            cm.Add(ColumnManager.Part);
-            cm.Add(ColumnManager.Order);
-            cm.Add(ColumnManager.Finished);
-            cm.Add(ColumnManager.Setup);
-            cm.Add(ColumnManager.StartSetupTime);
-            cm.Add(ColumnManager.StartMachiningTime);
-            cm.Add(ColumnManager.EndMachiningTime);
-            cm.Add(ColumnManager.SetupLimit);
-            cm.Add(ColumnManager.SetupTimePlan);
-            cm.Add(ColumnManager.SetupTimeFact);
-            cm.Add(ColumnManager.PartialSetupTime);
-            cm.Add(ColumnManager.SingleProductionTimePlan);
-            cm.Add(ColumnManager.MachiningTime);
-            cm.Add(ColumnManager.SingleProductionTime);
-            cm.Add(ColumnManager.PartReplacementTime);
-            cm.Add(ColumnManager.OperatorComment);
-            cm.Add(ColumnManager.SetupDowntimes);
-            cm.Add(ColumnManager.MachiningDowntimes);
-            cm.Add(ColumnManager.MaintenanceTime);
-            cm.Add(ColumnManager.ToolSearchingTime);
-            cm.Add(ColumnManager.ToolChangingTime);
-            cm.Add(ColumnManager.MentoringTime);
-            cm.Add(ColumnManager.ContactingDepartmentsTime);
-            cm.Add(ColumnManager.FixtureMakingTime);
-            cm.Add(ColumnManager.HardwareFailureTime);
-            cm.Add(ColumnManager.SpecifiedDowntimesRatio);
-            cm.Add(ColumnManager.SpecifiedDowntimesComment);
-            cm.Add(ColumnManager.SetupRatioTitle);
-            cm.Add(ColumnManager.MasterSetupComment);
-            cm.Add(ColumnManager.MasterComment);
-            cm.Add(ColumnManager.FixedSetupTimePlan);
-            cm.Add(ColumnManager.FixedProductionTimePlan);
-            cm.Add(ColumnManager.EngineerComment);
+            var cm = new CM();
+            cm.Add(CM.Machine);
+            cm.Add(CM.Date);
+            cm.Add(CM.Shift);
+            cm.Add(CM.Operator);
+            cm.Add(CM.Part);
+            cm.Add(CM.Order);
+            cm.Add(CM.Finished);
+            cm.Add(CM.Setup);
+            cm.Add(CM.StartSetupTime);
+            cm.Add(CM.StartMachiningTime);
+            cm.Add(CM.EndMachiningTime);
+            cm.Add(CM.SetupLimit);
+            cm.Add(CM.SetupTimePlan);
+            cm.Add(CM.SetupTimeFact);
+            cm.Add(CM.PartialSetupTime);
+            cm.Add(CM.SingleProductionTimePlan);
+            cm.Add(CM.MachiningTime);
+            cm.Add(CM.SingleProductionTime);
+            cm.Add(CM.PartReplacementTime);
+            cm.Add(CM.OperatorComment);
+            cm.Add(CM.SetupDowntimes);
+            cm.Add(CM.MachiningDowntimes);
+            cm.Add(CM.MaintenanceTime);
+            cm.Add(CM.ToolSearchingTime);
+            cm.Add(CM.ToolChangingTime);
+            cm.Add(CM.MentoringTime);
+            cm.Add(CM.ContactingDepartmentsTime);
+            cm.Add(CM.FixtureMakingTime);
+            cm.Add(CM.HardwareFailureTime);
+            cm.Add(CM.SpecifiedDowntimesRatio);
+            cm.Add(CM.SpecifiedDowntimesComment);
+            cm.Add(CM.SetupRatioTitle);
+            cm.Add(CM.MasterSetupComment);
+            cm.Add(CM.MasterComment);
+            cm.Add(CM.FixedSetupTimePlan);
+            cm.Add(CM.FixedProductionTimePlan);
+            cm.Add(CM.EngineerComment);
 
             ConfigureWorksheetHeader(ws, cm);
 
@@ -1220,64 +1270,64 @@ namespace remeLog.Infrastructure
                 var (limitValue, limitInfo) = part.SetupLimit(limits[part.Machine].SetupCoefficient, limits[part.Machine].SetupLimit);
                 if (limitValue >= part.SetupTimeFact + part.PartialSetupTime) continue;
 
-                ws.Cell(row, ci[ColumnManager.Machine]).SetValue(part.Machine);
-                ws.Cell(row, ci[ColumnManager.Date])
+                ws.Cell(row, ci[CM.Machine]).SetValue(part.Machine);
+                ws.Cell(row, ci[CM.Date])
                     .SetValue(part.ShiftDate)
                     .Style.DateFormat.Format = "dd.MM.yy";
-                ws.Cell(row, ci[ColumnManager.Shift]).SetValue(part.Shift);
-                ws.Cell(row, ci[ColumnManager.Operator]).SetValue(part.Operator);
-                ws.Cell(row, ci[ColumnManager.Part]).SetValue(part.PartName);
-                ws.Cell(row, ci[ColumnManager.Order]).SetValue(part.Order);
-                ws.Cell(row, ci[ColumnManager.Finished]).SetValue(part.FinishedCount);
-                ws.Cell(row, ci[ColumnManager.Setup]).SetValue(part.Setup);
-                ws.Cell(row, ci[ColumnManager.StartSetupTime])
+                ws.Cell(row, ci[CM.Shift]).SetValue(part.Shift);
+                ws.Cell(row, ci[CM.Operator]).SetValue(part.Operator);
+                ws.Cell(row, ci[CM.Part]).SetValue(part.PartName);
+                ws.Cell(row, ci[CM.Order]).SetValue(part.Order);
+                ws.Cell(row, ci[CM.Finished]).SetValue(part.FinishedCount);
+                ws.Cell(row, ci[CM.Setup]).SetValue(part.Setup);
+                ws.Cell(row, ci[CM.StartSetupTime])
                     .SetValue(part.StartSetupTime)
                     .Style.DateFormat.Format = "HH:mm";
-                ws.Cell(row, ci[ColumnManager.StartMachiningTime])
+                ws.Cell(row, ci[CM.StartMachiningTime])
                     .SetValue(part.StartMachiningTime)
                     .Style.DateFormat.Format = "HH:mm";
-                ws.Cell(row, ci[ColumnManager.EndMachiningTime])
+                ws.Cell(row, ci[CM.EndMachiningTime])
                     .SetValue(part.EndMachiningTime)
                     .Style.DateFormat.Format = "HH:mm";
-                ws.Cell(row, ci[ColumnManager.SetupTimePlan]).SetValue(part.SetupTimePlan);
-                ws.Cell(row, ci[ColumnManager.SetupTimeFact]).SetValue(part.SetupTimeFact);
-                if (part.SetupTimeFact > limitValue) ws.Cell(row, ci[ColumnManager.SetupTimeFact]).Style.Fill.BackgroundColor = XLColor.LightYellow;
-                ws.Cell(row, ci[ColumnManager.SetupLimit]).SetValue(limitValue).CreateComment().SetAuthor("Отчёт").AddText(limitInfo).AddNewLine();
-                ws.Cell(row, ci[ColumnManager.SingleProductionTimePlan]).SetValue(part.SingleProductionTimePlan);
-                ws.Cell(row, ci[ColumnManager.MachiningTime]).SetValue(part.MachiningTime);
+                ws.Cell(row, ci[CM.SetupTimePlan]).SetValue(part.SetupTimePlan);
+                ws.Cell(row, ci[CM.SetupTimeFact]).SetValue(part.SetupTimeFact);
+                if (part.SetupTimeFact > limitValue) ws.Cell(row, ci[CM.SetupTimeFact]).Style.Fill.BackgroundColor = XLColor.LightYellow;
+                ws.Cell(row, ci[CM.SetupLimit]).SetValue(limitValue).CreateComment().SetAuthor("Отчёт").AddText(limitInfo).AddNewLine();
+                ws.Cell(row, ci[CM.SingleProductionTimePlan]).SetValue(part.SingleProductionTimePlan);
+                ws.Cell(row, ci[CM.MachiningTime]).SetValue(part.MachiningTime);
                 if (part.SingleProductionTime is double spt && spt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.SingleProductionTime])
+                    ws.Cell(row, ci[CM.SingleProductionTime])
                         .SetValue(spt)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
                 if (part.PartReplacementTime is double prt && prt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.PartReplacementTime])
+                    ws.Cell(row, ci[CM.PartReplacementTime])
                         .SetValue(prt)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-                ws.Cell(row, ci[ColumnManager.OperatorComment])
+                ws.Cell(row, ci[CM.OperatorComment])
                     .SetValue(part.OperatorComment)
                     .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                ws.Cell(row, ci[ColumnManager.SetupDowntimes]).SetValue(part.SetupDowntimes);
-                ws.Cell(row, ci[ColumnManager.MachiningDowntimes]).SetValue(part.MachiningDowntimes);
-                ws.Cell(row, ci[ColumnManager.PartialSetupTime]).SetValue(part.PartialSetupTime);
-                if (part.PartialSetupTime > limitValue) ws.Cell(row, ci[ColumnManager.PartialSetupTime]).Style.Fill.BackgroundColor = XLColor.LightYellow;
-                ws.Cell(row, ci[ColumnManager.MaintenanceTime]).SetValue(part.MaintenanceTime);
-                ws.Cell(row, ci[ColumnManager.ToolSearchingTime]).SetValue(part.ToolSearchingTime);
-                ws.Cell(row, ci[ColumnManager.ToolChangingTime]).SetValue(part.ToolChangingTime);
-                ws.Cell(row, ci[ColumnManager.MentoringTime]).SetValue(part.MentoringTime);
-                ws.Cell(row, ci[ColumnManager.ContactingDepartmentsTime]).SetValue(part.ContactingDepartmentsTime);
-                ws.Cell(row, ci[ColumnManager.FixtureMakingTime]).SetValue(part.FixtureMakingTime);
-                ws.Cell(row, ci[ColumnManager.HardwareFailureTime]).SetValue(part.HardwareFailureTime);
+                ws.Cell(row, ci[CM.SetupDowntimes]).SetValue(part.SetupDowntimes);
+                ws.Cell(row, ci[CM.MachiningDowntimes]).SetValue(part.MachiningDowntimes);
+                ws.Cell(row, ci[CM.PartialSetupTime]).SetValue(part.PartialSetupTime);
+                if (part.PartialSetupTime > limitValue) ws.Cell(row, ci[CM.PartialSetupTime]).Style.Fill.BackgroundColor = XLColor.LightYellow;
+                ws.Cell(row, ci[CM.MaintenanceTime]).SetValue(part.MaintenanceTime);
+                ws.Cell(row, ci[CM.ToolSearchingTime]).SetValue(part.ToolSearchingTime);
+                ws.Cell(row, ci[CM.ToolChangingTime]).SetValue(part.ToolChangingTime);
+                ws.Cell(row, ci[CM.MentoringTime]).SetValue(part.MentoringTime);
+                ws.Cell(row, ci[CM.ContactingDepartmentsTime]).SetValue(part.ContactingDepartmentsTime);
+                ws.Cell(row, ci[CM.FixtureMakingTime]).SetValue(part.FixtureMakingTime);
+                ws.Cell(row, ci[CM.HardwareFailureTime]).SetValue(part.HardwareFailureTime);
                 if (part.SpecifiedDowntimesRatio is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.SpecifiedDowntimesRatio])
+                    ws.Cell(row, ci[CM.SpecifiedDowntimesRatio])
                         .SetValue(part.SpecifiedDowntimesRatio)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-                ws.Cell(row, ci[ColumnManager.SpecifiedDowntimesComment]).SetValue(part.SpecifiedDowntimesComment);
-                ws.Cell(row, ci[ColumnManager.SetupRatioTitle]).SetValue(part.SetupRatioTitle);
-                ws.Cell(row, ci[ColumnManager.MasterSetupComment]).SetValue(part.MasterSetupComment);
-                ws.Cell(row, ci[ColumnManager.MasterComment]).SetValue(part.MasterComment);
-                ws.Cell(row, ci[ColumnManager.FixedSetupTimePlan]).SetValue(part.FixedSetupTimePlan);
-                ws.Cell(row, ci[ColumnManager.FixedProductionTimePlan]).SetValue(part.FixedProductionTimePlan);
-                ws.Cell(row, ci[ColumnManager.EngineerComment]).SetValue(part.EngineerComment);
+                ws.Cell(row, ci[CM.SpecifiedDowntimesComment]).SetValue(part.SpecifiedDowntimesComment);
+                ws.Cell(row, ci[CM.SetupRatioTitle]).SetValue(part.SetupRatioTitle);
+                ws.Cell(row, ci[CM.MasterSetupComment]).SetValue(part.MasterSetupComment);
+                ws.Cell(row, ci[CM.MasterComment]).SetValue(part.MasterComment);
+                ws.Cell(row, ci[CM.FixedSetupTimePlan]).SetValue(part.FixedSetupTimePlan);
+                ws.Cell(row, ci[CM.FixedProductionTimePlan]).SetValue(part.FixedProductionTimePlan);
+                ws.Cell(row, ci[CM.EngineerComment]).SetValue(part.EngineerComment);
                 cnt++;
                 row++;
             }
@@ -1288,36 +1338,36 @@ namespace remeLog.Infrastructure
             ws.RangeUsed().SetAutoFilter(true);
             ws.Columns().AdjustToContents();
 
-            ws.Range(3, ci[ColumnManager.Machine], row, ci[ColumnManager.Machine])
+            ws.Range(3, ci[CM.Machine], row, ci[CM.Machine])
                 .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-            ws.Column(ci[ColumnManager.Operator]).Width = 15;
-            ws.Column(ci[ColumnManager.Part]).Width = 25;
-            ws.Range(3, ci[ColumnManager.OperatorComment], row, ci[ColumnManager.OperatorComment])
+            ws.Column(ci[CM.Operator]).Width = 15;
+            ws.Column(ci[CM.Part]).Width = 25;
+            ws.Range(3, ci[CM.OperatorComment], row, ci[CM.OperatorComment])
                 .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-            ws.Column(ci[ColumnManager.OperatorComment]).Width = 35;
-            ws.Column(ci[ColumnManager.MasterSetupComment]).Width = 20;
-            ws.Column(ci[ColumnManager.MasterComment]).Width = 20;
+            ws.Column(ci[CM.OperatorComment]).Width = 35;
+            ws.Column(ci[CM.MasterSetupComment]).Width = 20;
+            ws.Column(ci[CM.MasterComment]).Width = 20;
 
 
             var hiddenColumns = new List<string>
             {
-                ColumnManager.SingleProductionTimePlan,
-                ColumnManager.MachiningTime,
-                ColumnManager.SingleProductionTime,
-                ColumnManager.PartReplacementTime,
-                ColumnManager.MachiningDowntimes,
-                ColumnManager.MaintenanceTime,
-                ColumnManager.ToolSearchingTime,
-                ColumnManager.ToolChangingTime,
-                ColumnManager.MentoringTime,
-                ColumnManager.ContactingDepartmentsTime,
-                ColumnManager.FixtureMakingTime,
-                ColumnManager.HardwareFailureTime,
-                ColumnManager.SpecifiedDowntimesRatio,
-                ColumnManager.SpecifiedDowntimesComment,
-                ColumnManager.FixedProductionTimePlan
+                CM.SingleProductionTimePlan,
+                CM.MachiningTime,
+                CM.SingleProductionTime,
+                CM.PartReplacementTime,
+                CM.MachiningDowntimes,
+                CM.MaintenanceTime,
+                CM.ToolSearchingTime,
+                CM.ToolChangingTime,
+                CM.MentoringTime,
+                CM.ContactingDepartmentsTime,
+                CM.FixtureMakingTime,
+                CM.HardwareFailureTime,
+                CM.SpecifiedDowntimesRatio,
+                CM.SpecifiedDowntimesComment,
+                CM.FixedProductionTimePlan
             };
             foreach (var col in hiddenColumns)
             {
@@ -1341,47 +1391,48 @@ namespace remeLog.Infrastructure
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            var cm = new ColumnManager.Builder()
-                .Add(ColumnManager.Machine)
-                .Add(ColumnManager.Date)
-                .Add(ColumnManager.Shift)
-                .Add(ColumnManager.Operator)
-                .Add(ColumnManager.Part)
-                .Add(ColumnManager.Order)
-                .Add(ColumnManager.TotalByOrder)
-                .Add(ColumnManager.Finished)
-                .Add(ColumnManager.Setup)
-                .Add(ColumnManager.StartSetupTime)
-                .Add(ColumnManager.StartMachiningTime)
-                .Add(ColumnManager.EndMachiningTime)
-                .Add(ColumnManager.SetupTimePlan)
-                .Add(ColumnManager.SetupTimeFact)
-                .Add(ColumnManager.SingleProductionTimePlan)
-                .Add(ColumnManager.MachiningTime)
-                .Add(ColumnManager.SingleProductionTime)
-                .Add(ColumnManager.PartReplacementTime)
-                .Add(ColumnManager.ProductionTimeFact)
-                .Add(ColumnManager.PlanForBatch)
-                .Add(ColumnManager.OperatorComment)
-                .Add(ColumnManager.SetupDowntimes)
-                .Add(ColumnManager.MachiningDowntimes)
-                .Add(ColumnManager.PartialSetupTime)
-                .Add(ColumnManager.MaintenanceTime)
-                .Add(ColumnManager.ToolSearchingTime)
-                .Add(ColumnManager.MentoringTime)
-                .Add(ColumnManager.ContactingDepartmentsTime)
-                .Add(ColumnManager.FixtureMakingTime)
-                .Add(ColumnManager.HardwareFailureTime)
-                .Add(ColumnManager.SpecifiedDowntimesRatio)
-                .Add(ColumnManager.SpecifiedDowntimesComment)
-                .Add(ColumnManager.SetupRatioTitle)
-                .Add(ColumnManager.MasterSetupComment)
-                .Add(ColumnManager.ProductionRatioTitle)
-                .Add(ColumnManager.MasterProductionComment)
-                .Add(ColumnManager.MasterComment)
-                .Add(ColumnManager.FixedSetupTimePlan)
-                .Add(ColumnManager.FixedProductionTimePlan)
-                .Add(ColumnManager.EngineerComment)
+            var cm = new CM.Builder()
+                .Add(CM.Machine)
+                .Add(CM.Date)
+                .Add(CM.Shift)
+                .Add(CM.Operator)
+                .Add(CM.Part)
+                .Add(CM.Order)
+                .Add(CM.TotalByOrder)
+                .Add(CM.Finished)
+                .Add(CM.Setup)
+                .Add(CM.StartSetupTime)
+                .Add(CM.StartMachiningTime)
+                .Add(CM.EndMachiningTime)
+                .Add(CM.SetupTimePlan)
+                .Add(CM.SetupTimeFact)
+                .Add(CM.SingleProductionTimePlan)
+                .Add(CM.MachiningTime)
+                .Add(CM.SingleProductionTime)
+                .Add(CM.PartReplacementTime)
+                .Add(CM.ProductionTimeFact)
+                .Add(CM.PlanForBatch)
+                .Add(CM.OperatorComment)
+                .Add(CM.SetupDowntimes)
+                .Add(CM.MachiningDowntimes)
+                .Add(CM.PartialSetupTime)
+                .Add(CM.MaintenanceTime)
+                .Add(CM.ToolSearchingTime)
+                .Add(CM.ToolChangingTime)
+                .Add(CM.MentoringTime)
+                .Add(CM.ContactingDepartmentsTime)
+                .Add(CM.FixtureMakingTime)
+                .Add(CM.HardwareFailureTime)
+                .Add(CM.SpecifiedDowntimesRatio)
+                .Add(CM.SpecifiedDowntimesComment)
+                .Add(CM.SetupRatioTitle)
+                .Add(CM.MasterSetupComment)
+                .Add(CM.ProductionRatioTitle)
+                .Add(CM.MasterProductionComment)
+                .Add(CM.MasterComment)
+                .Add(CM.FixedSetupTimePlan)
+                .Add(CM.FixedProductionTimePlan)
+                .Add(CM.EngineerComment)
                 .Build();
 
             ConfigureWorksheetHeader(ws, cm);
@@ -1391,104 +1442,106 @@ namespace remeLog.Infrastructure
             var row = 3;
             foreach (var part in parts)
             {
-                ws.Cell(row, ci[ColumnManager.Machine]).SetValue(part.Machine);
+                ws.Cell(row, ci[CM.Machine]).SetValue(part.Machine);
 
-                ws.Cell(row, ci[ColumnManager.Date])
+                ws.Cell(row, ci[CM.Date])
                     .SetValue(part.ShiftDate)
                     .Style.DateFormat.Format = "dd.MM.yy";
 
-                ws.Cell(row, ci[ColumnManager.Shift]).SetValue(part.Shift);
+                ws.Cell(row, ci[CM.Shift]).SetValue(part.Shift);
 
-                ws.Cell(row, ci[ColumnManager.Operator]).SetValue(part.Operator);
+                ws.Cell(row, ci[CM.Operator]).SetValue(part.Operator);
 
-                ws.Cell(row, ci[ColumnManager.Part]).SetValue(part.PartName);
+                ws.Cell(row, ci[CM.Part]).SetValue(part.PartName);
 
-                ws.Cell(row, ci[ColumnManager.Order]).SetValue(part.Order);
+                ws.Cell(row, ci[CM.Order]).SetValue(part.Order);
 
-                ws.Cell(row, ci[ColumnManager.TotalByOrder]).SetValue(part.TotalCount);
+                ws.Cell(row, ci[CM.TotalByOrder]).SetValue(part.TotalCount);
 
-                ws.Cell(row, ci[ColumnManager.Finished]).SetValue(part.FinishedCount);
+                ws.Cell(row, ci[CM.Finished]).SetValue(part.FinishedCount);
 
-                ws.Cell(row, ci[ColumnManager.Setup]).SetValue(part.Setup);
+                ws.Cell(row, ci[CM.Setup]).SetValue(part.Setup);
 
-                ws.Cell(row, ci[ColumnManager.StartSetupTime])
+                ws.Cell(row, ci[CM.StartSetupTime])
                     .SetValue(part.StartSetupTime)
                     .Style.DateFormat.Format = "HH:mm";
 
-                ws.Cell(row, ci[ColumnManager.StartMachiningTime])
+                ws.Cell(row, ci[CM.StartMachiningTime])
                     .SetValue(part.StartMachiningTime)
                     .Style.DateFormat.Format = "HH:mm";
 
-                ws.Cell(row, ci[ColumnManager.EndMachiningTime])
+                ws.Cell(row, ci[CM.EndMachiningTime])
                     .SetValue(part.EndMachiningTime)
                     .Style.DateFormat.Format = "HH:mm";
 
-                ws.Cell(row, ci[ColumnManager.SetupTimePlan]).SetValue(part.SetupTimePlan);
+                ws.Cell(row, ci[CM.SetupTimePlan]).SetValue(part.SetupTimePlan);
 
-                ws.Cell(row, ci[ColumnManager.SetupTimeFact]).SetValue(part.SetupTimeFact);
+                ws.Cell(row, ci[CM.SetupTimeFact]).SetValue(part.SetupTimeFact);
 
-                ws.Cell(row, ci[ColumnManager.SingleProductionTimePlan]).SetValue(part.SingleProductionTimePlan);
+                ws.Cell(row, ci[CM.SingleProductionTimePlan]).SetValue(part.SingleProductionTimePlan);
 
-                ws.Cell(row, ci[ColumnManager.MachiningTime]).SetValue(part.MachiningTime);
+                ws.Cell(row, ci[CM.MachiningTime]).SetValue(part.MachiningTime);
 
                 if (part.SingleProductionTime is double spt && spt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.SingleProductionTime])
+                    ws.Cell(row, ci[CM.SingleProductionTime])
                         .SetValue(spt)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
 
                 if (part.PartReplacementTime is double prt && prt is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.PartReplacementTime])
+                    ws.Cell(row, ci[CM.PartReplacementTime])
                         .SetValue(prt)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
 
-                ws.Cell(row, ci[ColumnManager.ProductionTimeFact]).SetValue(part.ProductionTimeFact);
+                ws.Cell(row, ci[CM.ProductionTimeFact]).SetValue(part.ProductionTimeFact);
 
-                ws.Cell(row, ci[ColumnManager.PlanForBatch]).SetValue(part.PlanForBatch);
+                ws.Cell(row, ci[CM.PlanForBatch]).SetValue(part.PlanForBatch);
 
-                ws.Cell(row, ci[ColumnManager.OperatorComment])
+                ws.Cell(row, ci[CM.OperatorComment])
                     .SetValue(part.OperatorComment)
                     .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                ws.Cell(row, ci[ColumnManager.SetupDowntimes]).SetValue(part.SetupDowntimes);
+                ws.Cell(row, ci[CM.SetupDowntimes]).SetValue(part.SetupDowntimes);
 
-                ws.Cell(row, ci[ColumnManager.MachiningDowntimes]).SetValue(part.MachiningDowntimes);
+                ws.Cell(row, ci[CM.MachiningDowntimes]).SetValue(part.MachiningDowntimes);
 
-                ws.Cell(row, ci[ColumnManager.PartialSetupTime]).SetValue(part.PartialSetupTime);
+                ws.Cell(row, ci[CM.PartialSetupTime]).SetValue(part.PartialSetupTime);
 
-                ws.Cell(row, ci[ColumnManager.MaintenanceTime]).SetValue(part.MaintenanceTime);
+                ws.Cell(row, ci[CM.MaintenanceTime]).SetValue(part.MaintenanceTime);
 
-                ws.Cell(row, ci[ColumnManager.ToolSearchingTime]).SetValue(part.ToolSearchingTime);
+                ws.Cell(row, ci[CM.ToolSearchingTime]).SetValue(part.ToolSearchingTime);
 
-                ws.Cell(row, ci[ColumnManager.MentoringTime]).SetValue(part.MentoringTime);
+                ws.Cell(row, ci[CM.ToolChangingTime]).SetValue(part.ToolChangingTime);
 
-                ws.Cell(row, ci[ColumnManager.ContactingDepartmentsTime]).SetValue(part.ContactingDepartmentsTime);
+                ws.Cell(row, ci[CM.MentoringTime]).SetValue(part.MentoringTime);
 
-                ws.Cell(row, ci[ColumnManager.FixtureMakingTime]).SetValue(part.FixtureMakingTime);
+                ws.Cell(row, ci[CM.ContactingDepartmentsTime]).SetValue(part.ContactingDepartmentsTime);
 
-                ws.Cell(row, ci[ColumnManager.HardwareFailureTime]).SetValue(part.HardwareFailureTime);
+                ws.Cell(row, ci[CM.FixtureMakingTime]).SetValue(part.FixtureMakingTime);
+
+                ws.Cell(row, ci[CM.HardwareFailureTime]).SetValue(part.HardwareFailureTime);
 
                 if (part.SpecifiedDowntimesRatio is not (double.NaN or double.NegativeInfinity or double.PositiveInfinity))
-                    ws.Cell(row, ci[ColumnManager.SpecifiedDowntimesRatio])
+                    ws.Cell(row, ci[CM.SpecifiedDowntimesRatio])
                         .SetValue(part.SpecifiedDowntimesRatio)
                         .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                ws.Cell(row, ci[ColumnManager.SpecifiedDowntimesComment]).SetValue(part.SpecifiedDowntimesComment);
+                ws.Cell(row, ci[CM.SpecifiedDowntimesComment]).SetValue(part.SpecifiedDowntimesComment);
 
-                ws.Cell(row, ci[ColumnManager.SetupRatioTitle]).SetValue(part.SetupRatioTitle);
+                ws.Cell(row, ci[CM.SetupRatioTitle]).SetValue(part.SetupRatioTitle);
 
-                ws.Cell(row, ci[ColumnManager.MasterSetupComment]).SetValue(part.MasterSetupComment);
+                ws.Cell(row, ci[CM.MasterSetupComment]).SetValue(part.MasterSetupComment);
 
-                ws.Cell(row, ci[ColumnManager.ProductionRatioTitle]).SetValue(part.ProductionRatioTitle);
+                ws.Cell(row, ci[CM.ProductionRatioTitle]).SetValue(part.ProductionRatioTitle);
 
-                ws.Cell(row, ci[ColumnManager.MasterProductionComment]).SetValue(part.MasterMachiningComment);
+                ws.Cell(row, ci[CM.MasterProductionComment]).SetValue(part.MasterMachiningComment);
 
-                ws.Cell(row, ci[ColumnManager.MasterComment]).SetValue(part.MasterComment);
+                ws.Cell(row, ci[CM.MasterComment]).SetValue(part.MasterComment);
 
-                ws.Cell(row, ci[ColumnManager.FixedSetupTimePlan]).SetValue(part.FixedSetupTimePlan);
+                ws.Cell(row, ci[CM.FixedSetupTimePlan]).SetValue(part.FixedSetupTimePlan);
 
-                ws.Cell(row, ci[ColumnManager.FixedProductionTimePlan]).SetValue(part.FixedProductionTimePlan);
+                ws.Cell(row, ci[CM.FixedProductionTimePlan]).SetValue(part.FixedProductionTimePlan);
 
-                ws.Cell(row, ci[ColumnManager.EngineerComment]).SetValue(part.EngineerComment);
+                ws.Cell(row, ci[CM.EngineerComment]).SetValue(part.EngineerComment);
 
                 row++;
             }
@@ -1500,21 +1553,21 @@ namespace remeLog.Infrastructure
             ws.RangeUsed().SetAutoFilter(true);
             ws.Columns().AdjustToContents();
 
-            ws.Range(3, ci[ColumnManager.Machine], row, ci[ColumnManager.Machine])
+            ws.Range(3, ci[CM.Machine], row, ci[CM.Machine])
                 .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-            ws.Column(ci[ColumnManager.Operator]).Width = 15;
+            ws.Column(ci[CM.Operator]).Width = 15;
 
-            ws.Column(ci[ColumnManager.Part]).Width = 25;
+            ws.Column(ci[CM.Part]).Width = 25;
 
-            ws.Range(3, ci[ColumnManager.OperatorComment], row, ci[ColumnManager.OperatorComment])
+            ws.Range(3, ci[CM.OperatorComment], row, ci[CM.OperatorComment])
                 .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-            ws.Column(ci[ColumnManager.OperatorComment]).Width = 35;
+            ws.Column(ci[CM.OperatorComment]).Width = 35;
 
-            ws.Column(ci[ColumnManager.MasterSetupComment]).Width = 20;
-            ws.Column(ci[ColumnManager.MasterProductionComment]).Width = 20;
-            ws.Column(ci[ColumnManager.MasterComment]).Width = 20;
+            ws.Column(ci[CM.MasterSetupComment]).Width = 20;
+            ws.Column(ci[CM.MasterProductionComment]).Width = 20;
+            ws.Column(ci[CM.MasterComment]).Width = 20;
             ws.Row(1).Delete();
             ws.SheetView.FreezeRows(1);
 
@@ -1586,27 +1639,27 @@ namespace remeLog.Infrastructure
         }
 
         /// <summary>
-        /// Настраивает заголовки на рабочем листе Excel на основе объекта ColumnManager.
+        /// Настраивает заголовки на рабочем листе Excel на основе объекта CM.
         /// </summary>
         /// <param name="ws">Рабочий лист Excel.</param>
-        /// <param name="cm">Объект ColumnManager, содержащий информацию о колонках.</param>
+        /// <param name="cm">Объект CM, содержащий информацию о колонках.</param>
         /// <param name="headerRotateOption">Опция вращения заголовков (по умолчанию вертикально).</param>
         /// <param name="height">Высота строки заголовков (по умолчанию 90).</param>
         /// <param name="fontSize">Размер шрифта заголовков (по умолчанию 10).</param>
-        private static void ConfigureWorksheetHeader(IXLWorksheet ws, ColumnManager cm, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
+        private static void ConfigureWorksheetHeader(IXLWorksheet ws, CM cm, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
         {
             ConfigureWorksheetHeaderInternal(ws, cm.GetIndexedHeaders().ToList(), headerRotateOption, height, fontSize);
         }
 
         /// <summary>
-        /// Настраивает заголовки на рабочем листе Excel на основе объекта ColumnManager.
+        /// Настраивает заголовки на рабочем листе Excel на основе объекта CM.
         /// </summary>
         /// <param name="ws">Рабочий лист Excel.</param>
-        /// <param name="cm">Объект ColumnManager, содержащий информацию о колонках.</param>
+        /// <param name="cm">Объект CM, содержащий информацию о колонках.</param>
         /// <param name="headerRotateOption">Опция вращения заголовков (по умолчанию вертикально).</param>
         /// <param name="height">Высота строки заголовков (по умолчанию 90).</param>
         /// <param name="fontSize">Размер шрифта заголовков (по умолчанию 10).</param>
-        private static void ConfigureWorksheetHeader(ExcelWorksheet ws, ColumnManager cm, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
+        private static void ConfigureWorksheetHeader(ExcelWorksheet ws, CM cm, HeaderRotateOption headerRotateOption = HeaderRotateOption.Vertical, int height = 90, int fontSize = 10)
         {
             ConfigureWorksheetHeaderInternal(ws, cm.GetIndexedHeaders().ToList(), headerRotateOption, height, fontSize);
         }

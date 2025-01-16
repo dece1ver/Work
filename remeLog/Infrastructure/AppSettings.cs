@@ -86,7 +86,7 @@ namespace remeLog.Infrastructure
                 }
                 catch (Exception ex)
                 {
-                    Util.WriteLogAsync(ex, "Не удалось создать директорию для данных приложения.");
+                    Util.WriteLog(ex, "Не удалось создать директорию для данных приложения.");
                 }
             }
             DataSource = new DataSource(DataSource.Types.Database);
@@ -115,7 +115,7 @@ namespace remeLog.Infrastructure
                 } 
                 catch (Exception ex) 
                 {
-                    Util.WriteLogAsync(ex, "Не удалось скопировать резервный файл конфигурации.");
+                    Util.WriteLog(ex, "Не удалось скопировать резервный файл конфигурации.");
                 }
             }
             else if (!File.Exists(ConfigFilePath) && !File.Exists(ConfigBackupPath))
@@ -138,10 +138,10 @@ namespace remeLog.Infrastructure
                 switch (exception)
                 {
                     case Newtonsoft.Json.JsonException:
-                        Util.WriteLogAsync("Некорректный файл конфигурации.");
+                        Util.WriteLog("Некорректный файл конфигурации.");
                         break;
                     default:
-                        Util.WriteLogAsync(exception, "Ошибка при чтении конфигурации.");
+                        Util.WriteLog(exception, "Ошибка при чтении конфигурации.");
                         break;
                 }
 
@@ -157,13 +157,13 @@ namespace remeLog.Infrastructure
                     catch (JsonException)
                     {
                         var msg = "Резервный файл конфигурации некорректен, установка конфигурации по умолчанию.";
-                        Util.WriteLogAsync(msg);
+                        Util.WriteLog(msg);
                         CreateBaseConfig();
                     }
                     catch (Exception ex)
                     {
                         var msg = "Неизвестная ошибка при чтении резервного файла конфигурации, установка конфигурации по умолчанию.";
-                        Util.WriteLogAsync(ex, msg);
+                        Util.WriteLog(ex, msg);
                         CreateBaseConfig();
                     }
 
@@ -200,32 +200,32 @@ namespace remeLog.Infrastructure
                 catch (JsonException ex)
                 {
                     var msg = "Записан некорректный файл конфигурации, восстановление";
-                    Util.WriteLogAsync(ex, msg);
+                    Util.WriteLog(ex, msg);
                     File.Copy(ConfigBackupPath, ConfigFilePath, true);
                 }
                 catch (Exception ex)
                 {
                     var msg = "Неизвестная ошибка при создании бэкапа конфигурации";
-                    Util.WriteLogAsync(ex, msg);
+                    Util.WriteLog(ex, msg);
                 }
 
             }
             catch (UnauthorizedAccessException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Доступ запрещен).";
-                Util.WriteLogAsync(msg);
+                Util.WriteLog(msg);
                 if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (IOException)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Ошибка ввода/вывода).";
-                Util.WriteLogAsync(msg);
+                Util.WriteLog(msg);
                 if (!File.Exists(ConfigFilePath) && File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);
             }
             catch (Exception ex)
             {
                 var msg = "Ошибка при сохранении файла конфигурации (Неизвестная ошибка).";
-                Util.WriteLogAsync(ex, msg);
+                Util.WriteLog(ex, msg);
                 try
                 {
                     if (File.Exists(ConfigTempPath)) File.Copy(ConfigTempPath, ConfigFilePath, true);

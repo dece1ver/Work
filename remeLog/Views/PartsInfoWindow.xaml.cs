@@ -1,4 +1,5 @@
-﻿using remeLog.Models;
+﻿using remeLog.Infrastructure;
+using remeLog.Models;
 using remeLog.ViewModels;
 using Syncfusion.UI.Xaml.Grid;
 using System;
@@ -198,7 +199,7 @@ namespace remeLog.Views
             }
         }
 
-        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        private async void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (DataContext is PartsInfoWindowViewModel d)
             {
@@ -243,10 +244,23 @@ namespace remeLog.Views
                             //break;
 
                         case Key.Delete:
-                            if (d.SelectedPart is Part p)
+                            if (d.SelectedPart is Part dp)
                             {
-                                d.DeletePartCommand.Execute(p);
+                                d.DeletePartCommand.Execute(dp);
                                 e.Handled = true;
+                            }
+                            break;
+                        case Key.W:
+                            try
+                            {
+                                string result = await Util.SearchInWindchill(d.PartNameFilter);
+                                var links = Util.ExtractWncObjects(result, d.PartNameFilter);
+
+                                MessageBox.Show(string.Join("\n", links));
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message);
                             }
                             break;
                     }

@@ -42,7 +42,7 @@ namespace remeLog.Infrastructure
             }
             catch (Exception ex) 
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 MessageBox.Show(ex.Message);
                 return string.Empty;
             }
@@ -346,16 +346,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -478,16 +478,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -519,16 +519,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -559,16 +559,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -606,16 +606,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -647,16 +647,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -673,12 +673,12 @@ namespace remeLog.Infrastructure
                 else if (shifts.Count > 1)
                 {
                     MessageBox.Show("Найдена больше чем одна запись за смену, сообщите разработчику.", "Ошибка.", MessageBoxButton.OK, MessageBoxImage.Error);
-                    Util.WriteLogAsync("Найдена больше чем одна запись за смену.");
+                    Util.WriteLog("Найдена больше чем одна запись за смену.");
                     return DbResult.Error;
                 }
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
-                    if (AppSettings.Instance.DebugMode) Util.WriteLogAsync("Запись в БД информации о смене.");
+                    if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись в БД информации о смене.");
                     connection.Open();
                     string query = $"INSERT INTO cnc_shifts (ShiftDate, Shift, Machine, Master, UnspecifiedDowntimes, DowntimesComment, CommonComment, IsChecked) " +
                         $"VALUES (@ShiftDate, @Shift, @Machine, @Master, @UnspecifiedDowntimes, @DowntimesComment, @CommonComment, @IsChecked); SELECT SCOPE_IDENTITY()";
@@ -693,7 +693,7 @@ namespace remeLog.Infrastructure
                         command.Parameters.AddWithValue("CommonComment", shiftInfo.CommonComment);
                         command.Parameters.AddWithValue("IsChecked", shiftInfo.IsChecked);
                         var result = command.ExecuteScalar();
-                        if (AppSettings.Instance.DebugMode) Util.WriteLogAsync($"Смена записана и присвоен ID: {shiftInfo.Id}");
+                        if (AppSettings.Instance.DebugMode) Util.WriteLog($"Смена записана и присвоен ID: {shiftInfo.Id}");
                     }
                     return DbResult.Ok;
                 }
@@ -703,22 +703,22 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case -1:
-                        Util.WriteLogAsync("База данных недоступна.");
+                        Util.WriteLog("База данных недоступна.");
                         return DbResult.NoConnection;
                     case 2601 or 2627:
-                        Util.WriteLogAsync($"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
                         return DbResult.Error;
                     case 18456:
-                        Util.WriteLogAsync($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -778,16 +778,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -856,16 +856,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -893,12 +893,12 @@ namespace remeLog.Infrastructure
                         int rowsAffected = command.ExecuteNonQuery();
                         if (rowsAffected == 0)
                         {
-                            Util.WriteLogAsync("Смена не найдена, добавение новой.");
+                            Util.WriteLog("Смена не найдена, добавение новой.");
                             return WriteShiftInfo(shiftInfo);
                         }
                         else
                         {
-                            if (AppSettings.Instance.DebugMode) Util.WriteLogAsync($"Смена обновлена.");
+                            if (AppSettings.Instance.DebugMode) Util.WriteLog($"Смена обновлена.");
                         }
                     }
                     return DbResult.Ok;
@@ -909,22 +909,22 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case -1:
-                        Util.WriteLogAsync("База данных недоступна.");
+                        Util.WriteLog("База данных недоступна.");
                         return DbResult.NoConnection;
                     case 2601 or 2627:
-                        Util.WriteLogAsync($"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nЗапись в БД уже существует.");
                         return DbResult.Error;
                     case 18456:
-                        Util.WriteLogAsync($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog($"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -950,16 +950,16 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
                         return DbResult.AuthError;
                     default:
-                        Util.WriteLogAsync(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
                         return DbResult.Error;
                 }
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return DbResult.Error;
             }
         }
@@ -996,6 +996,47 @@ namespace remeLog.Infrastructure
         {
             if (AppSettings.Instance.ConnectionString == null) throw new InvalidOperationException("Невозомжно получить коэффициент лимита наладки т.к. отсуствтует строка подключения");
             return machine.GetMachineSetupCoefficient(AppSettings.Instance.ConnectionString);
+        }
+
+        public static DbResult GetWncServer(this string server)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    connection.Open();
+                    string query = $"SELECT Server FROM cnc_wnc_cfg;";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                server = reader.GetString(0);
+                                break;
+                            }
+                        }
+                    }
+                }
+                return DbResult.Ok;
+            }
+            catch (SqlException sqlEx)
+            {
+                switch (sqlEx.Number)
+                {
+                    case 18456:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
+                        return DbResult.AuthError;
+                    default:
+                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
+                        return DbResult.Error;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.WriteLog(ex);
+                return DbResult.Error;
+            }
         }
     }
 }
