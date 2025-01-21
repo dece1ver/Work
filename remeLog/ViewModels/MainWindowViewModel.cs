@@ -97,6 +97,16 @@ namespace remeLog.ViewModels
             }
         }
 
+
+
+        private bool _InProgress;
+        public bool InProgress
+        {
+            get => _InProgress;
+            set => Set(ref _InProgress, value);
+        }
+
+
         public Visibility ProgressBarVisibility
         {
             get => _ProgressBarVisibility;
@@ -331,154 +341,162 @@ namespace remeLog.ViewModels
 
         private async Task LoadPartsAsync(bool first = false)
         {
-            if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString))
-            {
-                MessageBox.Show("Перейдите в параметры приложения и настройте строку подключения к базе данных.", "Приложение не настроено.", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            if (lockUpdate) return;
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource = new();
-            var cancellationToken = _cancellationTokenSource.Token;
+            //InProgress = true;
 
-            await semaphoreSlim.WaitAsync(cancellationToken);
-            ProgressBarVisibility = Visibility.Visible;
-            Status = "Получение списка станков...";
-            if (!first)
+            try
             {
-                try
+                if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString))
                 {
-                    await Task.Delay(700, cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    semaphoreSlim?.Release();
+                    MessageBox.Show("Перейдите в параметры приложения и настройте строку подключения к базе данных.", "Приложение не настроено.", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-            }
-            switch (Machines.ReadMachines())
-            {
-                case DbResult.AuthError:
-                    MessageBox.Show("Не удалось получить список станков из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.Error:
-                    MessageBox.Show("Не удалось получить список станков из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.NoConnection:
-                    MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-            }
-            Status = "Получение списка причин неотмеченных простоев...";
-            switch (AppSettings.Instance.UnspecifiedDowntimesReasons.ReadDowntimeReasons())
-            {
-                case DbResult.AuthError:
-                    MessageBox.Show("Не удалось получить список причин простоев из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.Error:
-                    MessageBox.Show("Не удалось получить список причин простоев из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.NoConnection:
-                    MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-            }
+                if (lockUpdate) return;
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource = new();
+                var cancellationToken = _cancellationTokenSource.Token;
 
-            Status = "Получение списка причин отклонений в наладке...";
-            switch (AppSettings.Instance.SetupReasons.ReadDeviationReasons(DeviationReasonType.Setup))
-            {
-                case DbResult.AuthError:
-                    MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.Error:
-                    MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.NoConnection:
-                    MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-            }
-
-            Status = "Получение списка причин отклонений в изготовлении...";
-            switch (AppSettings.Instance.MachiningReasons.ReadDeviationReasons(DeviationReasonType.Machining))
-            {
-                case DbResult.AuthError:
-                    MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.Error:
-                    MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-                case DbResult.NoConnection:
-                    MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    break;
-            }
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                Status = "Очистка списка деталей...";
-                Parts.Clear();
-                foreach (var machine in Machines)
+                await semaphoreSlim.WaitAsync(cancellationToken);
+                ProgressBarVisibility = Visibility.Visible;
+                Status = "Получение списка станков...";
+                if (!first)
                 {
-                    ReportState state = ReportState.NotExist;
-                    bool dayExist = false;
-                    bool nightExist = false;
-                    bool dayChecked = false;
-                    bool nightChecked = false;
-                    Status = $"Получение информации за сутки на стнке {machine}...";
-                    if (FromDate == ToDate)
+                    try
                     {
-                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Day, machine), out var dbDayShifts) is DbResult.Ok && dbDayShifts.Count > 0 && dbDayShifts[0].Master != "")
-                        {
-                            dayExist = true;
-                            if (dbDayShifts.Any(s => s.IsChecked)) dayChecked = true;
-                        }
-
-                        if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0 && dbNightShifts[0].Master != "")
-                        {
-                            nightExist = true;
-                            if (dbNightShifts.Any(s => s.IsChecked)) nightChecked = true;
-                        }
-
-                        if (dayExist && nightExist)
-                        {
-                            state = ReportState.Exist;
-                        }
-                        else if (dayExist || nightExist)
-                        {
-                            state = ReportState.Partial;
-                        }
+                        await Task.Delay(700, cancellationToken);
                     }
-                    Parts.Add(new CombinedParts(machine, FromDate, ToDate) { IsReportExist = state, IsReportChecked = dayChecked && nightChecked });
-                }
-                return true;
-            });
-            Status = "Загрузка информации...";
-            foreach (var part in Parts)
-            {
-                try
-                {
-                    part.Parts = await Database.ReadPartsByShiftDateAndMachine(FromDate, ToDate, part.Machine, cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-
-                }
-                catch (SqlException sqlEx)
-                {
-                    var message = sqlEx.Number switch
+                    catch (OperationCanceledException)
                     {
-                        SqlErrorCode.NoConnection => StatusTips.NoConnectionToDb,
-                        SqlErrorCode.AuthError => StatusTips.AuthFailedToDb,
-                        _ => $"Ошибка БД №{sqlEx.Number}\n{sqlEx.Message}",
-                    };
-                    MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        semaphoreSlim?.Release();
+                        return;
+                    }
                 }
-                catch (Exception ex)
+                switch (Machines.ReadMachines())
                 {
-                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    case DbResult.AuthError:
+                        MessageBox.Show("Не удалось получить список станков из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.Error:
+                        MessageBox.Show("Не удалось получить список станков из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.NoConnection:
+                        MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                }
+                Status = "Получение списка причин неотмеченных простоев...";
+                switch (AppSettings.Instance.UnspecifiedDowntimesReasons.ReadDowntimeReasons())
+                {
+                    case DbResult.AuthError:
+                        MessageBox.Show("Не удалось получить список причин простоев из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.Error:
+                        MessageBox.Show("Не удалось получить список причин простоев из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.NoConnection:
+                        MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                }
+
+                Status = "Получение списка причин отклонений в наладке...";
+                switch (AppSettings.Instance.SetupReasons.ReadDeviationReasons(DeviationReasonType.Setup))
+                {
+                    case DbResult.AuthError:
+                        MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.Error:
+                        MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.NoConnection:
+                        MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                }
+
+                Status = "Получение списка причин отклонений в изготовлении...";
+                switch (AppSettings.Instance.MachiningReasons.ReadDeviationReasons(DeviationReasonType.Machining))
+                {
+                    case DbResult.AuthError:
+                        MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.Error:
+                        MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за ошибки.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    case DbResult.NoConnection:
+                        MessageBox.Show("Нет соединения с базой данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                }
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Status = "Очистка списка деталей...";
+                    Parts.Clear();
+                    foreach (var machine in Machines)
+                    {
+                        ReportState state = ReportState.NotExist;
+                        bool dayExist = false;
+                        bool nightExist = false;
+                        bool dayChecked = false;
+                        bool nightChecked = false;
+                        Status = $"Получение информации за сутки на стнке {machine}...";
+                        if (FromDate == ToDate)
+                        {
+                            if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Day, machine), out var dbDayShifts) is DbResult.Ok && dbDayShifts.Count > 0 && dbDayShifts[0].Master != "")
+                            {
+                                dayExist = true;
+                                if (dbDayShifts.Any(s => s.IsChecked)) dayChecked = true;
+                            }
+
+                            if (Database.ReadShiftInfo(new ShiftInfo(ToDate, ShiftType.Night, machine), out var dbNightShifts) is DbResult.Ok && dbNightShifts.Count > 0 && dbNightShifts[0].Master != "")
+                            {
+                                nightExist = true;
+                                if (dbNightShifts.Any(s => s.IsChecked)) nightChecked = true;
+                            }
+
+                            if (dayExist && nightExist)
+                            {
+                                state = ReportState.Exist;
+                            }
+                            else if (dayExist || nightExist)
+                            {
+                                state = ReportState.Partial;
+                            }
+                        }
+                        Parts.Add(new CombinedParts(machine, FromDate, ToDate) { IsReportExist = state, IsReportChecked = dayChecked && nightChecked });
+                    }
+                    return true;
+                });
+                Status = "Загрузка информации...";
+                foreach (var part in Parts)
+                {
+                    try
+                    {
+                        part.Parts = await Database.ReadPartsByShiftDateAndMachine(FromDate, ToDate, part.Machine, cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        var message = sqlEx.Number switch
+                        {
+                            SqlErrorCode.NoConnection => StatusTips.NoConnectionToDb,
+                            SqlErrorCode.AuthError => StatusTips.AuthFailedToDb,
+                            _ => $"Ошибка БД №{sqlEx.Number}\n{sqlEx.Message}",
+                        };
+                        MessageBox.Show(message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
-
-            Status = "";
-            ProgressBarVisibility = Visibility.Collapsed;
-            semaphoreSlim.Release();
+            finally
+            {
+                Status = "";
+                ProgressBarVisibility = Visibility.Collapsed;
+                semaphoreSlim.Release();
+                InProgress = false;
+            }
         }
 
         private void LockUpdate() => lockUpdate = true;
@@ -546,7 +564,7 @@ namespace remeLog.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        Util.WriteLogAsync(ex);
+                        Util.WriteLog(ex);
                     }
                 };
 
@@ -558,7 +576,7 @@ namespace remeLog.ViewModels
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
             }
         }
 

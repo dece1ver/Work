@@ -22,16 +22,16 @@ namespace remeLog
         {
             _uniqueEventName = CreateUniqueEventName();
 
-            Util.WriteLogAsync("Создан экземпляр приложения. Уникальное имя события: " + _uniqueEventName);
+            Util.WriteLog("Создан экземпляр приложения. Уникальное имя события: " + _uniqueEventName);
 
             try
             {
-                Util.WriteLogAsync("Начало обработки запуска приложения");
+                Util.WriteLog("Начало обработки запуска приложения");
                 HandleApplicationStart();
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex, "Критическая ошибка при запуске приложения");
+                Util.WriteLog(ex, "Критическая ошибка при запуске приложения");
                 MessageBox.Show($"Ошибка при запуске приложения: {ex.Message}",
                     "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
@@ -40,25 +40,25 @@ namespace remeLog
 
         private void HandleApplicationStart()
         {
-            Util.WriteLogAsync("Проверка на наличие уже запущенных экземпляров");
+            Util.WriteLog("Проверка на наличие уже запущенных экземпляров");
             bool isAlreadyRunning = TryConnectToExistingInstance();
             if (isAlreadyRunning)
             {
-                Util.WriteLogAsync("Обнаружен запущенный экземпляр приложения. Активируем окно и завершаем текущий процесс.");
+                Util.WriteLog("Обнаружен запущенный экземпляр приложения. Активируем окно и завершаем текущий процесс.");
                 _eventWaitHandle?.Set();
                 Shutdown();
                 return;
             }
 
-            Util.WriteLogAsync("Проверка обновлений приложения");
+            Util.WriteLog("Проверка обновлений приложения");
             if (CheckForUpdate())
             {
-                Util.WriteLogAsync("Обновление найдено и успешно запущено. Завершаем текущий процесс.");
+                Util.WriteLog("Обновление найдено и успешно запущено. Завершаем текущий процесс.");
                 Shutdown();
                 return;
             }
 
-            Util.WriteLogAsync("Начало инициализации приложения");
+            Util.WriteLog("Начало инициализации приложения");
             InitializeApplication();
         }
 
@@ -66,20 +66,20 @@ namespace remeLog
         {
             try
             {
-                Util.WriteLogAsync($"Попытка открыть событие с именем: {_uniqueEventName}");
+                Util.WriteLog($"Попытка открыть событие с именем: {_uniqueEventName}");
                 _eventWaitHandle = EventWaitHandle.OpenExisting(_uniqueEventName);
-                Util.WriteLogAsync("Событие найдено. Другой экземпляр уже запущен.");
+                Util.WriteLog("Событие найдено. Другой экземпляр уже запущен.");
                 return true;
             }
             catch (WaitHandleCannotBeOpenedException)
             {
-                Util.WriteLogAsync("Событие не найдено. Создаем новое.");
+                Util.WriteLog("Событие не найдено. Создаем новое.");
                 _eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, _uniqueEventName);
                 return false;
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex, "Ошибка при проверке запущенных экземпляров");
+                Util.WriteLog(ex, "Ошибка при проверке запущенных экземпляров");
                 throw;
             }
         }
@@ -88,29 +88,29 @@ namespace remeLog
         {
             try
             {
-                Util.WriteLogAsync("Получение текущего пути исполняемого файла");
+                Util.WriteLog("Получение текущего пути исполняемого файла");
                 var currentFile = Process.GetCurrentProcess().MainModule?.FileName;
                 if (currentFile == null)
                 {
-                    Util.WriteLogAsync("Не удалось получить путь текущего файла. Обновление не требуется.");
+                    Util.WriteLog("Не удалось получить путь текущего файла. Обновление не требуется.");
                     return false;
                 }
 
                 var currentExeName = Path.GetFileName(currentFile);
                 var updatePath = Path.Combine("./update", currentExeName);
-                Util.WriteLogAsync($"Проверка файла обновления по пути: {updatePath}");
+                Util.WriteLog($"Проверка файла обновления по пути: {updatePath}");
                 if (File.Exists(updatePath) && updatePath.IsFileNewerThan(currentFile))
                 {
-                    Util.WriteLogAsync("Обновленный файл найден. Запуск обновления...");
+                    Util.WriteLog("Обновленный файл найден. Запуск обновления...");
                     return TryStartUpdate(updatePath);
                 }
 
-                Util.WriteLogAsync("Обновление не требуется.");
+                Util.WriteLog("Обновление не требуется.");
                 return false;
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex, "Ошибка при проверке обновлений");
+                Util.WriteLog(ex, "Ошибка при проверке обновлений");
                 return false;
             }
         }
@@ -119,7 +119,7 @@ namespace remeLog
         {
             try
             {
-                Util.WriteLogAsync($"Запуск обновленной версии из {updatePath}");
+                Util.WriteLog($"Запуск обновленной версии из {updatePath}");
 
                 var startInfo = new ProcessStartInfo
                 {
@@ -130,58 +130,58 @@ namespace remeLog
                 var process = Process.Start(startInfo);
                 if (process == null)
                 {
-                    Util.WriteLogAsync("Не удалось запустить процесс обновления");
+                    Util.WriteLog("Не удалось запустить процесс обновления");
                     return false;
                 }
 
                 // Ждем чтобы убедиться что процесс запустился
                 if (!process.WaitForInputIdle(5000))
                 {
-                    Util.WriteLogAsync("Процесс обновления не отвечает");
+                    Util.WriteLog("Процесс обновления не отвечает");
                     return false;
                 }
 
-                Util.WriteLogAsync("Обновленная версия успешно запущена, завершаем текущий процесс");
+                Util.WriteLog("Обновленная версия успешно запущена, завершаем текущий процесс");
                 return true;
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex, "Ошибка при запуске обновления");
+                Util.WriteLog(ex, "Ошибка при запуске обновления");
                 return false;
             }
         }
 
         private void InitializeApplication()
         {
-            Util.WriteLogAsync("Инициализация настроек приложения");
+            Util.WriteLog("Инициализация настроек приложения");
             AppSettings.Instance.ReadConfig();
 
-            Util.WriteLogAsync("Настройка лицензии Syncfusion");
+            Util.WriteLog("Настройка лицензии Syncfusion");
             Util.TrySetupSyncfusionLicense();
 
-            Util.WriteLogAsync("Запуск наблюдателя активации окна");
+            Util.WriteLog("Запуск наблюдателя активации окна");
             StartWindowActivationWatcher();
 
-            Util.WriteLogAsync("Загрузка необходимых DLL");
+            Util.WriteLog("Загрузка необходимых DLL");
             LoadRequiredDlls();
 
-            Util.WriteLogAsync("Настройка культуры приложения");
+            Util.WriteLog("Настройка культуры приложения");
             ConfigureCulture();
 
-            Util.WriteLogAsync("Инициализация завершена");
+            Util.WriteLog("Инициализация завершена");
         }
 
         private void StartWindowActivationWatcher()
         {
-            Util.WriteLogAsync("Запуск наблюдателя активации окна");
+            Util.WriteLog("Запуск наблюдателя активации окна");
 
             Task.Factory.StartNew(() =>
             {
-                Util.WriteLogAsync("Наблюдатель активации запущен");
+                Util.WriteLog("Наблюдатель активации запущен");
                 
                 while (_eventWaitHandle?.WaitOne() ?? false)
                 {
-                    Util.WriteLogAsync("Получен сигнал активации");
+                    Util.WriteLog("Получен сигнал активации");
 
                     try
                     {
@@ -191,35 +191,35 @@ namespace remeLog
                         }
                         Dispatcher.BeginInvoke(() =>
                         {
-                            Util.WriteLogAsync("Вызов метода ActivateMainWindow через Dispatcher");
+                            Util.WriteLog("Вызов метода ActivateMainWindow через Dispatcher");
                             ActivateMainWindow();
                         });
                     }
                     catch (Exception ex)
                     {
-                        Util.WriteLogAsync(ex, "Ошибка при активации окна");
+                        Util.WriteLog(ex, "Ошибка при активации окна");
                     }
                 }
 
-                Util.WriteLogAsync("Наблюдатель активации завершил работу");
+                Util.WriteLog("Наблюдатель активации завершил работу");
             }, TaskCreationOptions.LongRunning);
         }
 
         private static void ActivateMainWindow()
         {
-            Util.WriteLogAsync("Попытка активации главного окна");
+            Util.WriteLog("Попытка активации главного окна");
 
             var mainWindow = Current.MainWindow;
             if (mainWindow == null)
             {
-                Util.WriteLogAsync("Главное окно не найдено. Завершаем активацию.");
+                Util.WriteLog("Главное окно не найдено. Завершаем активацию.");
                 return;
             }
 
             if (mainWindow.WindowState == WindowState.Minimized ||
                 mainWindow.Visibility != Visibility.Visible)
             {
-                Util.WriteLogAsync("Окно свернуто или скрыто. Приводим его в нормальное состояние.");
+                Util.WriteLog("Окно свернуто или скрыто. Приводим его в нормальное состояние.");
                 mainWindow.Show();
                 mainWindow.WindowState = WindowState.Maximized;
             }
@@ -229,7 +229,7 @@ namespace remeLog
             mainWindow.Topmost = false;
             mainWindow.Focus();
 
-            Util.WriteLogAsync("Главное окно активировано.");
+            Util.WriteLog("Главное окно активировано.");
         }
 
         private static void LoadRequiredDlls()
@@ -279,7 +279,7 @@ namespace remeLog
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex, $"Ошибка при загрузке DLL {dllName}");
+                Util.WriteLog(ex, $"Ошибка при загрузке DLL {dllName}");
                 throw;
             }
         }
@@ -304,7 +304,7 @@ namespace remeLog
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex, "Исключение при получении даты изменения");
+                Util.WriteLog(ex, "Исключение при получении даты изменения");
                 timestamp = "";
             }
             return $"remeLog-{version.Major}.{version.Minor}.{version.Build}.{timestamp}";
@@ -335,7 +335,7 @@ namespace remeLog
                 ? $"Необработанное исключение: {exception.Message}\n{exception.StackTrace}"
                 : $"Необработанное исключение. Тип: {e.ExceptionObject?.GetType()}";
 
-            Util.WriteLogAsync(message);
+            Util.WriteLog(message);
 
             MessageBox.Show("Произошла критическая ошибка. Приложение будет закрыто.",
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -346,7 +346,7 @@ namespace remeLog
         private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
             string message = $"Необработанное исключение в UI потоке: {e.Exception.Message}\n{e.Exception.StackTrace}";
-            Util.WriteLogAsync(message);
+            Util.WriteLog(message);
 
             MessageBox.Show("Произошла ошибка в пользовательском интерфейсе. Приложение будет закрыто.",
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -357,7 +357,7 @@ namespace remeLog
         private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
             string message = $"Необработанное исключение в задаче: {e.Exception?.Message}\n{e.Exception?.StackTrace}";
-            Util.WriteLogAsync(message);
+            Util.WriteLog(message);
 
             e.SetObserved();
         }

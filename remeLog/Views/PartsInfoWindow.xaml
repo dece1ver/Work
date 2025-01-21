@@ -760,7 +760,12 @@
                         </DockPanel>
 
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="Деталь" Margin="25 0 0 0"/>
-                        <TextBox Grid.Row="0" Grid.Column="4" Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
+                        <DockPanel Grid.Row="0" Grid.Column="4">
+                            <Button DockPanel.Dock="Right" Content="W" Width="20" 
+                                    Command="{Binding SearchInWindchillCommand}" 
+                                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}"/>
+                            <TextBox Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
+                        </DockPanel>
                         <TextBlock Grid.Row="1" Grid.Column="3" Text="М/Л" Margin="25 0 0 0"/>
                         <Grid Grid.Row="1" Grid.Column="4" >
                             <Grid.ColumnDefinitions>

@@ -8,7 +8,7 @@
     <ApplicationIcon>Resources\remeLog.ico</ApplicationIcon>
     <UseWindowsForms>True</UseWindowsForms>
 	<Title>Электронный журнал (Отчёты)</Title>
-	<Description/>
+	<Description />
 	<AssemblyTitle>Электронный журнал (Отчёты)</AssemblyTitle>
   </PropertyGroup>
 

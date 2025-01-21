@@ -147,7 +147,7 @@
                 </GroupBox>
                 <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" IsManipulationEnabled="True" FontSize="14" DockPanel.Dock="Top" Focusable="False" 
                           BorderBrush="Transparent" Margin="-4 0" ItemContainerStyle="{StaticResource ListViewItemsStyle}"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                          ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Vertical">

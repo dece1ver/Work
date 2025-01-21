@@ -998,21 +998,22 @@ namespace remeLog.Infrastructure
             return machine.GetMachineSetupCoefficient(AppSettings.Instance.ConnectionString);
         }
 
-        public static DbResult GetWncServer(this string server)
+        public static DbResult GetWncConfig(out WncConfig wncConfig)
         {
+            wncConfig = null!;
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (var connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
-                    string query = $"SELECT Server FROM cnc_wnc_cfg;";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    var query = $"SELECT * FROM cnc_wnc_cfg;";
+                    using (var command = new SqlCommand(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                server = reader.GetString(0);
+                                wncConfig = new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
                                 break;
                             }
                         }

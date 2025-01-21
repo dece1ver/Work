@@ -3,11 +3,13 @@ using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Models;
+using Microsoft.IdentityModel.Tokens;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using remeLog.Views;
+using Syncfusion.Data.Extensions;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -36,6 +38,7 @@ namespace remeLog.ViewModels
         {
             lockUpdate = true;
             ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
+            SearchInWindchillCommand = new LambdaCommand(OnSearchInWindchillCommandExecuted, CanSearchInWindchillCommandExecute);
             IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
             DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
             SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
@@ -685,6 +688,36 @@ namespace remeLog.ViewModels
         private static bool CanClearContentCommandExecute(object p) => true;
         #endregion
 
+        #region SearchInWindchill
+        public ICommand SearchInWindchillCommand { get; }
+        private async void OnSearchInWindchillCommandExecuted(object p)
+        {
+            if (p is PartsInfoWindow w)
+            {
+                try
+                {
+                    var searchResult = await Util.SearchInWindchill(PartNameFilter);
+                    var wncObjects = Util.ExtractWncObjects(searchResult);
+                    if (wncObjects.Any())
+                    {
+                        var wncObjectsWindow = new WncObjectsWindow(wncObjects.ToObservableCollection()) { Owner = w};
+                        wncObjectsWindow.Show();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ничего не найдено :с", ":c", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибочка вышла", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
+        }
+        private bool CanSearchInWindchillCommandExecute(object p) => !string.IsNullOrWhiteSpace(PartNameFilter) && p is PartsInfoWindow;
+        #endregion
+
         #region ShowInfo
         public ICommand ShowInfoCommand { get; }
         private void OnShowInfoCommandExecuted(object p)
@@ -1267,6 +1300,7 @@ namespace remeLog.ViewModels
         {
             Part.CalcFixed = !Part.CalcFixed;
             CalcFixed = Part.CalcFixed;
+            Task.Run(() => LoadPartsAsync());
         }
         private static bool CanChangeCalcFixedCommandExecute(object p) => true;
         #endregion

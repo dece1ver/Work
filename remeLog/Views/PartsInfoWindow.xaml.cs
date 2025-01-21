@@ -253,10 +253,7 @@ namespace remeLog.Views
                         case Key.W:
                             try
                             {
-                                string result = await Util.SearchInWindchill(d.PartNameFilter);
-                                var links = Util.ExtractWncObjects(result, d.PartNameFilter);
 
-                                MessageBox.Show(string.Join("\n", links));
                             }
                             catch (Exception ex)
                             {

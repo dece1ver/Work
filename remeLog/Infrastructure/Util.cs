@@ -1,21 +1,26 @@
-﻿using ClosedXML.Excel;
+﻿using Azure.Core;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing;
 using libeLog;
 using libeLog.Infrastructure;
+using libeLog.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using remeLog.Infrastructure.Services;
 using remeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data.Common;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection.Metadata;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows.Forms;
+using static System.Net.WebRequestMethods;
 
 namespace remeLog.Infrastructure
 {
@@ -104,7 +109,7 @@ namespace remeLog.Infrastructure
         /// <param name="start">Дата начала периода.</param>
         /// <param name="end">Дата окончания периода.</param>
         /// <returns>Количество рабочих дней.</returns>
-        public static int GetWorkDaysBeetween(DateTime start, DateTime end) 
+        public static int GetWorkDaysBeetween(DateTime start, DateTime end)
             => (int)(end - start).TotalDays + 1 - Constants.Dates.Holidays.Count(d => d >= start && d <= end);
 
         /// <summary>
@@ -144,7 +149,7 @@ namespace remeLog.Infrastructure
         {
             ">" or ">=" or "<" or "<=" => true,
             "=" or "!=" => false,
-            _ => false 
+            _ => false
         };
 
         /// <summary>
@@ -270,73 +275,59 @@ namespace remeLog.Infrastructure
 
         public static async Task<string> SearchInWindchill(string searchQuery)
         {
-            using var handler = new HttpClientHandler { UseDefaultCredentials = true };
-            using var client = new HttpClient(handler);
-            
-
-            client.DefaultRequestHeaders.Add("Accept", "text/javascript, text/html, application/xml, text/xml, */*");
-            client.DefaultRequestHeaders.Add("X-Prototype-Version", "1.6.1");
-            client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");            
-
-            var parameters = new Dictionary<string, string>
+            var dbResult = Database.GetWncConfig(out var wncConfig);
+            if (dbResult != DbResult.Ok || wncConfig == null)
             {
-                ["null___keywordkeywordField_SearchTextBox___textbox"] = searchQuery,
-                ["WCTYPE|wt.epm.EPMDocument|local.areopag.DefaultEPMDocument"] = "on",
-                ["searchType"] = "WCTYPE|wt.epm.EPMDocument|local.areopag.DefaultEPMDocument",
-                ["all_contexts"] = "on",
-                ["pageCounter"] = "1",
-                ["maxPageCont"] = "100"
-            };
+                throw new Exception("Не удалось получить конфигурацию Windchill");
+            }
 
-            var content = new FormUrlEncodedContent(parameters);
-
-            var response = await client.PostAsync(
-                "http://kbserv.areopag.local/Windchill/ptc1/searchResultsComp",
-                content);
-
-            return await response.Content.ReadAsStringAsync();
-        
+            var service = new WindchillService(wncConfig.Server, wncConfig.User, wncConfig.Password, wncConfig.LocalType);
+            return await service.SearchDocumentsAsync(searchQuery);
         }
 
-        public static List<WncObject> ExtractWncObjects(string inputString, string searchTerm)
+        public static List<WncObject> ExtractWncObjects(string inputString)
         {
             var objects = new List<WncObject>();
-            var server = "";
-            if (server.GetWncServer() != libeLog.Models.DbResult.Ok)
+            if (Database.GetWncConfig(out var wncConfig) != DbResult.Ok)
             {
                 MessageBox.Show("Не удалось выполнить поиск в Windchill из-за ошибки");
                 return objects;
             }
 
-            // Расширенный паттерн для захвата всех необходимых данных
-            var pattern = @"""number"":\s*{[^}]*""label"":\s*""([^""]+)""[^}]*}.*?""name"":\s*""([^""]+)"".*?ContainerOid=([^&]+)&amp;oid=([^&]+)&amp;u8=(\d+)";
-            var regex = new Regex(pattern, RegexOptions.Singleline);
+            // Ищем все объекты в JSON
+            var regex = new Regex(@"PTC\.ExtJSONTableConfig\.chunk\s*=\s*({.*?});", RegexOptions.Singleline);
+            var match = regex.Match(inputString);
+            if (!match.Success) return objects;
 
-            var matches = regex.Matches(inputString);
+            // Парсим JSON объект
+            var jsonObject = JObject.Parse(match.Groups[1].Value);
+            var data = jsonObject["data"] as JArray;
+            if (data == null) return objects;
 
-            foreach (Match match in matches)
+            foreach (var obj in data)
             {
-                var partNumber = match.Groups[1].Value;
-                var partName = match.Groups[2].Value;
+                // Извлекаем необходимые поля
+                var name = obj["name"]?.ToString() ?? "";
+                var partNumber = obj["number"]?["comparable"]?.ToString() ?? "";
+                var version = obj["version"]?["gui"]?["html"]?.ToString() ?? "";
+                var state = obj["state"]?.ToString() ?? "";
+                var containerName = obj["containerName"]?["label"]?.ToString() ?? "";
+                var type = obj["type_icon"]?["gui"]?["comparable"]?.ToString() ?? "";
+                var modifyDate = obj["thePersistInfo_modifyStamp"]?["gui"]?["html"]?.ToString() ?? "";
+                var createDate = obj["thePersistInfo_createStamp"]?["gui"]?["html"]?.ToString() ?? "";
+                var oid = obj["oid"]?.ToString() ?? "";
+                var containerOid = obj["nmActions"]?["params"]?["ContainerOid"]?.ToString() ?? "";
+                var u8 = "1";
 
-                if (partNumber.Contains(searchTerm) || partName.Contains(searchTerm))
-                {
-                    var containerOid = match.Groups[3].Value;
-                    var oid = match.Groups[4].Value;
-                    var u8 = match.Groups[5].Value;
+                // Формируем ссылку
+                var link = $"{wncConfig.Server}/Windchill/app/#ptc1/tcomp/infoPage?ContainerOid={containerOid}&oid={oid}&u8={u8}";
 
-                    // Заменяем &amp; на &
-                    containerOid = containerOid.Replace("&amp;", "&");
-                    oid = oid.Replace("&amp;", "&");
-
-                    var link = $"{server}/Windchill/app/#ptc1/tcomp/infoPage?ContainerOid={containerOid}&oid={oid}&u8={u8}";
-
-                    objects.Add(new WncObject(partName, partNumber, link));
-                }
+                // Создаем объект с необходимыми полями
+                objects.Add(new WncObject(name, partNumber, link, version, state, containerName, type, modifyDate.Replace("MSK", "").Trim(), createDate.Replace("MSK", "").Trim()));
             }
+
             return objects;
         }
-
 
         /// <summary>
         /// Настраивает лицензию Syncfusion, используя переменную окружения или данные из базы данных.
