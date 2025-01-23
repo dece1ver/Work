@@ -15,6 +15,8 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -273,16 +275,18 @@ namespace remeLog.Infrastructure
             });
         }
 
-        public static async Task<string> SearchInWindchill(string searchQuery)
+        public static async Task<string> SearchInWindchill(string searchQuery, CancellationToken cancellationToken)
         {
             var dbResult = Database.GetWncConfig(out var wncConfig);
+            Util.Debug(wncConfig);
             if (dbResult != DbResult.Ok || wncConfig == null)
             {
                 throw new Exception("Не удалось получить конфигурацию Windchill");
             }
 
             var service = new WindchillService(wncConfig.Server, wncConfig.User, wncConfig.Password, wncConfig.LocalType);
-            return await service.SearchDocumentsAsync(searchQuery);
+            cancellationToken.ThrowIfCancellationRequested();
+            return await service.SearchDocumentsAsync(searchQuery, cancellationToken);
         }
 
         public static List<WncObject> ExtractWncObjects(string inputString)
@@ -341,6 +345,68 @@ namespace remeLog.Infrastructure
                 Environment.SetEnvironmentVariable("SYNCFUSION_LICENSE", key, EnvironmentVariableTarget.User);
             }
             Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
+        }
+
+        [Conditional("DEBUG")]
+        public static void Debug(
+        object obj,
+        int indent = 0,
+        int maxDepth = 2
+            ,
+        [CallerArgumentExpression("obj")] string expression = null!)
+        {
+#if DEBUG
+            if (obj == null)
+            {
+                System.Diagnostics.Debug.WriteLine($"{expression} = null");
+                return;
+            }
+
+            if (indent > maxDepth)
+            {
+                System.Diagnostics.Debug.WriteLine($"{new string(' ', indent * 2)}... (Max depth reached)");
+                return;
+            }
+
+            var type = obj.GetType();
+            var indentStr = new string(' ', indent * 2);
+
+            if (type.IsPrimitive || obj is string)
+            {
+                System.Diagnostics.Debug.WriteLine($"{expression} = {obj}");
+                return;
+            }
+
+            if (indent == 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"{expression}:");
+            }
+
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                try
+                {
+                    // Пропускаем свойства, которые требуют параметров
+                    if (property.GetIndexParameters().Length > 0) continue;
+
+                    var value = property.GetValue(obj);
+                    if (value == null || property.PropertyType.IsPrimitive || property.PropertyType == typeof(string))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"{indentStr}{property.Name} = {value}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"{indentStr}{property.Name}:");
+                        Debug(value, indent + 1, maxDepth);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Логируем ошибку при доступе к свойству
+                    System.Diagnostics.Debug.WriteLine($"{indentStr}{property.Name} = <Error: {ex.Message}>");
+                }
+            }
+#endif
         }
     }
 }

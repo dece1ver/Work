@@ -253,7 +253,7 @@ namespace remeLog.Views
                         case Key.W:
                             try
                             {
-
+                                d.SearchInWindchillCommand.Execute(this);
                             }
                             catch (Exception ex)
                             {

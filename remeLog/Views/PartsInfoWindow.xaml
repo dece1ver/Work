@@ -761,9 +761,57 @@
 
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="Деталь" Margin="25 0 0 0"/>
                         <DockPanel Grid.Row="0" Grid.Column="4">
-                            <Button DockPanel.Dock="Right" Content="W" Width="20" 
-                                    Command="{Binding SearchInWindchillCommand}" 
-                                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}"/>
+                            <Button DockPanel.Dock="Right" Width="20" Height="20"
+        Command="{Binding SearchInWindchillCommand}" 
+        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Content" Value="{StaticResource SyncIcon}"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding WncSearchInProgress}" Value="True">
+                                                <Setter Property="Content">
+                                                    <Setter.Value>
+                                                        <Grid Width="16" Height="16"
+                                                              ClipToBounds="False">
+                                                            <Viewbox Width="12" Height="12"
+                                                                     
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center">
+                                                                <Label Content="{StaticResource SyncIcon}" Margin="-2"
+                                                                       RenderTransformOrigin="0.5 0.5"
+                                                                       Padding="0">                 
+                                                                    <Label.RenderTransform>
+                                                                        <RotateTransform CenterX="0" CenterY="0"/>
+                                                                    </Label.RenderTransform>
+                                                                    <Label.Style>
+                                                                        <Style TargetType="Label">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding WncSearchInProgress}" Value="True">
+                                                                                    <DataTrigger.EnterActions>
+                                                                                        <BeginStoryboard>
+                                                                                            <Storyboard RepeatBehavior="Forever">
+                                                                                                <DoubleAnimation
+                                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                        From="0" To="360" Duration="0:0:1"/>
+                                                                                            </Storyboard>
+                                                                                        </BeginStoryboard>
+                                                                                    </DataTrigger.EnterActions>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Label.Style>
+                                                                </Label>
+                                                            </Viewbox>
+                                                        </Grid>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                             <TextBox Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
                         </DockPanel>
                         <TextBlock Grid.Row="1" Grid.Column="3" Text="М/Л" Margin="25 0 0 0"/>

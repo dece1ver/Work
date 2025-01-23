@@ -128,17 +128,16 @@ namespace RodCalc
                 }
                 else
                 {
-                    Variant2TextBox.Text = "Вариант 2:\n" +
-                                         "Невозможно равномерно распределить детали по прутам.\n" +
-                                         "Рекомендуется использовать Вариант 1." +
+                    Variant2TextBox.Text = "Невозможно равномерно распределить детали по прутам.\n" +
+                                           "Рекомендуется использовать Вариант 1." +
                                          calculationFormula;
                 }
 
-                Variant1TextBox.Text = $"Вариант 1:\n" +
-                                      variant1Details +
-                                      $"Общий расход материала: {totalLengthUsedVariant1 + totalLeftoverVariant1} мм\n" +
-                                      $"Общий остаток: {totalLeftoverVariant1} мм" +
-                                      calculationFormula;
+                Variant1TextBox.Text = variant1Details +
+                                       $"Общий расход материала: {totalLengthUsedVariant1 + totalLeftoverVariant1} мм\n" +
+                                       $"Общий остаток: {totalLeftoverVariant1} мм" +
+                                       calculationFormula;
+
             }
             catch (Exception ex)
             {

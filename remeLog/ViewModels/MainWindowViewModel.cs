@@ -512,7 +512,7 @@ namespace remeLog.ViewModels
             Random random = new();
             var combinedParts = new CombinedParts(machine, fromDate, toDate)
             {
-                IsReportExist = (CombinedParts.ReportState)random.Next(0, 3),
+                IsReportExist = (ReportState)random.Next(0, 3),
                 IsReportChecked = random.NextDouble() > 0.5,
                 Parts = await Util.GenerateMockPartsAsync()
             };

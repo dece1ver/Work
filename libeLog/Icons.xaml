@@ -319,7 +319,11 @@
     </Viewbox>
 
 
-    <Viewbox x:Key="SyncIcon" x:Shared="False" Width="16" Height="16">
+    <Viewbox x:Key="SyncIcon" x:Shared="False" 
+         Width="16" Height="16"
+         ClipToBounds="False"
+         HorizontalAlignment="Center"
+         VerticalAlignment="Center">
         <Rectangle Width="16 " Height="16">
             <Rectangle.Resources>
                 <SolidColorBrush x:Key="canvas" Opacity="0" />

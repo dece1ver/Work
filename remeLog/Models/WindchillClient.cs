@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using remeLog.Infrastructure;
+using System.Threading;
 
 namespace remeLog.Models
 {
@@ -35,7 +36,7 @@ namespace remeLog.Models
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
         }
 
-        public async Task<bool> AuthorizeAsync()
+        public async Task<bool> AuthorizeAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -61,7 +62,7 @@ namespace remeLog.Models
                 request.Headers.Add("sec-ch-ua-mobile", "?0");
                 request.Headers.Add("sec-ch-ua-platform", "\"Windows\"");
 
-                var response = await _client.SendAsync(request);
+                var response = await _client.SendAsync(request, cancellationToken).ConfigureAwait(false);
                 _isAuthorized = response.IsSuccessStatusCode;
                 return _isAuthorized;
             }
@@ -72,23 +73,26 @@ namespace remeLog.Models
             }
         }
 
-        public async Task<string> SearchAsync(string searchQuery)
+        public async Task<string> SearchAsync(string searchQuery, CancellationToken cancellationToken)
         {
             if (!_isAuthorized)
                 throw new InvalidOperationException("Необходимо выполнить авторизацию перед поиском");
-
-            // Настраиваем заголовки для AJAX-запросов
             ConfigureAjaxHeaders();
+            cancellationToken.ThrowIfCancellationRequested();
 
-            // Выполнение поиска
-            var searchResponse = await ExecuteSearch(searchQuery);
+            var searchResponse = await ExecuteSearch(searchQuery, cancellationToken);
+            Util.Debug(searchResponse.StatusCode);
+            Util.Debug(searchResponse.IsSuccessStatusCode);
             await EnsureSuccessResponse(searchResponse, "выполнения поиска");
 
-            // Получение результатов
-            var resultsResponse = await GetSearchResults(searchQuery);
+            cancellationToken.ThrowIfCancellationRequested();
+            var resultsResponse = await GetSearchResults(searchQuery, cancellationToken);
+            Util.Debug(resultsResponse.StatusCode);
+            Util.Debug(resultsResponse.IsSuccessStatusCode);
             await EnsureSuccessResponse(resultsResponse, "получения результатов");
 
-            var result = await resultsResponse.Content.ReadAsStringAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+            var result = await resultsResponse.Content.ReadAsStringAsync(cancellationToken);
             return result;
         }
 
@@ -104,15 +108,12 @@ namespace remeLog.Models
             _client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
         }
 
-        private async Task<HttpResponseMessage> ExecuteSearch(string searchQuery)
+        private async Task<HttpResponseMessage> ExecuteSearch(string searchQuery, CancellationToken cancellationToken)
         {
-            // Формируем URL для поиска
             var searchUrl = GenerateCadSearchUrl(_serverUrl, searchQuery);
 
-            // Настраиваем заголовки для AJAX-запросов
             ConfigureAjaxHeaders();
 
-            // Формируем запрос
             var request = new HttpRequestMessage(HttpMethod.Get, searchUrl)
             {
                 Headers =
@@ -122,11 +123,10 @@ namespace remeLog.Models
                 }
             };
 
-            // Выполняем запрос
-            return await _client.SendAsync(request);
+            return await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         }
 
-        private async Task<HttpResponseMessage> GetSearchResults(string searchQuery)
+        private async Task<HttpResponseMessage> GetSearchResults(string searchQuery, CancellationToken cancellationToken)
         {
             var content = new FormUrlEncodedContent(new[]
             {
@@ -138,7 +138,7 @@ namespace remeLog.Models
 
             return await _client.PostAsync(
                 $"{_serverUrl}/Windchill/ptc1/searchResultsComp",
-                content
+                content, cancellationToken
             );
         }
 

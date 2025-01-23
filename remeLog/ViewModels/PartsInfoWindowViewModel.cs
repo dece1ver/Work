@@ -16,6 +16,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.DirectoryServices;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -32,6 +34,7 @@ namespace remeLog.ViewModels
     {
         private static readonly SemaphoreSlim semaphoreSlim = new(1, 1);
         private CancellationTokenSource _cancellationTokenSource = new();
+        private CancellationTokenSource _wncCancellationTokenSource = new();
         private static bool lockUpdate;
 
         public PartsInfoWindowViewModel(CombinedParts parts)
@@ -379,6 +382,16 @@ namespace remeLog.ViewModels
             set => Set(ref _InProgress, value);
         }
 
+
+        private bool _WncSearchInProgress;
+        /// <summary> Поиск по Windchill в процессе </summary>
+        public bool WncSearchInProgress
+        {
+            get => _WncSearchInProgress;
+            set => Set(ref _WncSearchInProgress, value);
+        }
+
+
         private string _Status = string.Empty;
         /// <summary> Статус </summary>
         public string Status
@@ -694,13 +707,44 @@ namespace remeLog.ViewModels
         {
             if (p is PartsInfoWindow w)
             {
+                _wncCancellationTokenSource?.Cancel();
+                _wncCancellationTokenSource?.Dispose();
+                _wncCancellationTokenSource = new CancellationTokenSource();
+
+                _wncCancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+                var cancellationToken = _wncCancellationTokenSource.Token;
+
                 try
                 {
-                    var searchResult = await Util.SearchInWindchill(PartNameFilter);
-                    var wncObjects = Util.ExtractWncObjects(searchResult);
+                    WncSearchInProgress = true;
+                    int stableObjectCount = 0;
+                    int previousObjectCount = 0;
+                    List<WncObject> wncObjects = new();
+                    Status = "Поиск в Windchill...";
+
+                    while (stableObjectCount < 3)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        var searchResult = await Util.SearchInWindchill(PartNameFilter, cancellationToken);
+                        cancellationToken.ThrowIfCancellationRequested();
+                        wncObjects = Util.ExtractWncObjects(searchResult);
+                        if (wncObjects.Count == previousObjectCount)
+                        {
+                            stableObjectCount++;
+                        }
+                        else
+                        {
+                            stableObjectCount = 0;
+                            previousObjectCount = wncObjects.Count;
+                        }
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await Task.Delay(200, cancellationToken);
+                    }
+
+                    Util.Debug(wncObjects);
                     if (wncObjects.Any())
                     {
-                        var wncObjectsWindow = new WncObjectsWindow(wncObjects.ToObservableCollection()) { Owner = w};
+                        var wncObjectsWindow = new WncObjectsWindow(wncObjects.ToObservableCollection()) { Owner = w };
                         wncObjectsWindow.Show();
                     }
                     else
@@ -708,9 +752,23 @@ namespace remeLog.ViewModels
                         MessageBox.Show("Ничего не найдено :с", ":c", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
+                catch (TaskCanceledException)
+                {
+                    
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Ошибочка вышла", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    WncSearchInProgress = false;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        Status = "Отменено";
+                        await Task.Delay(2000);
+                    }
+                    Status = "";
                 }
             }
 
