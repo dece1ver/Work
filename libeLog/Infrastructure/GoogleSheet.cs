@@ -42,7 +42,7 @@ namespace libeLog.Infrastructure
             return credential;
         }
 
-        public async Task<bool> CheckConnect()
+        public async Task<Spreadsheet> GetSpreadsheetAsync()
         {
             Credential = GetCredentialsFromFile(_credentialFile);
             SheetsService = new SheetsService(new BaseClientService.Initializer()
@@ -50,9 +50,7 @@ namespace libeLog.Infrastructure
                 HttpClientInitializer = Credential,
             });
             var request = SheetsService.Spreadsheets.Get(_sheetId);
-            if (await request.ExecuteAsync() == null) return false;
-            return true;
-
+            return await request.ExecuteAsync();
         }
 
         public async Task<string> FindRowByValue(string searchValue, string machine, IEnumerable<string> machines, IProgress<(int, string)> progress, int column = 2)

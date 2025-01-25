@@ -40,10 +40,10 @@ namespace remeLog.ViewModels
 
         private async Task CheckAllSettings()
         {
-            await CheckQualificationSourceTableAsync();
+            _ = CheckQualificationSourceTableAsync();
+            _ = CheckConnectionStringAsync();
             await CheckGoogleCredentialPathAsync();
-            await CheckAssignedPartsSheetAsync();
-            await CheckConnectionStringAsync();
+            _ = CheckAssignedPartsSheetAsync();
         }
 
         #region Свойства
@@ -285,16 +285,10 @@ namespace remeLog.ViewModels
             try
             {
                 var gs = new GoogleSheet(GoogleCredentialPath.Value, AssignedPartsSheet.Value);
-                if (await gs.CheckConnect())
-                {
-                    AssignedPartsSheet.Status = Status.Ok;
-                    AssignedPartsSheet.Tip = Constants.StatusTips.Ok;
-                }
-                else
-                {
-                    AssignedPartsSheet.Status = Status.Error;
-                    AssignedPartsSheet.Tip = Constants.StatusTips.GsError;
-                }
+                _ = await gs.GetSpreadsheetAsync();
+                AssignedPartsSheet.Status = Status.Ok;
+                AssignedPartsSheet.Tip = Constants.StatusTips.Ok;
+
             }
             catch (InvalidOperationException ex) when (ex.HResult == -2146233079)
             {
