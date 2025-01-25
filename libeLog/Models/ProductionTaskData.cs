@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace eLog.Models
+namespace libeLog.Models
 {
-    public class ProductionTaskData: ViewModel
+    public class ProductionTaskData : ViewModel
     {
         public string PartName { get; set; }
 
@@ -25,7 +25,7 @@ namespace eLog.Models
 
         public string LaborInput { get; set; }
 
-        public string PdComment { get; set;}
+        public string PdComment { get; set; }
 
 
         private string _NcProgramHref;
@@ -43,12 +43,10 @@ namespace eLog.Models
         public bool IsSelected
         {
             get => _IsSelected;
-            set 
+            set
             {
                 if (Set(ref _IsSelected, value))
-                {
                     OnPropertyChanged(nameof(NcProgramButtonEnabled));
-                }
             }
         }
 

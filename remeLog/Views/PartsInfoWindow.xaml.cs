@@ -250,16 +250,7 @@ namespace remeLog.Views
                                 e.Handled = true;
                             }
                             break;
-                        case Key.W:
-                            try
-                            {
-                                d.SearchInWindchillCommand.Execute(this);
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show(ex.Message);
-                            }
-                            break;
+                        
                     }
                 }
             }
@@ -267,59 +258,24 @@ namespace remeLog.Views
 
         private void partsInfoWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            //if (DataContext is PartsInfoWindowViewModel d)
-            //{
-            //    if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.H)
-            //    {
-            //        using (d.Overlay = new())
-            //        {
-            //            var helpWindow = new PartsInfoHelpWindow() { Owner = this };
-            //            helpWindow.ShowDialog();
-            //        }
-            //        e.Handled = true;
-            //        return;
-            //    }
+            if (DataContext is PartsInfoWindowViewModel d)
+            {
+                if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.W)
+                {
+                    try
+                    {
+                        d.SearchInWindchillCommand.Execute(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
 
-            //    int days = e.Key switch
-            //    {
-            //        Key.Up => 1,
-            //        Key.Down => -1,
-            //        Key.PageUp => 7,
-            //        Key.PageDown => -7,
-            //        _ => 0
-            //    };
-
-            //    DateTime? dt = days != 0 ? null : e.Key switch
-            //    {
-            //        Key.Home => new DateTime(2023, 1, 3),
-            //        Key.End => DateTime.Today,
-            //        _ => null,
-            //    };
-
-            //    if (days != 0 || dt.HasValue)
-            //    {
-            //        DateTime fromDate = dt ?? d.FromDate.AddDays(days);
-            //        DateTime toDate = dt ?? d.ToDate.AddDays(days);
-
-            //        switch (Keyboard.Modifiers)
-            //        {
-            //            case ModifierKeys.None:
-            //                d.FromDate = fromDate;
-            //                d.ToDate = toDate;
-            //                break;
-            //            case ModifierKeys.Shift:
-            //                d.FromDate = fromDate;
-            //                break;
-            //            case ModifierKeys.Control:
-            //                d.ToDate = toDate;
-            //                break;
-            //        }
-            //        e.Handled = true;
-            //    }
-            //}
+                }
+            }
         }
 
-        private void SfDataGrid_QueryRowHeight(object sender, Syncfusion.UI.Xaml.Grid.QueryRowHeightEventArgs e)
+        private void SfDataGrid_QueryRowHeight(object sender, QueryRowHeightEventArgs e)
         {
             if (SfDataGrid.GridColumnSizer.GetAutoRowHeight(e.RowIndex, gridRowResizingOptions, out autoHeight))
             {

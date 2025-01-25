@@ -7,6 +7,7 @@ using eLog.Views.Windows.Dialogs;
 using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
+using libeLog.Infrastructure;
 using libeLog.Interfaces;
 using libeLog.Models;
 using System;
@@ -22,6 +23,7 @@ using System.Windows;
 using System.Windows.Input;
 using static eLog.Infrastructure.Extensions.Util;
 using Application = System.Windows.Application;
+using Database = eLog.Infrastructure.Extensions.Database;
 using Machine = eLog.Models.Machine;
 using MessageBox = System.Windows.MessageBox;
 using Text = eLog.Infrastructure.Extensions.Text;
@@ -316,7 +318,8 @@ namespace eLog.ViewModels
                 ProgressBarVisibility = Visibility.Visible;
                 ProductionTasksIsLoading = true;
                 var progress = new Progress<string>(m => Status = m);
-                var tasks = await GoogleSheets.GetProductionTasksData(progress, _cts.Token);
+                var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialsPath, AppSettings.Instance.GsId);
+                var tasks = await gs.GetProductionTasksData(AppSettings.Instance.Machine.Name, AppSettings.Machines.Select(m => m.Name), progress, _cts.Token);
                 ProductionTasksIsLoading = false;
                 ProgressBarVisibility = Visibility.Collapsed;
                 using (Overlay = new())
@@ -1003,8 +1006,8 @@ namespace eLog.ViewModels
                     if (AppSettings.Instance.WiteToGs && part.TaskInfo is Part.PartTaskInfo.InList && !part.IsTaskStatusWritten)
                     {
                         var inProgress = part.IsFinished == Part.State.InProgress || (part.IsFinished == Part.State.PartialSetup && part.FinishedCount == 0);
-
-                        GoogleSheets.UpdateCellValue(partPosition, inProgress ? $"(уст {part.Setup}) в работе" : $"(уст {part.Setup}) готово", gProgress).GetAwaiter().GetResult();
+                        var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialsPath, AppSettings.Instance.GsId);
+                        gs.UpdateCellValue(partPosition, inProgress ? $"(уст {part.Setup}) в работе" : $"(уст {part.Setup}) готово", gProgress).GetAwaiter().GetResult();
                     }
                     if (gStatus == 1) part.IsTaskStatusWritten = true;
                     part.NotifyTaskStatus();

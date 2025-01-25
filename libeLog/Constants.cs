@@ -26,14 +26,20 @@ namespace libeLog
             public const string Ok = "Всё в порядке";
             public const string Checking = "Проверка";
             public const string AccessError = "Ошибка при проверке доступа";
+            public const string InvalidPath = "Некоррктный путь";
+            public const string GeneralError = "Общая ошибка ввода-вывода";
 
             public const string NoFile = "Файл не существует";
+            public const string FileInUse = "Файл занят";
 
             public const string NoAccessToDirectory = "Директория не существует или отсутствуют права на её чтение";
             public const string NoWriteAccess = "Нет доступа на запись. Работа в режиме чтения";
 
             public const string NoConnectionToDb = "Сервер БД не найден или недоступен";
             public const string AuthFailedToDb = "Неверные учетные данные";
+
+            public const string GsError = "Не удалось подключиться к таблице";
+            public const string NotSet = "Не указано";
 
         }
 

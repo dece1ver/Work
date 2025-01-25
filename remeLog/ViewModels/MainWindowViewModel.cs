@@ -197,8 +197,8 @@ namespace remeLog.ViewModels
                 {
                     AppSettings.Instance.DataSource = settings.DataSource;
                     AppSettings.Instance.QualificationSourcePath = settings.QualificationSourcePath.Value;
-                    AppSettings.Instance.ReportsPath = settings.ReportsPath.Value;
-                    AppSettings.Instance.DailyReportsDir = settings.DailyReportsDir.Value;
+                    AppSettings.Instance.GoogleCredentialPath = settings.GoogleCredentialPath.Value;
+                    AppSettings.Instance.AssignedPartsSheet = settings.AssignedPartsSheet.Value;
                     AppSettings.Instance.ConnectionString = settings.ConnectionString.Value;
                     AppSettings.Instance.InstantUpdateOnMainWindow = settings.InstantUpdateOnMainWindow;
                     AppSettings.Instance.User = settings.Role;

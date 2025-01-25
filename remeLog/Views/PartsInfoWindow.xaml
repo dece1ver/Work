@@ -761,12 +761,12 @@
 
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="Деталь" Margin="25 0 0 0"/>
                         <DockPanel Grid.Row="0" Grid.Column="4">
-                            <Button DockPanel.Dock="Right" Width="20" Height="20"
-        Command="{Binding SearchInWindchillCommand}" 
-        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
+                            <Button DockPanel.Dock="Right" Width="20"
+                                    Command="{Binding SearchInWindchillCommand}" 
+                                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
                                 <Button.Style>
                                     <Style TargetType="Button">
-                                        <Setter Property="Content" Value="{StaticResource SyncIcon}"/>
+                                        <Setter Property="Content" Value="🔎"/>
                                         <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                         <Setter Property="VerticalContentAlignment" Value="Center"/>
                                         <Style.Triggers>

@@ -76,25 +76,25 @@
                 <Button Content="Обзор..." Command="{Binding SetQualificationSourceTableCommand}"/>
             </DockPanel>
 
-            <!--<TextBlock Grid.Row="2" Grid.Column="0" 
-                       Text="Файл отчётов" Style="{StaticResource settingLabel}" />
-            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ReportsPath.Value}" 
-                     d:Text="C:\ProgramData\dece1ver\remeLog\reports.xlsx"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       Text="GS Credentials" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding GoogleCredentialPath.Value}" 
+                     d:Text="C:\ProgramData\dece1ver\remeLog\creds.json"/>
             <DockPanel Grid.Row="2" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding ReportsPath.Tip, UpdateSourceTrigger=PropertyChanged}"
-                       Content="{Binding ReportsPath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
-                <Button Content="Обзор..." Command="{Binding SetReportsTableCommand}"/>
-            </DockPanel>-->
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding GoogleCredentialPath.Tip, UpdateSourceTrigger=PropertyChanged}"
+                       Content="{Binding GoogleCredentialPath.Status, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Обзор..." Command="{Binding SetGoogleCredentialPathCommand}"/>
+            </DockPanel>
 
-            <!--<TextBlock Grid.Row="3" Grid.Column="0" 
-                       Text="Суточные отчёты" Style="{StaticResource settingLabel}" />
-            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DailyReportsDir.Value}" 
-                        d:Text="C:\ProgramData\dece1ver\remeLog\"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" 
+                       Text="ID СЗН" Style="{StaticResource settingLabel}" />
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AssignedPartsSheet.Value}" IsReadOnly="False"
+                        d:Text="123456789"/>
             <DockPanel Grid.Row="3" Grid.Column="2">
-                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding DailyReportsDir.Tip, UpdateSourceTrigger=PropertyChanged}"
-                        Content="{Binding DailyReportsDir.Status, Converter={StaticResource StatusVisibilityConverter}}" />
-                <Button Content="Обзор..." Command="{Binding SetDailyReportsDirCommand}"/>
-            </DockPanel>-->
+                <Label DockPanel.Dock="Right" Margin="5 0 0 0" d:Content="{StaticResource StatusOkIcon}" ToolTip="{Binding AssignedPartsSheet.Tip, UpdateSourceTrigger=PropertyChanged}"
+                        Content="{Binding AssignedPartsSheet.Status, Converter={StaticResource StatusVisibilityConverter}}" />
+                <Button Content="Проверить" Command="{Binding CheckAssignedPartsSheetCommand}"/>
+            </DockPanel>
 
             <TextBlock x:Name="ConnectionStringTextBlock" Grid.Row="4" Grid.Column="0" 
                        Text="Строка подключения" Style="{StaticResource settingLabel}" PreviewMouseLeftButtonUp="ConnectionStringTextBlock_PreviewMouseLeftButtonUp" />

@@ -263,5 +263,50 @@ namespace libeLog.Extensions
 
             return sourceFileInfo.LastWriteTime > targetFileInfo.LastWriteTime;
         }
+
+        /// <summary>
+        /// Проверяет возможность чтения указанного файла
+        /// </summary>
+        /// <param name="filePath">Полный путь к файлу</param>
+        /// <returns>Результат проверки в виде значения FileCheckResult</returns>
+        public static FileCheckResult CheckFileAccess(this string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(filePath))
+                    return FileCheckResult.InvalidPath;
+
+                using var stream = File.OpenRead(filePath);
+                return FileCheckResult.Success;
+            }
+            catch (FileNotFoundException)
+            {
+                return FileCheckResult.FileNotFound;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return FileCheckResult.FileNotFound;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return FileCheckResult.AccessDenied;
+            }
+            catch (IOException ex) when ((ex.HResult & 0x0000FFFF) == 32)
+            {
+                return FileCheckResult.FileInUse;
+            }
+            catch (IOException)
+            {
+                return FileCheckResult.GeneralError;
+            }
+            catch (ArgumentException)
+            {
+                return FileCheckResult.InvalidPath;
+            }
+            catch
+            {
+                return FileCheckResult.GeneralError;
+            }
+        }
     }
 }

@@ -1,9 +1,9 @@
-﻿using eLog.Models;
-using Google.Apis.Auth.OAuth2;
+﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using libeLog.Extensions;
+using libeLog.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,40 +11,61 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Navigation;
 
-namespace eLog.Infrastructure
+namespace libeLog.Infrastructure
 {
-    public class GoogleSheets
+    public class GoogleSheet
     {
-        
-        static readonly string[] Scopes = { SheetsService.Scope.Spreadsheets };
-        private static GoogleCredential Credential { get; set; } = GetCredentialsFromFile();
-        public static SheetsService SheetsService { get; set; } = new SheetsService(new BaseClientService.Initializer()
+        string _credentialFile;
+        string _sheetId;
+        public GoogleSheet(string credentialFile, string sheedId)
         {
-            HttpClientInitializer = Credential,
-        });
-
-        private static GoogleCredential GetCredentialsFromFile()
+            _credentialFile = credentialFile;
+            _sheetId = sheedId;
+            Credential = GetCredentialsFromFile(_credentialFile);
+            SheetsService = new SheetsService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = Credential,
+            });
+        }
+        static readonly string[] Scopes = { SheetsService.Scope.Spreadsheets };
+        private GoogleCredential Credential { get; set; }
+        public SheetsService SheetsService { get; set; }
+        private static GoogleCredential GetCredentialsFromFile(string filePath)
         {
             GoogleCredential credential;
-            using (var stream = new FileStream(AppSettings.Instance.GoogleCredentialsPath, FileMode.Open, FileAccess.Read))
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
                 credential = GoogleCredential.FromStream(stream).CreateScoped(Scopes);
             }
             return credential;
         }
 
-        public static async Task<string> FindRowByValue(string searchValue, IProgress<(int, string)> progress, int column = 2)
+        public async Task<bool> CheckConnect()
         {
-            progress.Report((0, "Подключение к списку заданий"));
-            string range = "Загрузка станков!A1:J200";
-            await Task.Delay(1000);
-            Credential = GetCredentialsFromFile();
+            Credential = GetCredentialsFromFile(_credentialFile);
             SheetsService = new SheetsService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = Credential,
             });
-            var request = SheetsService.Spreadsheets.Values.Get(AppSettings.Instance.GsId, range);
+            var request = SheetsService.Spreadsheets.Get(_sheetId);
+            if (await request.ExecuteAsync() == null) return false;
+            return true;
+
+        }
+
+        public async Task<string> FindRowByValue(string searchValue, string machine, IEnumerable<string> machines, IProgress<(int, string)> progress, int column = 2)
+        {
+            progress.Report((0, "Подключение к списку заданий"));
+            string range = "Загрузка станков!A1:J200";
+            await Task.Delay(1000);
+            Credential = GetCredentialsFromFile(_credentialFile);
+            SheetsService = new SheetsService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = Credential,
+            });
+            var request = SheetsService.Spreadsheets.Values.Get(_sheetId, range);
             ValueRange response = await request.ExecuteAsync();
             progress.Report((1, "Поиск станка"));
             await Task.Delay(1000);
@@ -58,7 +79,7 @@ namespace eLog.Infrastructure
 
                     if (values[i][0] is string currentMachine 
                         && currentMachine.Contains('|') 
-                        && AppSettings.Instance.Machine.Name.Contains(currentMachine.Split('|')[0].Trim()))
+                        && machine.Contains(currentMachine.Split('|')[0].Trim()))
                     {
                         machineFound = true;
                         progress.Report((2, "Станок найден"));
@@ -66,7 +87,7 @@ namespace eLog.Infrastructure
                     }
                     else if (machineFound && values[i][0] is string otherMachine 
                         && (otherMachine.ToLower() == "маркировка" || otherMachine.Contains('|') 
-                        && AppSettings.Machines.Select(m => m.Name).Any(name => name.Contains(otherMachine.Split('|')[0].Trim()))))
+                        && machines.Any(name => name.Contains(otherMachine.Split('|')[0].Trim()))))
                     {
                         break;
                     }
@@ -81,11 +102,11 @@ namespace eLog.Infrastructure
             return "";
         }
 
-        public static async Task UpdateCellValue(string range, string value, IProgress<(int, string)> progress)
+        public async Task UpdateCellValue(string range, string value, IProgress<(int, string)> progress)
         {
             progress.Report((0, "Запись статуса"));
             await Task.Delay(1000);
-            Credential = GetCredentialsFromFile();
+            Credential = GetCredentialsFromFile(_credentialFile);
             SheetsService = new SheetsService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = Credential,
@@ -95,7 +116,7 @@ namespace eLog.Infrastructure
                 Values = new List<IList<object>> { new List<object> { value } }
             };
 
-            var updateRequest = SheetsService.Spreadsheets.Values.Update(valueRange, AppSettings.Instance.GsId, range);
+            var updateRequest = SheetsService.Spreadsheets.Values.Update(valueRange, _sheetId, range);
             updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.RAW;
 
             await updateRequest.ExecuteAsync();
@@ -103,15 +124,15 @@ namespace eLog.Infrastructure
             await Task.Delay(1000);
         }
 
-        public static async Task<IReadOnlyList<ProductionTaskData>> GetProductionTasksData(IProgress<string> progress, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<ProductionTaskData>> GetProductionTasksData(string machine, IEnumerable<string> machines,  IProgress<string> progress, CancellationToken cancellationToken)
         {
             List<ProductionTaskData> data = new List<ProductionTaskData>();
-            Credential = GetCredentialsFromFile();
+            Credential = GetCredentialsFromFile(_credentialFile);
             SheetsService = new SheetsService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = Credential,
             });
-            SpreadsheetsResource.ValuesResource.GetRequest request = SheetsService.Spreadsheets.Values.Get(AppSettings.Instance.GsId, "Загрузка станков!A1:K200");
+            SpreadsheetsResource.ValuesResource.GetRequest request = SheetsService.Spreadsheets.Values.Get(_sheetId, "Загрузка станков!A1:K200");
             progress.Report("Подключение к списку...");
             ValueRange response = await request.ExecuteAsync(cancellationToken);
             progress.Report("Формирование списка работы...");
@@ -131,14 +152,14 @@ namespace eLog.Infrastructure
                     }
                     if (row[0] is string currentMachine 
                         && currentMachine.Contains('|') 
-                        && AppSettings.Instance.Machine.Name.Contains(currentMachine.Split('|')[0].Trim()))
+                        && machine.Contains(currentMachine.Split('|')[0].Trim()))
                     {
                         machineFound = true;
                         skipCnt = 2;
                     }
                     else if (machineFound && row[0] is string otherMachine 
                         && (otherMachine.ToLower() == "маркировка" || otherMachine.Contains('|') 
-                        && AppSettings.Machines.Select(m => m.Name).Any(name => name.Contains(otherMachine.Split('|')[0].Trim()))))
+                        && machines.Any(name => name.Contains(otherMachine.Split('|')[0].Trim()))))
                     {
                         break;
                     }

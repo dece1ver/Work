@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Presentation;
 using eLog.Models;
+using libeLog.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,10 @@ namespace eLog.Infrastructure.Extensions
     {
         public async static Task<string> GetPositionInTasksList(this Part part, IProgress<(int, string)> progress)
         {
-            var partPosition = await GoogleSheets.FindRowByValue(part.Order, progress);
-            if (string.IsNullOrEmpty(partPosition) && part.Order.ToLowerInvariant() == "без м/л") partPosition = await GoogleSheets.FindRowByValue(part.FullName, progress, 1);
+            var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialsPath, AppSettings.Instance.GsId);
+            var partPosition = await gs.FindRowByValue(part.Order, AppSettings.Instance.Machine.Name, AppSettings.Machines.Select(m => m.Name), progress);
+            if (string.IsNullOrEmpty(partPosition) && part.Order.ToLowerInvariant() == "без м/л") partPosition = 
+                    await gs.FindRowByValue(part.FullName, AppSettings.Instance.Machine.Name, AppSettings.Machines.Select(m => m.Name), progress, 1);
             return partPosition;
         }
     }

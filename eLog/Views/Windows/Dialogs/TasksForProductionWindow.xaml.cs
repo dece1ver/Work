@@ -1,5 +1,5 @@
-﻿using eLog.Models;
-using eLog.ViewModels;
+﻿using eLog.ViewModels;
+using libeLog.Models;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;

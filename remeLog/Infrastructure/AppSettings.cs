@@ -60,11 +60,11 @@ namespace remeLog.Infrastructure
         /// <summary> Путь к файлу с разрядами </summary>
         public string? QualificationSourcePath { get; set; }
 
-        /// <summary> Путь к файлу отчетов </summary>
-        public string? ReportsPath { get; set; }
+        /// <summary> Путь к файлу c доступом к гугл таблице </summary>
+        public string? GoogleCredentialPath { get; set; }
 
-        /// <summary> Путь к директории с суточными отчетами </summary>
-        public string? DailyReportsDir { get; set; }
+        /// <summary> ID таблицы СЗН </summary>
+        public string? AssignedPartsSheet { get; set; }
         /// <summary> Строка подключения к БД </summary>
         public string? ConnectionString { get; set; }
 
@@ -92,8 +92,8 @@ namespace remeLog.Infrastructure
             DataSource = new DataSource(DataSource.Types.Database);
             InstantUpdateOnMainWindow = false;
             QualificationSourcePath = "";
-            ReportsPath = "";
-            DailyReportsDir = "";
+            GoogleCredentialPath = "";
+            AssignedPartsSheet = "";
             ConnectionString = "";
             User = null;
             Util.WriteLog("Параметры заполнены, сохранение.");

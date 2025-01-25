@@ -6,6 +6,7 @@ using libeLog.Models;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.AccessControl;
@@ -22,22 +23,27 @@ namespace remeLog.ViewModels
         public SettingsWindowViewModel()
         {
             SetQualificationSourceTableCommand = new LambdaCommand(OnSetQualificationSourceTableCommandExecuted, CanSetQualificationSourceTableCommandExecute);
-            SetReportsTableCommand = new LambdaCommand(OnSetReportsTableCommandExecuted, CanSetReportsTableCommandExecute);
-            SetDailyReportsDirCommand = new LambdaCommand(OnSetDailyReportsDirCommandExecuted, CanSetDailyReportsDirCommandExecute);
+            SetGoogleCredentialPathCommand = new LambdaCommand(OnSetGoogleCredentialPathCommandExecuted, CanSetGoogleCredentialPathCommandExecute);
+            CheckAssignedPartsSheetCommand = new LambdaCommand(OnCheckAssignedPartsSheetCommandExecuted, CanCheckAssignedPartsSheetCommandExecute);
             CheckConnectionStringCommand = new LambdaCommand(OnCheckConnectionStringCommandExecuted, CanCheckConnectionStringCommandExecute);
 
             _DataSource = AppSettings.Instance.DataSource;
             _QualificationSourcePath = new SettingsItem(AppSettings.Instance.QualificationSourcePath ?? "");
-            _ReportsPath = new SettingsItem(AppSettings.Instance.ReportsPath ?? "");
-            _DailyReportsDir = new SettingsItem(AppSettings.Instance.DailyReportsDir ?? "");
+            _GoogleCredentialPath = new SettingsItem(AppSettings.Instance.GoogleCredentialPath ?? "");
+            _AssignedPartsSheet = new SettingsItem(AppSettings.Instance.AssignedPartsSheet ?? "");
             _ConnectionString = new SettingsItem(AppSettings.Instance.ConnectionString ?? "");
             _InstantUpdateOnMainWindow = AppSettings.Instance.InstantUpdateOnMainWindow;
             Role = AppSettings.Instance.User ??= User.Viewer;
 
-            _ = CheckSourceAsync();
-            _ = CheckReportsAsync();
-            _ = CheckDailyReportsDirAsync();
-            _ = CheckConnectionStringAsync();
+            Task.Run(() => CheckAllSettings());
+        }
+
+        private async Task CheckAllSettings()
+        {
+            await CheckQualificationSourceTableAsync();
+            await CheckGoogleCredentialPathAsync();
+            await CheckAssignedPartsSheetAsync();
+            await CheckConnectionStringAsync();
         }
 
         #region Свойства
@@ -106,20 +112,20 @@ namespace remeLog.ViewModels
             set => Set(ref _QualificationSourcePath, value);
         }
 
-        private SettingsItem _ReportsPath;
+        private SettingsItem _GoogleCredentialPath;
         /// <summary> Путь к файлу с отчетами </summary>
-        public SettingsItem ReportsPath
+        public SettingsItem GoogleCredentialPath
         {
-            get => _ReportsPath;
-            set => Set(ref _ReportsPath, value);
+            get => _GoogleCredentialPath;
+            set => Set(ref _GoogleCredentialPath, value);
         }
 
-        private SettingsItem _DailyReportsDir;
+        private SettingsItem _AssignedPartsSheet;
         /// <summary> Путь к директирии с суточными отчетами </summary>
-        public SettingsItem DailyReportsDir
+        public SettingsItem AssignedPartsSheet
         {
-            get => _DailyReportsDir;
-            set => Set(ref _DailyReportsDir, value);
+            get => _AssignedPartsSheet;
+            set => Set(ref _AssignedPartsSheet, value);
         }
 
         private SettingsItem _ConnectionString;
@@ -164,45 +170,42 @@ namespace remeLog.ViewModels
             };
             if (dlg.ShowDialog() != true) return;
             QualificationSourcePath.Value = dlg.FileName;
-            _ = CheckSourceAsync();
+            Task.Run(() => CheckQualificationSourceTableAsync());
         }
         private static bool CanSetQualificationSourceTableCommandExecute(object p) => true;
         #endregion
 
         #region SetReportsTable
-        public ICommand SetReportsTableCommand { get; }
-        private void OnSetReportsTableCommandExecuted(object p)
+        public ICommand SetGoogleCredentialPathCommand { get; }
+        private void OnSetGoogleCredentialPathCommandExecuted(object p)
         {
             OpenFileDialog dlg = new()
             {
-                Filter = "Excel книга с макросами (*.xlsm)|*.xlsm",
-                DefaultExt = "xlsm"
+                Filter = "JSON (*.json)|*.json",
+                DefaultExt = "json"
             };
             if (dlg.ShowDialog() != true) return;
-            ReportsPath.Value = dlg.FileName;
-            _ = CheckReportsAsync();
+            GoogleCredentialPath.Value = dlg.FileName;
+            Task.Run(() => CheckGoogleCredentialPathAsync());
         }
-        private static bool CanSetReportsTableCommandExecute(object p) => true;
+        private static bool CanSetGoogleCredentialPathCommandExecute(object p) => true;
         #endregion
 
-        #region SetDailyReportsDir
-        public ICommand SetDailyReportsDirCommand { get; }
-        private void OnSetDailyReportsDirCommandExecuted(object p)
+        #region SetAssignedPartsSheet
+        public ICommand CheckAssignedPartsSheetCommand { get; }
+        private async void OnCheckAssignedPartsSheetCommandExecuted(object p)
         {
-            FolderBrowserDialog dlg = new();
-            ;
-            if (dlg.ShowDialog() != DialogResult.OK) return;
-            DailyReportsDir.Value = dlg.SelectedPath;
-            _ = CheckDailyReportsDirAsync();
+            await CheckAssignedPartsSheetAsync();
         }
-        private static bool CanSetDailyReportsDirCommandExecute(object p) => true;
+
+        private static bool CanCheckAssignedPartsSheetCommandExecute(object p) => true;
         #endregion
 
         #region CheckConnectionString
         public ICommand CheckConnectionStringCommand { get; }
         private void OnCheckConnectionStringCommandExecuted(object p)
         {
-            _ = CheckConnectionStringAsync();
+            Task.Run(() => CheckConnectionStringAsync());
         }
         private static bool CanCheckConnectionStringCommandExecute(object p) => true;
         #endregion
@@ -210,7 +213,7 @@ namespace remeLog.ViewModels
 
         #endregion
 
-        private async Task CheckSourceAsync()
+        private async Task CheckQualificationSourceTableAsync()
         {
             await Task.Run(() =>
             {
@@ -227,49 +230,86 @@ namespace remeLog.ViewModels
             });
         }
 
-        private async Task CheckReportsAsync()
+        private async Task CheckGoogleCredentialPathAsync()
         {
             await Task.Run(() =>
             {
-                ReportsPath.Status = Status.Sync;
-                ReportsPath.Tip = Constants.StatusTips.Checking;
-                if (File.Exists(ReportsPath.Value))
+                GoogleCredentialPath.Status = Status.Sync;
+                GoogleCredentialPath.Tip = Constants.StatusTips.Checking;
+                switch (GoogleCredentialPath.Value.CheckFileAccess())
                 {
-                    ReportsPath.Status = Status.Ok;
-                    ReportsPath.Tip = Constants.StatusTips.Ok;
-                    return;
+                    case FileCheckResult.Success:
+                        GoogleCredentialPath.Status = Status.Ok;
+                        GoogleCredentialPath.Tip = Constants.StatusTips.Ok;
+                        break;
+                    case FileCheckResult.FileNotFound:
+                        GoogleCredentialPath.Status = Status.Error;
+                        GoogleCredentialPath.Tip = Constants.StatusTips.NoFile;
+                        break;
+                    case FileCheckResult.AccessDenied:
+                        GoogleCredentialPath.Status = Status.Warning;
+                        GoogleCredentialPath.Tip = Constants.StatusTips.AccessError;
+                        break;
+                    case FileCheckResult.FileInUse:
+                        GoogleCredentialPath.Status = Status.Warning;
+                        GoogleCredentialPath.Tip = Constants.StatusTips.FileInUse;
+                        break;
+                    case FileCheckResult.GeneralError:
+                        GoogleCredentialPath.Status = Status.Error;
+                        GoogleCredentialPath.Tip = Constants.StatusTips.GeneralError;
+                        break;
+                    case FileCheckResult.InvalidPath:
+                        GoogleCredentialPath.Status = Status.Error;
+                        GoogleCredentialPath.Tip = Constants.StatusTips.InvalidPath;
+                        break;
                 }
-                ReportsPath.Status = Status.Error;
-                ReportsPath.Tip = Constants.StatusTips.NoFile;
             });
         }
 
-        private async Task CheckDailyReportsDirAsync()
+        private async Task CheckAssignedPartsSheetAsync()
         {
-            await Task.Run(() =>
+            AssignedPartsSheet.Status = Status.Sync;
+            AssignedPartsSheet.Tip = Constants.StatusTips.Checking;
+            if (GoogleCredentialPath.Status != Status.Ok)
             {
-                DailyReportsDir.Status = Status.Sync;
-                DailyReportsDir.Tip = Constants.StatusTips.Checking;
-                switch (DailyReportsDir.Value.CheckDirectoryRights(FileSystemRights.WriteData))
+                AssignedPartsSheet.Status = Status.Error;
+                AssignedPartsSheet.Tip = Constants.StatusTips.InvalidPath;
+                return;
+            }
+            if (string.IsNullOrEmpty(AssignedPartsSheet.Value))
+            {
+                AssignedPartsSheet.Status = Status.Error;
+                AssignedPartsSheet.Tip = Constants.StatusTips.NotSet;
+                return;
+            }
+            try
+            {
+                var gs = new GoogleSheet(GoogleCredentialPath.Value, AssignedPartsSheet.Value);
+                if (await gs.CheckConnect())
                 {
-                    case CheckDirectoryRightsResult.HasAccess:
-                        DailyReportsDir.Status = Status.Ok;
-                        DailyReportsDir.Tip = Constants.StatusTips.Ok;
-                        break;
-                    case CheckDirectoryRightsResult.NoAccess:
-                        DailyReportsDir.Status = Status.Warning;
-                        DailyReportsDir.Tip = Constants.StatusTips.NoWriteAccess;
-                        break;
-                    case CheckDirectoryRightsResult.NotExists:
-                        DailyReportsDir.Status = Status.Error;
-                        DailyReportsDir.Tip = Constants.StatusTips.NoAccessToDirectory;
-                        break;
-                    case CheckDirectoryRightsResult.Error:
-                        DailyReportsDir.Status = Status.Error;
-                        DailyReportsDir.Tip = Constants.StatusTips.AccessError;
-                        break;
+                    AssignedPartsSheet.Status = Status.Ok;
+                    AssignedPartsSheet.Tip = Constants.StatusTips.Ok;
                 }
-            });
+                else
+                {
+                    AssignedPartsSheet.Status = Status.Error;
+                    AssignedPartsSheet.Tip = Constants.StatusTips.GsError;
+                }
+            }
+            catch (InvalidOperationException ex) when (ex.HResult == -2146233079)
+            {
+                AssignedPartsSheet.Status = Status.Error;
+                AssignedPartsSheet.Tip = "Некорректный файл с идентификационными данными";
+            }
+            catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                AssignedPartsSheet.Status = Status.Error;
+                AssignedPartsSheet.Tip = "Таблица с таким идентификатором не найдена";
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async Task CheckConnectionStringAsync()
