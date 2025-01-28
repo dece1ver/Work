@@ -27,43 +27,125 @@ namespace eLog.Infrastructure.Extensions
         }
 
         /// <summary>
-        /// Получение информации о заказе по номеру М/Л (имитация)
+        /// Расширение для получения информации о заказе по номеру М/Л.
         /// </summary>
-        /// <param name="orderNumber">Номер М/Л</param>
+        /// <param name="orderNumber">Номер М/Л.</param>
+        /// <returns>Список объектов <see cref="Part"/> с деталями заказа.</returns>
         public static List<Part> GetPartsFromOrder(this string orderNumber)
         {
             try
             {
-                using var wb = new XLWorkbook(AppSettings.LocalOrdersFile);
-                return (from xlRow in wb.Worksheet(1).Rows()
-                        where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
-                        select new Part()
-                        {
-                            Name = xlRow.Cell(2).Value.GetText() + (xlRow.Cell(3).Value.IsText ? " " + xlRow.Cell(3).Value.GetText() : ""),
-                            TotalCount = (int)xlRow.Cell(4).Value.GetNumber(),
-                        }).ToList();
+                return ProcessWorkbook(AppSettings.LocalOrdersFile, orderNumber);
             }
-            catch (Exception ex1)
+            catch (Exception ex)
             {
+                WriteLog(ex, "Ошибка при работе с основным файлом");
+
                 try
                 {
-                    var wb = new XLWorkbook(AppSettings.BackupOrdersFile);
-                    return (from xlRow in wb.Worksheet(1).Rows()
-                            where xlRow is { } && xlRow.Cell(1).Value.IsText && xlRow.Cell(1).Value.GetText().Contains(orderNumber.ToUpper())
-                            select new Part()
-                            {
-                                Name = xlRow.Cell(2).Value.GetText() + (xlRow.Cell(3).Value.IsText ? " " + xlRow.Cell(3).Value.GetText() : ""),
-                                TotalCount = (int)xlRow.Cell(4).Value.GetNumber(),
-                            }).ToList();
+                    return ProcessWorkbook(AppSettings.BackupOrdersFile, orderNumber);
                 }
-                catch (Exception ex2)
+                catch (Exception backupEx)
                 {
-                    WriteLog(ex2);
+                    WriteLog(backupEx, "Ошибка при работе с резервным файлом");
                 }
-                WriteLog(ex1);
-
             }
+
             return new List<Part>();
+        }
+
+        /// <summary>
+        /// Обрабатывает Excel-файл для поиска деталей заказа по номеру М/Л.
+        /// </summary>
+        /// <param name="filePath">Путь к файлу Excel.</param>
+        /// <param name="orderNumber">Номер М/Л.</param>
+        /// <returns>Список объектов <see cref="Part"/> с деталями заказа.</returns>
+        private static List<Part> ProcessWorkbook(string filePath, string orderNumber)
+        {
+            using var wb = new XLWorkbook(filePath);
+            var worksheet = wb.Worksheet(1);
+            var searchValue = orderNumber.ToUpper();
+
+            return worksheet.Rows()
+                .Where(xlRow => IsRowValid(xlRow, searchValue))
+                .Select(xlRow => CreatePartFromRow(xlRow))
+                .Where(part => part != null)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Проверяет, является ли строка валидной для обработки.
+        /// </summary>
+        /// <param name="row">Объект строки <see cref="IXLRow"/>.</param>
+        /// <param name="searchValue">Значение для поиска.</param>
+        /// <returns>Истина, если строка валидна; иначе ложь.</returns>
+        private static bool IsRowValid(IXLRow row, string searchValue)
+        {
+            try
+            {
+                var cell1 = row.Cell(1);
+                var cell2 = row.Cell(2);
+                var cell4 = row.Cell(4);
+
+                return cell1.Value.IsText
+                       && cell2.Value.IsText
+                       && cell4.Value.IsNumber
+                       && cell1.Value.GetText().Contains(searchValue);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Создает объект <see cref="Part"/> из строки Excel.
+        /// </summary>
+        /// <param name="row">Объект строки <see cref="IXLRow"/>.</param>
+        /// <returns>Объект <see cref="Part"/>, если данные корректны; иначе null.</returns>
+        private static Part CreatePartFromRow(IXLRow row)
+        {
+            try
+            {
+                var prefix = row.Cell(2).Value.GetText();
+                var nameParts = row.Cell(1).Value.GetText().Split(
+                    new[] { prefix },
+                    StringSplitOptions.RemoveEmptyEntries
+                );
+
+                var cleanName = (prefix + nameParts.LastOrDefault())
+                    .Replace("[", "")
+                    .Replace("]", "")
+                    .Replace("готовая продукция", "")
+                    .Trim();
+
+                return new Part
+                {
+                    Name = cleanName,
+                    TotalCount = Convert.ToInt32(row.Cell(4).Value.GetNumber())
+                };
+            }
+            catch
+            {
+                return null!;
+            }
+        }
+
+        /// <summary>
+        /// Форматирует имя детали с учетом префикса.
+        /// </summary>
+        /// <param name="name">Исходное имя детали.</param>
+        /// <param name="prefix">Префикс для форматирования.</param>
+        /// <returns>Отформатированное имя детали.</returns>
+        private static string FormatPartName(string name, string prefix)
+        {
+            var cleanName = name.Replace(prefix, "")
+                .Replace("[", "")
+                .Replace("]", "")
+                .Replace("готовая продукция", "")
+                .Trim();
+
+            return $"{prefix} {cleanName}".Trim();
         }
 
         public static bool GetBarCode(ref string barCode)
