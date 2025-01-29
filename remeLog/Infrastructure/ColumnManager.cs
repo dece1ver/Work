@@ -68,6 +68,11 @@ namespace remeLog.Infrastructure
         public const string Machine = "machine";
 
         /// <summary>
+        /// Станок закрепленный
+        /// </summary>
+        public const string MachineAssigned = "machineAssigned";
+
+        /// <summary>
         /// Дата
         /// </summary>
         public const string Date = "date";
@@ -86,6 +91,11 @@ namespace remeLog.Infrastructure
         /// Деталь
         /// </summary>
         public const string Part = "part";
+
+        // <summary>
+        /// Деталь закрепленная
+        /// </summary>
+        public const string PartAssigned = "partAssigned";
 
         /// <summary>
         /// М/Л
@@ -427,15 +437,22 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string TotalTime = "totalTime";
 
+        /// <summary>
+        /// Совпадает
+        /// </summary>
+        public const string IsEqual = "isEqual";
+
 
         private static readonly Dictionary<string, string> _descriptions = new()
         {
             { Guid, "GUID" },
             { Machine, "Станок" },
+            { MachineAssigned, "Станок закрепленный" },
             { Date, "Дата" },
             { Shift, "Смена" },
             { Operator, "Оператор" },
             { Part, "Деталь" },
+            { PartAssigned, "Деталь закрепленная" },
             { Order, "М/Л" },
             { TotalByOrder, "Всего по М/Л" },
             { Finished, "Выполнено" },
@@ -503,7 +520,8 @@ namespace remeLog.Infrastructure
             { TotalSetupTime, $"Время наладки" },
             { TotalProductionTime, $"Время изготовления" },
             { TotalDowntimesTime, $"Время простоев" },
-            { TotalTime, $"Отмеченное общее время" }
+            { TotalTime, $"Отмеченное общее время" },
+            { IsEqual, $"Совпадает" }
         };
 
         /// <summary>

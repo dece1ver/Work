@@ -1036,6 +1036,9 @@
                         </MenuItem>
                     </MenuItem>
 
+                    <MenuItem Header="Сравнить факт/СЗН" Command="{Binding CheckAssignmentWithFactCommand}">
+
+                    </MenuItem>
 
                     <MenuItem Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource ShowFullHistoryIcon}"
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 

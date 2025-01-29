@@ -285,7 +285,7 @@ namespace remeLog.ViewModels
             try
             {
                 var gs = new GoogleSheet(GoogleCredentialPath.Value, AssignedPartsSheet.Value);
-                _ = await gs.GetSpreadsheetAsync();
+                var a = await gs.GetSpreadsheetAsync();
                 AssignedPartsSheet.Status = Status.Ok;
                 AssignedPartsSheet.Tip = Constants.StatusTips.Ok;
 

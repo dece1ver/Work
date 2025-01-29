@@ -2,6 +2,7 @@
 using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
+using libeLog.Infrastructure;
 using libeLog.Models;
 using Microsoft.IdentityModel.Tokens;
 using remeLog.Infrastructure;
@@ -25,6 +26,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Database = remeLog.Infrastructure.Database;
 using Part = remeLog.Models.Part;
 
 namespace remeLog.ViewModels
@@ -70,6 +72,7 @@ namespace remeLog.ViewModels
             ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
             ExportReportForPeriodToExcelCommand = new LambdaCommand(OnExportReportForPeriodToExcelCommandExecuted, CanExportReportForPeriodToExcelCommandExecute);
             ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
+            CheckAssignmentWithFactCommand = new LambdaCommand(OnCheckAssignmentWithFactCommandExecuted, CanCheckAssignmentWithFactCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
             HideAllMachinesCommand = new LambdaCommand(OnHideAllMachinesCommandExecuted, CanHideAllMachinesCommandExecute);
@@ -995,6 +998,35 @@ namespace remeLog.ViewModels
         private static bool CanExportHistoryToExcelCommandExecute(object p) => true;
         #endregion
 
+        #region CheckAssignmentWithFact
+        public ICommand CheckAssignmentWithFactCommand { get; }
+        private async void OnCheckAssignmentWithFactCommandExecuted(object p)
+        {
+            try
+            {
+                var path = Util.GetXlsxPath();
+                await Task.Run(async () =>
+                {
+                    InProgress = true;
+                    var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialPath!, AppSettings.Instance.AssignedPartsSheet!);
+                    var assignedParts = await gs.GetAssignedPartsAsync();
+                    Status = Xl.ExportAssignmentCheckResult(Parts, assignedParts, path);
+                });
+
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanCheckAssignmentWithFactCommandExecute(object p) => true;
+        #endregion
 
         /// <summary>
         /// todo

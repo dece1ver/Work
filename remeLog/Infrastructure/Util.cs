@@ -298,19 +298,16 @@ namespace remeLog.Infrastructure
                 return objects;
             }
 
-            // Ищем все объекты в JSON
             var regex = new Regex(@"PTC\.ExtJSONTableConfig\.chunk\s*=\s*({.*?});", RegexOptions.Singleline);
             var match = regex.Match(inputString);
             if (!match.Success) return objects;
 
-            // Парсим JSON объект
             var jsonObject = JObject.Parse(match.Groups[1].Value);
             var data = jsonObject["data"] as JArray;
             if (data == null) return objects;
 
             foreach (var obj in data)
             {
-                // Извлекаем необходимые поля
                 var name = obj["name"]?.ToString() ?? "";
                 var partNumber = obj["number"]?["comparable"]?.ToString() ?? "";
                 var version = obj["version"]?["gui"]?["html"]?.ToString() ?? "";
@@ -323,10 +320,8 @@ namespace remeLog.Infrastructure
                 var containerOid = obj["nmActions"]?["params"]?["ContainerOid"]?.ToString() ?? "";
                 var u8 = "1";
 
-                // Формируем ссылку
                 var link = $"{wncConfig.Server}/Windchill/app/#ptc1/tcomp/infoPage?ContainerOid={containerOid}&oid={oid}&u8={u8}";
 
-                // Создаем объект с необходимыми полями
                 objects.Add(new WncObject(name, partNumber, link, version, state, containerName, type, modifyDate.Replace("MSK", "").Trim(), createDate.Replace("MSK", "").Trim()));
             }
 

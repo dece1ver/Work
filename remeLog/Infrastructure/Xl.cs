@@ -943,6 +943,65 @@ namespace remeLog.Infrastructure
             return path;
         }
 
+        public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path)
+        {
+            var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet($"Экспорт");
+            ws.Style.Alignment.WrapText = true;
+
+            var cm = new CM.Builder()
+                .Add(CM.Date)
+                .Add(CM.Operator)
+                .Add(CM.Part)
+                .Add(CM.Setup)
+                .Add(CM.Machine)
+                .Add(CM.MachineAssigned)
+                .Add(CM.IsEqual)
+                .Build();
+
+            ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 65, 8);
+
+            ws.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+
+            int row = 3;
+            var ci = cm.GetIndexes();
+
+            foreach (var part in factParts)
+            {
+                var isAssigned = assignmentParts.Keys.Contains(part.PartName.ToLowerInvariant().Trim());
+                ws.Cell(row, ci[CM.Date]).Value = part.ShiftDate;
+                ws.Cell(row, ci[CM.Operator]).Value = part.Operator;
+                ws.Cell(row, ci[CM.Part]).Value = part.PartName;
+                ws.Cell(row, ci[CM.Setup]).Value = part.Setup;
+                ws.Cell(row, ci[CM.Machine]).Value = part.Machine;
+                var assignedMachine = isAssigned
+                    ? assignmentParts
+                        .Where(ap => ap.Key.ToLowerInvariant().Trim() == part.PartName.ToLowerInvariant().Trim())
+                        .First()
+                        .Value
+                    : "-";
+                ws.Cell(row, ci[CM.MachineAssigned]).Value = assignedMachine;
+                ws.Cell(row, ci[CM.IsEqual]).Value = !isAssigned ? "-" : part.Machine.Contains(assignedMachine);
+                row++;
+            }
+
+
+            ws.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.RangeUsed().SetAutoFilter(true);
+            SetTitle(ws, ci.Count, "Проверка на изготовление в соответствии со СЗН");
+            ws.Columns().AdjustToContents();
+            wb.SaveAs(path);
+
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
+            }
+
+            return path;
+        }
+
         /// <summary>
         /// Экспортирует историю последних заказов в Excel-файл.
         ///
@@ -1152,7 +1211,6 @@ namespace remeLog.Infrastructure
             {
                 rowIndex++;
                 if (!row.Cell(2).IsEmpty() || !row.Cell(2).Value.IsBlank) continue;
-                var vvv = row.Cell(2).Value;
                 break;
             }
             rowIndex += 2;
@@ -1598,7 +1656,7 @@ namespace remeLog.Infrastructure
             }
             catch (Exception ex)
             {
-                Util.WriteLogAsync(ex);
+                Util.WriteLog(ex);
                 return "Н/Д";
             }
         }

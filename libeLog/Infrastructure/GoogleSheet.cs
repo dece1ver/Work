@@ -53,6 +53,33 @@ namespace libeLog.Infrastructure
             return await request.ExecuteAsync();
         }
 
+        public async Task<Dictionary<string, string>> GetAssignedPartsAsync()
+        {
+            var data = new Dictionary<string, string>();
+            Credential = GetCredentialsFromFile(_credentialFile);
+            SheetsService = new SheetsService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = Credential,
+            });
+            var requestTable = SheetsService.Spreadsheets.Get(_sheetId);
+            var table = await requestTable.ExecuteAsync();
+            if (table is Spreadsheet gs)
+            {
+                if (gs.Sheets.Count < 1) throw new ArgumentException("В таблице нет листов");
+                if (gs.Sheets[0].BandedRanges.Count < 0) throw new ArgumentException("На первом листе отсутствует требуемый диапазон данных");
+                var gridRange = gs.Sheets[0].BandedRanges[0].Range;
+                var range = CreateGoogleSheetsRange(((int)gridRange.StartRowIndex!, (int)gridRange.StartColumnIndex!, (int)gridRange.EndRowIndex!, (int)gridRange.EndColumnIndex!));
+                var requestData = SheetsService.Spreadsheets.Values.Get(_sheetId, range);
+                var responseData = await requestData.ExecuteAsync();
+                foreach (var value in responseData.Values)
+                {
+                    if (value.Count < 2) continue;
+                    data.TryAdd(value[0].ToString()?.ToLowerInvariant()!, value[1].ToString()!);
+                }
+            }
+            return data;
+        }
+
         public async Task<string> FindRowByValue(string searchValue, string machine, IEnumerable<string> machines, IProgress<(int, string)> progress, int column = 2)
         {
             progress.Report((0, "Подключение к списку заданий"));
@@ -222,6 +249,24 @@ namespace libeLog.Infrastructure
         public static string SafeGet(IList<object> list, int index)
         {
             return (list.Count > index && list[index] != null) ? list[index].ToString()! : "";
+        }
+
+        public static string CreateGoogleSheetsRange((int startRow, int startColumn, int endRow, int endColumn) coordinates)
+        {
+            var (startRow, startColumn, endRow, endColumn) = coordinates;
+            if (startRow == 0) startRow = 1;
+            string startCol = Utils.ConvertColumnIndexToLetters(startColumn);
+            string endCol = Utils.ConvertColumnIndexToLetters(endColumn);
+
+            int startRowNumber = startRow;
+            int endRowNumber = endRow;
+
+            string startCell = $"{startCol}{startRowNumber}";
+            string endCell = $"{endCol}{endRowNumber}";
+
+            return (startRow == endRow && startColumn == endColumn) ?
+                startCell :
+                $"{startCell}:{endCell}";
         }
     }
 }
