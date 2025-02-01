@@ -1036,7 +1036,7 @@
                         </MenuItem>
                     </MenuItem>
 
-                    <MenuItem Header="Сравнить факт/СЗН" Command="{Binding CheckAssignmentWithFactCommand}">
+                    <MenuItem Header="Сравнить факт/СЗН" Command="{Binding CheckAssignmentWithFactCommand}" Icon="{StaticResource ColumnComponent}">
 
                     </MenuItem>
 

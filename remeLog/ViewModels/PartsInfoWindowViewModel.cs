@@ -19,6 +19,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.DirectoryServices;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -1004,7 +1005,20 @@ namespace remeLog.ViewModels
         {
             try
             {
+                if (!File.Exists(AppSettings.Instance.GoogleCredentialPath) )
+                {
+                    MessageBox.Show("Файл с учетными данными Google не существует.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                if (!File.Exists(AppSettings.Instance.GoogleCredentialPath) && string.IsNullOrWhiteSpace(AppSettings.Instance.AssignedPartsSheet))
+                {
+                    MessageBox.Show("Не указан ID Google таблицы.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
                 var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
                 await Task.Run(async () =>
                 {
                     InProgress = true;
@@ -1013,15 +1027,15 @@ namespace remeLog.ViewModels
                     Status = Xl.ExportAssignmentCheckResult(Parts, assignedParts, path);
                 });
 
-                if (string.IsNullOrEmpty(path))
-                {
-                    Status = "Выбор файла отменён";
-                    return;
-                }
+                
+            }
+            catch (Google.GoogleApiException ex)
+            {
+                MessageBox.Show(GoogleSheet.ExceptionMessage(ex), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally { InProgress = false; }
         }

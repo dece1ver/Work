@@ -268,5 +268,19 @@ namespace libeLog.Infrastructure
                 startCell :
                 $"{startCell}:{endCell}";
         }
+
+        public static string ExceptionMessage(Google.GoogleApiException exception)
+        {
+            switch (exception.HResult)
+            {
+                case -2146233088:
+                    return "ID таблицы не указан";
+                case -2146233079:
+                    return "Некорректный ID таблицы";
+                default:
+                    return exception.Message;
+
+            }
+        }
     }
 }
