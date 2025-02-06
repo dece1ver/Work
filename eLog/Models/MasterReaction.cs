@@ -20,6 +20,15 @@ namespace eLog.Models
             Comment = string.Empty;
         }
 
+        public MasterReaction(MasterReaction masterReaction)
+        {
+            Type = masterReaction.Type;
+            Master = masterReaction.Master;
+            StartTime = masterReaction.StartTime;
+            EndDate = masterReaction.EndDate;
+            Comment = masterReaction.Comment;
+        }
+
         /// <summary>
         /// Имя мастера, к которому относится реакция.
         /// </summary>

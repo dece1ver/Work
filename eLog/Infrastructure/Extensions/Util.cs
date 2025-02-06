@@ -108,12 +108,13 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var prefix = row.Cell(2).Value.GetText();
-                var nameParts = row.Cell(1).Value.GetText().Split(
+                var cellValue = row.Cell(1).Value.GetText();
+                var suffix = cellValue.Contains(prefix) ? cellValue.Split(
                     new[] { prefix },
                     StringSplitOptions.RemoveEmptyEntries
-                );
+                )[1] : "";
 
-                var cleanName = (prefix + nameParts.LastOrDefault())
+                var cleanName = (prefix + suffix)
                     .Replace("[", "")
                     .Replace("]", "")
                     .Replace("готовая продукция", "")

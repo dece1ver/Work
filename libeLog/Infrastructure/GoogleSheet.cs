@@ -53,8 +53,9 @@ namespace libeLog.Infrastructure
             return await request.ExecuteAsync();
         }
 
-        public async Task<Dictionary<string, string>> GetAssignedPartsAsync()
+        public async Task<Dictionary<string, string>> GetAssignedPartsAsync(IProgress<string> progress)
         {
+            progress.Report("Подключение к таблице");
             var data = new Dictionary<string, string>();
             Credential = GetCredentialsFromFile(_credentialFile);
             SheetsService = new SheetsService(new BaseClientService.Initializer()
@@ -65,10 +66,12 @@ namespace libeLog.Infrastructure
             var table = await requestTable.ExecuteAsync();
             if (table is Spreadsheet gs)
             {
+                progress.Report("Определение данных");
                 if (gs.Sheets.Count < 1) throw new ArgumentException("В таблице нет листов");
                 if (gs.Sheets[0].BandedRanges.Count < 0) throw new ArgumentException("На первом листе отсутствует требуемый диапазон данных");
                 var gridRange = gs.Sheets[0].BandedRanges[0].Range;
                 var range = CreateGoogleSheetsRange(((int)gridRange.StartRowIndex!, (int)gridRange.StartColumnIndex!, (int)gridRange.EndRowIndex!, (int)gridRange.EndColumnIndex!));
+                progress.Report("Получение данных");
                 var requestData = SheetsService.Spreadsheets.Values.Get(_sheetId, range);
                 var responseData = await requestData.ExecuteAsync();
                 foreach (var value in responseData.Values)

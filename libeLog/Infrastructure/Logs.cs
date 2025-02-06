@@ -24,7 +24,6 @@ namespace libeLog.Infrastructure
             {
                 var backupLog = path + $".bk{DateTime.Now:ddMMyy}";
                 File.Move(path, backupLog);
-                TryCopyBackup(backupLog, copyDir);
             }
         }
 

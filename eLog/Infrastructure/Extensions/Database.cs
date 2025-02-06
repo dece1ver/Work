@@ -249,7 +249,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
                         cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
                         cmd.Parameters.AddWithValue("@Shift", part.Shift);
-                        var needDiscrease = part.Shift == Text.NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
+                        var needDiscrease = part.Shift == Text.NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(9);
                         var shiftDate = needDiscrease
                             ? new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddDays(-1)
                             : new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day);
@@ -297,29 +297,32 @@ namespace eLog.Infrastructure.Extensions
                             Util.WriteLog("Деталь не найдена, добавение новой.");
                             return await WritePartAsync(part, passive);
                         }
-                        foreach (var reaction in part.MasterReactions)
+                        if (part.MasterReactions != null && part.MasterReactions.Any())
                         {
-                            // Проверка на существующую запись о реакции
-                            string checkQuery = "SELECT COUNT(*) FROM cnc_master_reactions WHERE PartID = @PartID AND Master = @Master AND StartTime = @StartTime";
-                            using (SqlCommand checkCmd = new SqlCommand(checkQuery, connection))
+                            foreach (var reaction in part.MasterReactions)
                             {
-                                checkCmd.Parameters.AddWithValue("@PartID", part.Guid);
-                                checkCmd.Parameters.AddWithValue("@Master", reaction.Master);
-                                checkCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
-                                var existingCount = await checkCmd.ExecuteScalarAsync();
-
-                                if (existingCount is int i && i == 0)
+                                // Проверка на существующую запись о реакции
+                                string checkQuery = "SELECT COUNT(*) FROM cnc_master_reactions WHERE PartID = @PartID AND Master = @Master AND StartTime = @StartTime";
+                                using (SqlCommand checkCmd = new SqlCommand(checkQuery, connection))
                                 {
-                                    string insertReactionQuery = "INSERT INTO cnc_master_reactions (PartID, Master, StartTime, EndDate, Comment) " +
-                                        "VALUES (@PartID, @Master, @StartTime, @EndDate, @Comment)";
-                                    using (SqlCommand reactionCmd = new SqlCommand(insertReactionQuery, connection))
+                                    checkCmd.Parameters.AddWithValue("@PartID", part.Guid);
+                                    checkCmd.Parameters.AddWithValue("@Master", reaction.Master);
+                                    checkCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
+                                    var existingCount = await checkCmd.ExecuteScalarAsync();
+
+                                    if (existingCount is int i && i == 0)
                                     {
-                                        reactionCmd.Parameters.AddWithValue("@PartID", part.Guid);
-                                        reactionCmd.Parameters.AddWithValue("@Master", reaction.Master);
-                                        reactionCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
-                                        reactionCmd.Parameters.AddWithValue("@EndDate", reaction.EndDate);
-                                        reactionCmd.Parameters.AddWithValue("@Comment", reaction.Comment);
-                                        await reactionCmd.ExecuteNonQueryAsync();
+                                        string insertReactionQuery = "INSERT INTO cnc_master_reactions (PartID, Master, StartTime, EndDate, Comment) " +
+                                            "VALUES (@PartID, @Master, @StartTime, @EndDate, @Comment)";
+                                        using (SqlCommand reactionCmd = new SqlCommand(insertReactionQuery, connection))
+                                        {
+                                            reactionCmd.Parameters.AddWithValue("@PartID", part.Guid);
+                                            reactionCmd.Parameters.AddWithValue("@Master", reaction.Master);
+                                            reactionCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
+                                            reactionCmd.Parameters.AddWithValue("@EndDate", reaction.EndDate);
+                                            reactionCmd.Parameters.AddWithValue("@Comment", reaction.Comment);
+                                            await reactionCmd.ExecuteNonQueryAsync();
+                                        }
                                     }
                                 }
                             }

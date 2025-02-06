@@ -183,24 +183,24 @@ namespace remeLog.Infrastructure.Extensions
         /// <param name="parts">Список изготовлений</param>
         /// <param name="excludeDowntimeType">Тип простоя</param>
         /// <returns></returns>
-        public static double SpecifiedDowntimesRatioExcluding(this IEnumerable<Models.Part> parts, Downtime excludeDowntimeType)
+        public static double SpecifiedDowntimesRatioExcluding(this IEnumerable<Models.Part> parts, IEnumerable<Downtime> excludeDowntimeTypes)
         {
             double sum = 0;
             foreach (var part in parts)
             {
-                if (excludeDowntimeType != Downtime.Maintenance)
+                if (!excludeDowntimeTypes.Contains(Downtime.Maintenance))
                     sum += part.MaintenanceTime;
-                if (excludeDowntimeType != Downtime.ToolSearching)
+                if (!excludeDowntimeTypes.Contains(Downtime.ToolSearching))
                     sum += part.ToolSearchingTime;
-                if (excludeDowntimeType != Downtime.ToolChanging)
+                if (!excludeDowntimeTypes.Contains(Downtime.ToolChanging))
                     sum += part.ToolChangingTime;
-                if (excludeDowntimeType != Downtime.Mentoring)
+                if (!excludeDowntimeTypes.Contains(Downtime.Mentoring))
                     sum += part.MentoringTime;
-                if (excludeDowntimeType != Downtime.ContactingDepartments)
+                if (!excludeDowntimeTypes.Contains(Downtime.ContactingDepartments))
                     sum += part.ContactingDepartmentsTime;
-                if (excludeDowntimeType != Downtime.FixtureMaking)
+                if (!excludeDowntimeTypes.Contains(Downtime.FixtureMaking))
                     sum += part.FixtureMakingTime;
-                if (excludeDowntimeType != Downtime.HardwareFailure)
+                if (!excludeDowntimeTypes.Contains(Downtime.HardwareFailure))
                     sum += part.HardwareFailureTime;
             }
             return sum / parts.FullWorkedTime().TotalMinutes;

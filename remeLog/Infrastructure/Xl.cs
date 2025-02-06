@@ -715,7 +715,7 @@ namespace remeLog.Infrastructure
                   .SetValue(filteredParts.SpecifiedDowntimesRatio(ShiftType.All))
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                var specDowntimesEx = filteredParts.SpecifiedDowntimesRatioExcluding(Downtime.HardwareFailure);
+                var specDowntimesEx = filteredParts.SpecifiedDowntimesRatioExcluding(new Downtime[] { Downtime.HardwareFailure, Downtime.Mentoring });
                 ws.Cell(row, columns["specDowntimesEx"].index)
                   .SetValue(specDowntimesEx)
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
@@ -855,7 +855,7 @@ namespace remeLog.Infrastructure
                 .OrderBy(p => p.StartSetupTime)
                 .Select(p => p.Order)
                 .Distinct()
-                .Take(ordersCount)
+                .TakeLast(ordersCount)
                 .ToList();
 
             var filteredParts = parts
@@ -943,7 +943,7 @@ namespace remeLog.Infrastructure
             return path;
         }
 
-        public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path)
+        public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet($"Экспорт");
@@ -968,6 +968,7 @@ namespace remeLog.Infrastructure
 
             foreach (var part in factParts)
             {
+                progress.Report($"Проверка {part.PartName}");
                 var isAssigned = assignmentParts.Keys.Contains(part.PartName.ToLowerInvariant().Trim());
                 ws.Cell(row, ci[CM.Date]).Value = part.ShiftDate;
                 ws.Cell(row, ci[CM.Operator]).Value = part.Operator;
@@ -985,12 +986,13 @@ namespace remeLog.Infrastructure
                 row++;
             }
 
-
+            progress.Report("Настройка файла");
             ws.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             ws.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
             SetTitle(ws, ci.Count, "Проверка на изготовление в соответствии со СЗН");
             ws.Columns().AdjustToContents();
+            progress.Report("Сохранение файла");
             wb.SaveAs(path);
 
             if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)

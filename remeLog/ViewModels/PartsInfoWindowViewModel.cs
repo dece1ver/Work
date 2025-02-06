@@ -66,7 +66,6 @@ namespace remeLog.ViewModels
             ExportShiftsInfoReportCommand = new LambdaCommand(OnExportShiftsInfoReportCommandExecuted, CanExportShiftsInfoReportCommandExecute);
             ExportVerevkinReportCommand = new LambdaCommand(OnExportVerevkinReportCommandExecuted, CanExportVerevkinReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
-            ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
             OperatorsShiftsReportToExcelCommand = new LambdaCommand(OnOperatorsShiftsReportToExcelCommandExecuted, CanOperatorsShiftsReportToExcelCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
@@ -1019,15 +1018,16 @@ namespace remeLog.ViewModels
                     Status = "Выбор файла отменён";
                     return;
                 }
-                await Task.Run(async () =>
-                {
-                    InProgress = true;
-                    var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialPath!, AppSettings.Instance.AssignedPartsSheet!);
-                    var assignedParts = await gs.GetAssignedPartsAsync();
-                    Status = Xl.ExportAssignmentCheckResult(Parts, assignedParts, path);
-                });
+                IProgress<string> progress = new Progress<string>(m => Status = m);
+                InProgress = true;
+                progress.Report("Подключение к Google таблице");
+                var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialPath!, AppSettings.Instance.AssignedPartsSheet!);
+                progress.Report("Получение информации из Google таблицы");
+                var assignedParts = await gs.GetAssignedPartsAsync(progress);
+                progress.Report("Данные из СЗН получены, формирование отчёта...");
+                Status = await Task.Run(() => Xl.ExportAssignmentCheckResult(Parts, assignedParts, path, progress));
 
-                
+
             }
             catch (Google.GoogleApiException ex)
             {

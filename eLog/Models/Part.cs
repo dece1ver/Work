@@ -674,6 +674,7 @@ namespace eLog.Models
             _Operator = AppSettings.Instance.CurrentOperator ?? throw new NullReferenceException("Была запущена деталь без оператора");
             Id = -1;
             _DownTimes = new DeepObservableCollection<DownTime>();
+            _MasterReactions = new ObservableCollection<MasterReaction>();
             _OperatorComments = string.Empty;
             _Shift = string.Empty;
             DownTimes.CollectionChanged += DownTimes_CollectionChanged!;
@@ -687,6 +688,7 @@ namespace eLog.Models
             _Order = string.Empty;
             StartSetupTime = DateTime.Now.Rounded();
             _DownTimes = new DeepObservableCollection<DownTime>();
+            _MasterReactions = new ObservableCollection<MasterReaction>();
             Id = -1;
             _OperatorComments = string.Empty;
             _Operator = AppSettings.Instance.CurrentOperator!;
@@ -713,11 +715,16 @@ namespace eLog.Models
             _MachineTime = part.MachineTime;
             _LongSetupNotifySended = part.LongSetupNotifySended;
             _DownTimes = new DeepObservableCollection<DownTime>();
+            _MasterReactions = new ObservableCollection<MasterReaction>();
             _SetupTimePlan = part.SetupTimePlan;
             _SingleProductionTimePlan = part.SingleProductionTimePlan;
             foreach (var downTime in part.DownTimes)
             {
                 _DownTimes.Add(new DownTime(this, downTime));
+            }
+            foreach (var masterReaction in part.MasterReactions ?? new ObservableCollection<MasterReaction>())
+            {
+                _MasterReactions.Add(new MasterReaction(masterReaction));
             }
             _Id = part.Id;
             _OperatorComments = part.OperatorComments;
