@@ -1,4 +1,5 @@
-﻿using libeLog.Base;
+﻿using libeLog;
+using libeLog.Base;
 using libeLog.Extensions;
 using remeLog.Infrastructure;
 using System;
@@ -32,6 +33,7 @@ namespace remeLog.Models
             double setupDowntimes,
             double machiningDowntimes,
             double partialSetupTime,
+            double createNcProgramTime,
             double maintenanceTime,
             double toolSearchingTime,
             double toolChangingTime,
@@ -70,6 +72,7 @@ namespace remeLog.Models
             _SetupDowntimes = setupDowntimes;
             _MachiningDowntimes = machiningDowntimes;
             _PartialSetupTime = partialSetupTime;
+            _CreateNcProgramTime = createNcProgramTime;
             _MaintenanceTime = maintenanceTime;
             _ToolSearchingTime = toolSearchingTime;
             _ToolChangingTime = toolChangingTime;
@@ -112,6 +115,7 @@ namespace remeLog.Models
             _SetupDowntimes = part.SetupDowntimes;
             _MachiningDowntimes = part.MachiningDowntimes;
             _PartialSetupTime = part.PartialSetupTime;
+            _CreateNcProgramTime = part.CreateNcProgramTime;
             _MaintenanceTime = part.MaintenanceTime;
             _ToolSearchingTime = part.ToolSearchingTime;
             _ToolChangingTime = part.ToolChangingTime;
@@ -545,6 +549,36 @@ namespace remeLog.Models
                 }
             }
         }
+
+
+        private double _CreateNcProgramTime;
+        /// <summary> Время простоя "Написание УП" </summary>
+        public double CreateNcProgramTime
+        {
+            get => _CreateNcProgramTime;
+            set
+            {
+                if (Set(ref _CreateNcProgramTime, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(SetupTimeFact));
+                    OnPropertyChanged(nameof(ProductionTimeFact));
+                    OnPropertyChanged(nameof(SetupRatio));
+                    OnPropertyChanged(nameof(SetupRatioTitle));
+                    OnPropertyChanged(nameof(ProductionRatio));
+                    OnPropertyChanged(nameof(ProductionRatioTitle));
+                    OnPropertyChanged(nameof(SingleProductionTime));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesRatio));
+                    OnPropertyChanged(nameof(SpecifiedDowntimesComment));
+                    OnPropertyChanged(nameof(MasterSetupComment));
+                    OnPropertyChanged(nameof(MasterMachiningComment));
+                    OnPropertyChanged(nameof(MasterComment));
+                    OnPropertyChanged(nameof(Error));
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
 
 
         private double _MaintenanceTime;
@@ -1003,7 +1037,7 @@ namespace remeLog.Models
                 return ProductionTimeFact / partsCount;
             } }
         public double SetupRatio => SetupTimePlanForCalc / SetupTimeFact;
-        public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : $"{SetupRatio:0%}";
+        public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : SetupRatio > Constants.MaxSetupRatio ? $"{SetupRatio:0%}\n({Constants.MaxSetupRatio:0%})" : $"{SetupRatio:0%}";
         public double ProductionRatio => FinishedCountFact * ProductionTimePlanForCalc / ProductionTimeFact;
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity or double.NegativeInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;

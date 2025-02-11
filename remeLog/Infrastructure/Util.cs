@@ -258,6 +258,7 @@ namespace remeLog.Infrastructure
                         random.NextDouble(),
                         random.NextDouble(),
                         random.NextDouble(),
+                        random.NextDouble(),
                         $"Operator Comment {i}",
                         $"Master Setup Comment {i}",
                         $"Master Machining Comment {i}",

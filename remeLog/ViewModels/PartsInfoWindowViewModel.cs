@@ -404,8 +404,8 @@ namespace remeLog.ViewModels
         }
 
 
-        private bool _CompactView = true;
-        /// <summary> Компактный режим </summary>
+        private bool _CompactView = false;
+        /// <summary> Компактный режим (на самом деле уже нет, это для sfGridView) </summary>
         public bool CompactView
         {
             get => _CompactView;

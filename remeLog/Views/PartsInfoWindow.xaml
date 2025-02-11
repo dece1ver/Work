@@ -370,11 +370,24 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
+        <DataGridTextColumn x:Key="CreateNcProgramTimeColumn" Header="Написание УП" Binding="{Binding CreateNcProgramTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Developer'}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
         <DataGridTextColumn x:Key="MaintenanceTimeColumn" Header="Обслуживание" Binding="{Binding MaintenanceTime, Converter={StaticResource ExpressionToDoubleConverter}}" Width="33"
-                    Visibility="{Binding DataContext.ViewMode, 
-                    Source={x:Reference partsInfoWindow}, 
-                    Converter={StaticResource UserRoleVisibilityConverter}, 
-                    ConverterParameter='Viewer, Developer'}">
+                            Visibility="{Binding DataContext.ViewMode, 
+                            Source={x:Reference partsInfoWindow}, 
+                            Converter={StaticResource UserRoleVisibilityConverter}, 
+                            ConverterParameter='Viewer, Developer'}">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -496,7 +509,7 @@
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
 
-        <DataGridTextColumn x:Key="SetupRatioTitleColumn" Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="36" IsReadOnly="True">
+        <DataGridTextColumn x:Key="SetupRatioTitleColumn" Header="Наладка" Binding="{Binding SetupRatioTitle, Mode=OneWay}" Width="38" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -511,10 +524,12 @@
             </DataGridTemplateColumn.CellTemplate>
             <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate>
-                    <ComboBox ItemsSource="{Binding DataContext.SetupReasons, Source={x:Reference partsInfoWindow}}" 
-                      SelectedItem="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                      Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"
-                      />
+                    <Grid>
+                        <ComboBox ItemsSource="{Binding DataContext.SetupReasons, Source={x:Reference partsInfoWindow}}" 
+                                  SelectedItem="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                                  Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"
+                                  />                    
+                    </Grid>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
@@ -535,11 +550,13 @@
             </DataGridTemplateColumn.CellTemplate>
             <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate>
-                    <ComboBox ItemsSource="{Binding DataContext.MachiningReasons, Source={x:Reference partsInfoWindow}}" 
-                              SelectedItem="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                              Style="{StaticResource TableComboBox}" 
-                              VerticalAlignment="Stretch">
-                    </ComboBox>
+                    <Grid>
+                        <ComboBox ItemsSource="{Binding DataContext.MachiningReasons, Source={x:Reference partsInfoWindow}}" 
+                                  SelectedItem="{Binding MasterMachiningComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                                  Style="{StaticResource TableComboBox}" 
+                                  VerticalAlignment="Stretch">
+                        </ComboBox>
+                    </Grid>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
@@ -1068,7 +1085,7 @@
                 
             </Menu>
 
-            <syncfusion:SfDataGrid x:Name="SfDataGrid" Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
+            <syncfusion:SfDataGrid x:Name="SfDataGrid" Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
                                    ItemsSource="{Binding Parts}" AutoGenerateColumns="False" AllowCollectionView="True"
                                    AllowFiltering="True" AllowGrouping="True" AllowDeleting="False" AllowEditing="False"
                                    ShowBusyIndicator="True" ShowGroupDropArea="True" ColumnSizer="SizeToHeader" QueryRowHeight="SfDataGrid_QueryRowHeight"
@@ -1147,7 +1164,7 @@
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0" SelectedItem="{Binding SelectedPart, UpdateSourceTrigger=PropertyChanged}"
                       AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectedCellsChanged="DataGrid_SelectedCellsChanged" PreviewKeyDown="DataGrid_PreviewKeyDown"
-                      Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
+                      Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
                       >
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
@@ -1229,6 +1246,7 @@
                     <StaticResource ResourceKey="SetupDowntimesColumn"/>
                     <StaticResource ResourceKey="MachiningDowntimesColumn"/>
                     <StaticResource ResourceKey="PartialSetupTimeColumn"/>
+                    <StaticResource ResourceKey="CreateNcProgramTimeColumn"/>
                     <StaticResource ResourceKey="MaintenanceTimeColumn"/>
                     <StaticResource ResourceKey="ToolSearchingTimeColumn"/>
                     <StaticResource ResourceKey="ToolChangingTimeColumn"/>

@@ -9,6 +9,7 @@ using libeLog.Extensions;
 using libeLog.Models;
 using libeLog;
 using System.Security;
+using Syncfusion.Data.Extensions;
 
 
 namespace remeLog.Infrastructure.Extensions
@@ -22,8 +23,12 @@ namespace remeLog.Infrastructure.Extensions
         }
         public static double AverageSetupRatio(this IEnumerable<Models.Part> parts)
         {
-            var validSetupRatios = parts.Where(p => p.SetupRatio > 0 && !double.IsNaN(p.SetupRatio) && !double.IsPositiveInfinity(p.SetupRatio)).Select(p => p.SetupRatio);
-            return validSetupRatios.Any() ? validSetupRatios.Average() : 0.0;
+            var validSetupRatios = parts
+                .Where(p => p.SetupRatio > 0 && !double.IsNaN(p.SetupRatio) && !double.IsPositiveInfinity(p.SetupRatio))
+                .Select(p => p.SetupRatio <= 1.2 ? p.SetupRatio : Constants.MaxSetupRatio)
+                .DefaultIfEmpty(0.0);
+
+            return validSetupRatios.Average();
         }
 
         public static double SetupRatio(this IEnumerable<Models.Part> parts)
@@ -181,13 +186,15 @@ namespace remeLog.Infrastructure.Extensions
         /// Соотношение отмеченных простоев к общему времени
         /// </summary>
         /// <param name="parts">Список изготовлений</param>
-        /// <param name="excludeDowntimeType">Тип простоя</param>
+        /// <param name="excludeDowntimeTypes">Типы простоев для исключения</param>
         /// <returns></returns>
         public static double SpecifiedDowntimesRatioExcluding(this IEnumerable<Models.Part> parts, IEnumerable<Downtime> excludeDowntimeTypes)
         {
             double sum = 0;
             foreach (var part in parts)
             {
+                if (!excludeDowntimeTypes.Contains(Downtime.CreateNcProgram))
+                    sum += part.CreateNcProgramTime;
                 if (!excludeDowntimeTypes.Contains(Downtime.Maintenance))
                     sum += part.MaintenanceTime;
                 if (!excludeDowntimeTypes.Contains(Downtime.ToolSearching))
@@ -204,6 +211,17 @@ namespace remeLog.Infrastructure.Extensions
                     sum += part.HardwareFailureTime;
             }
             return sum / parts.FullWorkedTime().TotalMinutes;
+        }
+
+        /// <summary>
+        /// Соотношение отмеченных простоев к общему времени
+        /// </summary>
+        /// <param name="parts">Список изготовлений</param>
+        /// <param name="excludeDowntimeType">Тип простоя для исключения</param>
+        /// <returns></returns>
+        public static double SpecifiedDowntimesRatioExcluding(this IEnumerable<Models.Part> parts, Downtime excludeDowntimeType)
+        {
+            return parts.SpecifiedDowntimesRatioExcluding(new List<Downtime>() { excludeDowntimeType });
         }
 
         /// <summary>

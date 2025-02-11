@@ -54,6 +54,7 @@ namespace eLog.Infrastructure.Extensions
                         "SetupDowntimes, " +
                         "MachiningDowntimes, " +
                         "PartialSetupTime, " +
+                        "CreateNcProgramTime, " +
                         "MaintenanceTime, " +
                         "ToolSearchingTime, " +
                         "ToolChangingTime, " +
@@ -86,6 +87,7 @@ namespace eLog.Infrastructure.Extensions
                         "@SetupDowntimes, " +
                         "@MachiningDowntimes, " +
                         "@PartialSetupTime, " +
+                        "@CreateNcProgramTime, " +
                         "@MaintenanceTime, " +
                         "@ToolSearchingTime, " +
                         "@ToolChangingTime, " +
@@ -130,6 +132,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@CreateNcProgramTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.CreateNcProgram }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MaintenanceTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Maintenance }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@ToolSearchingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolSearching }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@ToolChangingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolChanging }).TotalMinutes(), 0));
@@ -235,6 +238,7 @@ namespace eLog.Infrastructure.Extensions
                         "SetupDowntimes = @SetupDowntimes, " +
                         "MachiningDowntimes = @MachiningDowntimes, " +
                         "PartialSetupTime = @PartialSetupTime, " +
+                        "CreateNcProgramTime = @CreateNcProgramTime, " +
                         "MaintenanceTime = @MaintenanceTime, " +
                         "ToolSearchingTime = @ToolSearchingTime, " +
                         "ToolChangingTime = @ToolChangingTime, " +
@@ -279,6 +283,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));
+                        cmd.Parameters.AddWithValue("@CreateNcProgramTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.CreateNcProgram }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MaintenanceTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.Maintenance }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@ToolSearchingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolSearching }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@ToolChangingTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.ToolChanging }).TotalMinutes(), 0));

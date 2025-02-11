@@ -73,6 +73,7 @@ namespace eLog.Models
 
         public enum Types
         {
+            CreateNcProgram,
             Maintenance,
             ToolSearching,
             ToolChanging,
@@ -111,6 +112,7 @@ namespace eLog.Models
 
         public string Name => Type switch
         {
+            Types.CreateNcProgram => Text.DownTimes.CreateNcProgram,
             Types.Maintenance => Text.DownTimes.Maintenance,
             Types.ToolSearching => Text.DownTimes.ToolSearching,
             Types.ToolChanging => Text.DownTimes.ToolChanging,

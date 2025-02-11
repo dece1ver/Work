@@ -88,6 +88,11 @@ namespace remeLog.Infrastructure
         public const string Operator = "operator";
 
         /// <summary>
+        /// Разряд
+        /// </summary>
+        public const string Qualification = "qualification";
+
+        /// <summary>
         /// Деталь
         /// </summary>
         public const string Part = "part";
@@ -116,6 +121,16 @@ namespace remeLog.Infrastructure
         /// Установка
         /// </summary>
         public const string Setup = "setup";
+
+        /// <summary>
+        /// Количество установок
+        /// </summary>
+        public const string SetupsCount = "setups";
+
+        /// <summary>
+        /// Количество изготовлений
+        /// </summary>
+        public const string ProductionsCount = "productions";
 
         /// <summary>
         /// Начало наладки
@@ -201,6 +216,11 @@ namespace remeLog.Infrastructure
         /// Частичная наладка
         /// </summary>
         public const string PartialSetupTime = "partialSetupTime";
+
+        /// <summary>
+        /// Написание УП
+        /// </summary>
+        public const string CreateNcProgramTime = "createNcProgramTime";
 
         /// <summary>
         /// Обслуживание
@@ -348,6 +368,11 @@ namespace remeLog.Infrastructure
         public const string ProductionRatio = "productionRatio";
 
         /// <summary>
+        /// Общая эффективность
+        /// </summary>
+        public const string GeneralRatio = "generalRatio";
+
+        /// <summary>
         /// Коэффициент наладки на штучке
         /// </summary>
         public const string SetupRatioUnder = "setupRatioUnder";
@@ -403,6 +428,11 @@ namespace remeLog.Infrastructure
         public const string SpecifiedDowntimes = "specifiedDowntimes";
 
         /// <summary>
+        /// Отмеченные простои (для К1)
+        /// </summary>
+        public const string SpecifiedDowntimesEx = "specifiedDowntimesEx";
+
+        /// <summary>
         /// Неуказанные простои
         /// </summary>
         public const string UnspecifiedDowntimes = "unspecifiedDowntimes";
@@ -442,6 +472,11 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string IsEqual = "isEqual";
 
+        /// <summary>
+        /// Коэффициент
+        /// </summary>
+        public const string Coefficient = "coefficient";
+
 
         private static readonly Dictionary<string, string> _descriptions = new()
         {
@@ -451,12 +486,15 @@ namespace remeLog.Infrastructure
             { Date, "Дата" },
             { Shift, "Смена" },
             { Operator, "Оператор" },
+            { Qualification, "Разряд" },
             { Part, "Деталь" },
             { PartAssigned, "Деталь закрепленная" },
             { Order, "М/Л" },
             { TotalByOrder, "Всего по М/Л" },
             { Finished, "Выполнено" },
             { Setup, "Установка" },
+            { SetupsCount, $"Количество{Environment.NewLine}наладок" },
+            { ProductionsCount, $"Количество{Environment.NewLine}изготовлений" },
             { StartSetupTime, "Начало наладки" },
             { StartMachiningTime, $"Начало{Environment.NewLine}изготовления" },
             { EndMachiningTime, $"Конец{Environment.NewLine}изготовления" },
@@ -474,6 +512,7 @@ namespace remeLog.Infrastructure
             { SetupDowntimes, $"Простои{Environment.NewLine}в наладке" },
             { MachiningDowntimes, $"Простои{Environment.NewLine}в изготовлении" },
             { PartialSetupTime, "Частичная наладка" },
+            { CreateNcProgramTime, "Написание УП" },
             { MaintenanceTime, "Обслуживание" },
             { ToolSearchingTime, "Поиск инструмента" },
             { ToolChangingTime, "Замена инструмента" },
@@ -501,6 +540,7 @@ namespace remeLog.Infrastructure
             { NoPowerShifts, "Смены без электропитания" },
             { ProcessRelatedLossShifts, "Организационные потери" },
             { UnspecifiedOtherShifts, $"Смены без работы{Environment.NewLine}по другим причинам" },
+            { GeneralRatio, $"Эффективность" },
             { SetupRatio, $"Выполнение норматива{Environment.NewLine}наладки (взв.)" },
             { ProductionRatio, $"Выполнение норматива{Environment.NewLine}изготовления" },
             { SetupRatioUnder, $"Выполнение норматива{Environment.NewLine}наладки на штучке" },
@@ -514,6 +554,7 @@ namespace remeLog.Infrastructure
             { ProductionEfficiencyToTotalRatio, $"Отношение нормативов{Environment.NewLine}к общему времени" },
             { AverageReplacementTime, $"Среднее время{Environment.NewLine}замены детали" },
             { SpecifiedDowntimes, "Отмеченные простои" },
+            { SpecifiedDowntimesEx, "Отмеченные простои (для К1)" },
             { UnspecifiedDowntimes, "Неуказанные простои" },
             { CountPerMachine, $"Количество{Environment.NewLine}по станку" },
             { AverageSetupTime, $"Среднее время наладки" },
@@ -521,7 +562,8 @@ namespace remeLog.Infrastructure
             { TotalProductionTime, $"Время изготовления" },
             { TotalDowntimesTime, $"Время простоев" },
             { TotalTime, $"Отмеченное общее время" },
-            { IsEqual, $"Совпадает" }
+            { IsEqual, $"Совпадает" },
+            { Coefficient, $"Коэффициент" }
         };
 
         /// <summary>

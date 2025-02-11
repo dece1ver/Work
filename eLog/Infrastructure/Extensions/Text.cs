@@ -11,6 +11,7 @@
 
         public static class DownTimes
         {
+            public const string CreateNcProgram = "Написание УП";
             public const string Maintenance = "Обслуживание";
             public const string ToolSearching = "Поиск и получение инструмента";
             public const string ToolChanging = "Замена инструмента";
