@@ -25,7 +25,7 @@ namespace remeLog.Infrastructure.Extensions
         {
             var validSetupRatios = parts
                 .Where(p => p.SetupRatio > 0 && !double.IsNaN(p.SetupRatio) && !double.IsPositiveInfinity(p.SetupRatio))
-                .Select(p => p.SetupRatio <= 1.2 ? p.SetupRatio : Constants.MaxSetupRatio)
+                .Select(p => p.SetupRatio <= AppSettings.MaxSetupLimit ? p.SetupRatio : AppSettings.MaxSetupLimit)
                 .DefaultIfEmpty(0.0);
 
             return validSetupRatios.Average();

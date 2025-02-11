@@ -1041,5 +1041,24 @@ namespace remeLog.Infrastructure
                 return DbResult.Error;
             }
         }
+
+        internal static void UpdateSettings(string connectionString)
+        {
+            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            {
+                connection.Open();
+                string query = $"SELECT max_setup_limit FROM cnc_remelog_config;";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            AppSettings.MaxSetupLimit = reader.GetDouble(0);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

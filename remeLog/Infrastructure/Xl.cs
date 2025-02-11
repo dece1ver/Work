@@ -945,8 +945,8 @@ namespace remeLog.Infrastructure
         public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();
-            var ws = wb.AddWorksheet($"Экспорт");
-            ws.Style.Alignment.WrapText = true;
+            var wsAll = wb.AddWorksheet($"Все");
+            wsAll.Style.Alignment.WrapText = true;
 
             var cm = new CM.Builder()
                 .Add(CM.Date)
@@ -958,39 +958,81 @@ namespace remeLog.Infrastructure
                 .Add(CM.IsEqual)
                 .Build();
 
-            ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 65, 8);
+            ConfigureWorksheetHeader(wsAll, cm, HeaderRotateOption.Vertical, 65, 8);
 
-            ws.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+            wsAll.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
 
             int row = 3;
             var ci = cm.GetIndexes();
 
             foreach (var part in factParts)
             {
-                progress.Report($"Проверка {part.PartName}");
-                var isAssigned = assignmentParts.Keys.Contains(part.PartName.ToLowerInvariant().Trim());
-                ws.Cell(row, ci[CM.Date]).Value = part.ShiftDate;
-                ws.Cell(row, ci[CM.Operator]).Value = part.Operator;
-                ws.Cell(row, ci[CM.Part]).Value = part.PartName;
-                ws.Cell(row, ci[CM.Setup]).Value = part.Setup;
-                ws.Cell(row, ci[CM.Machine]).Value = part.Machine;
+                progress.Report($"Все: Проверка {part.PartName}");
+                var isAssigned = assignmentParts.ContainsKey(part.PartName.ToLowerInvariant().Trim());
+                wsAll.Cell(row, ci[CM.Date]).Value = part.ShiftDate;
+                wsAll.Cell(row, ci[CM.Operator]).Value = part.Operator;
+                wsAll.Cell(row, ci[CM.Part]).Value = part.PartName;
+                wsAll.Cell(row, ci[CM.Setup]).Value = part.Setup;
+                wsAll.Cell(row, ci[CM.Machine]).Value = part.Machine;
                 var assignedMachine = isAssigned
                     ? assignmentParts
                         .Where(ap => ap.Key.ToLowerInvariant().Trim() == part.PartName.ToLowerInvariant().Trim())
                         .First()
                         .Value
                     : "-";
-                ws.Cell(row, ci[CM.MachineAssigned]).Value = assignedMachine;
-                ws.Cell(row, ci[CM.IsEqual]).Value = !isAssigned ? "-" : part.Machine.Contains(assignedMachine);
+                wsAll.Cell(row, ci[CM.MachineAssigned]).Value = assignedMachine;
+                wsAll.Cell(row, ci[CM.IsEqual]).Value = !isAssigned ? "-" : part.Machine.Contains(assignedMachine);
                 row++;
             }
 
-            progress.Report("Настройка файла");
-            ws.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            ws.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.RangeUsed().SetAutoFilter(true);
-            SetTitle(ws, ci.Count, "Проверка на изготовление в соответствии со СЗН");
-            ws.Columns().AdjustToContents();
+            progress.Report("Все: Настройка листа");
+            wsAll.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            wsAll.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            wsAll.RangeUsed().SetAutoFilter(true);
+            SetTitle(wsAll, ci.Count, "Проверка на изготовление в соответствии со СЗН");
+            wsAll.Columns().AdjustToContents();
+
+            var wsUnique = wb.AddWorksheet("Уникальные");
+            wsUnique.Style.Alignment.WrapText = true;
+
+            cm = new CM.Builder()
+                .Add(CM.Date)
+                .Add(CM.Part)
+                .Add(CM.Setup)
+                .Add(CM.Machine)
+                .Add(CM.MachineAssigned)
+                .Add(CM.IsEqual)
+                .Build();
+            ConfigureWorksheetHeader(wsUnique, cm, HeaderRotateOption.Vertical, 65, 8);
+            wsUnique.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+
+            row = 3;
+            ci = cm.GetIndexes();
+
+            foreach (var part in factParts.GroupBy(p => (p.PartName, p.Setup, p.Machine)).Select(g => g.First()))
+            {
+                progress.Report($"Уникальные: Проверка {part.PartName}");
+                var isAssigned = assignmentParts.ContainsKey(part.PartName.ToLowerInvariant().Trim());
+                wsUnique.Cell(row, ci[CM.Date]).Value = part.ShiftDate;
+                wsUnique.Cell(row, ci[CM.Part]).Value = part.PartName;
+                wsUnique.Cell(row, ci[CM.Setup]).Value = part.Setup;
+                wsUnique.Cell(row, ci[CM.Machine]).Value = part.Machine;
+                var assignedMachine = isAssigned
+                    ? assignmentParts
+                        .Where(ap => ap.Key.ToLowerInvariant().Trim() == part.PartName.ToLowerInvariant().Trim())
+                        .First()
+                        .Value
+                    : "-";
+                wsUnique.Cell(row, ci[CM.MachineAssigned]).Value = assignedMachine;
+                wsUnique.Cell(row, ci[CM.IsEqual]).Value = !isAssigned ? "-" : part.Machine.Contains(assignedMachine);
+                row++;
+            }
+            progress.Report("Уникальные: Настройка листа");
+            wsUnique.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            wsUnique.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            wsUnique.RangeUsed().SetAutoFilter(true);
+            SetTitle(wsUnique, ci.Count, "Проверка на изготовление в соответствии со СЗН");
+            wsUnique.Columns().AdjustToContents();
             progress.Report("Сохранение файла");
             wb.SaveAs(path);
 
@@ -1746,6 +1788,7 @@ namespace remeLog.Infrastructure
             headerRange.Style.Font.FontSize = fontSize;
             headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            headerRange.Style.Alignment.WrapText = true;
             ws.Row(2).Height = height;
         }
 

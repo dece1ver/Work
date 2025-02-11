@@ -51,6 +51,8 @@ namespace remeLog.Infrastructure
         public List<(string Reason, bool RequireComment)> MachiningReasons { get; set; } = new();
         [JsonIgnore]
         public List<string> UnspecifiedDowntimesReasons = new();
+        [JsonIgnore]
+        public static double MaxSetupLimit = 2;
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode { get; set; }

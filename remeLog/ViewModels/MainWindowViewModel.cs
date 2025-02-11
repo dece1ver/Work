@@ -354,9 +354,9 @@ namespace remeLog.ViewModels
                 _cancellationTokenSource.Cancel();
                 _cancellationTokenSource = new();
                 var cancellationToken = _cancellationTokenSource.Token;
-
                 await semaphoreSlim.WaitAsync(cancellationToken);
                 ProgressBarVisibility = Visibility.Visible;
+                Database.UpdateSettings(AppSettings.Instance.ConnectionString);
                 Status = "Получение списка станков...";
                 if (!first)
                 {

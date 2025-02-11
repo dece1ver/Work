@@ -1504,6 +1504,7 @@ namespace remeLog.ViewModels
             {
                 InProgress = true;
                 Status = "Получение информации...";
+                Database.UpdateSettings(AppSettings.Instance.ConnectionString);
                 if (!first) await Task.Delay(1000, cancellationToken);
 
                 if (UseMockData)

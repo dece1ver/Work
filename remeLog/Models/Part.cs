@@ -1037,7 +1037,7 @@ namespace remeLog.Models
                 return ProductionTimeFact / partsCount;
             } }
         public double SetupRatio => SetupTimePlanForCalc / SetupTimeFact;
-        public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : SetupRatio > Constants.MaxSetupRatio ? $"{SetupRatio:0%}\n({Constants.MaxSetupRatio:0%})" : $"{SetupRatio:0%}";
+        public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : SetupRatio > AppSettings.MaxSetupLimit ? $"{SetupRatio:0%}\n({AppSettings.MaxSetupLimit:0%})" : $"{SetupRatio:0%}";
         public double ProductionRatio => FinishedCountFact * ProductionTimePlanForCalc / ProductionTimeFact;
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity or double.NegativeInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;

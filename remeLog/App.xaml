@@ -10,24 +10,25 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/libeLog;component/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <cnv:StatusVisibilityConverter x:Key="StatusVisibilityConverter"/>
+            <cnv:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
             <cnv:CollectionConverteter x:Key="CollectionConverteter"/>
-            <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
-            <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
-            <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
-            <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
-            <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
-            <cnv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
-            <cnv:ReportStateVisibility x:Key="ReportStateVisibility"/>
-            <cnv:TimeConverter x:Key="TimeConverter"/>
-            <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
+            <cnv:EnumDescriptionConverter x:Key="EnumDescriptionConverter"/>
             <cnv:ExpressionToDoubleConverter x:Key="ExpressionToDoubleConverter"/>
             <cnv:ExpressionToIntConverter x:Key="ExpressionToIntConverter"/>
+            <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
+            <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
+            <cnv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <cnv:OverlayOpacityConverter x:Key="OverlayOpacityConverter"/>
+            <cnv:OverlayVisibilityConverter x:Key="OverlayVisibilityConverter"/>
+            <cnv:ReportStateVisibility x:Key="ReportStateVisibility"/>
             <cnv:RoleButtonConverter x:Key="RoleButtonConverter"/>
             <cnv:RoleColorConverter x:Key="RoleColorConverter"/>
             <cnv:ShortDateConverter x:Key="ShortDateConverter"/>
+            <cnv:StatusVisibilityConverter x:Key="StatusVisibilityConverter"/>
+            <cnv:TimeConverter x:Key="TimeConverter"/>
             <cnv:UserRoleVisibilityConverter x:Key="UserRoleVisibilityConverter"/>
-            <cnv:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
+            <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
             <stl:CustomRowStyleSelector x:Key="CustomRowStyleSelector"/>
         </ResourceDictionary>
     </Application.Resources>
