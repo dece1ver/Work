@@ -250,13 +250,15 @@ namespace eLog.Infrastructure
             set => Set(ref _NotSendedToolComments, value);
         }
 
-        private List<HelpCase> _NotSendedHelpCases;
-        /// <summary> Не отправленные уведомления о помощи мастера </summary>
-        public List<HelpCase> NotSendedHelpCasets
+
+        private List<string> _SearchToolTypes;
+        /// <summary> Типы инструмента при поиске </summary>
+        public List<string> SearchToolTypes
         {
-            get => _NotSendedHelpCases;
-            set => Set(ref _NotSendedHelpCases, value);
+            get => _SearchToolTypes;
+            set => Set(ref _SearchToolTypes, value);
         }
+
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode
@@ -290,15 +292,16 @@ namespace eLog.Infrastructure
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
             {
-            Text.WithoutOrderItem,
-            "УЧ",
-            "ФЛ",
-            "БП",
-            "СУ",
-            "УУ",
-            "ЗУ",
-            "СЛ",
-        };
+                Text.WithoutOrderItem,
+                "УЧ",
+                "ФЛ",
+                "БП",
+                "СУ",
+                "УУ",
+                "ЗУ",
+                "СЛ",
+            };
+            SearchToolTypes = new List<string>() { "Н/Д" };
             StorageType = new StorageType(StorageType.Types.Excel);
             ConnectionString = string.Empty;
             IsShiftStarted = false;
@@ -349,15 +352,16 @@ namespace eLog.Infrastructure
                 OrdersSourcePath ??= "";
                 OrderQualifiers ??= new[]
                 {
-                Text.WithoutOrderItem,
-                "УЧ",
-                "ФЛ",
-                "БП",
-                "СУ",
-                "УУ",
-                "ЗУ",
-                "СЛ",
-            };
+                    Text.WithoutOrderItem,
+                    "УЧ",
+                    "ФЛ",
+                    "БП",
+                    "СУ",
+                    "УУ",
+                    "ЗУ",
+                    "СЛ",
+                };
+                SearchToolTypes ??= new List<string> { "Н/Д" };
                 CurrentOperator ??= new()
                 {
                     LastName = "Бабохин",

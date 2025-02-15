@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Word;
-using eLog.Infrastructure;
+﻿using eLog.Infrastructure;
 using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using eLog.Services;
@@ -16,7 +15,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection.PortableExecutable;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -58,6 +56,7 @@ namespace eLog.ViewModels
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadProductionTasksCommand = new LambdaCommand(OnLoadProductionTasksCommandExecuted, CanLoadProductionTasksCommandExecute);
+            SendMessageCommand = new LambdaCommand(OnSendMessageCommandExecuted, CanSendMessageCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
             TestCommand = new LambdaCommand(OnTestCommandExecuted, CanTestCommandExecute);
 
@@ -72,7 +71,32 @@ namespace eLog.ViewModels
             var shiftHandoverWatcher = new Thread(() => ShiftHandoverWatcher()) { IsBackground = true };
             shiftHandoverWatcher.Start();
 
+            Task.Run(UpdateToolTypes);
+
             WriteLog("Старт");
+        }
+
+        private async static Task UpdateToolTypes()
+        {
+            var (result, types, error) = await Database.GetSearchToolTypes();
+            switch (result)
+            {
+                case DbResult.Ok:
+                    AppSettings.Instance.SearchToolTypes = types;
+                    break;
+                case DbResult.AuthError:
+                    Util.WriteLog("Не удалось авторизоваться при обновлении списка типов инструмента.");
+                    break;
+                case DbResult.Error:
+                    Util.WriteLog($"Ошибка при обновлении списка типов инструмента:\n{error}");
+                    break;
+                case DbResult.NoConnection:
+                    Util.WriteLog("Не удалось установить соединение с БД при обновлении списка типов инструмента.");
+                    break;
+                case DbResult.NotFound:
+                    Util.WriteLog($"Список типов инструмента пуст.");
+                    break;
+            }
         }
 
         #region Свойства-обертки настроек
@@ -354,6 +378,75 @@ namespace eLog.ViewModels
         private static bool CanLoadProductionTasksCommandExecute(object p) => true;
         #endregion
 
+        #region SendMessage
+        public ICommand SendMessageCommand { get; }
+        private async void OnSendMessageCommandExecuted(object p)
+        {
+            try
+            {
+                if (!Parts.Any() && Parts[0].IsFinished != Part.State.InProgress)
+                {
+                    MessageBox.Show("Без детали не положено", "Нет", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                string message;
+                string to;
+                using (Overlay = new())
+                {
+                    var dlg = new UserInputDialogWindow("Что вас беспокоит?", "Кому:", Email.RecieversGroups.Keys.ToList())
+                    {
+                        Owner = App.Current.MainWindow
+                    };
+
+                    if (dlg.ShowDialog() != true) return;
+
+                    message = dlg.UserInput ?? "-";
+                    to = dlg.SelectedOption;
+                }
+                IProgress<string> progress = new Progress<string>(status => Status = status);
+                progress.Report("Составление списка получателей...");
+
+                if (!Email.RecieversGroups.TryGetValue(to, out var receiverTypes))
+                {
+                    progress.Report("Выбранная группа не найдена.");
+                    await Task.Delay(3000);
+                    return;
+                }
+
+                var recipients = await Task.Run(() =>
+                    receiverTypes.SelectMany(GetMailReceivers).Distinct().ToList());
+
+                if (!recipients.Any())
+                {
+                    progress.Report("Получателей не обнаружено.");
+                    await Task.Delay(3000);
+                    return;
+                }
+
+                progress.Report($"Отправка сообщения группе: [{to}]...");
+                await Task.Run(() => Email.SendMessage(Parts[0], message, recipients));
+
+                progress.Report("Сообщение отправлено");
+                await Task.Delay(3000);
+            }
+            catch (OperationCanceledException)
+            {
+                Status = "Загрузка списка отменена.";
+            }
+            catch
+            {
+                Status = "Список работы недоступен.";
+            }
+            finally
+            {
+                ProductionTasksIsLoading = false;
+                ProgressBarVisibility = Visibility.Collapsed;
+            }
+        }
+
+        private static bool CanSendMessageCommandExecute(object p) => true;
+        #endregion
+
         #region EditOperators
         public ICommand EditOperatorsCommand { get; }
         private void OnEditOperatorsCommandExecuted(object p)
@@ -507,14 +600,19 @@ namespace eLog.ViewModels
         {
             using (Overlay = new())
             {
-                var downTimeType = WindowsUserDialogService.SetDownTimeType();
+                var (downTimeType, toolType, comment) = WindowsUserDialogService.SetDownTimeType();
                 if (downTimeType is { } type)
                 {
+                    if (type is DownTime.Types.CreateNcProgram && (Part)p is { SetupIsFinished: true })
+                    {
+                        MessageBox.Show($"{Text.DownTimes.CreateNcProgram} может быть только в наладке.", "Молодой человек, это не для вас простой.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
                     var part = (Part)p;
                     var index = Parts.IndexOf(part);
                     Parts.RemoveAt(index);
                     var downTimes = part.DownTimes;
-                    var downTime = new DownTime(part, type);
+                    var downTime = new DownTime(part, type) {ToolType = toolType, Comment = comment };
                     downTimes.Add(downTime);
                     part.DownTimes = downTimes;
                     OnPropertyChanged(nameof(part.DownTimes));
@@ -754,22 +852,16 @@ namespace eLog.ViewModels
                         }
                     }
 
-                    // уведомления об оказанной помощи
-                    AppSettings.Instance.NotSendedHelpCasets ??= new();
-                    if (AppSettings.Instance.NotSendedHelpCasets.Any())
+                    if (Parts.Count > 0 
+                        && Parts[0].IsFinished == Part.State.InProgress
+                        && Parts[0].DownTimes.Any() 
+                        && Parts[0].DownTimes.First() is { Type: DownTime.Types.ToolSearching, NeedToSend: true} dts)
                     {
-                        AppSettings.ToolSearchMailRecievers = GetMailReceivers(ReceiversType.ToolSearch);
-                        AppSettings.LongSetupsMailRecievers = GetMailReceivers(ReceiversType.LongSetup);
-                        if (Parts.Any())
+                        if (dts.EndTime < dts.StartTime && DateTime.Now - dts.StartTime > TimeSpan.FromMinutes(5))
                         {
-                            var tempList = AppSettings.Instance.NotSendedHelpCasets.ToList();
-                            foreach (var item in tempList)
-                            {
-                                if (Email.SendHelpCaseComment(item))
-                                {
-                                    AppSettings.Instance.NotSendedHelpCasets.Remove(item);
-                                }
-                            }
+                            AppSettings.Instance.NotSendedToolComments ??= new();
+                            AppSettings.Instance.NotSendedToolComments?.Add($"[{dts.ToolType}] {dts.Comment}");
+                            dts.NeedToSend = false;
                         }
                     }
 

@@ -185,8 +185,10 @@ namespace eLog.Services
             return true;
         }
 
-        public static DownTime.Types? SetDownTimeType(Window? owner = null)
+        public static (DownTime.Types? Type, string ToolType, string Comment) SetDownTimeType(Window? owner = null)
         {
+            var toolType = "";
+            var comment = "";
             var dlg = new SetDownTimeDialogWindow()
             {
                 Owner = owner ?? Application.Current.MainWindow,
@@ -197,16 +199,14 @@ namespace eLog.Services
                 case DownTime.Types.Maintenance:
                     break;
                 case DownTime.Types.ToolSearching:
-                    if (MessageBox.Show("Желаете указать что ищете?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) break;
-                    var toolSearchingDlg = new UserInputDialogWindow("Что вы ищите?")
+                    var toolSearchingDlg = new UserInputDialogWindow("Поподробнее:", "Что ищете?", AppSettings.Instance.SearchToolTypes)
                     {
                         Title = DownTimes.ToolSearching,
                         Owner = owner ?? Application.Current.MainWindow
                     };
-                    if (toolSearchingDlg.ShowDialog() != true) return null;
-                    var toolSearchingDlgMessage = toolSearchingDlg.UserInput ?? "Без комментария.";
-                    AppSettings.Instance.NotSendedToolComments ??= new();
-                    AppSettings.Instance.NotSendedToolComments.Add(toolSearchingDlgMessage);
+                    if (toolSearchingDlg.ShowDialog() != true) return (null, toolType, comment);
+                    toolType = toolSearchingDlg.SelectedOption;
+                    comment = toolSearchingDlg.UserInput;
                     break;
                 case DownTime.Types.ToolChanging:
                     break;
@@ -222,7 +222,7 @@ namespace eLog.Services
                         Title = DownTimes.HardwareFailure,
                         Owner = owner ?? Application.Current.MainWindow
                     };
-                    if (failureDlg.ShowDialog() != true) return null;
+                    if (failureDlg.ShowDialog() != true) return (null, toolType, comment);
                     var failureDlgMessage = failureDlg.UserInput ?? "Без комментария.";
                     _ = TrySendHardwareFailureMessageAsync(failureDlgMessage);
                     break;
@@ -231,7 +231,7 @@ namespace eLog.Services
                 default:
                     break;
             }
-            return dlg.Type;
+            return (dlg.Type, toolType, comment);
         }
 
         public static async Task TrySendHardwareFailureMessageAsync(string message)

@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using static eLog.Infrastructure.Extensions.Text;
 
 namespace eLog.Views.Windows.Dialogs
 {
@@ -48,10 +49,15 @@ namespace eLog.Views.Windows.Dialogs
         {
             using (Overlay = new())
             {
-                var downTimeType = WindowsUserDialogService.SetDownTimeType(this);
+                var (downTimeType, toolType, comment) = WindowsUserDialogService.SetDownTimeType(this);
                 if (downTimeType is { } type)
                 {
-                    Part.DownTimes.Add(new DownTime(Part, type));
+                    if (type is DownTime.Types.CreateNcProgram && Part is { SetupIsFinished: true })
+                    {
+                        MessageBox.Show($"{DownTimes.CreateNcProgram} может быть только в наладке.", "Молодой человек, это не для вас простой.", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    Part.DownTimes.Add(new DownTime(Part, type) { ToolType = toolType, Comment = comment});
                 }
                 CanAddDownTime = Part.DownTimesIsClosed && CanBeClosed;
             }

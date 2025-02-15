@@ -14,7 +14,7 @@ namespace eLog.Models
     public class DownTime : INotifyPropertyChanged, IDataErrorInfo
     {
         [JsonConstructor]
-        public DownTime(Part part, Types type, DateTime startTime, DateTime endTime, string comment = "")
+        public DownTime(Part part, Types type, DateTime startTime, DateTime endTime, string toolType = "", string comment = "")
         {
             _ParentPart = part;
             _Type = type;
@@ -22,10 +22,11 @@ namespace eLog.Models
             _StartTimeText = _StartTime.ToString(Constants.DateTimeFormat);
             _EndTime = endTime;
             _EndTimeText = _EndTime.ToString(Constants.DateTimeFormat);
+            _ToolType = toolType;
             _Comment = comment;
         }
 
-        public DownTime(Part part, Types type, string comment = "")
+        public DownTime(Part part, Types type, string toolType = "", string comment = "")
         {
             _ParentPart = part;
             _Type = type;
@@ -34,6 +35,7 @@ namespace eLog.Models
             _StartTimeText = StartTime.ToString(Constants.DateTimeFormat);
             _EndTime = DateTime.MinValue;
             _EndTimeText = string.Empty;
+            _ToolType = toolType;
             _Comment = comment;
         }
 
@@ -51,6 +53,7 @@ namespace eLog.Models
             _StartTimeText = downTime.StartTimeText;
             _EndTime = downTime.EndTime;
             _EndTimeText = downTime.EndTimeText;
+            _ToolType = downTime.ToolType;
             _Comment = downTime.Comment;
         }
 
@@ -109,6 +112,16 @@ namespace eLog.Models
                     : Relations.Setup;
             }
         }
+
+
+        private bool _NeedToSend = true;
+        /// <summary> Нужно ли отправлять уведомление </summary>
+        public bool NeedToSend
+        {
+            get => _NeedToSend;
+            set => Set(ref _NeedToSend, value);
+        }
+
 
         public string Name => Type switch
         {
@@ -182,6 +195,15 @@ namespace eLog.Models
                 UpdateError();
                 OnPropertyChanged(nameof(HasError));
             }
+        }
+
+
+        private string _ToolType;
+        /// <summary> Тип инструмента (только для поиска инструмента) </summary>
+        public string ToolType
+        {
+            get => _ToolType;
+            set => Set(ref _ToolType, value);
         }
 
 

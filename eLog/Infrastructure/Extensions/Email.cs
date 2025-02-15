@@ -6,11 +6,24 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using static eLog.Infrastructure.Extensions.Util;
 
 namespace eLog.Infrastructure.Extensions
 {
     public class Email
     {
+
+        public static readonly IReadOnlyDictionary<string, ReceiversType[]> RecieversGroups = new Dictionary<string, ReceiversType[]>
+        {
+            ["Технологи"] = new[] { ReceiversType.ProcessEngineeringDepartment },
+            ["Руководители цеха"] = new[] { ReceiversType.ProductionSupervisors },
+            ["Инструментальный склад"] = new[] { ReceiversType.ToolStorage },
+            ["Технологи и руководители цеха"] = new[]
+            {
+                ReceiversType.ProcessEngineeringDepartment,
+                ReceiversType.ProductionSupervisors
+            }
+        };
 
         public static void SendEmail(string subject, string body, string smtpAddress, int portNumber, bool enableSSL, string emailFrom, string password, List<string> emailTo)
         {
@@ -147,45 +160,40 @@ namespace eLog.Infrastructure.Extensions
             }
         }
 
-        public static bool SendHelpCaseComment(HelpCase helpCase)
+        public static bool SendMessage(Part part, string message, List<string> recievers)
         {
             try
             {
                 var smtpPwd = Environment.GetEnvironmentVariable("NOTIFY_SMTP_PWD", EnvironmentVariableTarget.User);
                 if (string.IsNullOrEmpty(smtpPwd)) throw new Exception("SMTP пароль не установлен.");
-
                 var emailBody = new StringBuilder();
 
                 emailBody.Append($@"
                 <html>
                 <body style=""font-family: Calibri, sans-serif; color: #333;"">
                     <div style=""max-width: 320px; margin: 0 auto; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"">
-
+        
                         <p style=""font-size: 18px; font-weight: bold; color: #d9534f; text-align: center;"">
-                            Отчёт о реакции мастера на {(helpCase.Reason is HelpCase.Type.LongSetup ? "длительную наладку" : "длительный поиск инструмента")}.
+                            Внимание: оператор отправляет сообщение!
                         </p>
 
                         <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
 
                         <div style=""margin-bottom: 15px;"">
                             <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine.Name}</p>
-                            <p style=""margin: 6px 0;""><strong>Оператор:</strong> {helpCase.Part.Operator.FullName}</p>
-                            <p style=""margin: 6px 0;""><strong>Деталь:</strong> {helpCase.Part.FullName.TrimLen(70)}</p>
+                            <p style=""margin: 6px 0;""><strong>Оператор:</strong> {part.Operator.FullName}</p>
+                            <p style=""margin: 6px 0;""><strong>Деталь:</strong> {part.FullName.TrimLen(70)}</p>
+                            <p style=""margin: 6px 0;""><strong>Установка:</strong> {part.Setup}</p>
+                            <p style=""margin: 6px 0;""><strong>М/Л:</strong> {part.Order}</p>
                         </div>
 
                         <div style=""margin-bottom: 15px;"">
-                            <p style=""margin: 6px 0;""><strong>Мастер:</strong> {helpCase.HelperName}</p>
-                            <p style=""margin: 6px 0;""><strong>Время начала:</strong> {helpCase.StartTime:HH:mm}</p>
-                            <p style=""margin: 6px 0;""><strong>Время завершения:</strong> {helpCase.EndTime:HH:mm}</p>
-                            <p style=""margin: 6px 0;""><strong>Продолжительность:</strong> {helpCase.Duration.TotalMinutes} мин.</p>
-                        </div>
-
-                        <div style=""margin-bottom: 15px;"">
-                            <p style=""margin: 6px 0;""><strong>Комментарий:</strong><br/>{helpCase.Comment}</p>
+                            <p style=""margin: 6px 0;""><strong>Сообщение:</strong> {message}</p>
                         </div>
                 ");
 
-                        emailBody.Append(@"
+
+                emailBody.Append(@"
                         <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
                         <p style=""font-size: 11px; text-align: center; color: #777; margin-top: 20px;"">
                             Это сообщение сформировано автоматически, не отвечайте на него.
@@ -193,17 +201,7 @@ namespace eLog.Infrastructure.Extensions
                     </div>
                 </body>
                 </html>");
-
-                SendEmail("Уведомление о случае оказания помощи", 
-                    emailBody.ToString(), 
-                    AppSettings.Instance.SmtpAddress, 
-                    AppSettings.Instance.SmtpPort, 
-                    true, 
-                    AppSettings.Instance.SmtpUsername, 
-                    smtpPwd, 
-                    helpCase.Reason is HelpCase.Type.LongSetup 
-                    ? AppSettings.LongSetupsMailRecievers 
-                    : AppSettings.ToolSearchMailRecievers);
+                SendEmail("Сообщение от оператора", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, recievers);
 
                 return true;
             }

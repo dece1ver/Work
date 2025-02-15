@@ -1,11 +1,14 @@
-﻿using eLog.Models;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using eLog.Models;
 using libeLog.Infrastructure;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -26,10 +29,15 @@ namespace eLog.Infrastructure.Extensions
             {
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
                     var partIndex = AppSettings.Instance.Parts.IndexOf(part);
                     var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
+                    foreach (var downtime in part.DownTimes.ToList())
+                    {
+                        if (downtime.Type == DownTime.Types.CreateNcProgram && downtime.Relation == DownTime.Relations.Machining)
+                            part.DownTimes.Remove(downtime);
+                    }
                     var partial = Util.SetPartialState(ref part, false);
                     string insertQuery = "INSERT INTO Parts (" +
                         "Guid, " +
@@ -143,7 +151,7 @@ namespace eLog.Infrastructure.Extensions
                         var combinedDownTimes = part.DownTimes.Combine();
                         cmd.Parameters.AddWithValue("@OperatorComment", $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim());
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
-                        var execureResult = cmd.ExecuteNonQuery();
+                        var execureResult = await cmd.ExecuteNonQueryAsync();
                         if (!passive)
                         {
                             using (SqlCommand countCmd = new SqlCommand("SELECT COUNT(*) FROM Parts", connection))
@@ -152,18 +160,19 @@ namespace eLog.Infrastructure.Extensions
                             }
                         }
 
-                        foreach (var reaction in part.MasterReactions)
+                        var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime) " +
+                            "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime);";
+                        using (SqlCommand insertToolSearchCmd = new SqlCommand(insertToolSearchQuery, connection))
                         {
-                            string insertReactionQuery = "INSERT INTO cnc_master_reactions (PartID, Master, StartTime, EndDate, Comment) " +
-                                "VALUES (@PartID, @Master, @StartTime, @EndDate, @Comment)";
-                            using (SqlCommand reactionCmd = new SqlCommand(insertReactionQuery, connection))
+                            foreach (var d in part.DownTimes.Where(d => d.Type == DownTime.Types.ToolSearching))
                             {
-                                reactionCmd.Parameters.AddWithValue("@PartID", part.Guid);
-                                reactionCmd.Parameters.AddWithValue("@Master", reaction.Master);
-                                reactionCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
-                                reactionCmd.Parameters.AddWithValue("@EndDate", reaction.EndDate);
-                                reactionCmd.Parameters.AddWithValue("@Comment", reaction.Comment);
-                                await reactionCmd.ExecuteNonQueryAsync();
+                                insertToolSearchCmd.Parameters.Clear();
+                                insertToolSearchCmd.Parameters.AddWithValue("@PartGuid", part.Guid);
+                                insertToolSearchCmd.Parameters.AddWithValue("@ToolType", d.ToolType);
+                                insertToolSearchCmd.Parameters.AddWithValue("@Value", d.Comment);
+                                insertToolSearchCmd.Parameters.AddWithValue("@StartTime", d.StartTime);
+                                insertToolSearchCmd.Parameters.AddWithValue("@EndTime", d.EndTime);
+                                await insertToolSearchCmd.ExecuteNonQueryAsync();
                             }
                         }
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Записно строк: {execureResult}\n{(passive ? "Оставлен" : "Присвоен")} Id: {part.Id}");
@@ -209,12 +218,18 @@ namespace eLog.Infrastructure.Extensions
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Обновление информации об изготовлении в БД.");
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
             var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
+            var aaa = part.DownTimes.ToList().RemoveAll(dt => dt.Relation == DownTime.Relations.Machining && dt.Type == DownTime.Types.CreateNcProgram);
+            foreach (var downtime in part.DownTimes.ToList())
+            {
+                if (downtime.Type == DownTime.Types.CreateNcProgram && downtime.Relation == DownTime.Relations.Machining)
+                    part.DownTimes.Remove(downtime);
+            }
             var partial = Util.SetPartialState(ref part, false);
             try
             {
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
                     string updateQuery = "UPDATE Parts SET " +
                         "Machine = @Machine, " +
@@ -295,45 +310,37 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@OperatorComment", $"{part.OperatorComments}\n{combinedDownTimes.Report()}".Trim());
 
                         if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись...");
-                        var execureResult = cmd.ExecuteNonQuery();
+                        var execureResult = await cmd.ExecuteNonQueryAsync();
                         if (AppSettings.Instance.DebugMode) Util.WriteLog($"Изменено строк: {execureResult}");
                         if (execureResult == 0)
                         {
                             Util.WriteLog("Деталь не найдена, добавение новой.");
                             return await WritePartAsync(part, passive);
                         }
-                        if (part.MasterReactions != null && part.MasterReactions.Any())
+                        
+                        var deleteToolSearchQuery = "DELETE FROM cnc_tool_search_cases WHERE PartGuid = @PartGuid";
+                        using (SqlCommand deleteToolSearchCmd = new SqlCommand(deleteToolSearchQuery, connection))
                         {
-                            foreach (var reaction in part.MasterReactions)
-                            {
-                                // Проверка на существующую запись о реакции
-                                string checkQuery = "SELECT COUNT(*) FROM cnc_master_reactions WHERE PartID = @PartID AND Master = @Master AND StartTime = @StartTime";
-                                using (SqlCommand checkCmd = new SqlCommand(checkQuery, connection))
-                                {
-                                    checkCmd.Parameters.AddWithValue("@PartID", part.Guid);
-                                    checkCmd.Parameters.AddWithValue("@Master", reaction.Master);
-                                    checkCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
-                                    var existingCount = await checkCmd.ExecuteScalarAsync();
+                            deleteToolSearchCmd.Parameters.AddWithValue("@PartGuid", part.Guid);
+                            await deleteToolSearchCmd.ExecuteNonQueryAsync();
+                        }
 
-                                    if (existingCount is int i && i == 0)
-                                    {
-                                        string insertReactionQuery = "INSERT INTO cnc_master_reactions (PartID, Master, StartTime, EndDate, Comment) " +
-                                            "VALUES (@PartID, @Master, @StartTime, @EndDate, @Comment)";
-                                        using (SqlCommand reactionCmd = new SqlCommand(insertReactionQuery, connection))
-                                        {
-                                            reactionCmd.Parameters.AddWithValue("@PartID", part.Guid);
-                                            reactionCmd.Parameters.AddWithValue("@Master", reaction.Master);
-                                            reactionCmd.Parameters.AddWithValue("@StartTime", reaction.StartTime);
-                                            reactionCmd.Parameters.AddWithValue("@EndDate", reaction.EndDate);
-                                            reactionCmd.Parameters.AddWithValue("@Comment", reaction.Comment);
-                                            await reactionCmd.ExecuteNonQueryAsync();
-                                        }
-                                    }
-                                }
+                        var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime) " +
+                            "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime);";
+                        using (SqlCommand insertToolSearchCmd = new SqlCommand(insertToolSearchQuery, connection))
+                        {
+                            foreach (var d in part.DownTimes.Where(d => d.Type == DownTime.Types.ToolSearching))
+                            {
+                                insertToolSearchCmd.Parameters.Clear();
+                                insertToolSearchCmd.Parameters.AddWithValue("@PartGuid", part.Guid);
+                                insertToolSearchCmd.Parameters.AddWithValue("@ToolType", d.ToolType);
+                                insertToolSearchCmd.Parameters.AddWithValue("@Value", d.Comment);
+                                insertToolSearchCmd.Parameters.AddWithValue("@StartTime", d.StartTime);
+                                insertToolSearchCmd.Parameters.AddWithValue("@EndTime", d.EndTime);
+                                await insertToolSearchCmd.ExecuteNonQueryAsync();
                             }
                         }
                     }
-                    connection.Close();
                     return DbResult.Ok;
                 }
             }
@@ -492,6 +499,48 @@ namespace eLog.Infrastructure.Extensions
             {
                 Util.WriteLog(ex);
                 return DbResult.Error;
+            }
+        }
+
+        public static async Task<(DbResult Result, List<string> ToolTypes, string? Error)> GetSearchToolTypes()
+        {
+            var toolTypes = new List<string>();
+            if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString)) return (DbResult.Error, toolTypes, "NO CONNECTION STRING");
+            try
+            {
+                
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = "SELECT SearchToolTypes FROM cnc_elog_config WHERE SearchToolTypes IS NOT NULL;";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                toolTypes.Add(reader.GetString(0));
+                            }
+                            if (toolTypes.Any())
+                            {
+                                return (DbResult.Ok, toolTypes, null);
+                            }
+                            return (DbResult.NotFound, toolTypes, "EMPTY");
+                        }
+                    }
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                return sqlEx.Number switch
+                {
+                    18456 => (DbResult.AuthError, toolTypes, sqlEx.Number.ToString()),
+                    _ => (DbResult.Error, toolTypes, sqlEx.Number.ToString()),
+                };
+            }
+            catch (Exception ex)
+            {
+                return (DbResult.Error, toolTypes, ex.Message);
             }
         }
 

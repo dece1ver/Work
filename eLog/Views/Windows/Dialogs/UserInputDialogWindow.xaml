@@ -11,6 +11,12 @@
         FontSize="16" WindowStartupLocation="CenterOwner"
         Title="Диалог" Height="300" Width="400">
     <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Visibility="{Binding ShowOptionalBlock, Converter={StaticResource VisibilityConverter}}" Margin="10">
+            <TextBlock Text="{Binding OptionalLabel}" Margin="0" d:Text="Опциональный текст:"/>
+            <ComboBox ItemsSource="{Binding Options}"
+                      SelectedItem="{Binding SelectedOption, Mode=TwoWay}"
+                      Margin="0 5" />
+        </StackPanel>
         <TextBlock DockPanel.Dock="Top" Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" d:Text="Введите что-то:" Margin="10 5" />
 
         <Grid DockPanel.Dock="Bottom">
@@ -29,13 +35,14 @@
             <cntr:TabTipButton Grid.Column="1" Margin="10" Width="50"/>
 
             <Button Grid.Column="2" Height="40" Width="100" Content="{StaticResource ConfirmIcon}" Margin="10"
-                    IsDefault="True" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:UserInputDialogWindow}}">
+                    IsDefault="True" IsEnabled="{Binding CanConfirm, UpdateSourceTrigger=PropertyChanged}" 
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:UserInputDialogWindow}}">
                 <Button.Command>
                     <cmd:CloseDialogCommand DialogResult="True"/>
                 </Button.Command>
             </Button>
         </Grid>
 
-        <TextBox Text="{Binding UserInput, TargetNullValue={x:Static sys:String.Empty}}" Margin="10 0"/>
+        <TextBox Text="{Binding UserInput, TargetNullValue={x:Static sys:String.Empty}, UpdateSourceTrigger=PropertyChanged}" Margin="10 0"/>
     </DockPanel>
 </Window>

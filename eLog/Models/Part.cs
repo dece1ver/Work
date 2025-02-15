@@ -259,22 +259,6 @@ namespace eLog.Models
             }
         }
 
-
-        private ObservableCollection<HelpCase> _HelpCases;
-        /// <summary> Коллекция случаев помощи </summary>
-        public ObservableCollection<HelpCase> HelpCases
-        {
-            get => _HelpCases;
-            set 
-            { 
-                if (Set(ref _HelpCases, value)) 
-                { 
-
-                }
-            }
-        }
-
-
         private bool _NeedMasterAttention;
         /// <summary> Описание </summary>
         public bool NeedMasterAttention
