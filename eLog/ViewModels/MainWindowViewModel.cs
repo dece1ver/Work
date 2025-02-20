@@ -429,18 +429,15 @@ namespace eLog.ViewModels
                 progress.Report("Сообщение отправлено");
                 await Task.Delay(3000);
             }
-            catch (OperationCanceledException)
-            {
-                Status = "Загрузка списка отменена.";
-            }
             catch
             {
-                Status = "Список работы недоступен.";
+                Status = "Ошибка при отправке сообщения.";
             }
             finally
             {
-                ProductionTasksIsLoading = false;
                 ProgressBarVisibility = Visibility.Collapsed;
+                await Task.Delay(3000);
+                Status = "";
             }
         }
 
