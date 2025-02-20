@@ -25,6 +25,15 @@ namespace eLog.Infrastructure.Extensions
             }
         };
 
+        static readonly string _bottom = $@"
+                        <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
+                        <p style=""font-size: 11px; text-align: center; color: #777; margin-top: 20px;"">
+                            [{Environment.UserDomainName}/{Environment.UserName}@{Environment.MachineName}]: Это сообщение сформировано автоматически, не отвечайте на него.
+                        </p>
+                    </div>
+                </body>
+                </html>";
+
         public static void SendEmail(string subject, string body, string smtpAddress, int portNumber, bool enableSSL, string emailFrom, string password, List<string> emailTo)
         {
             using (MailMessage mail = new MailMessage())
@@ -91,14 +100,7 @@ namespace eLog.Infrastructure.Extensions
                     emailBody.Append("</div>");
                 }
 
-                emailBody.Append(@"
-                        <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
-                        <p style=""font-size: 11px; text-align: center; color: #777; margin-top: 20px;"">
-                            Это сообщение сформировано автоматически, не отвечайте на него.
-                        </p>
-                    </div>
-                </body>
-                </html>");
+                emailBody.Append(_bottom);
                 SendEmail("Уведомление о длительной наладке", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.LongSetupsMailRecievers);
 
                 return true;
@@ -141,14 +143,7 @@ namespace eLog.Infrastructure.Extensions
                 ");
 
 
-                emailBody.Append(@"
-                        <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
-                        <p style=""font-size: 11px; text-align: center; color: #777; margin-top: 20px;"">
-                            Это сообщение сформировано автоматически, не отвечайте на него.
-                        </p>
-                    </div>
-                </body>
-                </html>");
+                emailBody.Append(_bottom);
                 SendEmail("Уведомление об инструменте", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.ToolSearchMailRecievers);
 
                 return true;
@@ -160,15 +155,13 @@ namespace eLog.Infrastructure.Extensions
             }
         }
 
-        public static bool SendMessage(Part part, string message, List<string> recievers)
+        public static void SendMessage(Part part, string message, List<string> recievers)
         {
-            try
-            {
-                var smtpPwd = Environment.GetEnvironmentVariable("NOTIFY_SMTP_PWD", EnvironmentVariableTarget.User);
-                if (string.IsNullOrEmpty(smtpPwd)) throw new Exception("SMTP пароль не установлен.");
-                var emailBody = new StringBuilder();
+            var smtpPwd = Environment.GetEnvironmentVariable("NOTIFY_SMTP_PWD", EnvironmentVariableTarget.User);
+            if (string.IsNullOrEmpty(smtpPwd)) throw new Exception("SMTP пароль не установлен.");
+            var emailBody = new StringBuilder();
 
-                emailBody.Append($@"
+            emailBody.Append($@"
                 <html>
                 <body style=""font-family: Calibri, sans-serif; color: #333;"">
                     <div style=""max-width: 320px; margin: 0 auto; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"">
@@ -193,23 +186,8 @@ namespace eLog.Infrastructure.Extensions
                 ");
 
 
-                emailBody.Append(@"
-                        <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
-                        <p style=""font-size: 11px; text-align: center; color: #777; margin-top: 20px;"">
-                            Это сообщение сформировано автоматически, не отвечайте на него.
-                        </p>
-                    </div>
-                </body>
-                </html>");
-                SendEmail("Сообщение от оператора", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, recievers);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Util.WriteLog(ex);
-                return false;
-            }
+            emailBody.Append(_bottom);
+            SendEmail("Сообщение от оператора", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, recievers);
         }
     }
 }

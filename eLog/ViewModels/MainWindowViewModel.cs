@@ -427,11 +427,10 @@ namespace eLog.ViewModels
                 await Task.Run(() => Email.SendMessage(Parts[0], message, recipients));
 
                 progress.Report("Сообщение отправлено");
-                await Task.Delay(3000);
             }
-            catch
+            catch (Exception ex)
             {
-                Status = "Ошибка при отправке сообщения.";
+                Status = $"Ошибка при отправке: {ex.Message}";
             }
             finally
             {
