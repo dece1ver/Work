@@ -477,6 +477,16 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string Coefficient = "coefficient";
 
+        /// <summary>
+        /// Тип
+        /// </summary>
+        public const string Type = "type";
+
+        /// <summary>
+        /// Описание
+        /// </summary>
+        public const string Description = "description";
+
 
         private static readonly Dictionary<string, string> _descriptions = new()
         {
@@ -554,16 +564,18 @@ namespace remeLog.Infrastructure
             { ProductionEfficiencyToTotalRatio, $"Отношение нормативов{Environment.NewLine}к общему времени" },
             { AverageReplacementTime, $"Среднее время{Environment.NewLine}замены детали" },
             { SpecifiedDowntimes, "Отмеченные простои" },
-            { SpecifiedDowntimesEx, "Отмеченные простои (для К1)" },
+            { SpecifiedDowntimesEx, $"Отмеченные простои{Environment.NewLine}(для К1)" },
             { UnspecifiedDowntimes, "Неуказанные простои" },
             { CountPerMachine, $"Количество{Environment.NewLine}по станку" },
-            { AverageSetupTime, $"Среднее время наладки" },
+            { AverageSetupTime, $"Среднее{Environment.NewLine}время наладки" },
             { TotalSetupTime, $"Время наладки" },
             { TotalProductionTime, $"Время изготовления" },
             { TotalDowntimesTime, $"Время простоев" },
             { TotalTime, $"Отмеченное общее время" },
             { IsEqual, $"Совпадает" },
-            { Coefficient, $"Коэффициент" }
+            { Coefficient, $"Коэффициент" },
+            { Type, $"Тип" },
+            { Description, $"Описание" }
         };
 
         /// <summary>

@@ -90,7 +90,7 @@ namespace remeLog.Views
                             case 8:
                                 d.SetupFilter = d.SetupFilter == p.Setup ? null : p.Setup;
                                 break;
-                            case 41:
+                            case 42:
                                 switch (p.EngineerComment)
                                 {
                                     case "":

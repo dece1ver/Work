@@ -193,6 +193,75 @@ namespace remeLog.Infrastructure
             }
         }
 
+        /// <summary>
+        /// Асинхронно извлекает данные о случаях поиска инструмента, разделяя запросы на подсписки по 2000 элементов.
+        /// </summary>
+        /// <param name="guids">Список GUID'ов для фильтрации данных по таблице parts.</param>
+        /// <param name="progress">Прогресс-объект для обновления статуса извлечения данных.</param>
+        /// <returns>Список объектов <see cref="ToolSearchCase"/>, полученных из базы данных.</returns>
+        /// <exception cref="SqlException">Возникает, если происходит ошибка при выполнении SQL-запроса.</exception>
+        public async static Task<List<ToolSearchCase>> GetToolSearchCasesAsync(List<Guid> guids, IProgress<string> progress)
+        {
+            var cases = new List<ToolSearchCase>();
+
+            if (guids == null || guids.Count == 0)
+                return cases;
+
+            // больше 2100 нельзя
+            var chunkSize = 2000;
+
+            var guidsChunks = guids
+                .Select((guid, index) => new { guid, index })
+                .GroupBy(x => x.index / chunkSize)
+                .Select(g => g.Select(x => x.guid).ToList())
+                .ToList();
+
+            await using var connection = new SqlConnection(AppSettings.Instance.ConnectionString);
+            await connection.OpenAsync();
+
+            for (int currentChunk = 0; currentChunk < guidsChunks.Count; currentChunk++)
+            {
+                
+
+                var chunk = guidsChunks[currentChunk];
+                var parameters = chunk.Select((guid, index) => $"@p{index}").ToArray();
+                var query = $@"
+                    SELECT p.Operator, p.PartName, p.Machine, c.ToolType, c.Value, c.StartTime, c.EndTime
+                    FROM cnc_tool_search_cases c
+                    INNER JOIN parts p ON c.PartGuid = p.Guid
+                    WHERE p.Guid IN ({string.Join(", ", parameters)});
+                ";
+
+                await using var command = new SqlCommand(query, connection);
+
+                for (int i = 0; i < chunk.Count; i++)
+                {
+                    command.Parameters.AddWithValue(parameters[i], chunk[i]);
+                }
+
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    cases.Add(new ToolSearchCase(
+                        reader.GetStringOrEmpty(0),
+                        reader.GetStringOrEmpty(1),
+                        reader.GetStringOrEmpty(2),
+                        reader.GetStringOrEmpty(3),
+                        reader.GetStringOrEmpty(4),
+                        reader.GetDateTimeOrMinValue(5),
+                        reader.GetDateTimeOrMinValue(6)));
+                }
+
+                if (guids.Count > chunkSize)
+                {
+                    progress.Report($"Получение данных из БД {((currentChunk + 1) * 100) / guidsChunks.Count}%");
+                }
+            }
+
+            return cases;
+        }
+
         public async static Task<List<Part>> ReadPartsWithConditions(string conditions, CancellationToken cancellationToken)
         {
             List<Part> parts = new();

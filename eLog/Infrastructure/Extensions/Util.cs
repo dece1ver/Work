@@ -186,7 +186,7 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                using var wb = new XLWorkbook(AppSettings.Instance.XlPath);
+                using var wb = new XLWorkbook(AppSettings.Instance.UpdatePath);
                 return true;
             }
             catch
@@ -260,14 +260,14 @@ namespace eLog.Infrastructure.Extensions
         {
             if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Новая запись информации о детали."); }
             var id = -1;
-            if (!File.Exists(AppSettings.Instance.XlPath)) return -3;
+            if (!File.Exists(AppSettings.Instance.UpdatePath)) return -3;
             var partIndex = AppSettings.Instance.Parts.IndexOf(part);
             var prevPart = partIndex != -1 && AppSettings.Instance.Parts.Count > partIndex + 1 ? AppSettings.Instance.Parts[partIndex + 1] : null;
             try
             {
                 progress.Report("Создание бэкапа таблицы...");
                 if (! await BackupXlAsync(progress)) throw new IOException("Ошибка при создании бэкапа таблицы.");
-                using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                using (var fs = new FileStream(AppSettings.Instance.UpdatePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     progress.Report("Создание записи и присвоение номера...");
                     var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
@@ -458,7 +458,7 @@ namespace eLog.Infrastructure.Extensions
 
             if (AppSettings.Instance.DebugMode && prevPart != null) { WriteLog(prevPart, $"Прошлая деталь."); }
 
-            if (!File.Exists(AppSettings.Instance.XlPath))
+            if (!File.Exists(AppSettings.Instance.UpdatePath))
             {
                 if (AppSettings.Instance.DebugMode) { WriteLog($"Путь к таблице не существует."); }
                 return WriteResult.FileNotExist;
@@ -481,7 +481,7 @@ namespace eLog.Infrastructure.Extensions
                     }
                 }
                 progress.Report("Чтение таблицы...");
-                using (var fs = new FileStream(AppSettings.Instance.XlPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                using (var fs = new FileStream(AppSettings.Instance.UpdatePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     var wb = new XLWorkbook(fs, new LoadOptions() { RecalculateAllFormulas = false });
 
@@ -609,8 +609,8 @@ namespace eLog.Infrastructure.Extensions
                     await Task.Run(() =>
                     {
                         progress.Report(i == 1 ? "Создание бэкапа таблицы..." : $"Создание бэкапа таблицы...попытка №{i}");
-                        using var wb = new XLWorkbook(AppSettings.Instance.XlPath, new LoadOptions() { RecalculateAllFormulas = false });
-                        File.Copy(AppSettings.Instance.XlPath, AppSettings.XlReservedPath, true);
+                        using var wb = new XLWorkbook(AppSettings.Instance.UpdatePath, new LoadOptions() { RecalculateAllFormulas = false });
+                        File.Copy(AppSettings.Instance.UpdatePath, AppSettings.XlReservedPath, true);
                         if (AppSettings.Instance.DebugMode) WriteLog("Успешно.");
                         Thread.Sleep(200);
                     });
@@ -631,7 +631,7 @@ namespace eLog.Infrastructure.Extensions
             {
                 Debug.Print("Restore");
                 WriteLog("Попытка восстановления XL файла...");
-                File.Copy(AppSettings.XlReservedPath, AppSettings.Instance.XlPath, true);
+                File.Copy(AppSettings.XlReservedPath, AppSettings.Instance.UpdatePath, true);
                 WriteLog("Успешно.");
                 Debug.Print("Ok");
             }
@@ -649,7 +649,7 @@ namespace eLog.Infrastructure.Extensions
         /// <returns></returns>
         private static string GetCopyDir()
         {
-            if (File.Exists(AppSettings.Instance.XlPath) && Directory.GetParent(AppSettings.Instance.XlPath) is { Exists: true } parent)
+            if (File.Exists(AppSettings.Instance.UpdatePath) && Directory.GetParent(AppSettings.Instance.UpdatePath) is { Exists: true } parent)
             {
                 return parent.FullName;
             }
@@ -664,7 +664,7 @@ namespace eLog.Infrastructure.Extensions
         {
             return await Task.Run(() =>
             {
-                if (File.Exists(AppSettings.Instance.XlPath) && Directory.GetParent(AppSettings.Instance.XlPath) is { Exists: true } parent)
+                if (File.Exists(AppSettings.Instance.UpdatePath) && Directory.GetParent(AppSettings.Instance.UpdatePath) is { Exists: true } parent)
                 {
                     return parent.FullName;
                 }

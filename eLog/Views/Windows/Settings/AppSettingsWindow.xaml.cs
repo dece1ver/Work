@@ -171,7 +171,7 @@ namespace eLog.Views.Windows.Settings
                 new StorageType (StorageType.Types.All)
             };
             _StorageType = AppSettings.Instance.StorageType;
-            _XlPath = AppSettings.Instance.XlPath;
+            _XlPath = AppSettings.Instance.UpdatePath;
             _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
             _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
             _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
@@ -189,7 +189,7 @@ namespace eLog.Views.Windows.Settings
             InitializeComponent();
         }
 
-        private void SetXlPathButton_Click(object sender, RoutedEventArgs e)
+        private void SetUpdatePathButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dlg = new()
             {
@@ -289,7 +289,7 @@ namespace eLog.Views.Windows.Settings
                 AppSettings.Instance.IsShiftStarted = isShiftStarted;
 
                 StorageType = AppSettings.Instance.StorageType;
-                XlPath = AppSettings.Instance.XlPath;
+                XlPath = AppSettings.Instance.UpdatePath;
                 OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
                 OrderQualifiers = AppSettings.Instance.OrderQualifiers;
                 Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);

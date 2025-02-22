@@ -65,7 +65,7 @@ namespace eLog.Infrastructure
 
 
         private Machine _Machine;
-        private string _XlPath;
+        private string _UpdatePath;
         private string _GoogleCredentialsPath;
         private string _GsId;
         private bool _WiteToGs;
@@ -93,10 +93,10 @@ namespace eLog.Infrastructure
         }
 
         /// <summary> Путь к общей таблице </summary>
-        public string XlPath
+        public string UpdatePath
         {
-            get => _XlPath;
-            set => Set(ref _XlPath, value);
+            get => _UpdatePath;
+            set => Set(ref _UpdatePath, value);
         }
 
         /// <summary> Путь к файлу с данными для google api </summary>
@@ -288,7 +288,7 @@ namespace eLog.Infrastructure
         };
             CurrentShift = Text.DayShift;
             Parts = new DeepObservableCollection<Part>();
-            XlPath = string.Empty;
+            UpdatePath = string.Empty;
             OrdersSourcePath = string.Empty;
             OrderQualifiers = new[]
             {
@@ -377,6 +377,7 @@ namespace eLog.Infrastructure
                 SmtpUsername ??= "";
                 PathToRecievers ??= "";
                 NotSendedToolComments ??= new();
+                if (string.IsNullOrWhiteSpace(Instance.UpdatePath)) Instance.UpdatePath = Database.TryGetUpdatePath();
             }
             catch (Exception exception)
             {
@@ -422,6 +423,7 @@ namespace eLog.Infrastructure
             }
         }
 
+        
         /// <summary>
         /// Обновляет конфиг
         /// </summary>

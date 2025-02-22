@@ -71,12 +71,12 @@
                 <TextBox x:Name="OrdersSourcePathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
                          Text="{Binding OrdersSourcePath}"/>
             </DockPanel>
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="Занесение:" VerticalAlignment="Center" Margin="5 0" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Обновление:" VerticalAlignment="Center" Margin="5 0" />
             <DockPanel Grid.Row="3" Grid.Column="1" Margin="0" 
                        VerticalAlignment="Stretch" LastChildFill="True">
-                <Button x:Name="SetOrdersSourcePathButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Width="80" Click="SetXlPathButton_Click"/>
+                <Button x:Name="SetUpdatePathButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Width="80" Click="SetUpdatePathButton_Click"/>
                 <TextBox x:Name="XlPathTextBox" VerticalContentAlignment="Center" VerticalAlignment="Stretch" Margin="0 1"
-                         Text="{Binding XlPath}"/>
+                         Text="{Binding UpdatePath}"/>
             </DockPanel>
 
             <TextBlock Grid.Row="4" Grid.Column="0" Text="ID Таблицы:" VerticalAlignment="Center" Margin="5 0" />

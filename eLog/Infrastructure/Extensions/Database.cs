@@ -15,6 +15,27 @@ namespace eLog.Infrastructure.Extensions
     public static class Database
     {
 
+        public static string TryGetUpdatePath()
+        {
+            try
+            {
+                using SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString);
+                connection.Open();
+                var query = "SELECT UpdatePath FROM cnc_elog_config";
+                using SqlCommand command = new SqlCommand(query, connection);
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    return reader.GetString(0);
+                }
+                return "";
+            }
+            catch
+            {
+                return "";
+            }
+            
+        }
 
         /// <summary>
         /// Запись информации о детали в БД

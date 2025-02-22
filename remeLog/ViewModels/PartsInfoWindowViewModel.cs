@@ -72,6 +72,7 @@ namespace remeLog.ViewModels
             ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
             ExportReportForPeriodToExcelCommand = new LambdaCommand(OnExportReportForPeriodToExcelCommandExecuted, CanExportReportForPeriodToExcelCommandExecute);
             ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
+            ExportToolSearchCasesToExcelCommand = new LambdaCommand(OnExportToolSearchCasesToExcelCommandExecuted, CanExportToolSearchCasesToExcelCommandExecute);
             CheckAssignmentWithFactCommand = new LambdaCommand(OnCheckAssignmentWithFactCommandExecuted, CanCheckAssignmentWithFactCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
@@ -998,6 +999,33 @@ namespace remeLog.ViewModels
         private static bool CanExportHistoryToExcelCommandExecute(object p) => true;
         #endregion
 
+        #region ExportToolSearchCasesToExcel
+        public ICommand ExportToolSearchCasesToExcelCommand { get; }
+        private async void OnExportToolSearchCasesToExcelCommandExecuted(object p)
+        {
+            try
+            {
+                InProgress = true;
+                var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                IProgress<string> progress = new Progress<string>(p => Status = p);
+                Status = $"Файл сохранен в: {await Xl.ExportToolSearchCasesAsync(Parts, path, progress)}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                Util.WriteLog(ex, "Ошибка при экспорте отчёта по поискам.");
+                Status = "";
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportToolSearchCasesToExcelCommandExecute(object p) => true;
+        #endregion
+
         #region CheckAssignmentWithFact
         public ICommand CheckAssignmentWithFactCommand { get; }
         private async void OnCheckAssignmentWithFactCommandExecuted(object p)
@@ -1504,6 +1532,11 @@ namespace remeLog.ViewModels
             {
                 InProgress = true;
                 Status = "Получение информации...";
+                if (AppSettings.Instance.ConnectionString == null)
+                {
+                    Status = "Не настроено соединение с БД";
+                    return false;
+                }
                 Database.UpdateSettings(AppSettings.Instance.ConnectionString);
                 if (!first) await Task.Delay(1000, cancellationToken);
 

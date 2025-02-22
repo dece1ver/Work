@@ -1051,10 +1051,18 @@
                                 <TextBlock Text="Отчет по сменам"/>
                             </MenuItem.Header>
                         </MenuItem>
+                        
                     </MenuItem>
 
                     <MenuItem Header="Сравнить факт/СЗН" Command="{Binding CheckAssignmentWithFactCommand}" Icon="{StaticResource ColumnComponent}">
 
+                    </MenuItem>
+
+                    <MenuItem Command="{Binding ExportToolSearchCasesToExcelCommand}"
+                              ToolTip="Экспорт отчёта по поискам" HorizontalAlignment="Stretch">
+                        <MenuItem.Header>
+                            <TextBlock Text="Отчет по поискам"/>
+                        </MenuItem.Header>
                     </MenuItem>
 
                     <MenuItem Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource ShowFullHistoryIcon}"

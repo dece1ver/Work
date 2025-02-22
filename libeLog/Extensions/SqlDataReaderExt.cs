@@ -26,5 +26,11 @@ namespace libeLog.Extensions
             }
             return null;
         }
+
+        public static string GetStringOrEmpty(this SqlDataReader reader, int index) =>
+            reader.IsDBNull(index) ? string.Empty : reader.GetString(index);
+
+        public static DateTime GetDateTimeOrMinValue(this SqlDataReader reader, int index) =>
+            reader.IsDBNull(index) ? DateTime.MinValue : reader.GetDateTime(index);
     }
 }

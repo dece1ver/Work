@@ -213,6 +213,7 @@ namespace eLog.ViewModels
         private bool _ShiftStarted = AppSettings.Instance.IsShiftStarted;
         private Visibility _ProgressBarVisibility = Visibility.Collapsed;
         private object lockObject = new();
+        private bool askedForUpdate;
 
         public bool ShiftStarted
         {
@@ -918,10 +919,27 @@ namespace eLog.ViewModels
                         }
                     }
                 }
+
                 catch (Exception ex) { WriteLog(ex); }
                 finally
                 {
                     Thread.Sleep(30000);
+                    if (!string.IsNullOrWhiteSpace(AppSettings.Instance.UpdatePath) && !askedForUpdate && App.CheckForUpdate(AppSettings.Instance.UpdatePath, false))
+                    {
+                        if (MessageBox.Show("Доступно обновление, перезапустите программу.\nА в идеале перезагрузить компьютер и подождать 15 минут.\n\n" +
+                            "Можно нажать \"Да\", тогда всё закроется и попытается перезагрузиться само.", "Обновление", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = "shutdown",
+                                Arguments = $"/r /t 10",
+                                CreateNoWindow = true,
+                                UseShellExecute = false
+                            });
+                            App.Current.Shutdown(0);
+                        }
+                        askedForUpdate = true;
+                    }
                 }
             }
         }

@@ -39,7 +39,6 @@ namespace remeLog.Infrastructure.Types
         }
 
 
-
         public override string ToString() => $"{Operator} '{Value}'";
     }
 }

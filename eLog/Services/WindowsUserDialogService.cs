@@ -90,7 +90,7 @@ namespace eLog.Services
                 return false;
             }
             AppSettings.Instance.Machine = dlg.Machine;
-            AppSettings.Instance.XlPath = dlg.XlPath;
+            AppSettings.Instance.UpdatePath = dlg.XlPath;
             AppSettings.Instance.OrdersSourcePath = dlg.OrdersSourcePathTextBox.Text;
             AppSettings.Instance.OrderQualifiers = dlg.OrderQualifiers;
             AppSettings.Instance.DebugMode = dlg.DebugMode;

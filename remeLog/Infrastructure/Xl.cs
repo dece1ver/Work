@@ -20,6 +20,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using Part = remeLog.Models.Part;
 using CM = remeLog.Infrastructure.ColumnManager;
+using System.Threading.Tasks;
 
 namespace remeLog.Infrastructure
 {
@@ -942,6 +943,83 @@ namespace remeLog.Infrastructure
             return path;
         }
 
+        public static async Task<string> ExportToolSearchCasesAsync(ICollection<Part> parts, string path, IProgress<string> progress)
+        {
+            progress.Report("Создание книги");
+            var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet($"Поиски истины");
+            progress.Report("Получение данных из БД");
+            var cases = await Database.GetToolSearchCasesAsync(parts.Select(p => p.Guid).ToList(), progress);
+
+            
+            ws.Style.Font.FontSize = 10;
+            ws.Style.Alignment.WrapText = true;
+            ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            progress.Report("Формирование столбцов");
+
+            var cm = new CM.Builder()
+                .Add(CM.Operator)
+                .Add(CM.Type)
+                .Add(CM.Description)
+                .Add(CM.StartMachiningTime, "Начало")
+                .Add(CM.EndMachiningTime, "Завершение")
+                .Add(CM.ToolSearchingTime, "Затраченное время")
+                .Add(CM.Part)
+                .Add(CM.Machine)
+                .Build();
+
+            ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Horizontal, 65, 10);
+
+            ws.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+
+            int row = 3;
+            
+            var ci = cm.GetIndexes();
+
+
+            foreach (var @case in cases)
+            {
+                ws.Cell(row, ci[CM.Operator]).SetValue(@case.Operator);
+                ws.Cell(row, ci[CM.Part]).SetValue(@case.Part);
+                ws.Cell(row, ci[CM.Machine]).SetValue(@case.Machine);
+                ws.Cell(row, ci[CM.Type]).SetValue(@case.Type);
+                ws.Cell(row, ci[CM.Description]).SetValue(@case.Description);
+                ws.Cell(row, ci[CM.StartMachiningTime]).SetValue(@case.StartTime)
+                    .Style.DateFormat.Format = "dd.MM.yy HH:mm";
+                ws.Cell(row, ci[CM.EndMachiningTime]).SetValue(@case.EndTime)
+                    .Style.DateFormat.Format = "dd.MM.yy HH:mm";
+                ws.Cell(row, ci[CM.ToolSearchingTime]).SetValue(@case.Time);
+            
+                row++;
+            }
+
+            ws.Columns().AdjustToContents();
+            ws.Column(ci[CM.Type]).Width = 25;
+            ws.Column(ci[CM.Description]).Width = 60;
+            ws.Column(ci[CM.Part]).Width = 60;
+            ws.Column(ci[CM.StartMachiningTime]).Width = 12;
+            ws.Column(ci[CM.EndMachiningTime]).Width = 12;
+            ws.Column(ci[CM.ToolSearchingTime]).Width = 12;
+            ws.Range(2, ci[CM.StartMachiningTime], row, ci[CM.ToolSearchingTime]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            ws.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.RangeUsed().SetAutoFilter(true);
+            SetTitle(ws, ci.Count, "Поиски инструмента");
+            progress.Report("Сохранение файла");
+            wb.SaveAs(path);
+
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
+            }
+
+            return path;
+        }
+
+        
         public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();
