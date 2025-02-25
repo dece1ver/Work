@@ -1076,7 +1076,7 @@ namespace remeLog.Infrastructure
             cm = new CM.Builder()
                 .Add(CM.Date)
                 .Add(CM.Part)
-                .Add(CM.Setup)
+                .Add(CM.Order)
                 .Add(CM.Machine)
                 .Add(CM.MachineAssigned)
                 .Add(CM.IsEqual)
@@ -1087,13 +1087,13 @@ namespace remeLog.Infrastructure
             row = 3;
             ci = cm.GetIndexes();
 
-            foreach (var part in factParts.GroupBy(p => (p.PartName, p.Setup, p.Machine)).Select(g => g.First()))
+            foreach (var part in factParts.GroupBy(p => (p.PartName, p.Order, p.Machine)).Select(g => g.First()))
             {
                 progress.Report($"Уникальные: Проверка {part.PartName}");
                 var isAssigned = assignmentParts.ContainsKey(part.PartName.ToLowerInvariant().Trim());
                 wsUnique.Cell(row, ci[CM.Date]).Value = part.ShiftDate;
                 wsUnique.Cell(row, ci[CM.Part]).Value = part.PartName;
-                wsUnique.Cell(row, ci[CM.Setup]).Value = part.Setup;
+                wsUnique.Cell(row, ci[CM.Order]).Value = part.Order;
                 wsUnique.Cell(row, ci[CM.Machine]).Value = part.Machine;
                 var assignedMachine = isAssigned
                     ? assignmentParts
@@ -1111,6 +1111,43 @@ namespace remeLog.Infrastructure
             wsUnique.RangeUsed().SetAutoFilter(true);
             SetTitle(wsUnique, ci.Count, "Проверка на изготовление в соответствии со СЗН");
             wsUnique.Columns().AdjustToContents();
+
+            var wsFromList = wb.AddWorksheet("По списку");
+            wsFromList.Style.Alignment.WrapText = true;
+
+            cm = new CM.Builder()
+                .Add(CM.Part)
+                .Add(CM.MachineAssigned)
+                .Add(CM.Order, "Заказы")
+                .Add(CM.Machine, "Станки")
+                .Add(CM.IsEqual, "Делали")
+                .Build();
+            ConfigureWorksheetHeader(wsFromList, cm, HeaderRotateOption.Vertical, 65, 8);
+            wsFromList.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
+
+            row = 3;
+            ci = cm.GetIndexes();
+
+            foreach (var partName in assignmentParts.Keys.Skip(1))
+            {
+                progress.Report($"По списку: Проверка {partName}");
+                var isProcessed = factParts.Select(p => p.PartName.ToLowerInvariant().Trim()).Contains(partName);
+                wsFromList.Cell(row, ci[CM.Part]).Value = partName;
+                wsFromList.Cell(row, ci[CM.Order]).Value = string.Join(" ", factParts.Where(p => p.PartName.ToLowerInvariant().Trim() == partName).Select(pn => pn.Order).Distinct());
+                wsFromList.Cell(row, ci[CM.Machine]).Value = string.Join(" ", factParts.Where(p => p.PartName.ToLowerInvariant().Trim() == partName).Select(pn => pn.Machine).Distinct());
+                wsFromList.Cell(row, ci[CM.MachineAssigned]).Value = assignmentParts[partName];
+                wsFromList.Cell(row, ci[CM.IsEqual]).Value = isProcessed;
+                row++;
+            }
+            progress.Report("Уникальные: Настройка листа");
+            wsFromList.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            wsFromList.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            wsFromList.RangeUsed().SetAutoFilter(true);
+            SetTitle(wsFromList, ci.Count, "Проверка на изготовление в соответствии со СЗН");
+            wsFromList.Columns().AdjustToContents();
+
+
+
             progress.Report("Сохранение файла");
             wb.SaveAs(path);
 
