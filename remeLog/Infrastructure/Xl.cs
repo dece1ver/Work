@@ -1121,6 +1121,7 @@ namespace remeLog.Infrastructure
                 .Add(CM.Order, "Заказы")
                 .Add(CM.Machine, "Станки")
                 .Add(CM.IsEqual, "Делали")
+                .Add(CM.CountPerMachine, "Количество запусков")
                 .Build();
             ConfigureWorksheetHeader(wsFromList, cm, HeaderRotateOption.Vertical, 65, 8);
             wsFromList.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
@@ -1133,10 +1134,31 @@ namespace remeLog.Infrastructure
                 progress.Report($"По списку: Проверка {partName}");
                 var isProcessed = factParts.Select(p => p.PartName.ToLowerInvariant().Trim()).Contains(partName);
                 wsFromList.Cell(row, ci[CM.Part]).Value = partName;
-                wsFromList.Cell(row, ci[CM.Order]).Value = string.Join(" ", factParts.Where(p => p.PartName.ToLowerInvariant().Trim() == partName).Select(pn => pn.Order).Distinct());
-                wsFromList.Cell(row, ci[CM.Machine]).Value = string.Join(" ", factParts.Where(p => p.PartName.ToLowerInvariant().Trim() == partName).Select(pn => pn.Machine).Distinct());
+                var orders = factParts.Where(p => p.PartName.ToLowerInvariant().Trim() == partName).Select(pn => pn.Order).Distinct();
+                wsFromList.Cell(row, ci[CM.Order]).Value = string.Join(" ", orders);
+                var machines = factParts.Where(p => p.PartName.ToLowerInvariant().Trim() == partName).Select(pn => pn.Machine).Distinct();
+                wsFromList.Cell(row, ci[CM.Machine]).Value = string.Join(" ", machines);
                 wsFromList.Cell(row, ci[CM.MachineAssigned]).Value = assignmentParts[partName];
-                wsFromList.Cell(row, ci[CM.IsEqual]).Value = isProcessed;
+                var status = "";
+                if (isProcessed && machines.Count() == 1 && string.Join(" ", machines).Contains(assignmentParts[partName]))
+                {
+                    status = "Делали как надо";
+                }
+                else if (isProcessed && machines.Count() > 1 && string.Join(" ", machines).Contains(assignmentParts[partName]))
+                {
+                    status = "Делали и где надо и где не надо";
+                }
+                else if (isProcessed)
+                {
+                    status = "Делали где попало, но не где надо";
+                }
+                else
+                {
+                    status = "Не делали";
+                }
+                wsFromList.Cell(row, ci[CM.IsEqual]).Value = status;
+                var count = factParts.Where(p => p.PartName.ToLowerInvariant().Trim() == partName).Select(p => (p.Order, p.Machine)).Distinct().Count();
+                wsFromList.Cell(row, ci[CM.CountPerMachine]).Value = count;
                 row++;
             }
             progress.Report("Уникальные: Настройка листа");
