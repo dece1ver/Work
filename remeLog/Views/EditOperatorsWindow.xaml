@@ -21,9 +21,48 @@
         <DataGrid Grid.Row="0" Name="EmployeesDataGrid" AutoGenerateColumns="False" ItemsSource="{Binding Operators}" 
                   AlternatingRowBackground="#01D3D3D3" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
                   CanUserAddRows="True" CanUserDeleteRows="True" PreviewKeyDown="EmployeesDataGrid_PreviewKeyDown">
+            <DataGrid.Resources>
+                <Style TargetType="{x:Type DataGridRow}">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+                <Style TargetType="{x:Type DataGridCell}">
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderBrush" Value="Transparent" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Оператор" 
-                                    Binding="{Binding Name, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                <DataGridTextColumn Header="Фамилия" 
+                    Binding="{Binding LastName, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                    Width="*" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsModified}" Value="True">
+                                    <Setter Property="Foreground" Value="Blue"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Имя" 
+                                    Binding="{Binding FirstName, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
                                     Width="*" >
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
@@ -35,7 +74,19 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-
+                <DataGridTextColumn Header="Отчество" 
+                    Binding="{Binding Patronymic, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                    Width="*" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsModified}" Value="True">
+                                    <Setter Property="Foreground" Value="Blue"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
                 <DataGridTextColumn Header="Разряд" 
                                     Binding="{Binding Qualification, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
                                     Width="Auto">

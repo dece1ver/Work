@@ -25,7 +25,7 @@ namespace remeLog.Infrastructure
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
-                    string query = $"SELECT license_key FROM licensing where license_name = '{licenseName}';";
+                    string query = $"SELECT license_key FROM licensing WHERE license_name = '{licenseName}';";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
@@ -54,7 +54,7 @@ namespace remeLog.Infrastructure
             using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
             {
                 connection.Open();
-                string query = $"SELECT * FROM cnc_operators ORDER BY Name ASC;";
+                string query = $"SELECT * FROM cnc_operators ORDER BY LastName ASC;";
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     using (SqlDataReader reader = command.ExecuteReader())
@@ -64,8 +64,10 @@ namespace remeLog.Infrastructure
                             operators.Add(new OperatorInfo(
                                 reader.GetInt32(0),
                                 reader.GetString(1).Trim(),
-                                reader.GetInt32(2),
-                                reader.GetBoolean(3)));
+                                reader.GetString(2).Trim(),
+                                reader.GetString(3).Trim(),
+                                reader.GetInt32(4),
+                                reader.GetBoolean(5)));
                         }
                     }
                 }
@@ -83,19 +85,21 @@ namespace remeLog.Infrastructure
                 using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
-                    string query = $"SELECT * FROM cnc_operators ORDER BY Name ASC;";
+                    string query = $"SELECT * FROM cnc_operators ORDER BY LastName ASC;";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
                             progress.Report("Чтение данных из БД...");
-                            while (reader.Read())
+                            while (await reader.ReadAsync())
                             {
                                 operators.Add(new OperatorInfo(
                                     reader.GetInt32(0), 
                                     reader.GetString(1).Trim(), 
-                                    reader.GetInt32(2), 
-                                    reader.GetBoolean(3)));
+                                    reader.GetString(2).Trim(), 
+                                    reader.GetString(3).Trim(), 
+                                    reader.GetInt32(4), 
+                                    reader.GetBoolean(5)));
                             }
                         }
                     }
@@ -131,13 +135,15 @@ namespace remeLog.Infrastructure
                 using (var command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@Id", operatorInfo.Id);
-                    command.Parameters.AddWithValue("@Name", operatorInfo.Name);
+                    command.Parameters.AddWithValue("@FirstName", operatorInfo.FirstName);
+                    command.Parameters.AddWithValue("@LastName", operatorInfo.LastName);
+                    command.Parameters.AddWithValue("@Patronymic", operatorInfo.Patronymic);
                     command.Parameters.AddWithValue("@Qualification", operatorInfo.Qualification);
                     command.Parameters.AddWithValue("@IsActive", operatorInfo.IsActive);
 
-                    progress.Report($"Сохранение оператора '{operatorInfo.Name}' в БД...");
+                    progress.Report($"Сохранение оператора '{operatorInfo.DisplayName}' в БД...");
                     await command.ExecuteNonQueryAsync();
-                    progress.Report($"Оператор '{operatorInfo.Name}' успешно сохранен.");
+                    progress.Report($"Оператор '{operatorInfo.DisplayName}' успешно сохранен.");
                 }
             }
         }

@@ -1,10 +1,12 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 using eLog.Models;
+using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Threading.Tasks;
@@ -35,6 +37,37 @@ namespace eLog.Infrastructure.Extensions
                 return "";
             }
             
+        }
+
+        public async static Task<ObservableCollection<Operator>> GetOperatorsAsync(IProgress<string>? progress = null)
+        {
+            ObservableCollection<Operator> operators = new();
+
+            await Task.Run(async () =>
+            {
+                progress?.Report("Подключение к БД...");
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = $"SELECT * FROM cnc_operators WHERE IsActive = 1 ORDER BY LastName ASC;";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            progress?.Report("Чтение данных из БД...");
+                            while (await reader.ReadAsync())
+                            {
+                                operators.Add(new Operator() { 
+                                    FirstName = reader.GetStringOrEmpty(1), 
+                                    LastName = reader.GetStringOrEmpty(2), 
+                                    Patronymic = reader.GetStringOrEmpty(3) });
+                            }
+                        }
+                    }
+                }
+                progress?.Report("Чтение завершено");
+            });
+            return operators;
         }
 
         /// <summary>

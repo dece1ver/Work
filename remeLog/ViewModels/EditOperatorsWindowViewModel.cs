@@ -130,14 +130,14 @@ namespace remeLog.ViewModels
 
         private string ValidateOperator(OperatorInfo op)
         {
-            if (string.IsNullOrWhiteSpace(op.Name))
+            if (string.IsNullOrWhiteSpace(op.FirstName))
                 return "Ошибка: Имя оператора не может быть пустым.";
 
-            if (Operators.Count(o => o.Name == op.Name) > 1)
-                return $"Ошибка: Имя оператора '{op.Name}' уже существует.";
+            if (Operators.Count(o => o.FullName == op.FullName) > 1)
+                return $"Ошибка: Оператор '{op.FullName}' уже существует.";
 
             if (op.Qualification < 0 || op.Qualification > 6)
-                return $"Ошибка: Разряд оператора '{op.Name}' должен быть от 0 до 6.";
+                return $"Ошибка: Разряд оператора '{op.DisplayName}' должен быть от 0 до 6.";
 
             return null!;
         }

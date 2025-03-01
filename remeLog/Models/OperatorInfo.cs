@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 using libeLog.Base;
+using libeLog.Extensions;
 using System;
 using System.ComponentModel;
 
@@ -7,17 +8,23 @@ namespace remeLog.Models
 {
     public class OperatorInfo : ViewModel, IDataErrorInfo
     {
-        private string _originalName;
+        private string _originalFirstName;
+        private string _originalLastName;
+        private string _originalPatronymic;
         private int _originalQualification;
         private bool _originalIsActive;
 
-        public OperatorInfo(int id, string name, int qualification, bool isActive)
+        public OperatorInfo(int id, string firstName, string lastName, string patronymic, int qualification, bool isActive)
         {
             Id = id;
-            _Name = name;
+            _FirstName = firstName;
+            _LastName = lastName;
+            _Patronymic = patronymic;
             _Qualification = qualification;
             IsActive = isActive;
-            _originalName = _Name;
+            _originalFirstName = _FirstName;
+            _originalLastName = _LastName;
+            _originalPatronymic = _Patronymic;
             _originalQualification = _Qualification;
             _originalIsActive = IsActive;
             IsModified = !IsOriginalState();
@@ -26,10 +33,14 @@ namespace remeLog.Models
         public OperatorInfo()
         {
             Id = -1;
-            _Name = "";
+            _FirstName = "";
+            _LastName = "";
+            _Patronymic = "";
             _Qualification = 0;
             IsActive = false;
-            _originalName = _Name;
+            _originalFirstName = _FirstName;
+            _originalLastName = _LastName;
+            _originalPatronymic = _Patronymic;
             _originalQualification = _Qualification;
             _originalIsActive = IsActive;
         }
@@ -43,14 +54,42 @@ namespace remeLog.Models
 
         public int Id { get; set; }
 
-        private string _Name;
-        /// <summary> ФИО оператора </summary>
-        public string Name
+        private string _FirstName;
+        /// <summary> Имя </summary>
+        public string FirstName
         {
-            get => _Name;
+            get => _FirstName;
             set
             {
-                if (Set(ref _Name, value))
+                if (Set(ref _FirstName, value))
+                {
+                    IsModified = !IsOriginalState();
+                }
+            }
+        }
+
+        private string _LastName;
+        /// <summary> Фамилия </summary>
+        public string LastName
+        {
+            get => _LastName;
+            set
+            {
+                if (Set(ref _LastName, value))
+                {
+                    IsModified = !IsOriginalState();
+                }
+            }
+        }
+
+        private string _Patronymic;
+        /// <summary> Отчество </summary>
+        public string Patronymic
+        {
+            get => _Patronymic;
+            set
+            {
+                if (Set(ref _Patronymic, value))
                 {
                     IsModified = !IsOriginalState();
                 }
@@ -84,6 +123,20 @@ namespace remeLog.Models
             }
         }
 
+        public string FullName => $"{LastName} {FirstName} {Patronymic ?? ""}";
+        public string DisplayName
+        {
+            get
+            {
+                var result = LastName;
+                if (string.IsNullOrEmpty(FirstName)) return result;
+                result += " " + FirstName[0] + ".";
+                if (!string.IsNullOrEmpty(Patronymic))
+                    result += " " + Patronymic[0] + ".";
+                return result;
+            }
+        }
+
         public string this[string columnName]
         {
             get
@@ -91,9 +144,13 @@ namespace remeLog.Models
                 string error = null!;
                 switch (columnName)
                 {
-                    case nameof(Name):
-                        if (string.IsNullOrWhiteSpace(Name))
+                    case nameof(FirstName):
+                        if (string.IsNullOrWhiteSpace(FirstName))
                             error = "Имя оператора не может быть пустым.";
+                        break;
+                    case nameof(LastName):
+                        if (string.IsNullOrWhiteSpace(LastName))
+                            error = "Фамилия оператора не может быть пустой.";
                         break;
                     case nameof(Qualification):
                         if (Qualification < 0 || Qualification > 6)
@@ -108,7 +165,7 @@ namespace remeLog.Models
 
         private bool IsOriginalState()
         {
-            return Name == _originalName && Qualification == _originalQualification && IsActive == _originalIsActive;
+            return FirstName == _originalFirstName && LastName == _originalLastName && Patronymic == _originalPatronymic && Qualification == _originalQualification && IsActive == _originalIsActive;
         }
     }
 }
