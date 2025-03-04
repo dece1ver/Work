@@ -31,6 +31,16 @@ namespace remeLog.Infrastructure.Extensions
             return validSetupRatios.Average();
         }
 
+        public static double AverageSetupRatioIncludeDowntimes(this IEnumerable<Models.Part> parts)
+        {
+            var validSetupRatios = parts
+                .Where(p => p.SetupRatioIncludeDowntimes > 0 && !double.IsNaN(p.SetupRatioIncludeDowntimes) && !double.IsPositiveInfinity(p.SetupRatioIncludeDowntimes))
+                .Select(p => p.SetupRatioIncludeDowntimes <= AppSettings.MaxSetupLimit ? p.SetupRatioIncludeDowntimes : AppSettings.MaxSetupLimit)
+                .DefaultIfEmpty(0.0);
+
+            return validSetupRatios.Average();
+        }
+
         public static double SetupRatio(this IEnumerable<Models.Part> parts)
         {
             double factSum = 0;

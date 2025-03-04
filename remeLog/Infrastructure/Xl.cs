@@ -128,6 +128,7 @@ namespace remeLog.Infrastructure
                 .Add(CM.ProcessRelatedLossShifts)
                 .Add(CM.UnspecifiedOtherShifts)
                 .Add(CM.SetupRatio)
+                .Add(CM.SetupRatioIncludeDowntimes)
                 .Add(CM.ProductionRatio)
                 .Add(CM.SetupRatioUnder)
                 .Add(CM.ProductionRatioUnder)
@@ -206,6 +207,7 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[CM.ProcessRelatedLossShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, ci[CM.UnspecifiedOtherShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
                 ws.Cell(row, ci[CM.SetupRatio]).Value = parts.AverageSetupRatio();
+                ws.Cell(row, ci[CM.SetupRatioIncludeDowntimes]).Value = parts.AverageSetupRatioIncludeDowntimes();
                 ws.Cell(row, ci[CM.ProductionRatio]).Value = parts.ProductionRatio();
                 var setupUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).AverageSetupRatio();
                 ws.Cell(row, ci[CM.SetupRatioUnder]).Value = setupUnderRatio;
