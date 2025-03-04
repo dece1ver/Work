@@ -611,10 +611,11 @@ namespace remeLog.Infrastructure
         /// <returns>При удачном выполнении возвращает путь к записанному файлу</returns>
         public static string ExportOperatorReport(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int minPartsCount, int maxPartsCount, ExportOperatorReportType reportType = ExportOperatorReportType.Under)
         {
+            var operators = Database.GetOperators();
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet("Отчет по операторам");
             var workDays = Util.GetWorkDaysBeetween(fromDate, toDate);
-            var cm = new ColumnManager.Builder()
+            var cm = new CM.Builder()
                 .Add(CM.Operator)
                 .Add(CM.Qualification)
                 .Add(CM.Machine)
@@ -668,7 +669,7 @@ namespace remeLog.Infrastructure
                 var filteredParts = partGroup.ToList();
 
                 ws.Cell(row, ci[CM.Operator]).SetValue(partGroup.Key.Operator);
-                var qualification = partGroup.Key.Operator.GetOperatorQualification();
+                var qualification = partGroup.Key.Operator.GetOperatorQualification(operators);
                 var validQualification = int.TryParse(qualification, out int qualificationNumber);
                 ws.Cell(row, ci[CM.Qualification]).SetValue(validQualification ? qualificationNumber : qualification);
                 ws.Cell(row, ci[CM.Machine]).SetValue(filteredParts.First().Machine);
@@ -1815,30 +1816,42 @@ namespace remeLog.Infrastructure
             return path;
         }
 
-        public static string GetOperatorQualification(this string operatorName)
+        //public static string GetOperatorQualification(this string operatorName)
+        //{
+        //    if (!File.Exists(AppSettings.Instance.QualificationSourcePath)) return "Н/Д";
+        //    try
+        //    {
+        //        using (var fs = new FileStream(AppSettings.Instance.QualificationSourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        //        {
+        //            var wb = new XLWorkbook(fs);
+        //            foreach (var xlRow in wb.Worksheet(1).Rows().Skip(2))
+        //            {
+        //                if (xlRow.Cell(2).Value.IsText && xlRow.Cell(2).Value.GetText() == operatorName)
+        //                {
+        //                    if (xlRow.Cell(4).Value.IsText) return xlRow.Cell(4).Value.GetText();
+        //                    else if (xlRow.Cell(4).Value.IsNumber) return xlRow.Cell(4).Value.GetNumber().ToString();
+        //                }
+        //            }
+        //            return "Н/Д";
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Util.WriteLog(ex);
+        //        return "Н/Д";
+        //    }
+        //}
+
+        public static string GetOperatorQualification(this string operatorFullName, IEnumerable<OperatorInfo> operators)
         {
-            if (!File.Exists(AppSettings.Instance.QualificationSourcePath)) return "Н/Д";
-            try
+            foreach (var @operator in operators)
             {
-                using (var fs = new FileStream(AppSettings.Instance.QualificationSourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                if (@operator.FullName == operatorFullName)
                 {
-                    var wb = new XLWorkbook(fs);
-                    foreach (var xlRow in wb.Worksheet(1).Rows().Skip(2))
-                    {
-                        if (xlRow.Cell(2).Value.IsText && xlRow.Cell(2).Value.GetText() == operatorName)
-                        {
-                            if (xlRow.Cell(4).Value.IsText) return xlRow.Cell(4).Value.GetText();
-                            else if (xlRow.Cell(4).Value.IsNumber) return xlRow.Cell(4).Value.GetNumber().ToString();
-                        }
-                    }
-                    return "Н/Д";
+                    return @operator.Qualification.ToString();
                 }
             }
-            catch (Exception ex)
-            {
-                Util.WriteLog(ex);
-                return "Н/Д";
-            }
+            return "Н/Д";
         }
 
 
