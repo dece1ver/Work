@@ -50,7 +50,11 @@ namespace remeLog.Models
             double fixedSetupTimePlan = 0,
             double fixedMachineTimePlan = 0,
             string engineerComment = "",
-            bool excludeFromReports = false)
+            bool excludeFromReports = false,
+            string longSetupReasonComment = "",
+            string longSetupFixComment = "",
+            string longSetupEngeneerComment = ""
+            )
         {
             _Guid = guid;
             _Machine = machine;
@@ -91,6 +95,9 @@ namespace remeLog.Models
             _EngineerComment = engineerComment;
             _ExcludeFromReports = excludeFromReports;
             NeedUpdate = false;
+            _LongSetupReasonComment = longSetupReasonComment;
+            _LongSetupFixComment = longSetupFixComment;
+            _LongSetupEngeneerComment = longSetupEngeneerComment;
         }
 
         public Part(Part part)
@@ -133,6 +140,9 @@ namespace remeLog.Models
             _FixedProductionTimePlan = part.FixedProductionTimePlan;
             _EngineerComment = part.EngineerComment;
             NeedUpdate = false;
+            _LongSetupReasonComment = part.LongSetupReasonComment;
+            _LongSetupFixComment = part.LongSetupFixComment;
+            _LongSetupEngeneerComment = part.LongSetupEngeneerComment;
         }
 
         private Guid _Guid;
@@ -178,7 +188,6 @@ namespace remeLog.Models
                 }
             }
         }
-
 
         private string _Shift;
         /// <summary> Смена </summary>
@@ -351,6 +360,8 @@ namespace remeLog.Models
         }
 
         public double SetupTimeFact => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes - SetupDowntimes - PartialSetupTime;
+        public double SetupTimeFactIncludePartial => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes - SetupDowntimes;
+        public double SetupTimeFactIncludePartialAndDowntimes => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes;
         public double ProductionTimeFact => (EndMachiningTime - StartMachiningTime - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)).TotalMinutes - MachiningDowntimes;
 
         private DateTime _EndMachiningTime;
@@ -578,8 +589,6 @@ namespace remeLog.Models
                 }
             }
         }
-
-
 
         private double _MaintenanceTime;
         /// <summary> Время простоя "Обслуживание" </summary>
@@ -1031,13 +1040,55 @@ namespace remeLog.Models
             }
         }
 
+        private string _LongSetupReasonComment;
+        public string LongSetupReasonComment
+        {
+            get => _LongSetupReasonComment;
+            set
+            {
+                if (Set(ref _LongSetupReasonComment, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
+        private string _LongSetupFixComment;
+        public string LongSetupFixComment
+        {
+            get => _LongSetupFixComment;
+            set
+            {
+                if (Set(ref _LongSetupFixComment, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
+        private string _LongSetupEngeneerComment;
+        public string LongSetupEngeneerComment
+        {
+            get => _LongSetupEngeneerComment;
+            set
+            {
+                if (Set(ref _LongSetupEngeneerComment, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
         public double SingleProductionTime { get 
             {
                 var partsCount = StartSetupTime != StartMachiningTime && FinishedCount > 1 ? FinishedCount - 1 : FinishedCount;
                 return ProductionTimeFact / partsCount;
             } }
         public double SetupRatio => SetupTimePlanForCalc / SetupTimeFact;
-        public double SetupRatioIncludeDowntimes => SetupTimePlanForCalc / (SetupTimeFact + SetupDowntimes);
+        public double SetupRatioIncludeDowntimes => SetupTimeFact > 0 ? SetupTimePlanForCalc / (SetupTimeFact + SetupDowntimes) : 0;
         public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : SetupRatio > AppSettings.MaxSetupLimit ? $"{SetupRatio:0%}\n({AppSettings.MaxSetupLimit:0%})" : $"{SetupRatio:0%}";
         public double ProductionRatio => FinishedCountFact * ProductionTimePlanForCalc / ProductionTimeFact;
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity or double.NegativeInfinity ? "б/и" : $"{ProductionRatio:0%}";

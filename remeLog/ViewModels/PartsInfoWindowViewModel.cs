@@ -54,7 +54,7 @@ namespace remeLog.ViewModels
             SetAllDateCommand = new LambdaCommand(OnSetAllDateCommandExecuted, CanSetAllDateCommandExecute);
             IncreaseSetupCommand = new LambdaCommand(OnIncreaseSetupCommandExecuted, CanIncreaseSetupCommandExecute);
             DecreaseSetupCommand = new LambdaCommand(OnDecreaseSetupCommandExecuted, CanDecreaseSetupCommandExecute);
-            UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecuted, CanUpdatePartsCommandExecute);
+            UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecutedAsync, CanUpdatePartsCommandExecute);
             RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
             ChangeCompactViewCommand = new LambdaCommand(OnChangeCompactViewCommandExecuted, CanChangeCompactViewCommandExecute);
             ChangeRoleCommand = new LambdaCommand(OnChangeRoleCommandExecuted, CanChangeRoleCommandExecute);
@@ -1369,12 +1369,12 @@ namespace remeLog.ViewModels
 
         #region UpdateParts
         public ICommand UpdatePartsCommand { get; }
-        private void OnUpdatePartsCommandExecuted(object p)
+        private async void OnUpdatePartsCommandExecutedAsync(object p)
         {
             if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) return;
             foreach (var part in Parts.Where(p => p.NeedUpdate))
             {
-                switch (part.UpdatePart())
+                switch (await part.UpdatePartAsync())
                 {
                     case DbResult.Ok:
                         part.NeedUpdate = false;
@@ -1537,7 +1537,7 @@ namespace remeLog.ViewModels
                     Status = "Не настроено соединение с БД";
                     return false;
                 }
-                Database.UpdateSettings(AppSettings.Instance.ConnectionString);
+                Database.UpdateAppSettings();
                 if (!first) await Task.Delay(1000, cancellationToken);
 
                 if (UseMockData)

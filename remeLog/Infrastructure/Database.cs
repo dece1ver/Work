@@ -306,6 +306,25 @@ namespace remeLog.Infrastructure
             return parts;
         }
 
+        public async static Task<ObservableCollection<Part>> ReadPartsByShiftDate(DateTime fromDate, DateTime toDate, string machine, CancellationToken cancellationToken)
+        {
+            ObservableCollection<Part> parts = new();
+            using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
+            {
+                connection.Open();
+
+                string query = "SELECT * FROM Parts WHERE ShiftDate BETWEEN @FromDate AND @ToDate ORDER BY StartSetupTime ASC;";
+                using (SqlCommand command = new(query, connection))
+                {
+                    command.Parameters.AddWithValue("@FromDate", fromDate);
+                    command.Parameters.AddWithValue("@ToDate", toDate);
+
+                    await parts.FillPartsAsync(command, cancellationToken);
+                }
+            }
+            return parts;
+        }
+
         public async static Task<ObservableCollection<Part>> ReadPartsByPartNameAndOrder(string[] partNames, string[] orders, CancellationToken cancellationToken)
         {
             ObservableCollection<Part> parts = new();
@@ -323,13 +342,13 @@ namespace remeLog.Infrastructure
         }
 
 
-        public static DbResult UpdatePart(this Part part)
+        public async static Task<DbResult> UpdatePartAsync(this Part part)
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
                     string updateQuery = "UPDATE Parts SET " +
                         "Machine = @Machine, " +
                         "Shift = @Shift, " +
@@ -368,6 +387,9 @@ namespace remeLog.Infrastructure
                         "FixedProductionTimePlan = @FixedProductionTimePlan, " +
                         "EngineerComment = @EngineerComment, " +
                         "ExcludeFromReports = @ExcludeFromReports " +
+                        "LongSetupReasonComment = @LongSetupReasonComment " +
+                        "LongSetupFixComment = @LongSetupFixComment " +
+                        "LongSetupEngeneerComment = @LongSetupEngeneerComment " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
@@ -409,10 +431,13 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@FixedProductionTimePlan", part.FixedProductionTimePlan);
                         cmd.Parameters.AddWithValue("@EngineerComment", part.EngineerComment);
                         cmd.Parameters.AddWithValue("@ExcludeFromReports", part.ExcludeFromReports);
+                        cmd.Parameters.AddWithValue("@LongSetupReasonComment", part.LongSetupReasonComment);
+                        cmd.Parameters.AddWithValue("@LongSetupFixComment", part.LongSetupFixComment);
+                        cmd.Parameters.AddWithValue("@LongSetupEngeneerComment", part.LongSetupEngeneerComment);
 
-                        var execureResult = cmd.ExecuteNonQuery();
+                        var execureResult = await cmd.ExecuteNonQueryAsync();
                     }
-                    connection.Close();
+                    await connection.CloseAsync();
                     return DbResult.Ok;
                 }
             }
@@ -442,48 +467,51 @@ namespace remeLog.Infrastructure
                 while (await reader.ReadAsync(cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var guid = await reader.GetFieldValueAsync<Guid>(0);
-                    var machine = await reader.GetFieldValueAsync<string>(1);
-                    var shift = await reader.GetFieldValueAsync<string>(2);
-                    var shiftDate = await reader.GetFieldValueAsync<DateTime>(3);
-                    var @operator = await reader.GetFieldValueAsync<string>(4);
-                    var partName = await reader.GetFieldValueAsync<string>(5);
-                    var order = await reader.GetFieldValueAsync<string>(6);
-                    var setup = await reader.GetFieldValueAsync<int>(7);
-                    var finishedCount = await reader.GetFieldValueAsync<int>(8);
-                    var totalCount = await reader.GetFieldValueAsync<int>(9);
-                    var startSetupTime = await reader.GetFieldValueAsync<DateTime>(10);
-                    var startMachiningTime = await reader.GetFieldValueAsync<DateTime>(11);
-                    var setupTimeFact = await reader.GetFieldValueAsync<double>(12);
-                    var endMachiningTime = await reader.GetFieldValueAsync<DateTime>(13);
-                    var setupTimePlan = await reader.GetFieldValueAsync<double>(14);
-                    var setupTimePlanForReport = await reader.GetFieldValueAsync<double>(15);
-                    var singleProductionTimePlan = await reader.GetFieldValueAsync<double>(16);
-                    var productionTimeFact = await reader.GetFieldValueAsync<double>(17);
-                    var machininhTime = await reader.GetFieldValueAsync<TimeSpan>(18);
-                    var setupDowntimes = await reader.GetFieldValueAsync<double>(19);
-                    var machiningDowntimes = await reader.GetFieldValueAsync<double>(20);
-                    var partialSetupTime = await reader.GetFieldValueAsync<double>(21);
-                    var createNcProgramTime = await reader.GetFieldValueAsync<double>(22);
-                    var maintenanceTime = await reader.GetFieldValueAsync<double>(23);
-                    var toolSearchingTime = await reader.GetFieldValueAsync<double>(24);
-                    var toolChangingTime = await reader.GetFieldValueAsync<double>(25);
-                    var mentoringTime = await reader.GetFieldValueAsync<double>(26);
-                    var contactiongDepartmentsTime = await reader.GetFieldValueAsync<double>(27);
-                    var fixtureMakingTime = await reader.GetFieldValueAsync<double>(28);
-                    var hardwareFailureTime = await reader.GetFieldValueAsync<double>(29);
-                    var operatorComment = await reader.GetFieldValueAsync<string>(30);
-                    var masterSetupComment = reader.GetValue(31)?.ToString() ?? "";
-                    var masterMachiningComment = reader.GetValue(32)?.ToString() ?? "";
-                    var specifiedDowntimesComment = reader.GetValue(33)?.ToString() ?? "";
-                    var unspecifiedDowntimesComment = reader.GetValue(34)?.ToString() ?? "";
-                    var masterComment = reader.GetValue(35)?.ToString() ?? "";
-                    var fixedSetupComment = reader.GetValue(36).GetDouble();
-                    var fixedProductionComment = reader.GetValue(37).GetDouble();
-                    var engineerComment = reader.GetValue(38)?.ToString() ?? "";
-                    var excludeFromReports = reader.GetValue(39) == DBNull.Value ? false : (bool)reader.GetValue(39);
+                    var guid = await reader.GetFieldValueAsync<Guid>(0, cancellationToken);
+                    var machine = await reader.GetFieldValueAsync<string>(1, cancellationToken);
+                    var shift = await reader.GetFieldValueAsync<string>(2, cancellationToken);
+                    var shiftDate = await reader.GetFieldValueAsync<DateTime>(3, cancellationToken);
+                    var @operator = await reader.GetFieldValueAsync<string>(4, cancellationToken);
+                    var partName = await reader.GetFieldValueAsync<string>(5, cancellationToken);
+                    var order = await reader.GetFieldValueAsync<string>(6, cancellationToken);
+                    var setup = await reader.GetFieldValueAsync<int>(7, cancellationToken);
+                    var finishedCount = await reader.GetFieldValueAsync<int>(8, cancellationToken);
+                    var totalCount = await reader.GetFieldValueAsync<int>(9, cancellationToken);
+                    var startSetupTime = await reader.GetFieldValueAsync<DateTime>(10, cancellationToken);
+                    var startMachiningTime = await reader.GetFieldValueAsync<DateTime>(11, cancellationToken);
+                    var setupTimeFact = await reader.GetFieldValueAsync<double>(12, cancellationToken);
+                    var endMachiningTime = await reader.GetFieldValueAsync<DateTime>(13, cancellationToken);
+                    var setupTimePlan = await reader.GetFieldValueAsync<double>(14, cancellationToken);
+                    var setupTimePlanForReport = await reader.GetFieldValueAsync<double>(15, cancellationToken);
+                    var singleProductionTimePlan = await reader.GetFieldValueAsync<double>(16, cancellationToken);
+                    var productionTimeFact = await reader.GetFieldValueAsync<double>(17, cancellationToken);
+                    var machininhTime = await reader.GetFieldValueAsync<TimeSpan>(18, cancellationToken);
+                    var setupDowntimes = await reader.GetFieldValueAsync<double>(19, cancellationToken);
+                    var machiningDowntimes = await reader.GetFieldValueAsync<double>(20, cancellationToken);
+                    var partialSetupTime = await reader.GetFieldValueAsync<double>(21, cancellationToken);
+                    var createNcProgramTime = await reader.GetFieldValueAsync<double>(22, cancellationToken);
+                    var maintenanceTime = await reader.GetFieldValueAsync<double>(23, cancellationToken);
+                    var toolSearchingTime = await reader.GetFieldValueAsync<double>(24, cancellationToken);
+                    var toolChangingTime = await reader.GetFieldValueAsync<double>(25, cancellationToken);
+                    var mentoringTime = await reader.GetFieldValueAsync<double>(26, cancellationToken);
+                    var contactiongDepartmentsTime = await reader.GetFieldValueAsync<double>(27, cancellationToken);
+                    var fixtureMakingTime = await reader.GetFieldValueAsync<double>(28, cancellationToken);
+                    var hardwareFailureTime = await reader.GetFieldValueAsync<double>(29, cancellationToken);
+                    var operatorComment = await reader.GetFieldValueAsync<string>(30, cancellationToken);
+                    var masterSetupComment = await reader.GetValueOrDefaultAsync(31, "", cancellationToken);
+                    var masterMachiningComment = await reader.GetValueOrDefaultAsync(32, "", cancellationToken);
+                    var specifiedDowntimesComment = await reader.GetValueOrDefaultAsync(33, "", cancellationToken);
+                    var unspecifiedDowntimesComment = await reader.GetValueOrDefaultAsync(34, "", cancellationToken);
+                    var masterComment = await reader.GetValueOrDefaultAsync(35, "", cancellationToken);
+                    var fixedSetupTimePlan = await reader.GetValueOrDefaultAsync(36, 0.0, cancellationToken);
+                    var fixedMachineTimePlan = await reader.GetValueOrDefaultAsync(37, 0.0, cancellationToken);
+                    var engineerComment = await reader.GetValueOrDefaultAsync(38, "", cancellationToken);
+                    var excludeFromReports = await reader.GetValueOrDefaultAsync(39, false, cancellationToken);
+                    var longSetupReasonComment = await reader.GetValueOrDefaultAsync(40, "", cancellationToken);
+                    var longSetupFixComment = await reader.GetValueOrDefaultAsync(41, "", cancellationToken);
+                    var longSetupEngeneerComment = await reader.GetValueOrDefaultAsync(42, "", cancellationToken);
 
-                    Part part = new Part(
+                    Part part = new(
                         guid,
                         machine,
                         shift,
@@ -520,10 +548,13 @@ namespace remeLog.Infrastructure
                         specifiedDowntimesComment,
                         unspecifiedDowntimesComment,
                         masterComment,
-                        fixedSetupComment,
-                        fixedProductionComment,
+                        fixedSetupTimePlan,
+                        fixedMachineTimePlan,
                         engineerComment,
-                        excludeFromReports);
+                        excludeFromReports, 
+                        longSetupReasonComment, 
+                        longSetupFixComment, 
+                        longSetupEngeneerComment);
                     parts.Add(part);
                 }
             }
@@ -1117,19 +1148,20 @@ namespace remeLog.Infrastructure
             }
         }
 
-        internal static void UpdateSettings(string connectionString)
+        internal static async void UpdateAppSettings()
         {
-            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
-                connection.Open();
-                string query = $"SELECT max_setup_limit FROM cnc_remelog_config;";
-                using (SqlCommand command = new SqlCommand(query, connection))
+                await connection.OpenAsync();
+                string query = $"SELECT max_setup_limit, long_setup_limit FROM cnc_remelog_config;";
+                using (SqlCommand command = new(query, connection))
                 {
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
-                            AppSettings.MaxSetupLimit = reader.GetDouble(0);
+                            AppSettings.MaxSetupLimit = await reader.GetValueOrDefaultAsync(0, 1.5);
+                            AppSettings.LongSetupLimit = await reader.GetValueOrDefaultAsync(1, 240.0);
                         }
                     }
                 }

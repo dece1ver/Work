@@ -130,6 +130,7 @@ namespace remeLog.Infrastructure
                 .Add(CM.SetupRatio)
                 .Add(CM.SetupRatioIncludeDowntimes)
                 .Add(CM.ProductionRatio)
+                .Add(CM.ProductionRatioIncludeDowntimes)
                 .Add(CM.SetupRatioUnder)
                 .Add(CM.ProductionRatioUnder)
                 .Add(CM.SetupRatioOver)
@@ -209,6 +210,7 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[CM.SetupRatio]).Value = parts.AverageSetupRatio();
                 ws.Cell(row, ci[CM.SetupRatioIncludeDowntimes]).Value = parts.AverageSetupRatioIncludeDowntimes();
                 ws.Cell(row, ci[CM.ProductionRatio]).Value = parts.ProductionRatio();
+                ws.Cell(row, ci[CM.ProductionRatioIncludeDowntimes]).Value = parts.ProductionRatioIncludeDowntimes();
                 var setupUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).AverageSetupRatio();
                 ws.Cell(row, ci[CM.SetupRatioUnder]).Value = setupUnderRatio;
                 var productionUnderRatio = parts.Where(p => p.FinishedCountFact < underOverBorder).ProductionRatio();
@@ -284,8 +286,8 @@ namespace remeLog.Infrastructure
             dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
 
             ws.Range(headerRow, ci[CM.Machine], lastDataRow, ci[CM.Machine]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.8);
+            ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatioIncludeDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatioIncludeDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.8);
             ws.Range(headerRow, ci[CM.SetupRatioUnder], lastDataRow, ci[CM.ProductionRatioUnder]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent2, 0.8);
             ws.Range(headerRow, ci[CM.SetupRatioOver], lastDataRow, ci[CM.ProductionRatioOver]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.Range(headerRow, ci[CM.SetupRatioOver], lastDataRow, ci[CM.ProductionRatioOver]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent3, 0.8);

@@ -373,6 +373,11 @@ namespace remeLog.Infrastructure
         public const string ProductionRatio = "productionRatio";
 
         /// <summary>
+        /// Коэффициент изготовления не исключая простоев
+        /// </summary>
+        public const string ProductionRatioIncludeDowntimes = "productionRatioIncludeDowntimes";
+
+        /// <summary>
         /// Общая эффективность
         /// </summary>
         public const string GeneralRatio = "generalRatio";
@@ -559,6 +564,7 @@ namespace remeLog.Infrastructure
             { SetupRatio, $"Выполнение норматива{Environment.NewLine}наладки" },
             { SetupRatioIncludeDowntimes, $"Выполнение норматива{Environment.NewLine}наладки{Environment.NewLine}(с простоями)" },
             { ProductionRatio, $"Выполнение норматива{Environment.NewLine}изготовления" },
+            { ProductionRatioIncludeDowntimes, $"Выполнение норматива{Environment.NewLine}изготовления{Environment.NewLine}(с простоями)" },
             { SetupRatioUnder, $"Выполнение норматива{Environment.NewLine}наладки на штучке" },
             { ProductionRatioUnder, $"Выполнение норматива{Environment.NewLine}изготовления на штучке" },
             { SetupRatioOver, $"Выполнение норматива{Environment.NewLine}наладки на серийке" },

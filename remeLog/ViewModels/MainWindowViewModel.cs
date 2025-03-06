@@ -8,6 +8,7 @@ using remeLog.Infrastructure;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
 using remeLog.Views;
+using Syncfusion.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -38,6 +39,7 @@ namespace remeLog.ViewModels
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadPartsInfoCommand = new LambdaCommand(OnLoadPartsInfoCommandExecuted, CanLoadPartsInfoCommandExecute);
+            ShowLongSetupsCommand = new LambdaCommand(OnShowLongSetupsCommandExecuted, CanShowLongSetupsCommandExecute);
             ShowMonitorCommand = new LambdaCommand(OnShowMonitorCommandExecuted, CanShowMonitorCommandExecute);
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
@@ -248,13 +250,26 @@ namespace remeLog.ViewModels
         private static bool CanLoadPartsInfoCommandExecute(object p) => true;
         #endregion
 
+        #region ShowLongSetups
+        public ICommand ShowLongSetupsCommand { get; }
+        private void OnShowLongSetupsCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                LongSetupsWindow longSetupsWindow = new(Parts.SelectMany(cp => cp.Parts.Where(p => p.SetupTimeFactIncludePartial >= AppSettings.LongSetupLimit)).OrderBy(p => p.StartSetupTime).ToObservableCollection()) { Owner = App.Current.MainWindow};
+                longSetupsWindow.Show();
+            }
+        }
+        private static bool CanShowLongSetupsCommandExecute(object p) => true;
+        #endregion
+
         #region ShowMonitor
         public ICommand ShowMonitorCommand { get; }
         private void OnShowMonitorCommandExecuted(object p)
         {
             using (Overlay = new())
             {
-                FanucMonitor fanucMonitor = new FanucMonitor() { Owner = App.Current.MainWindow };
+                FanucMonitor fanucMonitor = new() { Owner = App.Current.MainWindow };
                 fanucMonitor.ShowDialog();
             }
         }
@@ -356,7 +371,7 @@ namespace remeLog.ViewModels
                 var cancellationToken = _cancellationTokenSource.Token;
                 await semaphoreSlim.WaitAsync(cancellationToken);
                 ProgressBarVisibility = Visibility.Visible;
-                Database.UpdateSettings(AppSettings.Instance.ConnectionString);
+                Database.UpdateAppSettings();
                 Status = "Получение списка станков...";
                 if (!first)
                 {

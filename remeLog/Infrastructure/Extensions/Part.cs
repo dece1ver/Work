@@ -71,6 +71,18 @@ namespace remeLog.Infrastructure.Extensions
             return factSum == 0 ? 0 : planSum / factSum;
         }
 
+        public static double ProductionRatioIncludeDowntimes(this IEnumerable<Models.Part> parts)
+        {
+            double planSum = 0;
+            double factSum = 0;
+            foreach (var part in parts.Where(p => p.ProductionTimePlanForCalc > 0))
+            {
+                factSum += part.ProductionTimeFact + part.MachiningDowntimes;
+                planSum += part.FinishedCountFact * part.ProductionTimePlanForCalc;
+            }
+            return factSum == 0 ? 0 : planSum / factSum;
+        }
+
         /// <summary>
         /// Отмеченные простои за период
         /// </summary>

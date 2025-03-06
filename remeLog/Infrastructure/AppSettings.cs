@@ -53,6 +53,8 @@ namespace remeLog.Infrastructure
         public List<string> UnspecifiedDowntimesReasons = new();
         [JsonIgnore]
         public static double MaxSetupLimit = 2;
+        [JsonIgnore]
+        public static double LongSetupLimit = 240;
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode { get; set; }

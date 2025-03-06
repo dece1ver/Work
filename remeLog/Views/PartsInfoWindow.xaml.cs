@@ -199,7 +199,7 @@ namespace remeLog.Views
             }
         }
 
-        private async void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (DataContext is PartsInfoWindowViewModel d)
             {
