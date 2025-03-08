@@ -7,18 +7,11 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="Отчеты электронного журнала" Height="640" Width="1080" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closing="Window_Closing">
+        Title="Отчеты электронного журнала" Height="715" Width="1080" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closing="Window_Closing">
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
     <Window.Resources>
-        <Style TargetType="Button" x:Key="UppedPanelButton">
-            <Style.Resources>
-                <Style TargetType="Border">
-                    <Setter Property="CornerRadius" Value="2"/>
-                </Style>
-            </Style.Resources>
-        </Style>
         <Style TargetType="ListViewItem" x:Key="ListViewItemsStyle">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Focusable" Value="false"/>
@@ -76,90 +69,142 @@
                     <TextBlock Text="{Binding Status}" FontSize="16" Margin="0 -1"/>
                 </StatusBarItem>
             </StatusBar>
-            <ProgressBar DockPanel.Dock="Bottom" Value="{Binding Progress}" Maximum="{Binding ProgressMaxValue}" IsIndeterminate="True"
-                Visibility="{Binding ProgressBarVisibility}" Height="2" />
+            <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="{Binding InProgress}" Height="2" />
             <DockPanel>
-                <GroupBox DockPanel.Dock="Top" BorderBrush="DarkGray" Margin="3" Padding="0 0 3 5">
-                    <GroupBox.Header>
+                <DockPanel DockPanel.Dock="Top" Margin="0 4 0 0">
+                    <Button DockPanel.Dock="Right" Content="Отладка" FontSize="16" Padding="10 0" Style="{StaticResource OutlineDefaultButtonStyle}"
+                            Margin="0" Width="137" Command="{Binding LoadPartsInfoCommand}" CommandParameter="{Binding Debug}"
+                            Visibility="{Binding Debug, Converter={StaticResource VisibilityConverter}}" d:Visibility="Collapsed">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="2"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button DockPanel.Dock="Right" Content="Сформировать" FontSize="16" 
+                            Margin="4 0" Width="143" Command="{Binding LoadPartsInfoCommand}" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="2"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <StackPanel DockPanel.Dock="Left">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock FontSize="18" Text="Период" FontWeight="DemiBold"/>
+                            <TextBlock Text="От" FontSize="16" VerticalAlignment="Center" TextAlignment="Center" Width="30"/>
+                            <DatePicker Style="{StaticResource DatePickerOutlineStyle}" DockPanel.Dock="Left" FontSize="16" SelectedDate="{Binding FromDate}" Margin="4 0"
+                                        IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                        BorderThickness="1 1 1 0">
+                                <DatePicker.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="2 2 0 0"/>
+                                    </Style>
+                                </DatePicker.Resources>
+                            </DatePicker>
                         </StackPanel>
-                    </GroupBox.Header>
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="Отладка" FontSize="16" Padding="10 0" 
-                                Margin="5 -7 -3 -5" Width="137" Command="{Binding LoadPartsInfoCommand}" CommandParameter="{Binding Debug}"
-                                Visibility="{Binding Debug, Converter={StaticResource VisibilityConverter}}">
+                        <Border Background="Gray" Height="1" Margin="34 0 4 0"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="До" FontSize="16" VerticalAlignment="Center" TextAlignment="Center" Width="30"/>
+                            <DatePicker Style="{StaticResource DatePickerOutlineStyle}" DockPanel.Dock="Left" FontSize="16" SelectedDate="{Binding ToDate}" Margin="4 0"
+                                        IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                        BorderThickness="1 0 1 1">
+                                <DatePicker.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="0 0 2 2"/>
+                                    </Style>
+                                </DatePicker.Resources>
+                            </DatePicker>
+                        </StackPanel>
+                    </StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition Height="1"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="1" Background="Gray" Grid.ColumnSpan="5"/>
+                        <Border Grid.Column="1" Background="Gray" Grid.RowSpan="3"/>
+                        <Border Grid.Column="3" Background="Gray" Grid.RowSpan="3"/>
+                        <Button Grid.Row="0" Grid.Column="0" Content="+ сутки" 
+                                IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                Margin="0 0 0 0" BorderThickness="1 1 0 0"
+                                Command="{Binding IncreaseDateCommand}">
                             <Button.Resources>
                                 <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="2"/>
+                                    <Setter Property="CornerRadius" Value="2 0 0 0"/>
                                 </Style>
                             </Button.Resources>
                         </Button>
-                        <Button DockPanel.Dock="Right" Content="Сформировать" FontSize="16" Padding="10 0" 
-                            Margin="-3 -7 -3 -5" Width="137" Command="{Binding LoadPartsInfoCommand}">
+                        <Button Grid.Row="2" Grid.Column="0" Content="- сутки" 
+                                IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                Margin="0 0 0 0" BorderThickness="1 0 0 1"
+                                Command="{Binding DecreaseDateCommand}">
                             <Button.Resources>
                                 <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="2"/>
+                                    <Setter Property="CornerRadius" Value="0 0 0 2"/>
                                 </Style>
                             </Button.Resources>
                         </Button>
-                        <StackPanel DockPanel.Dock="Left">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="От" FontSize="16" VerticalAlignment="Center" TextAlignment="Center" Width="30"/>
-                                <DatePicker DockPanel.Dock="Left" FontSize="16" SelectedDate="{Binding FromDate}" Margin="2 0 2 0">
-                                    <DatePicker.Resources>
-                                        <Style TargetType="Border">
-                                            <Setter Property="CornerRadius" Value="2"/>
-                                        </Style>
-                                    </DatePicker.Resources>
-                                </DatePicker>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="До" FontSize="16" VerticalAlignment="Center" TextAlignment="Center" Width="30"/>
-                                <DatePicker DockPanel.Dock="Left" FontSize="16" SelectedDate="{Binding ToDate}" Margin="2 2 0 0">
-                                    <DatePicker.Resources>
-                                        <Style TargetType="Border">
-                                            <Setter Property="CornerRadius" Value="2"/>
-                                        </Style>
-                                    </DatePicker.Resources>
-                                </DatePicker>
-                            </StackPanel>
-                        </StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100"/>
-                                <ColumnDefinition Width="100"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <Button Grid.Row="0" Grid.Column="0" Content="+ сутки" 
-                                    Margin="0 0 1 1" Style="{StaticResource UppedPanelButton}"
-                                    Command="{Binding IncreaseDateCommand}"/>
-                            <Button Grid.Row="1" Grid.Column="0" Content="- сутки" 
-                                    Margin="0 1 1 0" Style="{StaticResource UppedPanelButton}"
-                                    Command="{Binding DecreaseDateCommand}"/>
-                            <Button Grid.Row="0" Grid.Column="1" Content="Вчера" 
-                                    Margin="1 0 0 1" Style="{StaticResource UppedPanelButton}"
-                                    Command="{Binding SetYesterdayDateCommand}"/>
-                            <Button Grid.Row="1" Grid.Column="1" Content="Неделя" 
-                                    Margin="1 1 0 0" Style="{StaticResource UppedPanelButton}"
-                                    Command="{Binding SetWeekDateCommand}"/>
-                        </Grid>
-                    </DockPanel>
-                </GroupBox>
+                        <Button Grid.Row="0" Grid.Column="2" Content="Вчера"
+                                IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                Margin="0 0 0 0" BorderThickness="0 1 0 0"
+                                Command="{Binding SetYesterdayDateCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="0 0 0 0"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                        <Button Grid.Row="2" Grid.Column="2" Content="Неделя" 
+                                IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                Margin="0 0 0 0" BorderThickness="0 0 0 1"
+                                Command="{Binding SetWeekDateCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="0 0 0 0"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                        <Button Grid.Row="0" Grid.Column="4" Content="Месяц" 
+                                IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                Margin="0 0 0 0" BorderThickness="0 1 1 0"
+                                Command="{Binding SetMonthDateCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="0 2 0 0"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                        <Button Grid.Row="2" Grid.Column="4" Content="Год" 
+                                IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                                Margin="0 0 0 0" BorderThickness="0 0 1 1"
+                                Command="{Binding SetYearDateCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="0 0 2 0"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </Grid>
+                </DockPanel>
                 <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" IsManipulationEnabled="True" FontSize="14" DockPanel.Dock="Top" Focusable="False" 
-                          BorderBrush="Transparent" Margin="-4 0" ItemContainerStyle="{StaticResource ListViewItemsStyle}"
+                          BorderBrush="Transparent" Margin="-4 2 -2 0" ItemContainerStyle="{StaticResource ListViewItemsStyle}"
                           ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Vertical">
-                                <GroupBox BorderBrush="DarkGray">
+                            <StackPanel Orientation="Vertical" Margin="0 -2 0 2">
+                                <GroupBox Style="{DynamicResource ListViewGroupBox}">
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <Grid Grid.Row="0" Grid.Column="8" Grid.RowSpan="2" Visibility="{Binding IsSingleShift, Converter={StaticResource VisibilityConverter}}"
-                                                  Margin="-2 0 0 -4">
+                                                  Margin="-3 -3 -4 -4">
                                                 <Label Content="{StaticResource StatusOkIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility }, ConverterParameter=Exist}"
                                                        ToolTip="Есть отчет за смену"/>
                                                 <Label Content="{StaticResource StatusWarningIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility }, ConverterParameter=Partial}"
@@ -167,7 +212,7 @@
                                                 <Label Content="{StaticResource StatusErrorIcon}" Visibility="{Binding IsReportExist, Converter={StaticResource ReportStateVisibility}, ConverterParameter=NotExist}"
                                                        ToolTip="Нет отчета за смену"/>
                                             </Grid>
-                                            <TextBlock FontSize="16" Text="{Binding Machine}" FontWeight="SemiBold" Margin="0 1 0 0"/>
+                                            <TextBlock FontSize="16" Text="{Binding Machine}" FontWeight="SemiBold" Margin="2 -2 0 0"/>
                                             <TextBlock FontSize="16" Text="+" FontWeight="SemiBold" Visibility="{Binding IsReportChecked, Converter={StaticResource VisibilityConverter}}"/>
                                         </StackPanel>
                                     </GroupBox.Header>
@@ -188,7 +233,7 @@
                                             <Grid.RowDefinitions>
                                                 <RowDefinition />
                                             </Grid.RowDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="10 0 15 0">
+                                            <StackPanel Grid.Column="0" Margin="2 0 0 0">
                                                 <TextBlock Text="{Binding ShiftsInfo}"/>
                                                 <TextBlock >
                                                     <TextBlock.Text>
@@ -266,7 +311,6 @@
                                         </Grid>
                                         <!--Много суток-->
                                         <Grid Grid.Column="0" Visibility="{Binding IsSingleShift, Converter={StaticResource InvertedVisibilityConverter}}">
-                                            
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="250"/>
                                                 <ColumnDefinition Width="150"/>
@@ -277,7 +321,7 @@
                                             <Grid.RowDefinitions>
                                                 <RowDefinition/>
                                             </Grid.RowDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="10 0 15 0">
+                                            <StackPanel Grid.Column="0" Margin="2 0 0 0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock >
                                                         <TextBlock.Text>
@@ -297,7 +341,7 @@
                                                         </MultiBinding>
                                                     </TextBlock.Text>
                                                 </TextBlock>
-                                                
+
                                             </StackPanel>
                                             <StackPanel Grid.Column="1" >
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -360,7 +404,7 @@
                                                 </StackPanel>
                                             </StackPanel>
                                         </Grid>
-                                        <Button Margin="0 -6 0 0" Width="120" HorizontalAlignment="Right"
+                                        <Button Margin="0 -15 4 4" Width="120" HorizontalAlignment="Right" 
                                             CommandParameter="{Binding}" 
                                             Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=DataContext.ShowPartsInfoCommand}" Content="Подробно">
                                             <Button.Resources>

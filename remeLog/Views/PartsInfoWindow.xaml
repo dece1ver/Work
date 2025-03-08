@@ -703,8 +703,8 @@
             </DockPanel>
 
             <DockPanel DockPanel.Dock="Top" >
-                <GroupBox Header="Фильтры">
-                    <Grid>
+                <GroupBox Header="Фильтры" Style="{StaticResource GroupBoxStyle}" Margin="0" BorderBrush="Gray">
+                    <Grid Margin="0 -2 0 0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="60"/>
                             <ColumnDefinition Width="100"/>
@@ -713,8 +713,8 @@
                             <ColumnDefinition Width="320"/>
                             <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="30"/>
-                            <ColumnDefinition Width="135"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="60"/>
                             <ColumnDefinition Width="60"/>
                             <ColumnDefinition Width="60"/>
@@ -722,23 +722,30 @@
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="22"/>
+                            <RowDefinition Height="1"/>
                             <RowDefinition Height="22"/>
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Оператор"/>
+                        <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Background="DarkGray"/>
+                        <Border Grid.Row="1" Grid.Column="4" Grid.ColumnSpan="1" Margin="0 0 19 0" Background="DarkGray"/>
+                        <Border Grid.Row="1" Grid.Column="8" Margin="0 0 4 0" Grid.ColumnSpan="1" Background="Gray"/>
+                        <Border Grid.Row="1" Grid.Column="9" Grid.ColumnSpan="3" Background="Gray"/>
                         <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" 
-                                 Text="{Binding OperatorFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Смена"/>
-                        <ComboBox Grid.Row="1" Grid.Column="1" Text="Оператор" 
+                                 Text="{Binding OperatorFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"
+                                 BorderThickness="1 1 1 0" Margin="0 0 0 0"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Смена"/>
+                        <ComboBox Grid.Row="2" Grid.Column="1" Text="Оператор" BorderThickness="1 0 1 1"
                                   ItemsSource="{Binding ShiftFilterItems}" DisplayMemberPath="Name" SelectedItem="{Binding ShiftFilter}"/>
 
-                        <DockPanel Grid.Row="1" Grid.Column="2" ToolTip="Количество лично выполненных деталей">
+                        <DockPanel Grid.Row="2" Grid.Column="2" ToolTip="Количество лично выполненных деталей">
                             <TextBlock Text="Шт." Margin="10 0 5 0"/>
-                            <TextBox Text="{Binding FinishedCountFilter, UpdateSourceTrigger=PropertyChanged, Delay=500, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" Style="{StaticResource ClearableTextBox}"/>
+                            <TextBox Text="{Binding FinishedCountFilter, UpdateSourceTrigger=PropertyChanged, Delay=500, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+                                     Style="{StaticResource ClearableTextBox}" BorderThickness="1 0 1 1"/>
                         </DockPanel>
 
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="Деталь" Margin="25 0 0 0"/>
                         <DockPanel Grid.Row="0" Grid.Column="4">
-                            <Button DockPanel.Dock="Right" Width="20"
+                            <Button DockPanel.Dock="Right" Width="22" Margin="0 0 0 -1"
                                     Command="{Binding SearchInWindchillCommand}" 
                                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
                                 <Button.Style>
@@ -770,8 +777,8 @@
                                                                                         <BeginStoryboard>
                                                                                             <Storyboard RepeatBehavior="Forever">
                                                                                                 <DoubleAnimation
-                                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                                        From="0" To="360" Duration="0:0:1"/>
+                                                                                                    Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                                    From="0" To="360" Duration="0:0:1"/>
                                                                                             </Storyboard>
                                                                                         </BeginStoryboard>
                                                                                     </DataTrigger.EnterActions>
@@ -789,10 +796,10 @@
                                     </Style>
                                 </Button.Style>
                             </Button>
-                            <TextBox Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
+                            <TextBox Text="{Binding PartNameFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}" BorderThickness="1 1 0 0"/>
                         </DockPanel>
-                        <TextBlock Grid.Row="1" Grid.Column="3" Text="М/Л" Margin="25 0 0 0"/>
-                        <Grid Grid.Row="1" Grid.Column="4" >
+                        <TextBlock Grid.Row="2" Grid.Column="3" Text="М/Л" Margin="25 0 0 0"/>
+                        <Grid Grid.Row="2" Grid.Column="4" >
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="35"/>
@@ -805,18 +812,16 @@
                                 <RowDefinition/>
                                 <RowDefinition/>
                             </Grid.RowDefinitions>
-                            <TextBox Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="{Binding OrderFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" Style="{StaticResource ClearableTextBox}"/>
+                            <TextBox Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Text="{Binding OrderFilter, UpdateSourceTrigger=PropertyChanged, Delay=500}" 
+                                     Style="{StaticResource ClearableTextBox}" BorderThickness="1 0 1 1"/>
                             <TextBlock Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Text="Шт." Margin="0 0 5 0" HorizontalAlignment="Right" ToolTip="Количество деталей по М/Л"/>
                             <TextBox Grid.Column="2" Grid.Row="0" Grid.RowSpan="2" Text="{Binding TotalCountFilter, UpdateSourceTrigger=PropertyChanged, Delay=500, TargetNullValue={x:Static sys:String.Empty}}"
-                                     Style="{StaticResource ClearableTextBox}" ToolTip="Количество деталей по М/Л"/>
+                                     Style="{StaticResource ClearableTextBox}" ToolTip="Количество деталей по М/Л" BorderThickness="1 0 1 1"/>
                             <TextBlock Grid.Column="3" Grid.Row="0" Grid.RowSpan="2" Text="Уст." Margin="0 0 5 0" HorizontalAlignment="Right"/>
                             <TextBox Grid.Column="4" Grid.Row="0" Grid.RowSpan="2" Text="{Binding SetupFilter, UpdateSourceTrigger=PropertyChanged, Delay=300, TargetNullValue={x:Static sys:String.Empty}}"
-                                     Style="{StaticResource ClearableTextBox}"/>
-                            <controls:IncDecControl Grid.Row="0" Grid.Column="5" Grid.RowSpan="2" Value="{Binding SetupFilter, Delay=500, Mode=TwoWay}"/>
+                                     Style="{StaticResource ClearableTextBox}" BorderThickness="1 0 0 1"/>
+                            <controls:IncDecControl Grid.Row="0" Grid.Column="5" Grid.RowSpan="2" Value="{Binding SetupFilter, Delay=500, Mode=TwoWay}" Width="22" Margin="-2 -1 0 0"/>
                         </Grid>
-
-                        
-
                         
                         <ComboBox Grid.Column="5" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
                                   ItemsSource="{Binding MachineFilters}" Margin="25 0" Width="180"
@@ -831,7 +836,7 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
-                        <Button Grid.Column="5" Grid.Row="1" Margin="25 0" Command="{Binding DeleteFilterCommand}" 
+                        <Button Grid.Column="5" Grid.Row="2" Margin="25 0" Command="{Binding DeleteFilterCommand}" 
                                 Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Left">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal" Margin="0 2 0 0">
@@ -841,39 +846,57 @@
                             </Button.Content>
                         </Button>
 
-                        <TextBlock Grid.Row="0" Grid.Column="7" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
+                        <TextBlock Grid.Row="0" Grid.Column="7" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" Margin="0 0 5 0"/>
                         <StackPanel Grid.Row="0" Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Right">
-                            <DatePicker SelectedDate="{Binding FromDate}" />
-                            <controls:IncDecControl Value="{Binding FromDate, Mode=TwoWay}" Width="23" Margin="0 0 2 0"/>
+                            <DatePicker SelectedDate="{Binding FromDate}" Width="100" BorderThickness="1 1 0 0"/>
+                            <controls:IncDecControl Value="{Binding FromDate, Mode=TwoWay}" Width="23" Margin="0 0 4 -1"/>
                         </StackPanel>
 
-                        <TextBlock Grid.Row="1" Grid.Column="7" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right"/>
-                        <StackPanel Grid.Row="1" Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Right">
-                            <DatePicker SelectedDate="{Binding ToDate}" />
-                            <controls:IncDecControl Value="{Binding ToDate, Mode=TwoWay}" Width="23" Margin="0 0 2 0"/>
+                        <TextBlock Grid.Row="2" Grid.Column="7" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" Margin="0 0 5 0"/>
+                        <StackPanel Grid.Row="2" Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <DatePicker SelectedDate="{Binding ToDate}" Width="100" BorderThickness="1 0 0 1"/>
+                            <controls:IncDecControl Value="{Binding ToDate, Mode=TwoWay}" Width="23" Margin="0 -1 4 0"/>
                         </StackPanel>
 
                         <Button Grid.Row="0" Grid.Column="9" Content="+ сутки" 
-                                Margin="0"
-                                Command="{Binding IncreaseDateCommand}"/>
-                        <Button Grid.Row="1" Grid.Column="9" Content="- сутки" 
-                                Margin="0"
-                                Command="{Binding DecreaseDateCommand}"/>
+                                Margin="0" BorderThickness="1 1 0 0"
+                                Command="{Binding IncreaseDateCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="1 0 0 0"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                        <Button Grid.Row="2" Grid.Column="9" Content="- сутки" 
+                                Margin="0" BorderThickness="1 0 0 1"
+                                Command="{Binding DecreaseDateCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="0 0 0 1"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
                         <Button Grid.Row="0" Grid.Column="10" Content="Вчера" 
-                                Margin="0"
+                                Margin="0" BorderThickness="1 1 0 0"
                                 Command="{Binding SetYesterdayDateCommand}"/>
-                        <Button Grid.Row="1" Grid.Column="10" Content="Неделя" 
-                                Margin="0"
+                        <Button Grid.Row="2" Grid.Column="10" Content="Неделя" 
+                                Margin="0" BorderThickness="1 0 0 1"
                                 Command="{Binding SetWeekDateCommand}"/>
                         <Button Grid.Row="0" Grid.Column="11" Content="Месяц" 
-                                Margin="0"
+                                Margin="0" BorderThickness="1 1 0 0"
                                 Command="{Binding SetMonthDateCommand}"/>
-                        <Button Grid.Row="1" Grid.Column="11" Content="Год" 
-                                Margin="0"
+                        <Button Grid.Row="2" Grid.Column="11" Content="Год" 
+                                Margin="0" BorderThickness="1 0 0 1"
                                 Command="{Binding SetYearDateCommand}"/>
-                        <Button Grid.Row="0" Grid.Column="12" Grid.RowSpan="2" Content="*"
-                                Margin="0" 
-                                Command="{Binding SetAllDateCommand}"/>
+                        <Button Grid.Row="0" Grid.Column="12" Grid.RowSpan="3" Content="*"
+                                Margin="0 0 0 0" BorderThickness="1 1 1 1" Padding="0 2 0 0"
+                                Command="{Binding SetAllDateCommand}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="0 1 1 0"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
                     </Grid>
                 </GroupBox>
 

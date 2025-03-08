@@ -1374,16 +1374,17 @@ namespace remeLog.ViewModels
             if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) return;
             foreach (var part in Parts.Where(p => p.NeedUpdate))
             {
-                switch (await part.UpdatePartAsync())
+                var (res, mess) = await part.UpdatePartAsync();
+                switch (res)
                 {
                     case DbResult.Ok:
                         part.NeedUpdate = false;
                         break;
                     case DbResult.AuthError:
-                        MessageBox.Show("Ошибка авторизации");
+                        MessageBox.Show(mess);
                         break;
                     case DbResult.Error:
-                        MessageBox.Show("Ошибка");
+                        MessageBox.Show(mess);
                         break;
                 }
             }

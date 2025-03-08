@@ -48,6 +48,8 @@ namespace remeLog.ViewModels
             DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
             SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
             SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
+            SetMonthDateCommand = new LambdaCommand(OnSetMonthDateCommandExecuted, CanSetMonthDateCommandExecute);
+            SetYearDateCommand = new LambdaCommand(OnSetYearDateCommandExecuted, CanSetYearDateCommandExecute);
             _Machines = new();
             if (AppSettings.Instance.InstantUpdateOnMainWindow) { _ = LoadPartsAsync(true); }
             //var backgroundWorker = new Thread(BackgroundWorker) { IsBackground = true };
@@ -75,49 +77,12 @@ namespace remeLog.ViewModels
             set => Set(ref _Status, value);
         }
 
-        private double _Progress = 1;
-        /// <summary> Значение прогрессбара </summary>
-        public double Progress
-        {
-            get => _Progress;
-            set
-            {
-                Set(ref _Progress, value);
-                OnPropertyChanged(nameof(ProgressBarVisibility));
-            }
-        }
-
-        private double _ProgressMaxValue = 1;
-        /// <summary> Максимальное значение прогрессбара </summary>
-        public double ProgressMaxValue
-        {
-            get => _ProgressMaxValue;
-            set
-            {
-                Set(ref _ProgressMaxValue, value);
-                OnPropertyChanged(nameof(ProgressBarVisibility));
-            }
-        }
-
-
-
         private bool _InProgress;
         public bool InProgress
         {
             get => _InProgress;
             set => Set(ref _InProgress, value);
         }
-
-
-        public Visibility ProgressBarVisibility
-        {
-            get => _ProgressBarVisibility;
-            set => Set(ref _ProgressBarVisibility, value);
-        }
-
-        private Visibility _ProgressBarVisibility = Visibility.Hidden;
-
-
 
         private DateTime _FromDate = DateTime.Today.AddDays(-1);
         public DateTime FromDate
@@ -185,7 +150,7 @@ namespace remeLog.ViewModels
         {
             Application.Current.Shutdown();
         }
-        private static bool CanCloseApplicationCommandExecute(object p) => true;
+        private bool CanCloseApplicationCommandExecute(object p) => !InProgress;
         #endregion
 
         #region EditSettings
@@ -210,7 +175,7 @@ namespace remeLog.ViewModels
                 }
             }
         }
-        private static bool CanEditSettingsCommandExecute(object p) => true;
+        private bool CanEditSettingsCommandExecute(object p) => !InProgress;
         #endregion
 
         #region EditOperators
@@ -223,7 +188,7 @@ namespace remeLog.ViewModels
                 editOperatorsWindow.ShowDialog();
             }
         }
-        private static bool CanEditOperatorsCommandExecute(object p) => true;
+        private bool CanEditOperatorsCommandExecute(object p) => !InProgress;
         #endregion
 
         #region LoadPartsInfo
@@ -247,20 +212,27 @@ namespace remeLog.ViewModels
             }
             await LoadPartsAsync(true);
         }
-        private static bool CanLoadPartsInfoCommandExecute(object p) => true;
+        private bool CanLoadPartsInfoCommandExecute(object p) => true;
         #endregion
 
         #region ShowLongSetups
         public ICommand ShowLongSetupsCommand { get; }
         private void OnShowLongSetupsCommandExecuted(object p)
         {
+            var longSetupParts = Parts.SelectMany(cp => cp.Parts.Where(p => p.SetupTimeFactIncludePartial >= AppSettings.LongSetupLimit)).OrderBy(p => p.StartSetupTime);
+            if (!longSetupParts.Any())
+            {
+                MessageBox.Show("За выбранный период нет длительных наладок", "Неа", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
             using (Overlay = new())
             {
-                LongSetupsWindow longSetupsWindow = new(Parts.SelectMany(cp => cp.Parts.Where(p => p.SetupTimeFactIncludePartial >= AppSettings.LongSetupLimit)).OrderBy(p => p.StartSetupTime).ToObservableCollection()) { Owner = App.Current.MainWindow};
+                
+                LongSetupsWindow longSetupsWindow = new(longSetupParts.ToObservableCollection()) { Owner = App.Current.MainWindow};
                 longSetupsWindow.Show();
             }
         }
-        private static bool CanShowLongSetupsCommandExecute(object p) => true;
+        private bool CanShowLongSetupsCommandExecute(object p) => !InProgress;
         #endregion
 
         #region ShowMonitor
@@ -273,7 +245,7 @@ namespace remeLog.ViewModels
                 fanucMonitor.ShowDialog();
             }
         }
-        private static bool CanShowMonitorCommandExecute(object p) => true;
+        private bool CanShowMonitorCommandExecute(object p) => !InProgress;
         #endregion
 
         #region ShowAbout
@@ -285,7 +257,7 @@ namespace remeLog.ViewModels
                 MessageBox.Show($"Тут могла быть ваша реклама.\n\n\t{App.CreateUniqueEventName()}", "О программе", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
-        private static bool CanShowAboutCommandExecute(object p) => true;
+        private bool CanShowAboutCommandExecute(object p) => !InProgress;
         #endregion
 
         #region ShowPartsInfo
@@ -304,7 +276,7 @@ namespace remeLog.ViewModels
             }
         }
 
-        private static bool CanShowPartsInfoCommandExecute(object p) => true;
+        private bool CanShowPartsInfoCommandExecute(object p) => true;
         #endregion
 
         #region IncreaseDateCommand
@@ -352,11 +324,42 @@ namespace remeLog.ViewModels
         private bool CanSetWeekDateCommandExecute(object p) => true;
         #endregion
 
+        #region SetMonthDateCommand
+        public ICommand SetMonthDateCommand { get; }
+        private void OnSetMonthDateCommandExecuted(object p)
+        {
+            LockUpdate();
+            if (FromDate == ToDate.AddDays(-30))
+            {
+                FromDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                ToDate = DateTime.Today.AddDays(-1);
+            }
+            else
+            {
+                FromDate = ToDate.AddDays(-30);
+            }
+            UnlockUpdate();
+        }
+        private bool CanSetMonthDateCommandExecute(object p) => true;
+        #endregion
+
+        #region SetYearDateCommand
+        public ICommand SetYearDateCommand { get; }
+        private void OnSetYearDateCommandExecuted(object p)
+        {
+            LockUpdate();
+            FromDate = new DateTime(2024, 01, 01);
+            ToDate = DateTime.Today;
+            UnlockUpdate();
+        }
+        private bool CanSetYearDateCommandExecute(object p) => true;
+        #endregion
+
         #endregion
 
         private async Task LoadPartsAsync(bool first = false)
         {
-            //InProgress = true;
+            InProgress = true;
 
             try
             {
@@ -370,7 +373,6 @@ namespace remeLog.ViewModels
                 _cancellationTokenSource = new();
                 var cancellationToken = _cancellationTokenSource.Token;
                 await semaphoreSlim.WaitAsync(cancellationToken);
-                ProgressBarVisibility = Visibility.Visible;
                 Database.UpdateAppSettings();
                 Status = "Получение списка станков...";
                 if (!first)
@@ -508,7 +510,6 @@ namespace remeLog.ViewModels
             finally
             {
                 Status = "";
-                ProgressBarVisibility = Visibility.Collapsed;
                 semaphoreSlim.Release();
                 InProgress = false;
             }

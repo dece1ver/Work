@@ -306,7 +306,7 @@ namespace remeLog.Infrastructure
             return parts;
         }
 
-        public async static Task<ObservableCollection<Part>> ReadPartsByShiftDate(DateTime fromDate, DateTime toDate, string machine, CancellationToken cancellationToken)
+        public async static Task<ObservableCollection<Part>> ReadPartsByShiftDate(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken)
         {
             ObservableCollection<Part> parts = new();
             using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
@@ -324,6 +324,47 @@ namespace remeLog.Infrastructure
             }
             return parts;
         }
+        /// <summary>
+        /// Асинхронно извлекает данные о деталях, разделяя запросы на подсписки по 2000 элементов.
+        /// </summary>
+        /// <param name="guids">Список GUID'ов для фильтрации данных по таблице Parts.</param>
+        /// <param name="cancellationToken">Токен отмены для прерывания операции.</param>
+        /// <returns>Коллекция объектов <see cref="Part"/>, полученных из базы данных.</returns>
+        public async static Task<ObservableCollection<Part>> ReadPartsByGuids(IEnumerable<Guid> guids, CancellationToken cancellationToken)
+        {
+            ObservableCollection<Part> parts = new();
+
+            if (guids == null || !guids.Any())
+                return parts;
+
+            const int chunkSize = 2000;
+
+            var chunks = guids
+                .Select((guid, index) => new { guid, index })
+                .GroupBy(x => x.index / chunkSize)
+                .Select(g => g.Select(x => x.guid).ToList());
+
+            using var connection = new SqlConnection(AppSettings.Instance.ConnectionString);
+            await connection.OpenAsync(cancellationToken);
+
+            foreach (var chunk in chunks)
+            {
+                var parameters = chunk.Select((_, index) => $"@p{index}").ToArray();
+                var query = $"SELECT * FROM Parts WHERE Guid IN ({string.Join(", ", parameters)}) ORDER BY StartSetupTime ASC;";
+
+                using var command = new SqlCommand(query, connection);
+
+                for (int i = 0; i < chunk.Count; i++)
+                {
+                    command.Parameters.AddWithValue(parameters[i], chunk[i]);
+                }
+
+                await parts.FillPartsAsync(command, cancellationToken);
+            }
+
+            return parts;
+        }
+
 
         public async static Task<ObservableCollection<Part>> ReadPartsByPartNameAndOrder(string[] partNames, string[] orders, CancellationToken cancellationToken)
         {
@@ -342,7 +383,7 @@ namespace remeLog.Infrastructure
         }
 
 
-        public async static Task<DbResult> UpdatePartAsync(this Part part)
+        public async static Task<(DbResult dbResult, string message)> UpdatePartAsync(this Part part)
         {
             try
             {
@@ -386,9 +427,9 @@ namespace remeLog.Infrastructure
                         "FixedSetupTimePlan = @FixedSetupTimePlan, " +
                         "FixedProductionTimePlan = @FixedProductionTimePlan, " +
                         "EngineerComment = @EngineerComment, " +
-                        "ExcludeFromReports = @ExcludeFromReports " +
-                        "LongSetupReasonComment = @LongSetupReasonComment " +
-                        "LongSetupFixComment = @LongSetupFixComment " +
+                        "ExcludeFromReports = @ExcludeFromReports, " +
+                        "LongSetupReasonComment = @LongSetupReasonComment, " +
+                        "LongSetupFixComment = @LongSetupFixComment, " +
                         "LongSetupEngeneerComment = @LongSetupEngeneerComment " +
                         "WHERE Guid = @Guid";
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
@@ -438,7 +479,7 @@ namespace remeLog.Infrastructure
                         var execureResult = await cmd.ExecuteNonQueryAsync();
                     }
                     await connection.CloseAsync();
-                    return DbResult.Ok;
+                    return (DbResult.Ok, "ОК");
                 }
             }
             catch (SqlException sqlEx)
@@ -446,17 +487,19 @@ namespace remeLog.Infrastructure
                 switch (sqlEx.Number)
                 {
                     case 18456:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.");
-                        return DbResult.AuthError;
+                        var authMessage = $"Ошибка №{sqlEx.Number}:\nОшибка авторизации.";
+                        Util.WriteLog(sqlEx, authMessage);
+                        return (DbResult.AuthError, authMessage);
                     default:
-                        Util.WriteLog(sqlEx, $"Ошибка №{sqlEx.Number}:");
-                        return DbResult.Error;
+                        var sqlExMessage = $"Ошибка №{sqlEx.Number}:";
+                        Util.WriteLog(sqlEx, sqlExMessage);
+                        return (DbResult.Error, sqlExMessage);
                 }
             }
             catch (Exception ex)
             {
                 Util.WriteLog(ex);
-                return DbResult.Error;
+                return (DbResult.Error, ex.Message);
             }
         }
 

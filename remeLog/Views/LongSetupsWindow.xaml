@@ -15,9 +15,12 @@
                 <TextBlock d:Text="Статус"/>
             </StatusBarItem>
         </StatusBar>
-        <ProgressBar DockPanel.Dock="Bottom"/>
-        <DockPanel DockPanel.Dock="Bottom">
-            <Button Content="Записать" Width="100" HorizontalAlignment="Right" Margin="2"/>
+        <ProgressBar DockPanel.Dock="Bottom" IsIndeterminate="{Binding InProgress}"/>
+        <DockPanel DockPanel.Dock="Bottom" Height="40">
+            <Button Content="Вернуть взад" Width="100" HorizontalAlignment="Right" Margin="2"
+                    Command="{Binding UpdatePartsCommand}"/>
+            <Button Content="Записать" Width="100" HorizontalAlignment="Right" Margin="2"
+                    Command="{Binding SavePartsCommand}"/>
         </DockPanel>
         <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
           VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
@@ -74,56 +77,54 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
-                    <DataGridTextColumn.EditingElementStyle>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                    </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
+
                 <DataGridTextColumn IsReadOnly="True" Header="Смена" Binding="{Binding Shift}" Width="44">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
-                    <DataGridTextColumn.EditingElementStyle>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                    </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn IsReadOnly="True" Header="Станок" Binding="{Binding Machine}" Width="200">
+
+                <DataGridTextColumn IsReadOnly="True" Header="Станок" Binding="{Binding Machine}" Width="110">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
-                    <DataGridTextColumn.EditingElementStyle>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                    </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn IsReadOnly="True" Header="Оператор" Binding="{Binding Operator}" Width="200">
+
+                <DataGridTextColumn IsReadOnly="True" Header="Оператор" Binding="{Binding Operator}" Width="150">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
-                    <DataGridTextColumn.EditingElementStyle>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                    </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
+
+
                 <DataGridTextColumn IsReadOnly="True" Header="Деталь" Binding="{Binding PartName}" Width="*">
-                    
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                    </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+                
+                <DataGridTextColumn IsReadOnly="True" Header="Комментарий оператора" Binding="{Binding OperatorComment}" Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
                 <DataGridTextColumn IsReadOnly="True" Header="Норматив" Binding="{Binding SetupTimePlan}" Width="70">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
-                    <DataGridTextColumn.EditingElementStyle>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                    </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
+
                 <DataGridTextColumn IsReadOnly="True" Header="Факт" Binding="{Binding SetupTimeFactIncludePartial}" Width="70">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
-                    <DataGridTextColumn.EditingElementStyle>
-                        <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-                    </DataGridTextColumn.EditingElementStyle>
                 </DataGridTextColumn>
+                
                 <DataGridTextColumn Header="Причина" Binding="{Binding LongSetupReasonComment}" Width="250">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
                     <DataGridTextColumn.EditingElementStyle>
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
@@ -131,7 +132,7 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Кооректирующие мероприятия" Binding="{Binding LongSetupFixComment}" Width="250">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
                     <DataGridTextColumn.EditingElementStyle>
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
@@ -139,7 +140,7 @@
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Комментарий СГТ" Binding="{Binding LongSetupEngeneerComment}" Width="250">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableLargeTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>
                     <DataGridTextColumn.EditingElementStyle>
                         <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
