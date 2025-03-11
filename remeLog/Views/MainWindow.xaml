@@ -7,7 +7,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="Отчеты электронного журнала" Height="715" Width="1080" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closing="Window_Closing">
+        Title="Отчеты электронного журнала" Height="708" Width="1080" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closing="Window_Closing">
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>

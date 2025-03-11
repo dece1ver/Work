@@ -662,7 +662,7 @@ namespace remeLog.Infrastructure
             }
             ConfigureWorksheetHeader(ws, cm);
             var row = 3;
-            // .Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount && !p.ExcludeFromReports)
+            
             foreach (var partGroup in parts
                 .Where(p => !p.ExcludeFromReports)
                 .GroupBy(p => new { p.Operator, p.Machine })
