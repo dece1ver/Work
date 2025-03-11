@@ -359,7 +359,8 @@ namespace remeLog.ViewModels
 
         private async Task LoadPartsAsync(bool first = false)
         {
-            InProgress = true;
+            //await Task.Delay(500);
+            
 
             try
             {
@@ -369,10 +370,12 @@ namespace remeLog.ViewModels
                     return;
                 }
                 if (lockUpdate) return;
+                
                 _cancellationTokenSource.Cancel();
                 _cancellationTokenSource = new();
                 var cancellationToken = _cancellationTokenSource.Token;
                 await semaphoreSlim.WaitAsync(cancellationToken);
+                InProgress = true;
                 Database.UpdateAppSettings();
                 Status = "Получение списка станков...";
                 if (!first)

@@ -122,11 +122,11 @@ namespace remeLog.Infrastructure
             
             string query = "IF EXISTS (SELECT 1 FROM cnc_operators WHERE Id = @Id) " +
                            "BEGIN " +
-                           "    UPDATE cnc_operators SET Name = @Name, Qualification = @Qualification, IsActive = @IsActive WHERE Id = @Id; " +
+                           "    UPDATE cnc_operators SET FirstName = @FirstName, LastName = @LastName, Patronymic = @Patronymic, Qualification = @Qualification, IsActive = @IsActive WHERE Id = @Id; " +
                            "END " +
                            "ELSE " +
                            "BEGIN " +
-                           "    INSERT INTO cnc_operators (Name, Qualification, IsActive) VALUES (@Name, @Qualification, @IsActive); " +
+                           "    INSERT INTO cnc_operators (FirstName, LastName, Patronymic, Qualification, IsActive) VALUES (@FirstName, @LastName, @Patronymic, @Qualification, @IsActive); " +
                            "END;";
             progress.Report("Подключение к БД...");
             using (var connection = new SqlConnection(AppSettings.Instance.ConnectionString))

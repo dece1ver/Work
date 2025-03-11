@@ -16,9 +16,10 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <DataGrid Grid.Row="0" Name="EmployeesDataGrid" AutoGenerateColumns="False" ItemsSource="{Binding Operators}" 
+        <DataGrid Grid.Row="0" Name="EmployeesDataGrid" AutoGenerateColumns="False" ItemsSource="{Binding Operators}" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" 
                   AlternatingRowBackground="#01D3D3D3" VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
                   CanUserAddRows="True" CanUserDeleteRows="True" PreviewKeyDown="EmployeesDataGrid_PreviewKeyDown">
             <DataGrid.Resources>
@@ -107,9 +108,12 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Button Grid.Row="1" Content="Записать" Width="100" Height="30" Margin="10" HorizontalAlignment="Right" IsEnabled="{Binding IsSaveEnabled}" Command="{Binding SaveOperatorsCommand}"/>
+        <Button Grid.Row="1" Content="Записать" Width="100" Height="30" Margin="10" HorizontalAlignment="Right" 
+                IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                Command="{Binding SaveOperatorsCommand}"/>
 
-        <StatusBar Grid.Row="2">
+        <ProgressBar Grid.Row="2" IsIndeterminate="{Binding InProgress}"/>
+        <StatusBar Grid.Row="3">
             <StatusBarItem>
                 <TextBlock Text="{Binding Status}"/>
             </StatusBarItem>

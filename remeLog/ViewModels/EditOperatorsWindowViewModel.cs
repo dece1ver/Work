@@ -54,15 +54,27 @@ namespace remeLog.ViewModels
             set => Set(ref _IsSaveEnabled, value);
         }
 
+        private bool _InProgress;
+        public bool InProgress
+        {
+            get => _InProgress;
+            set => Set(ref _InProgress, value);
+        }
+
         #region SaveOperators
         public ICommand SaveOperatorsCommand { get; }
         private async void OnSaveOperatorsCommandExecuted(object p)
         {
+            InProgress = true;
             await Database.SaveOperatorsAsync(Operators, new Progress<string>(p => Status = p));
             LoadOperatorsAsync();
+            InProgress = false;
+            Status = "Обновление завершено";
+            await Task.Delay(3000);
+            Status = "";
         }
 
-        private static bool CanSaveOperatorsCommandExecute(object p) => true;
+        private bool CanSaveOperatorsCommandExecute(object p) => !InProgress;
         #endregion
 
         private async void LoadOperatorsAsync()

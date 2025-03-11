@@ -97,6 +97,11 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
+                <DataGridTextColumn IsReadOnly="True" Header="Уст" Binding="{Binding Setup}" Width="28">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
                 <DataGridTextColumn IsReadOnly="True" Header="Деталь" Binding="{Binding PartName}" Width="*">
                     <DataGridTextColumn.ElementStyle>
