@@ -622,7 +622,7 @@ namespace remeLog.ViewModels
             }
             catch (OperationCanceledException)
             {
-                // Нормальное завершение работы
+                
             }
             catch (Exception ex)
             {
