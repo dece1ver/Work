@@ -518,7 +518,7 @@ namespace remeLog.Infrastructure
                     var partName = await reader.GetFieldValueAsync<string>(5, cancellationToken);
                     var order = await reader.GetFieldValueAsync<string>(6, cancellationToken);
                     var setup = await reader.GetFieldValueAsync<int>(7, cancellationToken);
-                    var finishedCount = await reader.GetFieldValueAsync<int>(8, cancellationToken);
+                    var finishedCount = await reader.GetFieldValueAsync<double>(8, cancellationToken);
                     var totalCount = await reader.GetFieldValueAsync<int>(9, cancellationToken);
                     var startSetupTime = await reader.GetFieldValueAsync<DateTime>(10, cancellationToken);
                     var startMachiningTime = await reader.GetFieldValueAsync<DateTime>(11, cancellationToken);

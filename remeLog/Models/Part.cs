@@ -20,7 +20,7 @@ namespace remeLog.Models
             string partName,
             string order,
             int setup,
-            int finishedCount,
+            double finishedCount,
             int totalCount,
             DateTime startSetupTime,
             DateTime startMachiningTime,
@@ -265,9 +265,9 @@ namespace remeLog.Models
             }
         }
 
-        private int _FinishedCount;
+        private double _FinishedCount;
         /// <summary> Изготовлено </summary>
-        public int FinishedCount
+        public double FinishedCount
         {
             get => _FinishedCount;
             set {
@@ -280,7 +280,7 @@ namespace remeLog.Models
         }
 
         /// <summary> Изготовлено по факту с учетом наладок </summary>
-        public int FinishedCountFact
+        public double FinishedCountFact
         {
             get
             {

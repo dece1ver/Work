@@ -126,8 +126,8 @@ namespace remeLog.Models
 
         public bool IsSingleShift => FromDate == ToDate;
         public int Orders => Parts.GroupBy(p => p.Order).Count();
-        public int AllFinishedCount => Parts.Sum(p => p.FinishedCount);
-        public int FinishedCount => Parts.Where(p => p.Setup == 1).Sum(p => p.FinishedCount);
+        public double AllFinishedCount => Parts.Sum(p => p.FinishedCount);
+        public double FinishedCount => Parts.Where(p => p.Setup == 1).Sum(p => p.FinishedCount);
         public double AverageSetupRatio => Parts.AverageSetupRatio();
         public double AverageProductionRatio => Parts.AverageProductionRatio();
         public double SetupTimeRatio => Parts.SetupRatio();

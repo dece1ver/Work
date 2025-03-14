@@ -8,7 +8,7 @@ namespace remeLog.Models
 {
     public class VerevkinPart
     {
-        public VerevkinPart(string partName, string order, int finishedCount)
+        public VerevkinPart(string partName, string order, double finishedCount)
         {
             PartName = partName;
             Order = order;
@@ -17,7 +17,7 @@ namespace remeLog.Models
 
         public string PartName { get; set; }
         public string Order { get; set; }
-        public int FinishedCount { get; set; }
+        public double FinishedCount { get; set; }
         public TimeSpan MachineTime1 { get; set; } = TimeSpan.Zero;
         public TimeSpan MachineTime2 { get; set; } = TimeSpan.Zero;
         public TimeSpan MachineTime3 { get; set; } = TimeSpan.Zero;

@@ -235,8 +235,8 @@ namespace remeLog.ViewModels
         public List<Part> NightParts => Parts.Where(p => p.Shift == "Ночь").ToList();
         public int DayOrders => Parts.Where(p => p.Shift == new Shift(ShiftType.Day).Name).GroupBy(p => p.Order).Count();
         public int NightOrders => Parts.Where(p => p.Shift == new Shift(ShiftType.Night).Name).GroupBy(p => p.Order).Count();
-        public int DayFinishedCount => Parts.Where(p => p.Shift == new Shift(ShiftType.Day).Name).Sum(p => p.FinishedCount);
-        public int NightFinishedCount => Parts.Where(p => p.Shift == new Shift(ShiftType.Night).Name).Sum(p => p.FinishedCount);
+        public double DayFinishedCount => Parts.Where(p => p.Shift == new Shift(ShiftType.Day).Name).Sum(p => p.FinishedCount);
+        public double NightFinishedCount => Parts.Where(p => p.Shift == new Shift(ShiftType.Night).Name).Sum(p => p.FinishedCount);
         public int DaySetups => Parts.Count(p => p.StartSetupTime != p.StartMachiningTime && p.Shift == new Shift(ShiftType.Day).Name);
         public int NightSetups => Parts.Count(p => p.StartSetupTime != p.StartMachiningTime && p.Shift == new Shift(ShiftType.Night).Name);
         public string DayOperator => DayParts.Count > 0 ? DayParts.First().Operator : "Нет оператора.";

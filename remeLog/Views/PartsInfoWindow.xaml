@@ -146,7 +146,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="FinishedCountColumn" Header="Выполнено" Binding="{Binding FinishedCount, Converter={StaticResource ExpressionToIntConverter}}" Width="30">
+        <DataGridTextColumn x:Key="FinishedCountColumn" Header="Выполнено" Binding="{Binding FinishedCount, Converter={StaticResource ExpressionToDoubleConverter}}" Width="30">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
