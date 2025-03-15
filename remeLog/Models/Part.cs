@@ -362,6 +362,7 @@ namespace remeLog.Models
         public double SetupTimeFact => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes - SetupDowntimes - PartialSetupTime;
         public double SetupTimeFactIncludePartial => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes - SetupDowntimes;
         public double SetupTimeFactIncludePartialAndDowntimes => (StartMachiningTime - StartSetupTime - DateTimes.GetBreaksBetween(StartSetupTime, StartMachiningTime)).TotalMinutes;
+        public double SetupTimeFactFull => (StartMachiningTime - StartSetupTime).TotalMinutes;
         public double ProductionTimeFact => (EndMachiningTime - StartMachiningTime - DateTimes.GetBreaksBetween(StartMachiningTime, EndMachiningTime)).TotalMinutes - MachiningDowntimes;
 
         private DateTime _EndMachiningTime;

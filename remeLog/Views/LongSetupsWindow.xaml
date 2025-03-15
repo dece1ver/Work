@@ -121,7 +121,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn IsReadOnly="True" Header="Факт" Binding="{Binding SetupTimeFactIncludePartial}" Width="70">
+                <DataGridTextColumn IsReadOnly="True" Header="Факт" Binding="{Binding SetupTimeFactIncludePartialAndDowntimes}" Width="70">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
                     </DataGridTextColumn.ElementStyle>

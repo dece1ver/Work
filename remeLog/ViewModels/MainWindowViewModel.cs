@@ -222,7 +222,7 @@ namespace remeLog.ViewModels
         public ICommand ShowLongSetupsCommand { get; }
         private void OnShowLongSetupsCommandExecuted(object p)
         {
-            var longSetupParts = Parts.SelectMany(cp => cp.Parts.Where(p => p.SetupTimeFactIncludePartial >= AppSettings.LongSetupLimit)).OrderBy(p => p.StartSetupTime);
+            var longSetupParts = Parts.SelectMany(cp => cp.Parts.Where(p => p.SetupTimeFactIncludePartialAndDowntimes > AppSettings.LongSetupLimit)).OrderBy(p => p.StartSetupTime);
             if (!longSetupParts.Any())
             {
                 MessageBox.Show("За выбранный период нет длительных наладок", "Неа", MessageBoxButton.OK, MessageBoxImage.Information);

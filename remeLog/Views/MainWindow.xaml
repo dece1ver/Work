@@ -44,7 +44,7 @@
     </Window.Resources>
     <Grid>
         <DockPanel LastChildFill="True" Grid.Column="0">
-            <Menu DockPanel.Dock="Top" Background="Transparent">
+            <Menu DockPanel.Dock="Top" Background="Transparent" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
                 <MenuItem Header="Параметры">
                     <MenuItem Header="Параметры"
                               Command="{Binding EditSettingsCommand}" Icon="{StaticResource SettingsIcon}"/>
