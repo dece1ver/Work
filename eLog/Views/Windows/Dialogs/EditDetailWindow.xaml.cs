@@ -432,7 +432,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 _FinishedCount = value;
-                Part.FinishedCount = _FinishedCount.GetInt(numberOption: GetNumberOption.OnlyPositive);
+                Part.FinishedCount = _FinishedCount.GetDouble(numberOption: GetNumberOption.OnlyPositive);
                 OnPropertyChanged(nameof(EndMachiningTime));
                 OnPropertyChanged(nameof(MachineTime));
                 OnPropertyChanged(nameof(CanBeClosed));
@@ -792,14 +792,17 @@ namespace eLog.Views.Windows.Dialogs
                 PartSetupTimePlan = prevSetupTimePlan == "0" ? "-" : prevSetupTimePlan;
                 var singleProductionTimePlan = prev.SingleProductionTimePlan.ToString().Replace(",", ".");
                 SingleProductionTimePlan = singleProductionTimePlan == "0" ? "-" : singleProductionTimePlan;
+                if (prev != null) MachineTime = prev.MachineTime.ToString(Constants.TimeSpanFormat);
             }
             catch
             {
                 PartSetupTimePlan = "";
                 SingleProductionTimePlan = "";
+                MachineTime = "";
             }
             OnPropertyChanged(nameof(PartSetupTimePlan));
             OnPropertyChanged(nameof(SingleProductionTimePlan));
+            OnPropertyChanged(nameof(MachineTime));
             OnPropertyChanged(nameof(CanIncreaseSetup));
             OnPropertyChanged(nameof(CanDecreaseSetup));
         }
@@ -817,16 +820,19 @@ namespace eLog.Views.Windows.Dialogs
                 PartSetupTimePlan = prevSetupTimePlan == "0" ? "-" : prevSetupTimePlan;
                 var singleProductionTimePlan = prev.SingleProductionTimePlan.ToString().Replace(",", ".");
                 SingleProductionTimePlan = singleProductionTimePlan == "0" ? "-" : singleProductionTimePlan;
+                if (prev != null) MachineTime = prev.MachineTime.ToString(Constants.TimeSpanFormat);
             }
             catch
             {
                 PartSetupTimePlan = "";
                 SingleProductionTimePlan = "";
+                MachineTime = "";
             }
 
 
             OnPropertyChanged(nameof(PartSetupTimePlan));
             OnPropertyChanged(nameof(SingleProductionTimePlan));
+            OnPropertyChanged(nameof(MachineTime));
             OnPropertyChanged(nameof(CanIncreaseSetup));
             OnPropertyChanged(nameof(CanDecreaseSetup));
         }

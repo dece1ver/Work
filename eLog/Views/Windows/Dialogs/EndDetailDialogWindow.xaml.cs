@@ -21,7 +21,7 @@ namespace eLog.Views.Windows.Dialogs
     public partial class EndDetailDialogWindow : Window, INotifyPropertyChanged, IDataErrorInfo
     {
         private TimeSpan _MachineTime = TimeSpan.Zero;
-        private int _PartsFinished;
+        private double _PartsFinished;
         private string _MachineTimeText = string.Empty;
         private string _FinishedCount = string.Empty;
         private Visibility _KeyboardVisibility;
@@ -64,7 +64,7 @@ namespace eLog.Views.Windows.Dialogs
             {
                 Set(ref _FinishedCount, value);
                 OnPropertyChanged(nameof(Valid));
-                Part.FinishedCount = _FinishedCount.GetInt();
+                Part.FinishedCount = _FinishedCount.GetDouble();
                 Status = Part.FinishedCount switch
                 {
                     0 when string.IsNullOrWhiteSpace(FinishedCount) => string.Empty,
@@ -85,7 +85,7 @@ namespace eLog.Views.Windows.Dialogs
         {
             get
             {
-                var result = int.TryParse(FinishedCount, out _PartsFinished) && _PartsFinished > 0 &&
+                var result = double.TryParse(FinishedCount, out _PartsFinished) && _PartsFinished > 0 &&
                              MachineTimeText.TimeParse(out _MachineTime) && _MachineTime.TotalSeconds > 0
                              || _PartsFinished == 0 && !string.IsNullOrWhiteSpace(_FinishedCount) &&
                              FinishedCount.Replace("0", "").Length == 0;

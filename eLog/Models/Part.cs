@@ -26,7 +26,7 @@ namespace eLog.Models
         private byte _Setup;
         private int _TotalCount;
         private string _Shift;
-        private int _FinishedCount;
+        private double _FinishedCount;
         private double _SetupTimePlan;
         private double _SingleProductionTimePlan;
         private Operator _Operator;
@@ -169,7 +169,7 @@ namespace eLog.Models
         }
 
         /// <summary> Количество выпущено</summary>
-        public int FinishedCount
+        public double FinishedCount
         {
             get => _FinishedCount;
             set
