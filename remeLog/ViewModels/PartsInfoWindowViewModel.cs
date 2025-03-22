@@ -83,6 +83,7 @@ namespace remeLog.ViewModels
             SetHorMillMachinesCommand = new LambdaCommand(OnSetHorMillMachinesCommandExecuted, CanSetHorMillMachinesCommandExecute);
             SetVerMillMachinesCommand = new LambdaCommand(OnSetVerMillMachinesCommandExecuted, CanSetVerMillMachinesCommandExecute);
             DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
+            NormsAndWorkloadAnalysisCommand = new LambdaCommand(OnNormsAndWorkloadAnalysisCommandExecuted, CanNormsAndWorkloadAnalysisCommandExecute);
 
             CalcFixed = Part.CalcFixed;
             PartsInfo = parts;
@@ -1070,6 +1071,43 @@ namespace remeLog.ViewModels
         private static bool CanCheckAssignmentWithFactCommandExecute(object p) => true;
         #endregion
 
+        #region NormsAndWorkloadAnalysis
+        public ICommand NormsAndWorkloadAnalysisCommand { get; }
+        private async void OnNormsAndWorkloadAnalysisCommandExecuted(object p)
+        {
+            try
+            {
+                var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                IProgress<string> progress = new Progress<string>(m => Status = m);
+                InProgress = true;
+                progress.Report("Подключение к Google таблице");
+                var dates = new List<DateTime> {
+                    new(2024, 12, 1),
+                    new(2025, 1, 1),
+                    new(2025, 2, 1)
+                };
+                Status = await Task.Run(() => Xl.ExportNormsAndWorkloadAnalysis(Parts, dates, path, progress));
+
+
+            }
+            catch (Google.GoogleApiException ex)
+            {
+                MessageBox.Show(GoogleSheet.ExceptionMessage(ex), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanNormsAndWorkloadAnalysisCommandExecute(object p) => true;
+        #endregion
+        
         /// <summary>
         /// todo
         /// </summary>

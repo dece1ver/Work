@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClosedXML.Excel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -496,7 +497,6 @@ namespace remeLog.Infrastructure
         /// Описание
         /// </summary>
         public const string Description = "description";
-
 
         private static readonly Dictionary<string, string> _descriptions = new()
         {

@@ -21,11 +21,15 @@ using System.Windows;
 using Part = remeLog.Models.Part;
 using CM = remeLog.Infrastructure.ColumnManager;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace remeLog.Infrastructure
 {
     public static class Xl
     {
+        static XLColor _lightRed = XLColor.FromHtml("#DA9694");
+        static XLColor _lightGreen = XLColor.FromHtml("#96DA94");
+
         const double Coefficient1 = 1.2;
         const double Coefficient2 = 1.4;
 
@@ -1024,7 +1028,162 @@ namespace remeLog.Infrastructure
             return path;
         }
 
-        
+        public static string ExportNormsAndWorkloadAnalysis(ICollection<Part> parts, List<DateTime> dates, string path, IProgress<string> progress)
+        {
+            var wb = new XLWorkbook();
+            var wsNorms = wb.AddWorksheet("Нормативы");
+            wsNorms.Style.Alignment.WrapText = true;
+            progress.Report("Формирование листа \"Нормативы\"");
+
+            var builder = new CM.Builder().Add(CM.Part);
+
+            var setupColumns = new List<string>();
+            var workloadColumns = new List<string>();
+
+            foreach (var date in dates)
+            {
+                string setupColumn = $"Наладка{Environment.NewLine}на {date.ToString(Constants.ShortDateFormat)}";
+                string workloadColumn = $"Изготовление{Environment.NewLine}на {date.ToString(Constants.ShortDateFormat)}";
+
+                builder.Add(setupColumn, setupColumn)
+                       .Add(workloadColumn, workloadColumn);
+
+                setupColumns.Add(setupColumn);
+                workloadColumns.Add(workloadColumn);
+            }
+
+            var cm = builder.Build();
+
+            ConfigureWorksheetHeader(wsNorms, cm, HeaderRotateOption.Horizontal, 65, 10);
+            int row = 3;
+            var ci = cm.GetIndexes();
+
+            var partsDict = parts
+                .Select(p => new {
+                    Part = p,
+                    NormalizedName = NormalizePartName(p.PartName)
+                })
+                .GroupBy(x => x.NormalizedName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(x => x.Part).ToList()
+                );
+
+            var totalUnique = partsDict
+                .Where(kvp => kvp.Value
+                    .Where(p => p.TotalCount >= 50)
+                    .Select(p => p.Order)
+                    .Distinct()
+                    .Take(3)
+                    .Count() == 3)
+                .Select(kvp => kvp.Value.First())
+                .ToList();
+
+            foreach (var part in totalUnique)
+            {
+                var normalizedName = NormalizePartName(part.PartName);
+                var partsForName = partsDict[normalizedName];
+                var machineGroups = partsForName.GroupBy(p => p.Machine).ToDictionary(g => g.Key, g => g.ToList());
+
+                wsNorms.Cell(row, ci[CM.Part]).Value = part.PartName;
+
+                for (int i = 0; i < dates.Count; i++)
+                {
+                    var date = dates[i];
+                    var setupColumn = setupColumns[i];
+                    var workloadColumn = workloadColumns[i];
+
+                    double setupSum = 0;
+                    double workloadSum = 0;
+
+                    foreach (var machineGroup in machineGroups)
+                    {
+                        var machine = machineGroup.Key;
+                        var machineParts = machineGroup.Value;
+
+                        var dateParts = machineParts.Where(p => p.EndMachiningTime <= date).ToList();
+
+                        double setup = 0;
+                        if (dateParts.Any())
+                        {
+                            var lastNonZero = dateParts.LastOrDefault(p => p.SetupTimePlan != 0);
+                            setup = lastNonZero != null ? lastNonZero.SetupTimePlan : dateParts.Last().SetupTimePlan;
+                        }
+
+                        double workload = 0;
+                        if (dateParts.Any())
+                        {
+                            var lastNonZero = dateParts.LastOrDefault(p => p.SingleProductionTimePlan != 0);
+                            workload = lastNonZero != null ? lastNonZero.SingleProductionTimePlan : dateParts.Last().SingleProductionTimePlan;
+                        }
+
+                        setupSum += setup;
+                        workloadSum += workload;
+                    }
+
+                    wsNorms.Cell(row, ci[setupColumn]).Value = setupSum;
+                    wsNorms.Cell(row, ci[workloadColumn]).Value = workloadSum;
+                }
+
+                row++;
+            }
+
+            for (int i = 1; i < setupColumns.Count; i++)
+            {
+                var currentSetupColumn = setupColumns[i];
+                var previousSetupColumn = setupColumns[i - 1];
+
+                var setupRange = wsNorms.Range(3, ci[currentSetupColumn], row - 1, ci[currentSetupColumn]);
+                var setupFormattingGreen = setupRange.AddConditionalFormat();
+                setupFormattingGreen.WhenIsTrue($"{setupRange.FirstCell().Address}<{wsNorms.Cell(3, ci[previousSetupColumn]).Address}").Fill.BackgroundColor = _lightGreen;
+
+                var setupFormattingRed = setupRange.AddConditionalFormat();
+                setupFormattingRed.WhenIsTrue($"{setupRange.FirstCell().Address}>{wsNorms.Cell(3, ci[previousSetupColumn]).Address}").Fill.BackgroundColor = _lightRed;
+            }
+
+            for (int i = 1; i < workloadColumns.Count; i++)
+            {
+                var currentWorkloadColumn = workloadColumns[i];
+                var previousWorkloadColumn = workloadColumns[i - 1];
+
+                var workloadRange = wsNorms.Range(3, ci[currentWorkloadColumn], row - 1, ci[currentWorkloadColumn]);
+
+                var workloadFormattingGreen = workloadRange.AddConditionalFormat();
+                workloadFormattingGreen.WhenIsTrue($"{workloadRange.FirstCell().Address}<{wsNorms.Cell(3, ci[previousWorkloadColumn]).Address}").Fill.BackgroundColor = _lightGreen;
+
+                var workloadFormattingRed = workloadRange.AddConditionalFormat();
+                workloadFormattingRed.WhenIsTrue($"{workloadRange.FirstCell().Address}>{wsNorms.Cell(3, ci[previousWorkloadColumn]).Address}").Fill.BackgroundColor = _lightRed;
+            }
+
+            wsNorms.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            wsNorms.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            wsNorms.Columns().AdjustToContents();
+
+            foreach (var setupColumn in setupColumns)
+            {
+                wsNorms.Column(ci[setupColumn]).Width = 14;
+            }
+
+            foreach (var workloadColumn in workloadColumns)
+            {
+                wsNorms.Column(ci[workloadColumn]).Width = 14;
+            }
+
+            wsNorms.RangeUsed().SetAutoFilter(true);
+            SetTitle(wsNorms, ci.Count, "Изменение нормативов");
+
+            progress.Report("Сохранение файла");
+            wb.SaveAs(path);
+
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
+            }
+
+            return path;
+        }
+
         public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();

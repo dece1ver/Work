@@ -1041,6 +1041,10 @@
 
                     </MenuItem>
 
+                    <MenuItem Header="АИННиИиФТ" ToolTip="Анализ Изменения Нормативов Наладки и Изготовления и Фактической Трудоемкости" 
+                              Command="{Binding NormsAndWorkloadAnalysisCommand }" Icon="{StaticResource ColumnComponent}">
+                    </MenuItem>
+
                     <MenuItem Command="{Binding ExportToolSearchCasesToExcelCommand}"
                               ToolTip="Экспорт отчёта по поискам" HorizontalAlignment="Stretch">
                         <MenuItem.Header>

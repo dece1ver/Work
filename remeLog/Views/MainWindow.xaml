@@ -238,7 +238,7 @@
                                                 <TextBlock Text="{Binding ShiftsInfo}"/>
                                                 <TextBlock >
                                                     <TextBlock.Text>
-                                                        <MultiBinding StringFormat="М/Л: {0}. Деталей: {1}.">
+                                                        <MultiBinding StringFormat="М/Л: {0}, Деталей: {1:#.##}">
                                                             <Binding Path="Orders"/>
                                                             <Binding Path="AllFinishedCount"/>
                                                         </MultiBinding>
@@ -336,7 +336,7 @@
                                                 </StackPanel>
                                                 <TextBlock >
                                                     <TextBlock.Text>
-                                                        <MultiBinding StringFormat="М/Л: {0}. Деталей: {1}.">
+                                                        <MultiBinding StringFormat="М/Л: {0}, Деталей: {1:#.##}">
                                                             <Binding Path="Orders"/>
                                                             <Binding Path="FinishedCount"/>
                                                         </MultiBinding>
