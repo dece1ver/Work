@@ -133,7 +133,7 @@ namespace remeLog.ViewModels
         }
 
 
-        private bool _Debug = false;
+        private bool _Debug = true;
         /// <summary> отладка </summary>
         public bool Debug
         {

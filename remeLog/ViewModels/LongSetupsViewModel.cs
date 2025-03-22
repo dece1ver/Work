@@ -66,7 +66,7 @@ namespace remeLog.ViewModels
             set => Set(ref _Status, value);
         }
 
-        #region UpdateParts
+        #region SaveParts
         public ICommand SavePartsCommand { get; }
         private async void OnSavePartsCommandExecuted(object p)
         {

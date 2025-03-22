@@ -1077,27 +1077,32 @@ namespace remeLog.ViewModels
         {
             try
             {
+                
+                IProgress<string> progress = new Progress<string>(m => Status = m);
+                InProgress = true;
+                progress.Report("Подключение к Google таблице");
+
+                List<DateTime> dates = new();
+
+                var dlg = new GetDatesWindow(ToDate);
+                if (dlg.ShowDialog() == false)
+                {
+                    Status = "Отмена";
+                    InProgress = false;
+                    await Task.Delay(3000);
+                    Status = "";
+                    return;
+                }
+                dates = dlg.Dates.ToList();
                 var path = Util.GetXlsxPath();
                 if (string.IsNullOrEmpty(path))
                 {
                     Status = "Выбор файла отменён";
                     return;
                 }
-                IProgress<string> progress = new Progress<string>(m => Status = m);
-                InProgress = true;
-                progress.Report("Подключение к Google таблице");
-                var dates = new List<DateTime> {
-                    new(2024, 12, 1),
-                    new(2025, 1, 1),
-                    new(2025, 2, 1)
-                };
                 Status = await Task.Run(() => Xl.ExportNormsAndWorkloadAnalysis(Parts, dates, path, progress));
 
 
-            }
-            catch (Google.GoogleApiException ex)
-            {
-                MessageBox.Show(GoogleSheet.ExceptionMessage(ex), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
