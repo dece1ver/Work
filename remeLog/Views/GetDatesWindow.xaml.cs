@@ -28,5 +28,16 @@ namespace remeLog.Views
             InitializeComponent();
             DataContext = new GetDatesWindowViewModel(dateTime);
         }
+
+        private void ListView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var listView = sender as ListView;
+            if (listView?.View is GridView gridView && gridView.Columns.Count > 0)
+            {
+                double otherColumnsWidth = gridView.Columns.Take(gridView.Columns.Count - 1)
+                                                          .Sum(c => c.ActualWidth);
+                gridView.Columns.Last().Width = Math.Max(0, listView.ActualWidth - otherColumnsWidth - 10);
+            }
+        }
     }
 }

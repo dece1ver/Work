@@ -5,9 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:remeLog.Views"
         xmlns:vm="clr-namespace:remeLog.ViewModels"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
-        Title="Список дат" Height="300" Width="400">
+        Title="Список дат" Height="240" Width="320" MinHeight="240" MinWidth="320">
     <Window.Resources>
+        <CollectionViewSource x:Key="SortedDates" Source="{Binding Dates}">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Date" Direction="Ascending"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+
         <Style TargetType="Button" x:Key="BottomButton">
             <Setter Property="Width" Value="80"/>
             <Setter Property="Height" Value="25"/>
@@ -16,15 +23,29 @@
         <Style TargetType="TextBlock">
             <Setter Property="Margin" Value="0 0 0 5"/>
         </Style>
+        <Style TargetType="ListViewItem">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="LightBlue"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="DarkBlue"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
-    
+
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
                 <TextBlock Text="{Binding Status}"/>
             </StatusBarItem>
         </StatusBar>
-
         <Grid DockPanel.Dock="Bottom">
             <UniformGrid Columns="2" Grid.Row="3">
                 <Button Content="Отмена" 
@@ -40,39 +61,36 @@
                         Style="{StaticResource BottomButton}"/>
             </UniformGrid>
         </Grid>
-
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-
-            <Grid Grid.Row="0" Margin="5">
+            <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-
                 <DatePicker Grid.Column="0" SelectedDate="{Binding NewDate}" 
                             BorderThickness="1"
-                            Margin="4"/>
+                            Margin="0"/>
                 <Button Grid.Column="1" Content="Добавить" Command="{Binding AddDateCommand}"
-                        Margin="2 4" Width="80"/>
+                        Margin="0" Width="80" BorderThickness="0 1 1 1"/>
                 <Button Grid.Column="2" Content="Удалить" Command="{Binding RemoveDateCommand}"
-                        Margin="2 4" Width="80"/>
+                        Margin="0" Width="80" BorderThickness="0 1 1 1"/>
             </Grid>
-
-            <DataGrid Grid.Row="1" x:Name="DatesGrid" 
-                      ItemsSource="{Binding Dates}" 
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      SelectionMode="Single"
-                      SelectedItem="{Binding SelectedDate}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Дата" Binding="{Binding StringFormat=dd.MM.yyyy}" Width="*"/>
-                </DataGrid.Columns>
-            </DataGrid>
+            <ListView Grid.Row="1" ItemsSource="{Binding Source={StaticResource SortedDates}}"
+                      SelectedItem="{Binding SelectedDate}"
+                      BorderThickness="0"
+                      Background="Transparent" SizeChanged="ListView_SizeChanged">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Дата"
+                                        DisplayMemberBinding="{Binding StringFormat=dd.MM.yyyy}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
         </Grid>
     </DockPanel>
 </Window>
