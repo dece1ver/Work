@@ -1039,7 +1039,7 @@ namespace remeLog.Infrastructure
 
             var setupColumns = new List<string>();
             var workloadColumns = new List<string>();
-
+            dates.Sort();
             foreach (var date in dates)
             {
                 string setupColumn = $"Наладка{Environment.NewLine}на {date.ToString(Constants.ShortDateFormat)}";
@@ -1100,6 +1100,15 @@ namespace remeLog.Infrastructure
                     {
                         var machine = machineGroup.Key;
                         var machineParts = machineGroup.Value;
+
+                        foreach (var order in machineParts.Select(mg => mg.Order))
+                        {
+                            foreach (var p in machineParts.Where(p => p.Order == order))
+                            {
+                                if (p.SetupTimePlan != 0) setupSum = p.SetupTimePlanForCalc;
+                                if (p.SingleProductionTimePlan != 0) workloadSum = p.SingleProductionTimePlan;
+                            }
+                        }
 
                         var dateParts = machineParts.Where(p => p.EndMachiningTime <= date).ToList();
 
