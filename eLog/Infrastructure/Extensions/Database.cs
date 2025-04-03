@@ -71,17 +71,17 @@ namespace eLog.Infrastructure.Extensions
             return operators;
         }
 
-        public async static Task<ObservableCollection<Machine>> GetMachinesAsync(IProgress<string>? progress = null)
+        public async static Task<ObservableCollection<Machine>> GetMachinesAsync(string connectionString = null!, IProgress<string>? progress = null)
         {
             ObservableCollection<Machine> machines = new();
-
+            connectionString ??= AppSettings.Instance.ConnectionString;
             await Task.Run(async () =>
             {
                 progress?.Report("Подключение к БД...");
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
-                    string query = $"SELECT * FROM cnc_operators WHERE IsActive = 1 ORDER BY LastName ASC;";
+                    string query = $"SELECT * FROM cnc_machines WHERE IsActive = 1 ORDER BY Name ASC;";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())

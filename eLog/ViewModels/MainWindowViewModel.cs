@@ -254,7 +254,7 @@ namespace eLog.ViewModels
                 {
                     var shiftInfo = new ShiftHandOverInfo(dateTime,
                         AppSettings.Instance.CurrentShift,
-                        AppSettings.Instance.Machine.Name,
+                        AppSettings.Instance.Machine?.Name ?? "",
                         false,
                         shiftHandoverWindow.WorkplaceCleaned,
                         shiftHandoverWindow.Failures,
@@ -294,7 +294,7 @@ namespace eLog.ViewModels
                 {
                     var shiftInfo = new ShiftHandOverInfo(dateTime,
                         AppSettings.Instance.CurrentShift,
-                        AppSettings.Instance.Machine.Name,
+                        AppSettings.Instance.Machine?.Name ?? "",
                         true,
                         shiftHandoverWindow.WorkplaceCleaned,
                         shiftHandoverWindow.Failures,
@@ -326,6 +326,8 @@ namespace eLog.ViewModels
             {
                 if (!WindowsUserDialogService.EditSettings()) return;
                 OnPropertyChanged(nameof(Machine));
+                OnPropertyChanged(nameof(_CanLoadProductionTasksCommandExecute));
+                OnPropertyChanged(nameof(_CanSendMessageCommandExecute));
             }
         }
         private static bool CanEditSettingsCommandExecute(object p) => true;
@@ -376,7 +378,8 @@ namespace eLog.ViewModels
                 ProgressBarVisibility = Visibility.Collapsed;
             }
         }
-        private static bool CanLoadProductionTasksCommandExecute(object p) => true;
+        private static bool CanLoadProductionTasksCommandExecute(object p) => !(string.IsNullOrWhiteSpace(AppSettings.Instance.GsId) || string.IsNullOrWhiteSpace(AppSettings.Instance.GoogleCredentialsPath));
+        public bool _CanLoadProductionTasksCommandExecute => LoadProductionTasksCommand.CanExecute(null);
         #endregion
 
         #region SendMessage
@@ -385,7 +388,12 @@ namespace eLog.ViewModels
         {
             try
             {
-                if (!Parts.Any() && Parts[0].IsFinished != Part.State.InProgress)
+                if (!Parts.Any())
+                {
+                    MessageBox.Show("Без детали не положено", "Нет", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                else if (Parts[0].IsFinished != Part.State.InProgress)
                 {
                     MessageBox.Show("Без детали не положено", "Нет", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
@@ -441,7 +449,9 @@ namespace eLog.ViewModels
             }
         }
 
-        private static bool CanSendMessageCommandExecute(object p) => true;
+        private static bool CanSendMessageCommandExecute(object p) => !string.IsNullOrWhiteSpace(AppSettings.Instance.PathToRecievers);
+
+        public bool _CanSendMessageCommandExecute => SendMessageCommand.CanExecute(null);
         #endregion
 
         #region EditOperators
@@ -583,12 +593,15 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(CanEditShiftAndParams));
                 OnPropertyChanged(nameof(CanAddPart));
                 OnPropertyChanged(nameof(CanEndShift));
+                OnPropertyChanged(nameof(_CanLoadProductionTasksCommandExecute));
+                OnPropertyChanged(nameof(_CanSendMessageCommandExecute));
                 OnPropertyChanged(nameof(Parts));
                 AppSettings.Save();
             }
             _editPart = false;
         }
         private static bool CanStartDetailCommandExecute(object p) => true;
+
         #endregion
 
         #region SetDownTime

@@ -61,7 +61,7 @@ namespace eLog.Services
                 Owner = Application.Current.MainWindow,
             };
 
-            if (dlg.ShowDialog() != true || dlg.Operators.SequenceEqual(AppSettings.Instance.Operators))
+            if (dlg.ShowDialog() != true)
             {
                 if (AppSettings.Instance.DebugMode) { WriteLog($"Отмена."); }
                 return false;
@@ -90,7 +90,8 @@ namespace eLog.Services
                 return false;
             }
             AppSettings.Instance.Machine = dlg.Machine;
-            AppSettings.Instance.UpdatePath = dlg.XlPath;
+            AppSettings.Instance.Machines = dlg.Machines.ToList();
+            AppSettings.Instance.UpdatePath = dlg.UpdatePath;
             AppSettings.Instance.OrdersSourcePath = dlg.OrdersSourcePathTextBox.Text;
             AppSettings.Instance.OrderQualifiers = dlg.OrderQualifiers;
             AppSettings.Instance.DebugMode = dlg.DebugMode;

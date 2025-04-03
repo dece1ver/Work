@@ -59,7 +59,8 @@
             <ComboBox Grid.Row="0"  Grid.Column="1" DockPanel.Dock="Top" Margin="0 1"
                       ItemsSource="{Binding Machines}" 
                       SelectedItem="{Binding Machine}" 
-                      DisplayMemberPath="Name"/>
+                      DisplayMemberPath="Name"
+                      IsEnabled="{Binding Machines, Converter={StaticResource CollectionNotEmptyConverter}}"/>
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Метод хранения:" VerticalAlignment="Center" Margin="5 0" />
             <ComboBox Grid.Row="1" Grid.Column="1"
                       ItemsSource="{Binding StorageTypes}" SelectedItem="{Binding StorageType}" DisplayMemberPath="Name"/>

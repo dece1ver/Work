@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -31,7 +32,7 @@ namespace eLog.Views.Windows.Settings
         private string _GsId;
         private bool _WriteToGs;
         private string _OrdersSourcePath;
-        private Machine _Machine;
+        private Machine? _Machine;
         private string[] _OrderQualifiers;
         private bool _DebugMode;
         private StorageType _StorageType;
@@ -84,7 +85,7 @@ namespace eLog.Views.Windows.Settings
         }
 
 
-        public Machine Machine
+        public Machine? Machine
         {
             get => _Machine;
             set => Set(ref _Machine, value);
@@ -172,13 +173,18 @@ namespace eLog.Views.Windows.Settings
 
         public AppSettingsWindow()
         {
-            _Machines = new();
-            _ = LoadMachinesAsync();
+            Debug.WriteLine("Старт конструктора");
+            _Machines = AppSettings.Instance.Machines?.Count > 0
+                ? new ObservableCollection<Machine>(AppSettings.Instance.Machines)
+                : new ObservableCollection<Machine>();
+            Debug.WriteLine($"{_Machines.Count}");
+            _Machine = _Machines.FirstOrDefault(m => m.Name == AppSettings.Instance.Machine?.Name);
+            Debug.WriteLine($"{_Machine?.Name}");
             StorageTypes = new List<StorageType>()
             {
                 new(StorageType.Types.Database),
             };
-            _StorageType = AppSettings.Instance.StorageType;
+            _StorageType = StorageTypes.FirstOrDefault(s => s.Type == AppSettings.Instance.StorageType.Type);
             _UpdatePath = AppSettings.Instance.UpdatePath;
             _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
             _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
@@ -194,11 +200,14 @@ namespace eLog.Views.Windows.Settings
             _EnableWriteShiftHandover = AppSettings.Instance.EnableWriteShiftHandover;
             _DebugMode = AppSettings.Instance.DebugMode;
             InitializeComponent();
+            _ = LoadMachinesAsync();
         }
 
         private async Task LoadMachinesAsync()
         {
-            Machines = await Database.GetMachinesAsync();
+            string currentMachineName = Machine?.Name ?? "";
+            Machines = await Database.GetMachinesAsync(ConnectionString);
+            Machine = Machines.FirstOrDefault(m => m.Name == currentMachineName);
         } 
 
         private void SetUpdatePathButton_Click(object sender, RoutedEventArgs e)
@@ -371,6 +380,11 @@ namespace eLog.Views.Windows.Settings
             {
                 using (SqlConnection connection = new SqlConnection(ConnectionString))
                 {
+                    if (string.IsNullOrWhiteSpace(ConnectionString))
+                    {
+                        MessageBox.Show("Не указана строка подключения", "Нет", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                     }
                     connection.Open();
                     connection.Close();
                     _ = LoadMachinesAsync();

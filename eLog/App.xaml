@@ -11,6 +11,7 @@
                 <ResourceDictionary Source="pack://application:,,,/libeLog;component/StyleDictionary.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/libeLog;component/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <cnv:CollectionNotEmptyConverter x:Key="CollectionNotEmptyConverter"/>
             <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
             <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
