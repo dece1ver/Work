@@ -397,7 +397,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <returns>Суммарное фактическое время настройки <see cref="SetupTimeFact"/> всех деталей в коллекции.</returns>
         public static TimeSpan TotalSetupTime(this IEnumerable<Models.Part> parts)
         {
-            return TimeSpan.FromMinutes(parts.Sum(p => p.SetupTimeFact + p.PartialSetupTime));
+            return parts.Any() ? TimeSpan.FromMinutes(parts.Sum(p => p.SetupTimeFact + p.PartialSetupTime)) : TimeSpan.Zero;
         }
 
         /// <summary>
@@ -407,7 +407,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <returns>Суммарное фактическое время производства <see cref="ProductionTimeFact"/> всех деталей в коллекции.</returns>
         public static TimeSpan TotalProductionTime(this IEnumerable<Models.Part> parts)
         {
-            return TimeSpan.FromMinutes(parts.Sum(p => p.ProductionTimeFact));
+            return parts.Any() ? TimeSpan.FromMinutes(parts.Sum(p => p.ProductionTimeFact)) : TimeSpan.Zero;
         }
 
         /// <summary>
@@ -417,7 +417,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <returns>Суммарное фактическое время простоев в изготовлении <see cref="MachiningDowntimes"/> и в наладке <see cref="SetupDowntimes"/> всех деталей в коллекции.</returns>
         public static TimeSpan TotalDowntimesTime(this IEnumerable<Models.Part> parts)
         {
-            return TimeSpan.FromMinutes(parts.Sum(p => p.MachiningDowntimes + p.SetupDowntimes));
+            return parts.Any() ? TimeSpan.FromMinutes(parts.Sum(p => p.MachiningDowntimes + p.SetupDowntimes)) : TimeSpan.Zero;
         }
 
         /// <summary>
@@ -427,7 +427,7 @@ namespace remeLog.Infrastructure.Extensions
         /// <returns>Среднее арифметическое время в наладке <see cref="SetupDowntimes"/> тех деталей в коллекции, где осуществлялась полноценная наладка.</returns>
         public static TimeSpan AverageSetupTime(this IEnumerable<Models.Part> parts)
         {
-            return TimeSpan.FromMinutes(parts.Where(p => p.SetupTimeFact > 0).Average(p => p.SetupTimeFact));
+            return parts.Any() ? TimeSpan.FromMinutes(parts.Where(p => p.SetupTimeFact > 0).Average(p => p.SetupTimeFact)) : TimeSpan.Zero;
         }
 
         /// <summary>
