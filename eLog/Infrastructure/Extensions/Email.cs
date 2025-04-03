@@ -73,7 +73,7 @@ namespace eLog.Infrastructure.Extensions
                         <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
 
                         <div style=""margin-bottom: 15px;"">
-                            <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine.Name}</p>
+                            <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine?.Name}</p>
                             <p style=""margin: 6px 0;""><strong>Оператор:</strong> {part.Operator.FullName}</p>
                             <p style=""margin: 6px 0;""><strong>Деталь:</strong> {part.FullName.TrimLen(70)}</p>
                             <p style=""margin: 6px 0;""><strong>Установка:</strong> {part.Setup}</p>

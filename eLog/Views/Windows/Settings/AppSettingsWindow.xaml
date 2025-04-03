@@ -64,7 +64,7 @@
             <ComboBox Grid.Row="1" Grid.Column="1"
                       ItemsSource="{Binding StorageTypes}" SelectedItem="{Binding StorageType}" DisplayMemberPath="Name"/>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Номенклатура:" VerticalAlignment="Center" Margin="5 0" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Заказы:" VerticalAlignment="Center" Margin="5 0" />
             <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" 
                        VerticalAlignment="Stretch" LastChildFill="True">
                 <Button x:Name="SetOrdersSourceButton" DockPanel.Dock="Right" Content="Обзор" Margin="2 1 0 1" Width="80" Click="SetOrdersSourceButton_Click"/>

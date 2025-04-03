@@ -64,7 +64,7 @@ namespace eLog.Infrastructure
 
 
 
-        private Machine _Machine;
+        private Machine? _Machine;
         private string _UpdatePath;
         private string _GoogleCredentialsPath;
         private string _GsId;
@@ -86,7 +86,7 @@ namespace eLog.Infrastructure
 
 
         /// <summary> Текущий станок </summary>
-        public Machine Machine
+        public Machine? Machine
         {
             get => _Machine;
             set => Set(ref _Machine, value);
@@ -267,8 +267,13 @@ namespace eLog.Infrastructure
             set => Set(ref _DebugMode, value);
         }
 
-        [JsonIgnore]
-        public static List<Machine> Machines { get; } = Enumerable.Range(0, 18).Select(i => new Machine(i)).ToList(); // кейсы в machine model + 1
+        private List<Machine> _Machines;
+        /// <summary> Станки </summary>
+        public List<Machine> Machines
+        {
+            get => _Machines;
+            set => Set(ref _Machines, value);
+        }
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
         private void CreateBaseConfig()
@@ -276,16 +281,9 @@ namespace eLog.Infrastructure
             if (File.Exists(ConfigFilePath)) File.Move(ConfigFilePath, ConfigFilePath + $".mvd{DateTime.Now.Ticks}");
             if (File.Exists(ConfigBackupPath)) File.Move(ConfigBackupPath, ConfigBackupPath + $".mvd{DateTime.Now.Ticks}");
             if (!Directory.Exists(BasePath)) Directory.CreateDirectory(BasePath);
-            Machine = new Machine(0);
-            Operators = new DeepObservableCollection<Operator>()
-        {
-            new()
-            {
-                LastName = "Бабохин",
-                FirstName = "Кирилл",
-                Patronymic = "Георгиевич"
-            },
-        };
+            Machines = new();
+            Machine = null;
+            Operators = new DeepObservableCollection<Operator>();
             CurrentShift = Text.DayShift;
             Parts = new DeepObservableCollection<Part>();
             UpdatePath = string.Empty;
@@ -346,7 +344,6 @@ namespace eLog.Infrastructure
                 LongSetupsMailRecievers = Util.GetMailReceivers(Util.ReceiversType.LongSetup);
                 ToolSearchMailRecievers = Util.GetMailReceivers(Util.ReceiversType.ToolSearch);
 
-                Machine ??= new Machine(0);
                 GoogleCredentialsPath ??= "";
                 GsId ??= "";
                 OrdersSourcePath ??= "";

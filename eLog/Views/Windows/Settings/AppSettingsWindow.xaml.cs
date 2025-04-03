@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Office2019.Drawing.Diagram11;
 using eLog.Infrastructure;
+using eLog.Infrastructure.Extensions;
 using eLog.Models;
 using libeLog.Models;
 using Microsoft.Data.SqlClient;
@@ -8,10 +9,12 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -22,7 +25,8 @@ namespace eLog.Views.Windows.Settings
     /// </summary>
     public partial class AppSettingsWindow : Window, INotifyPropertyChanged
     {
-        private string _XlPath;
+        private ObservableCollection<Machine> _Machines;
+        private string _UpdatePath;
         private string _GoogleCredentialsPath;
         private string _GsId;
         private bool _WriteToGs;
@@ -39,12 +43,17 @@ namespace eLog.Views.Windows.Settings
         private int _secretMenuCounter;
 
         public List<StorageType> StorageTypes { get; }
-        public IReadOnlyList<Machine> Machines { get; }
 
-        public string XlPath
+        public ObservableCollection<Machine> Machines
         {
-            get => _XlPath;
-            set => Set(ref _XlPath, value);
+            get => _Machines;
+            set => Set(ref _Machines, value);
+        }
+
+        public string UpdatePath
+        {
+            get => _UpdatePath;
+            set => Set(ref _UpdatePath, value);
         }
 
         public string OrdersSourcePath
@@ -163,18 +172,16 @@ namespace eLog.Views.Windows.Settings
 
         public AppSettingsWindow()
         {
-            Machines = AppSettings.Machines;
+            _Machines = new();
+            _ = LoadMachinesAsync();
             StorageTypes = new List<StorageType>()
             {
-                new StorageType(StorageType.Types.Excel),
-                new StorageType(StorageType.Types.Database),
-                new StorageType (StorageType.Types.All)
+                new(StorageType.Types.Database),
             };
             _StorageType = AppSettings.Instance.StorageType;
-            _XlPath = AppSettings.Instance.UpdatePath;
+            _UpdatePath = AppSettings.Instance.UpdatePath;
             _OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
             _OrderQualifiers = AppSettings.Instance.OrderQualifiers;
-            _Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
             _GoogleCredentialsPath = AppSettings.Instance.GoogleCredentialsPath ?? "";
             _GsId = AppSettings.Instance.GsId ?? "";
             _WriteToGs = AppSettings.Instance.WiteToGs;
@@ -189,6 +196,11 @@ namespace eLog.Views.Windows.Settings
             InitializeComponent();
         }
 
+        private async Task LoadMachinesAsync()
+        {
+            Machines = await Database.GetMachinesAsync();
+        } 
+
         private void SetUpdatePathButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dlg = new()
@@ -197,7 +209,7 @@ namespace eLog.Views.Windows.Settings
                 DefaultExt = "xlsm"
             };
             if (dlg.ShowDialog() != true) return;
-            XlPath = dlg.FileName;
+            UpdatePath = dlg.FileName;
         }
         private void SetOrdersSourceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -215,7 +227,7 @@ namespace eLog.Views.Windows.Settings
             try
             {
                 string saveDir = "";
-                if (File.Exists(XlPath) && Directory.GetParent(XlPath) is { FullName: { } parent })
+                if (File.Exists(UpdatePath) && Directory.GetParent(UpdatePath) is { FullName: { } parent })
                 {
                     saveDir = parent;
                 }
@@ -242,7 +254,7 @@ namespace eLog.Views.Windows.Settings
                     if (string.IsNullOrEmpty(saveDir)) return;
 
                 }
-                var tempPath = Path.Combine(saveDir, "configs", AppSettings.Instance.Machine.SafeName, DateTime.Now.ToString("dd-MM-yy HH-mm"));
+                var tempPath = Path.Combine(saveDir, "configs", AppSettings.Instance.Machine?.SafeName ?? "", DateTime.Now.ToString("dd-MM-yy HH-mm"));
                 if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
                 var exportPath = Path.Combine(tempPath, "config.json");
                 File.Copy(AppSettings.ConfigFilePath, exportPath);
@@ -289,10 +301,9 @@ namespace eLog.Views.Windows.Settings
                 AppSettings.Instance.IsShiftStarted = isShiftStarted;
 
                 StorageType = AppSettings.Instance.StorageType;
-                XlPath = AppSettings.Instance.UpdatePath;
+                UpdatePath = AppSettings.Instance.UpdatePath;
                 OrdersSourcePath = AppSettings.Instance.OrdersSourcePath;
                 OrderQualifiers = AppSettings.Instance.OrderQualifiers;
-                Machine = Machines.First(x => x.Id == AppSettings.Instance.Machine.Id);
                 GoogleCredentialsPath = AppSettings.Instance.GoogleCredentialsPath ?? "";
                 GsId = AppSettings.Instance.GsId ?? "";
                 WriteToGs = AppSettings.Instance.WiteToGs;
@@ -362,6 +373,7 @@ namespace eLog.Views.Windows.Settings
                 {
                     connection.Open();
                     connection.Close();
+                    _ = LoadMachinesAsync();
                     MessageBox.Show("Ок", $"Подключение доступно.", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }

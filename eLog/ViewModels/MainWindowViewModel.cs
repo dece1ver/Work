@@ -344,7 +344,7 @@ namespace eLog.ViewModels
                 ProductionTasksIsLoading = true;
                 var progress = new Progress<string>(m => Status = m);
                 var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialsPath, AppSettings.Instance.GsId);
-                var tasks = await gs.GetProductionTasksData(AppSettings.Instance.Machine.Name, AppSettings.Machines.Select(m => m.Name), progress, _cts.Token);
+                var tasks = await gs.GetProductionTasksData(AppSettings.Instance.Machine?.Name ?? "", AppSettings.Instance.Machines.Select(m => m.Name), progress, _cts.Token);
                 ProductionTasksIsLoading = false;
                 ProgressBarVisibility = Visibility.Collapsed;
                 using (Overlay = new())

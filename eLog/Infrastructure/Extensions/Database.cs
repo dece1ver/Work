@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Threading.Tasks;
 using System.Transactions;
+using Machine = eLog.Models.Machine;
 
 namespace eLog.Infrastructure.Extensions
 {
@@ -54,7 +55,7 @@ namespace eLog.Infrastructure.Extensions
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
-                            progress?.Report("Чтение данных из БД...");
+                            progress?.Report("Чтение данных об операторах из БД...");
                             while (await reader.ReadAsync())
                             {
                                 operators.Add(new Operator() { 
@@ -68,6 +69,34 @@ namespace eLog.Infrastructure.Extensions
                 progress?.Report("Чтение завершено");
             });
             return operators;
+        }
+
+        public async static Task<ObservableCollection<Machine>> GetMachinesAsync(IProgress<string>? progress = null)
+        {
+            ObservableCollection<Machine> machines = new();
+
+            await Task.Run(async () =>
+            {
+                progress?.Report("Подключение к БД...");
+                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = $"SELECT * FROM cnc_operators WHERE IsActive = 1 ORDER BY LastName ASC;";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            progress?.Report("Чтение данных о станках из БД...");
+                            while (await reader.ReadAsync())
+                            {
+                                machines.Add(new Machine(reader.GetStringOrEmpty(1)));
+                            }
+                        }
+                    }
+                }
+                progress?.Report("Чтение завершено");
+            });
+            return machines;
         }
 
         /// <summary>
