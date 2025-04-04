@@ -1084,6 +1084,7 @@ namespace remeLog.Infrastructure
                 var normalizedName = NormalizePartName(part.PartName);
                 var partsForName = partsDict[normalizedName];
                 var machineGroups = partsForName.GroupBy(p => p.Machine).ToDictionary(g => g.Key, g => g.ToList());
+                var orderGroups = partsForName.GroupBy(p => p.Order).ToDictionary(g => g.Key, g => g.ToList());
 
                 wsNorms.Cell(row, ci[CM.Part]).Value = part.PartName;
 
@@ -1095,40 +1096,39 @@ namespace remeLog.Infrastructure
 
                     double setupSum = 0;
                     double workloadSum = 0;
-
-                    foreach (var machineGroup in machineGroups)
+                    List<(string Machine, int Setup, double SetupPlan, double ProductionPlan)> partSum = new();
+                    foreach (var orderData in orderGroups)
                     {
-                        var machine = machineGroup.Key;
-                        var machineParts = machineGroup.Value;
-
-                        foreach (var order in machineParts.Select(mg => mg.Order))
+                        var order = orderData.Key;
+                        var orderParts = orderData.Value;
+                        
+                        foreach (var p in orderParts)
                         {
-                            foreach (var p in machineParts.Where(p => p.Order == order))
-                            {
-                                if (p.SetupTimePlan != 0) setupSum = p.SetupTimePlanForCalc;
-                                if (p.SingleProductionTimePlan != 0) workloadSum = p.SingleProductionTimePlan;
-                            }
+                            var tuplePart = (p.Machine, p.Setup, p.SetupTimePlanForCalc, p.SingleProductionTimePlan);
+                            if (!partSum.Contains(tuplePart)) partSum.Add(tuplePart);
                         }
-
-                        var dateParts = machineParts.Where(p => p.EndMachiningTime <= date).ToList();
-
-                        double setup = 0;
-                        if (dateParts.Any())
-                        {
-                            var lastNonZero = dateParts.LastOrDefault(p => p.SetupTimePlan != 0);
-                            setup = lastNonZero != null ? lastNonZero.SetupTimePlan : dateParts.Last().SetupTimePlan;
-                        }
-
-                        double workload = 0;
-                        if (dateParts.Any())
-                        {
-                            var lastNonZero = dateParts.LastOrDefault(p => p.SingleProductionTimePlan != 0);
-                            workload = lastNonZero != null ? lastNonZero.SingleProductionTimePlan : dateParts.Last().SingleProductionTimePlan;
-                        }
-
-                        setupSum += setup;
-                        workloadSum += workload;
                     }
+
+                    setupSum = partSum.Sum(p => p.SetupPlan);
+                    workloadSum = partSum.Sum(p => p.ProductionPlan);
+
+                    //foreach (var machineGroup in machineGroups)
+                    //{
+                    //    var machine = machineGroup.Key;
+                    //    var machineParts = machineGroup.Value;
+                    //    double setup = 0;
+                    //    double workload = 0;
+                    //    foreach (var order in machineParts.Select(mg => mg.Order))
+                    //    {
+                    //        foreach (var p in machineParts.Where(p => p.Order == order && p.EndMachiningTime <= date))
+                    //        {
+                    //            if (p.SetupTimePlan != 0) setupSum = p.SetupTimePlanForCalc;
+                    //            if (p.SingleProductionTimePlan != 0) workloadSum = p.SingleProductionTimePlan;
+                    //        }
+                    //        setupSum += setup;
+                    //        workloadSum += workload;
+                    //    }
+                    //}
 
                     wsNorms.Cell(row, ci[setupColumn]).Value = setupSum;
                     wsNorms.Cell(row, ci[workloadColumn]).Value = workloadSum;
