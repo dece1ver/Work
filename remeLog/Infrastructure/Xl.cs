@@ -1106,33 +1106,15 @@ namespace remeLog.Infrastructure
                         var order = orderData.Key;
                         var orderParts = orderData.Value;
                         
-                        foreach (var p in orderParts)
+                        foreach (var p in orderParts.Where(p => p.EndMachiningTime <= date))
                         {
-                            var tuplePart = (p.Machine, p.Setup, p.SetupTimePlanForCalc, p.SingleProductionTimePlan);
+                            var tuplePart = (p.Machine, p.Setup, p.SetupTimePlanForCalc, p.ProductionTimePlanForCalc);
                             if (!partSum.Contains(tuplePart)) partSum.Add(tuplePart);
                         }
+
+                        setupSum = partSum.Sum(p => p.SetupPlan);
+                        workloadSum = partSum.Sum(p => p.ProductionPlan);
                     }
-
-                    setupSum = partSum.Sum(p => p.SetupPlan);
-                    workloadSum = partSum.Sum(p => p.ProductionPlan);
-
-                    //foreach (var machineGroup in machineGroups)
-                    //{
-                    //    var machine = machineGroup.Key;
-                    //    var machineParts = machineGroup.Value;
-                    //    double setup = 0;
-                    //    double workload = 0;
-                    //    foreach (var order in machineParts.Select(mg => mg.Order))
-                    //    {
-                    //        foreach (var p in machineParts.Where(p => p.Order == order && p.EndMachiningTime <= date))
-                    //        {
-                    //            if (p.SetupTimePlan != 0) setupSum = p.SetupTimePlanForCalc;
-                    //            if (p.SingleProductionTimePlan != 0) workloadSum = p.SingleProductionTimePlan;
-                    //        }
-                    //        setupSum += setup;
-                    //        workloadSum += workload;
-                    //    }
-                    //}
 
                     wsNorms.Cell(row, ci[setupColumn]).Value = setupSum;
                     wsNorms.Cell(row, ci[workloadColumn]).Value = workloadSum;
