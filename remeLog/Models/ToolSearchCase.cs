@@ -8,7 +8,7 @@ namespace remeLog.Models
 {
     public class ToolSearchCase
     {
-        public ToolSearchCase(string @operator, string part, string machine, string type, string description, DateTime startTime, DateTime endTime)
+        public ToolSearchCase(string @operator, string part, string machine, string type, string description, DateTime startTime, DateTime endTime, bool? isSuccess)
         {
             Operator = @operator;
             Part = part;
@@ -17,6 +17,7 @@ namespace remeLog.Models
             Description = description;
             StartTime = startTime;
             EndTime = endTime;
+            IsSuccess = isSuccess;
         }
 
         public string Operator { get; set; }
@@ -27,5 +28,6 @@ namespace remeLog.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public TimeSpan Time => EndTime - StartTime;
+        public bool? IsSuccess { get; set; }
     }
 }

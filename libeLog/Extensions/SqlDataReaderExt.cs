@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,6 +12,24 @@ namespace libeLog.Extensions
 {
     public static class SqlDataReaderExt
     {
+        /// <summary>
+        /// Возвращает nullable значение указанного типа из заданной колонки.
+        /// </summary>
+        /// <typeparam name="T">Тип данных, который должен быть nullable.</typeparam>
+        /// <param name="reader">Читатель данных.</param>
+        /// <param name="ordinal">Индекс колонки.</param>
+        /// <returns>Значение типа <c>T?</c>, или <c>null</c>, если в колонке <c>DBNull</c>.</returns>
+        public static T? GetNullable<T>(this DbDataReader reader, int ordinal) where T : struct
+        {
+            return reader.IsDBNull(ordinal) ? (T?)null : reader.GetFieldValue<T>(ordinal);
+        }
+
+        /// <summary>
+        /// Безопасно возвращает nullable-логическое значение из указанной колонки.
+        /// </summary>
+        /// <param name="reader">Читатель данных.</param>
+        /// <param name="ordinal">Индекс колонки.</param>
+        /// <returns>Значение типа <c>bool</c>, или <c>null</c>, если в колонке <c>DBNull</c>.</returns>
         public static bool? GetNullableBoolean(this SqlDataReader reader, int ordinal)
         {
             if (!reader.IsDBNull(ordinal))

@@ -14,7 +14,7 @@ namespace eLog.Models
     public class DownTime : INotifyPropertyChanged, IDataErrorInfo
     {
         [JsonConstructor]
-        public DownTime(Part part, Types type, DateTime startTime, DateTime endTime, string toolType = "", string comment = "")
+        public DownTime(Part part, Types type, DateTime startTime, DateTime endTime, string toolType = "", string comment = "", bool? isSuccess = null)
         {
             _ParentPart = part;
             _Type = type;
@@ -55,6 +55,7 @@ namespace eLog.Models
             _EndTimeText = downTime.EndTimeText;
             _ToolType = downTime.ToolType;
             _Comment = downTime.Comment;
+            _IsSuccess = downTime.IsSuccess;
         }
 
         private Types _Type;
@@ -213,6 +214,14 @@ namespace eLog.Models
         {
             get => _Comment;
             set => Set(ref _Comment, value);
+        }
+
+        private bool? _IsSuccess;
+        /// <summary> Нашел ли инструмент </summary>
+        public bool? IsSuccess
+        {
+            get => _IsSuccess;
+            set => Set(ref _IsSuccess, value);
         }
 
 

@@ -498,6 +498,11 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string Description = "description";
 
+        /// <summary>
+        /// Успешно ли
+        /// </summary>
+        public const string IsSuccess = "isSuccess";
+
         private static readonly Dictionary<string, string> _descriptions = new()
         {
             { Guid, "GUID" },
@@ -587,7 +592,8 @@ namespace remeLog.Infrastructure
             { IsEqual, $"Совпадает" },
             { Coefficient, $"Коэффициент" },
             { Type, $"Тип" },
-            { Description, $"Описание" }
+            { Description, $"Описание" },
+            { IsSuccess, $"Успешно ли" }
         };
 
         /// <summary>

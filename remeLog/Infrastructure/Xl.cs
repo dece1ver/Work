@@ -977,6 +977,7 @@ namespace remeLog.Infrastructure
                 .Add(CM.ToolSearchingTime, "Затраченное время")
                 .Add(CM.Part)
                 .Add(CM.Machine)
+                .Add(CM.IsSuccess, "Нашёл?")
                 .Build();
 
             ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Horizontal, 65, 10);
@@ -1000,6 +1001,7 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[CM.EndMachiningTime]).SetValue(@case.EndTime)
                     .Style.DateFormat.Format = "dd.MM.yy HH:mm";
                 ws.Cell(row, ci[CM.ToolSearchingTime]).SetValue(@case.Time);
+                ws.Cell(row, ci[CM.IsSuccess]).SetValue(@case.IsSuccess.HasValue ? @case.IsSuccess.Value ? "Да" : "Нет" : "Н/Д");
             
                 row++;
             }
@@ -1011,6 +1013,8 @@ namespace remeLog.Infrastructure
             ws.Column(ci[CM.StartMachiningTime]).Width = 12;
             ws.Column(ci[CM.EndMachiningTime]).Width = 12;
             ws.Column(ci[CM.ToolSearchingTime]).Width = 12;
+            ws.Column(ci[CM.IsSuccess]).Width = 8;
+            ws.Column(ci[CM.IsSuccess]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Range(2, ci[CM.StartMachiningTime], row, ci[CM.ToolSearchingTime]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             ws.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;

@@ -191,7 +191,7 @@ namespace eLog.Infrastructure.Extensions
                     using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
-                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
+                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine?.Name ?? "");
                         cmd.Parameters.AddWithValue("@Shift", part.Shift);
                         var needDiscrease = part.Shift == Text.NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(8);
                         var shiftDate = needDiscrease
@@ -243,8 +243,8 @@ namespace eLog.Infrastructure.Extensions
                             }
                         }
 
-                        var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime) " +
-                            "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime);";
+                        var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime, IsSuccess) " +
+                            "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime, @IsSuccess);";
                         using (SqlCommand insertToolSearchCmd = new SqlCommand(insertToolSearchQuery, connection))
                         {
                             foreach (var d in part.DownTimes.Where(d => d.Type == DownTime.Types.ToolSearching))
@@ -255,6 +255,7 @@ namespace eLog.Infrastructure.Extensions
                                 insertToolSearchCmd.Parameters.AddWithValue("@Value", d.Comment);
                                 insertToolSearchCmd.Parameters.AddWithValue("@StartTime", d.StartTime);
                                 insertToolSearchCmd.Parameters.AddWithValue("@EndTime", d.EndTime);
+                                insertToolSearchCmd.Parameters.AddWithValue("@IsSuccess", d.IsSuccess);
                                 await insertToolSearchCmd.ExecuteNonQueryAsync();
                             }
                         }
@@ -349,7 +350,7 @@ namespace eLog.Infrastructure.Extensions
                     using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
-                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine.Name);
+                        cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine?.Name ?? "");
                         cmd.Parameters.AddWithValue("@Shift", part.Shift);
                         var needDiscrease = part.Shift == Text.NightShift && part.EndMachiningTime < new DateTime(part.EndMachiningTime.Year, part.EndMachiningTime.Month, part.EndMachiningTime.Day).AddHours(9);
                         var shiftDate = needDiscrease
@@ -408,8 +409,8 @@ namespace eLog.Infrastructure.Extensions
                             await deleteToolSearchCmd.ExecuteNonQueryAsync();
                         }
 
-                        var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime) " +
-                            "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime);";
+                        var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime, IsSuccess) " +
+                            "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime, @IsSuccess);";
                         using (SqlCommand insertToolSearchCmd = new SqlCommand(insertToolSearchQuery, connection))
                         {
                             foreach (var d in part.DownTimes.Where(d => d.Type == DownTime.Types.ToolSearching))
@@ -420,6 +421,7 @@ namespace eLog.Infrastructure.Extensions
                                 insertToolSearchCmd.Parameters.AddWithValue("@Value", d.Comment);
                                 insertToolSearchCmd.Parameters.AddWithValue("@StartTime", d.StartTime);
                                 insertToolSearchCmd.Parameters.AddWithValue("@EndTime", d.EndTime);
+                                insertToolSearchCmd.Parameters.AddWithValue("@IsSuccess", d.IsSuccess);
                                 await insertToolSearchCmd.ExecuteNonQueryAsync();
                             }
                         }
@@ -462,7 +464,7 @@ namespace eLog.Infrastructure.Extensions
                         var query = "INSERT INTO maintenance_log (machine, creation_date, rq_status, comments, plandate) VALUES (@Machine, @Date, @Status, @Comment, @PlanDate);";
                         using (SqlCommand cmd = new SqlCommand(query, connection))
                         {
-                            cmd.Parameters.AddWithValue("Machine", AppSettings.Instance.Machine.Name);
+                            cmd.Parameters.AddWithValue("Machine", AppSettings.Instance.Machine?.Name ?? "");
                             cmd.Parameters.AddWithValue("Date", DateTime.Now);
                             cmd.Parameters.AddWithValue("Status", "Открыто");
                             cmd.Parameters.AddWithValue("Comment", message);

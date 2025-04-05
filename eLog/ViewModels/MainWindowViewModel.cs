@@ -655,6 +655,18 @@ namespace eLog.ViewModels
                         MessageBoxImage.Question)
                     == MessageBoxResult.OK)
                 {
+                    if (part.LastDownTime.Type == DownTime.Types.ToolSearching)
+                    {
+                        switch (MessageBox.Show("Нашёл что искал?", "Нашёл?", MessageBoxButton.YesNo, MessageBoxImage.Question))
+                        {
+                            case MessageBoxResult.Yes:
+                                part.LastDownTime.IsSuccess = true;
+                                break;
+                            case MessageBoxResult.No:
+                                part.LastDownTime.IsSuccess = false;
+                                break;
+                        }
+                    }
                     var now = DateTime.Now;
                     var endTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
                     if (AppSettings.Instance.DebugMode) { WriteLog(part, $"Завершен простой [{part.LastDownTime.Name}]"); }
@@ -665,9 +677,7 @@ namespace eLog.ViewModels
                     }
                     else
                     {
-
                         part.LastDownTime.EndTimeText = DateTime.Now.ToString(Constants.DateTimeFormat);
-
                     }
                     OnPropertyChanged(nameof(part.DownTimes));
                     OnPropertyChanged(nameof(part.DownTimesIsClosed));

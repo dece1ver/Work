@@ -232,7 +232,7 @@ namespace remeLog.Infrastructure
                 var chunk = guidsChunks[currentChunk];
                 var parameters = chunk.Select((guid, index) => $"@p{index}").ToArray();
                 var query = $@"
-                    SELECT p.Operator, p.PartName, p.Machine, c.ToolType, c.Value, c.StartTime, c.EndTime
+                    SELECT p.Operator, p.PartName, p.Machine, c.ToolType, c.Value, c.StartTime, c.EndTime, c.IsSuccess
                     FROM cnc_tool_search_cases c
                     INNER JOIN parts p ON c.PartGuid = p.Guid
                     WHERE p.Guid IN ({string.Join(", ", parameters)});
@@ -249,14 +249,25 @@ namespace remeLog.Infrastructure
 
                 while (await reader.ReadAsync())
                 {
+                    string operatorName = reader.GetStringOrEmpty(0);
+                    string partName = reader.GetStringOrEmpty(1);
+                    string machine = reader.GetStringOrEmpty(2);
+                    string toolType = reader.GetStringOrEmpty(3);
+                    string value = reader.GetStringOrEmpty(4);
+                    DateTime startTime = reader.GetDateTimeOrMinValue(5);
+                    DateTime endTime = reader.GetDateTimeOrMinValue(6);
+                    bool? isSuccess = reader.GetNullableBoolean(7);
+
                     cases.Add(new ToolSearchCase(
-                        reader.GetStringOrEmpty(0),
-                        reader.GetStringOrEmpty(1),
-                        reader.GetStringOrEmpty(2),
-                        reader.GetStringOrEmpty(3),
-                        reader.GetStringOrEmpty(4),
-                        reader.GetDateTimeOrMinValue(5),
-                        reader.GetDateTimeOrMinValue(6)));
+                        operatorName,
+                        partName,
+                        machine,
+                        toolType,
+                        value,
+                        startTime,
+                        endTime,
+                        isSuccess
+                    ));
                 }
 
                 if (guids.Count > chunkSize)
