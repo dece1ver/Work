@@ -65,6 +65,11 @@ namespace remeLog.ViewModels
         public ICommand SaveOperatorsCommand { get; }
         private async void OnSaveOperatorsCommandExecuted(object p)
         {
+            if (string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
+            {
+                Status = "Операторы не могут быть сохранены т.к. строка подключения не настроена";
+                return;
+            }
             InProgress = true;
             await Database.SaveOperatorsAsync(Operators, new Progress<string>(p => Status = p));
             LoadOperatorsAsync();
@@ -79,6 +84,11 @@ namespace remeLog.ViewModels
 
         private async void LoadOperatorsAsync()
         {
+            if (string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
+            {
+                Status = "Операторы не могут быть загружены т.к. строка подключения не настроена";
+                return;
+            }
             var operators = await Database.GetOperatorsAsync(new Progress<string>(p => Status = p));
             Operators = new ObservableCollection<OperatorInfo>(operators);
             ValidateOperators();
