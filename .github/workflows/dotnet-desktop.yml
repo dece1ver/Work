@@ -36,27 +36,15 @@ jobs:
           dir publish\eLog
           dir publish\remeLog
 
-      - name: 📦 Создание релиза
-        id: create_release
+      - name: 🚀 Создание релиза и загрузка артефактов
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: Release v${{ github.run_number }}
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 📤 Загрузка eLog.exe
-        uses: softprops/action-gh-release@v2
-        with:
-          files: publish/eLog/eLog.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 📤 Загрузка remeLog.exe
-        uses: softprops/action-gh-release@v2
-        with:
-          files: publish/remeLog/remeLog.exe
+          files: |
+            publish/eLog/eLog.exe
+            publish/remeLog/remeLog.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
