@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build & Publish
+    name: Build & Release
     runs-on: windows-latest
 
     env:
@@ -22,16 +22,16 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: 📦 Restore dependencies
-        run: dotnet restore src
+      - name: 📦 Restore dependencies via solution
+        run: dotnet restore Work.sln
 
       - name: 🔨 Публикация eLog
-        run: dotnet publish src/eLog/eLog.csproj -c Release -r win-x64 -o publish/eLog --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:PublishReadyToRun=false
+        run: dotnet publish eLog/eLog.csproj -c Release -r win-x64 -o publish/eLog --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:PublishReadyToRun=false
 
       - name: 🔨 Публикация remeLog
-        run: dotnet publish src/remeLog/remeLog.csproj -c Release -r win-x64 -o publish/remeLog --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:PublishReadyToRun=false
+        run: dotnet publish remeLog/remeLog.csproj -c Release -r win-x64 -o publish/remeLog --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:PublishReadyToRun=false
 
-      - name: 🧪 Проверка наличия файлов
+      - name: 🧪 Проверка публикации
         run: |
           dir publish\eLog
           dir publish\remeLog
