@@ -255,7 +255,8 @@ namespace eLog.Infrastructure.Extensions
                                 insertToolSearchCmd.Parameters.AddWithValue("@Value", d.Comment);
                                 insertToolSearchCmd.Parameters.AddWithValue("@StartTime", d.StartTime);
                                 insertToolSearchCmd.Parameters.AddWithValue("@EndTime", d.EndTime);
-                                insertToolSearchCmd.Parameters.AddWithValue("@IsSuccess", d.IsSuccess);
+                                insertToolSearchCmd.Parameters.AddNullableParameter("@IsSuccess", d.IsSuccess);
+                                    
                                 await insertToolSearchCmd.ExecuteNonQueryAsync();
                             }
                         }
@@ -421,7 +422,7 @@ namespace eLog.Infrastructure.Extensions
                                 insertToolSearchCmd.Parameters.AddWithValue("@Value", d.Comment);
                                 insertToolSearchCmd.Parameters.AddWithValue("@StartTime", d.StartTime);
                                 insertToolSearchCmd.Parameters.AddWithValue("@EndTime", d.EndTime);
-                                insertToolSearchCmd.Parameters.AddWithValue("@IsSuccess", d.IsSuccess);
+                                insertToolSearchCmd.Parameters.AddNullableParameter("@IsSuccess", d.IsSuccess);
                                 await insertToolSearchCmd.ExecuteNonQueryAsync();
                             }
                         }
