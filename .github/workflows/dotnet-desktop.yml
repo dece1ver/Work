@@ -1,0 +1,62 @@
+name: Build and Release eLog & remeLog
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build & Publish
+    runs-on: windows-latest
+
+    env:
+      DOTNET_VERSION: '6.0.x'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: 📦 Restore dependencies
+        run: dotnet restore src
+
+      - name: 🔨 Публикация eLog
+        run: dotnet publish src/eLog/eLog.csproj -c Release -r win-x64 -o publish/eLog --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:PublishReadyToRun=false
+
+      - name: 🔨 Публикация remeLog
+        run: dotnet publish src/remeLog/remeLog.csproj -c Release -r win-x64 -o publish/remeLog --self-contained false /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:PublishReadyToRun=false
+
+      - name: 🧪 Проверка наличия файлов
+        run: |
+          dir publish\eLog
+          dir publish\remeLog
+
+      - name: 📦 Создание релиза
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📤 Загрузка eLog.exe
+        uses: softprops/action-gh-release@v2
+        with:
+          files: publish/eLog/eLog.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📤 Загрузка remeLog.exe
+        uses: softprops/action-gh-release@v2
+        with:
+          files: publish/remeLog/remeLog.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
