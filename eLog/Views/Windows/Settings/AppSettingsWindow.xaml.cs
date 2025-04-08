@@ -207,6 +207,7 @@ namespace eLog.Views.Windows.Settings
         {
             string currentMachineName = Machine?.Name ?? "";
             Machines = await Database.GetMachinesAsync(ConnectionString);
+            if (Machines.Any()) AppSettings.Instance.Machines = Machines.ToList();
             Machine = Machines.FirstOrDefault(m => m.Name == currentMachineName);
         } 
 
