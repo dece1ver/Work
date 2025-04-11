@@ -56,11 +56,7 @@
                     <Button x:Name="OkButton" DockPanel.Dock="Right" Width="260" HorizontalAlignment="Right"
                             Margin="10" Height="60" Style="{StaticResource GeneralButton}"
                             VerticalAlignment="Bottom" Content="{StaticResource ConfirmIcon}"
-                            IsEnabled="{Binding CanBeClosed}"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDownTimesDialogWindow}}">
-                        <Button.Command>
-                            <cmd:CloseDialogCommand DialogResult="True"/>
-                        </Button.Command>
+                            IsEnabled="{Binding CanBeClosed}" Click="OkButton_Click">
                     </Button>
                 </DockPanel>
                 <Grid>

@@ -156,5 +156,15 @@ namespace eLog.Views.Windows.Dialogs
                 }
             }
         }
+
+        private void OkButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var dt in Part.DownTimes.Where(d => d.Type == DownTime.Types.ToolSearching && d.IsSuccess == null && d.EndTime > d.StartTime))
+            {
+                dt.IsSuccess = MessageBox.Show($"Удалось ли найти инструмент?\n[{dt.ToolType}] {dt.Comment}\nс {dt.StartTimeText} по {dt.EndTimeText}", "Уточните", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            }
+            DialogResult = true;
+            Close();
+        }
     }
 }
