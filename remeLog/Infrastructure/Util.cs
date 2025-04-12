@@ -2,6 +2,7 @@
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Drawing;
 using libeLog;
+using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Models;
 using Newtonsoft.Json;
@@ -22,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
-using static System.Net.WebRequestMethods;
 
 namespace remeLog.Infrastructure
 {
@@ -72,37 +72,175 @@ namespace remeLog.Infrastructure
             => LogWithErrorHandling(() => WriteLogAsync(exception, additionMessage));
 
         /// <summary>
-        /// Открывает диалог для выбора или сохранения файла Excel и возвращает путь к выбранному файлу.
+        /// Открывает диалог выбора или сохранения файла Excel и обрабатывает 
+        /// случаи, когда файл заблокирован другим процессом
         /// </summary>
-        /// <param name="save">
-        /// Если <c>true</c>, открывается диалог сохранения; 
-        /// если <c>false</c>, открывается диалог открытия.
-        /// </param>
-        /// <returns>Путь к выбранному файлу или пустая строка, если файл не был выбран.</returns>
+        /// <param name="save">True для диалога сохранения, False для диалога открытия</param>
+        /// <returns>Путь к выбранному файлу или пустую строку, если выбор отменен</returns>
         public static string GetXlsxPath(bool save = true)
         {
-            FileDialog fileDialog;
-            if (save)
+            FileDialog fileDialog = save
+                ? new SaveFileDialog() { Filter = "Книга Excel (*.xlsx)|*.xlsx", DefaultExt = "xlsx" }
+                : new OpenFileDialog() { Filter = "Книга Excel (*.xlsx)|*.xlsx", DefaultExt = "xlsx" };
+
+            if (fileDialog.ShowDialog() != DialogResult.OK)
+                return "";
+
+            string filePath = fileDialog.FileName;
+
+            if (save && File.Exists(filePath))
             {
-                fileDialog = new SaveFileDialog()
+                if (filePath.CheckFileWriteAccess() is FileCheckResult.FileInUse)
                 {
-                    Filter = "Книга Excel (*.xlsx)|*.xlsx",
-                    DefaultExt = "xlsx"
-                };
+                    // Получаем информацию о процессе, блокирующем файл
+                    var processInfo = GetProcessLockingFile(filePath);
+                    string processInfoText = processInfo != null
+                        ? $"Процесс: {processInfo.ProcessName} (ID: {processInfo.Id})"
+                        : "Неизвестный процесс";
+
+                    var result = MessageBox.Show(
+                        $"Файл занят другим процессом.\n{processInfoText}\n\n" +
+                        $"Да - закрыть процесс автоматически\n" +
+                        $"Нет - закрыть процесс самостоятельно и продолжить\n" +
+                        $"Отмена - прервать операцию",
+                        "Файл занят",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        // Пытаемся закрыть процесс
+                        if (processInfo != null)
+                        {
+                            try
+                            {
+                                // Пытаемся мягко закрыть процесс
+                                bool closedGracefully = libeLog.WinApi.Windows.Processes.CloseProcessGracefully(processInfo);
+
+                                if (!closedGracefully || !processInfo.HasExited)
+                                {
+                                    // Если мягкое закрытие не удалось, спрашиваем о принудительном
+                                    var forceResult = MessageBox.Show(
+                                        "Программа не закрылась автоматически. Возможно, отображается диалог сохранения. Закрыть принудительно?",
+                                        "Принудительное закрытие",
+                                        MessageBoxButtons.YesNo,
+                                        MessageBoxIcon.Warning);
+
+                                    if (forceResult == DialogResult.Yes)
+                                    {
+                                        processInfo.Kill();
+                                        processInfo.WaitForExit(10000); // Ждем 10 секунд
+                                    }
+                                }
+
+                                // Проверяем, освободился ли файл
+                                if (filePath.CheckFileWriteAccess() == FileCheckResult.FileInUse)
+                                {
+                                    MessageBox.Show("Не удалось освободить файл. Попробуйте закрыть процесс вручную.",
+                                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return "";
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"Ошибка при закрытии процесса: {ex.Message}",
+                                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return "";
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не удалось определить блокирующий процесс.",
+                                "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return "";
+                        }
+                    }
+                    else if (result == DialogResult.No)
+                    {
+                        // Пользователь выбрал закрыть файл самостоятельно
+                        // Проверяем, освободился ли файл через 10 секунд
+                        for (int i = 0; i < 10; i++)
+                        {
+                            System.Threading.Thread.Sleep(1000); // Ждем секунду между проверками
+                            if (filePath.CheckFileWriteAccess() != FileCheckResult.FileInUse)
+                                break;
+                        }
+
+                        // Финальная проверка
+                        if (filePath.CheckFileWriteAccess() == FileCheckResult.FileInUse)
+                        {
+                            MessageBox.Show("Файл всё ещё занят. Закройте файл вручную и попробуйте снова.",
+                                "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return "";
+                        }
+                    }
+                    else // DialogResult.Cancel
+                    {
+                        return "";
+                    }
+                }
             }
-            else
+
+            return filePath;
+        }
+
+        /// <summary>
+        /// Пытается определить процесс, блокирующий указанный файл
+        /// </summary>
+        /// <param name="filePath">Путь к файлу</param>
+        /// <returns>Процесс, блокирующий файл, или null если процесс не найден</returns>
+        private static Process GetProcessLockingFile(string filePath)
+        {
+            try
             {
-                fileDialog = new OpenFileDialog()
+                Process[] processes = Process.GetProcesses();
+                foreach (Process process in processes)
                 {
-                    Filter = "Книга Excel (*.xlsx)|*.xlsx",
-                    DefaultExt = "xlsx"
-                };
+                    try
+                    {
+                        var processModules = process.Modules;
+                        foreach (ProcessModule module in processModules)
+                        {
+                            if (module.FileName is { } fileName && fileName.Equals(filePath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return process;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Пропускаем процессы, к которым нет доступа
+                        continue;
+                    }
+                }
+
+                // Альтернативный способ - проверка через командную строку
+                using (Process netstat = new Process())
+                {
+                    netstat.StartInfo.FileName = "cmd.exe";
+                    netstat.StartInfo.Arguments = "/c handle \"" + filePath + "\"";
+                    netstat.StartInfo.UseShellExecute = false;
+                    netstat.StartInfo.RedirectStandardOutput = true;
+                    netstat.StartInfo.CreateNoWindow = true;
+                    netstat.Start();
+
+                    string output = netstat.StandardOutput.ReadToEnd();
+                    netstat.WaitForExit();
+
+                    // Разбор вывода для получения PID процесса
+                    var match = Regex.Match(output, @"pid: (\d+)", RegexOptions.IgnoreCase);
+                    if (match.Success && int.TryParse(match.Groups[1].Value, out int pid))
+                    {
+                        return Process.GetProcessById(pid);
+                    }
+                }
             }
-            if (fileDialog.ShowDialog() == DialogResult.OK)
+            catch (Exception)
             {
-                return fileDialog.FileName;
+                // Обработка исключений
             }
-            return "";
+
+            return null;
         }
 
         /// <summary>

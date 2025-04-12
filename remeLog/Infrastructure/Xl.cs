@@ -22,6 +22,8 @@ using Part = remeLog.Models.Part;
 using CM = remeLog.Infrastructure.ColumnManager;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Office2010.PowerPoint;
+using DocumentFormat.OpenXml.Presentation;
 
 namespace remeLog.Infrastructure
 {
@@ -335,7 +337,7 @@ namespace remeLog.Infrastructure
             {
                 string colLetter = ws.Column(col).ColumnLetter();
                 ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})/$B${lastDataRow + 2}";
-            } 
+            }
             for (int col = ci[CM.SetupRatio]; col <= ci[CM.AverageSetupTime]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
@@ -666,7 +668,7 @@ namespace remeLog.Infrastructure
             }
             ConfigureWorksheetHeader(ws, cm);
             var row = 3;
-            
+
             foreach (var partGroup in parts
                 .Where(p => !p.ExcludeFromReports)
                 .GroupBy(p => new { p.Operator, p.Machine })
@@ -960,7 +962,7 @@ namespace remeLog.Infrastructure
             progress.Report("Получение данных из БД");
             var cases = await Database.GetToolSearchCasesAsync(parts.Select(p => p.Guid).ToList(), progress);
 
-            
+
             ws.Style.Font.FontSize = 10;
             ws.Style.Alignment.WrapText = true;
             ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
@@ -985,7 +987,7 @@ namespace remeLog.Infrastructure
             ws.Range(2, 1, 2, cm.Count).Style.Border.SetOutsideBorder(XLBorderStyleValues.Medium);
 
             int row = 3;
-            
+
             var ci = cm.GetIndexes();
 
 
@@ -1002,7 +1004,7 @@ namespace remeLog.Infrastructure
                     .Style.DateFormat.Format = "dd.MM.yy HH:mm";
                 ws.Cell(row, ci[CM.ToolSearchingTime]).SetValue(@case.Time);
                 ws.Cell(row, ci[CM.IsSuccess]).SetValue(@case.IsSuccess.HasValue ? @case.IsSuccess.Value ? "Да" : "Нет" : "Н/Д");
-            
+
                 row++;
             }
 
@@ -1082,13 +1084,12 @@ namespace remeLog.Infrastructure
                 .Select(kvp => kvp.Value.First())
                 .ToList();
 
+            // Создаем множество нормализованных имен деталей из totalUnique для быстрого поиска
+            var totalUniqueNames = totalUnique.Select(p => NormalizePartName(p.PartName)).ToHashSet();
+
             foreach (var part in totalUnique)
             {
                 var normalizedName = NormalizePartName(part.PartName);
-                if (normalizedName == NormalizePartName("Вал кривошипный АР40.2-02-047"))
-                {
-
-                }
                 var partsForName = partsDict[normalizedName];
 
                 wsNorms.Cell(row, ci[CM.Part]).Value = part.PartName;
@@ -1104,8 +1105,13 @@ namespace remeLog.Infrastructure
                     var operationsUpToDate = partsForName
                         .Where(p => p.EndMachiningTime <= date)
                         .Select(p => new {
+                            p.PartName,
                             EffectiveSetup = p.FixedSetupTimePlan != 0 ? p.FixedSetupTimePlan : p.SetupTimePlan,
                             EffectiveProduction = p.FixedProductionTimePlan != 0 ? p.FixedProductionTimePlan : p.SingleProductionTimePlan,
+                            p.SetupTimePlan,
+                            p.SingleProductionTimePlan,
+                            p.FixedSetupTimePlan,
+                            p.FixedProductionTimePlan,
                             p.Setup,
                             p.EndMachiningTime
                         })
@@ -1113,8 +1119,23 @@ namespace remeLog.Infrastructure
                         .Select(g => g.OrderByDescending(p => p.EndMachiningTime).First())
                         .ToList();
 
-                    double setupSum = operationsUpToDate.Sum(op => op.EffectiveSetup);
-                    double productionSum = operationsUpToDate.Sum(op => op.EffectiveProduction);
+                    var filteredOps = new List<(double SetupTimePlan, double ProductionTimePlan)>();
+
+                    foreach (var op in operationsUpToDate)
+                    {
+                        if (filteredOps.Any(p => p.SetupTimePlan == op.SetupTimePlan && op.FixedSetupTimePlan != 0))
+                        {
+                            filteredOps.RemoveAll(p => p.SetupTimePlan == op.SetupTimePlan);
+                        }
+                        if (filteredOps.Any(p => p.ProductionTimePlan == op.SingleProductionTimePlan && op.FixedProductionTimePlan != 0))
+                        {
+                            filteredOps.RemoveAll(p => p.SetupTimePlan == op.SetupTimePlan);
+                        }
+                        filteredOps.Add((op.EffectiveSetup, op.EffectiveProduction));
+                    }
+
+                    double setupSum = filteredOps.Sum(op => op.SetupTimePlan);
+                    double productionSum = filteredOps.Sum(op => op.ProductionTimePlan);
 
                     wsNorms.Cell(row, ci[setupColumn]).Value = setupSum;
                     wsNorms.Cell(row, ci[workloadColumn]).Value = productionSum;
@@ -1165,6 +1186,191 @@ namespace remeLog.Infrastructure
             wsNorms.RangeUsed().SetAutoFilter(true);
             SetTitle(wsNorms, ci.Count, "Изменение нормативов");
 
+            // Создаем второй лист для отслеживания изменений нормативов
+            var wsChanges = wb.AddWorksheet("Изменения нормативов");
+            wsChanges.Style.Alignment.WrapText = false;
+            progress.Report("Формирование листа \"Изменения нормативов\"");
+
+            // Создаем билдер для второго листа - добавляем столбец "В основном отчёте"
+            var changesBuilder = new CM.Builder()
+                .Add(CM.Part)
+                .Add("Станок", "Станок")
+                .Add("Установка", "Установка")
+                .Add("Тип", "Тип")
+                .Add("Дата", "Дата")
+                .Add("Старое значение", "Старое значение")
+                .Add("Новое значение", "Новое значение")
+                .Add("Изменение", "Изменение")
+                .Add("Изменение %", "Изменение %")
+                .Add("Серийная", "Серийная");
+
+            var changesMap = changesBuilder.Build();
+            ConfigureWorksheetHeader(wsChanges, changesMap, HeaderRotateOption.Horizontal, 65, 10);
+            var changesCI = changesMap.GetIndexes();
+            int changesRow = 3;
+
+            // Создаем структуру для хранения уникальных изменений
+            var uniqueChanges = new HashSet<(string PartName, string Machine, int Setup, string ChangeType,
+                                            double OldValue, double NewValue)>();
+
+            // Собираем все изменения с информацией о дате для сортировки
+            var allChanges = new List<(string PartName, string Machine, int Setup, string ChangeType,
+                                      double OldValue, double NewValue, DateTime Date, bool IsInTotalUnique)>();
+
+            // Собираем информацию об изменениях для всех деталей
+            foreach (var partGroup in partsDict)
+            {
+                var partsForName = partGroup.Value;
+                bool isInTotalUnique = totalUniqueNames.Contains(partGroup.Key);
+
+                // Собираем все части с фиксированными нормативами (изменениями)
+                var partsWithChanges = partsForName
+                    .Where(p => (p.FixedSetupTimePlan != 0 && p.SetupTimePlan != 0) ||
+                                (p.FixedProductionTimePlan != 0 && p.SingleProductionTimePlan != 0))
+                    .OrderBy(p => p.EndMachiningTime)
+                    .ToList();
+
+                if (partsWithChanges.Count == 0)
+                    continue;
+
+                // Для каждой части с изменениями
+                foreach (var changedPart in partsWithChanges)
+                {
+                    // Обрабатываем изменения в наладке
+                    if (changedPart.FixedSetupTimePlan != 0 && changedPart.SetupTimePlan != 0 &&
+                        Math.Abs(changedPart.FixedSetupTimePlan - changedPart.SetupTimePlan) > 0.001)
+                    {
+                        var changeKey = (
+                            changedPart.PartName,
+                            changedPart.Machine,
+                            changedPart.Setup,
+                            "Наладка",
+                            changedPart.SetupTimePlan,
+                            changedPart.FixedSetupTimePlan
+                        );
+
+                        // Добавляем только если такого изменения ещё не было
+                        if (uniqueChanges.Add(changeKey))
+                        {
+                            allChanges.Add((
+                                changeKey.PartName,
+                                changeKey.Machine,
+                                changeKey.Setup,
+                                changeKey.Item4,
+                                changeKey.SetupTimePlan,
+                                changeKey.FixedSetupTimePlan,
+                                changedPart.EndMachiningTime,
+                                isInTotalUnique
+                            ));
+                        }
+                    }
+
+                    // Обрабатываем изменения в изготовлении
+                    if (changedPart.FixedProductionTimePlan != 0 && changedPart.SingleProductionTimePlan != 0 &&
+                        Math.Abs(changedPart.FixedProductionTimePlan - changedPart.SingleProductionTimePlan) > 0.001)
+                    {
+                        var changeKey = (
+                            changedPart.PartName,
+                            changedPart.Machine,
+                            changedPart.Setup,
+                            "Изготовление",
+                            changedPart.SingleProductionTimePlan,
+                            changedPart.FixedProductionTimePlan
+                        );
+
+                        // Добавляем только если такого изменения ещё не было
+                        if (uniqueChanges.Add(changeKey))
+                        {
+                            allChanges.Add((
+                                changeKey.PartName,
+                                changeKey.Machine,
+                                changeKey.Setup,
+                                changeKey.Item4,
+                                changeKey.SingleProductionTimePlan,
+                                changeKey.FixedProductionTimePlan,
+                                changedPart.EndMachiningTime,
+                                isInTotalUnique
+                            ));
+                        }
+                    }
+                }
+            }
+
+            // Сортируем все изменения по дате
+            allChanges = allChanges.OrderBy(c => c.Date).ToList();
+
+            // Заполняем второй лист отсортированными изменениями
+            foreach (var change in allChanges)
+            {
+                wsChanges.Cell(changesRow, changesCI[CM.Part]).Value = change.PartName;
+                wsChanges.Cell(changesRow, changesCI["Станок"]).Value = change.Machine;
+                wsChanges.Cell(changesRow, changesCI["Установка"]).Value = change.Setup;
+                wsChanges.Cell(changesRow, changesCI["Тип"]).Value = change.ChangeType;
+                wsChanges.Cell(changesRow, changesCI["Дата"]).Value = change.Date;
+                wsChanges.Cell(changesRow, changesCI["Старое значение"]).Value = change.OldValue;
+                wsChanges.Cell(changesRow, changesCI["Новое значение"]).Value = change.NewValue;
+                wsChanges.Cell(changesRow, changesCI["Серийная"]).Value = change.IsInTotalUnique;
+
+                // Ячейки для формул
+                var newValueCell = wsChanges.Cell(changesRow, changesCI["Новое значение"]).Address;
+                var oldValueCell = wsChanges.Cell(changesRow, changesCI["Старое значение"]).Address;
+
+                // Формула для абсолютного изменения
+                wsChanges.Cell(changesRow, changesCI["Изменение"]).FormulaA1 = $"={newValueCell}-{oldValueCell}";
+
+                // Формула для процентного изменения
+                wsChanges.Cell(changesRow, changesCI["Изменение %"]).FormulaA1 = $"=IF({oldValueCell}=0,0,{newValueCell}/{oldValueCell}-1)";
+
+                changesRow++;
+            }
+
+            // Форматирование таблицы изменений
+            if (changesRow > 3) // если есть данные
+            {
+                wsChanges.Range(2, 1, changesRow - 1, changesCI.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                wsChanges.Range(2, 1, changesRow - 1, changesMap.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+
+                // Форматирование процентов
+                var percentRange = wsChanges.Range(3, changesCI["Изменение %"], changesRow - 1, changesCI["Изменение %"]);
+                percentRange.Style.NumberFormat.Format = "0.00%";
+
+                // Форматирование даты
+                var dateRange = wsChanges.Range(3, changesCI["Дата"], changesRow - 1, changesCI["Дата"]);
+                dateRange.Style.NumberFormat.Format = Constants.ShortDateFormat;
+
+                // Форматирование значений нормативов
+                var valueColumns = new[] { "Старое значение", "Новое значение", "Изменение" };
+                foreach (var colName in valueColumns)
+                {
+                    var valueRange = wsChanges.Range(3, changesCI[colName], changesRow - 1, changesCI[colName]);
+                    valueRange.Style.NumberFormat.Format = "0.00";
+                }
+
+                // Форматирование столбца "Серийная"
+                var serialRange = wsChanges.Range(3, changesCI["Серийная"], changesRow - 1, changesCI["Серийная"]);
+                var cfInReport = serialRange.AddConditionalFormat();
+                cfInReport.WhenEquals("ИСТИНА").Fill.BackgroundColor = XLColor.LightBlue;
+
+                // Добавляем условное форматирование для всей таблицы
+                var changeColRange = wsChanges.Range(3, changesCI["Изменение"], changesRow - 1, changesCI["Изменение"]);
+                var cfGreen = changeColRange.AddConditionalFormat();
+                cfGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+                var cfRed = changeColRange.AddConditionalFormat();
+                cfRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+
+                var percentColRange = wsChanges.Range(3, changesCI["Изменение %"], changesRow - 1, changesCI["Изменение %"]);
+                var cfPercentGreen = percentColRange.AddConditionalFormat();
+                cfPercentGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+                var cfPercentRed = percentColRange.AddConditionalFormat();
+                cfPercentRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+            }
+
+            wsChanges.Columns().AdjustToContents();
+            wsChanges.RangeUsed().SetAutoFilter(true);
+            SetTitle(wsChanges, changesCI.Count, "История изменений нормативов");
+
             progress.Report("Сохранение файла");
             wb.SaveAs(path);
 
@@ -1176,8 +1382,6 @@ namespace remeLog.Infrastructure
 
             return path;
         }
-
-
 
         public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path, IProgress<string> progress)
         {

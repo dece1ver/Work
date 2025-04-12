@@ -308,5 +308,50 @@ namespace libeLog.Extensions
                 return FileCheckResult.GeneralError;
             }
         }
+
+        /// <summary>
+        /// Проверяет возможность записи в указанный файл
+        /// </summary>
+        /// <param name="filePath">Полный путь к файлу</param>
+        /// <returns>Результат проверки в виде значения FileCheckResult</returns>
+        public static FileCheckResult CheckFileWriteAccess(this string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(filePath))
+                    return FileCheckResult.InvalidPath;
+
+                using var stream = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+                return FileCheckResult.Success;
+            }
+            catch (FileNotFoundException)
+            {
+                return FileCheckResult.FileNotFound;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return FileCheckResult.FileNotFound;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return FileCheckResult.AccessDenied;
+            }
+            catch (IOException ex) when ((ex.HResult & 0x0000FFFF) == 32)
+            {
+                return FileCheckResult.FileInUse;
+            }
+            catch (IOException)
+            {
+                return FileCheckResult.GeneralError;
+            }
+            catch (ArgumentException)
+            {
+                return FileCheckResult.InvalidPath;
+            }
+            catch
+            {
+                return FileCheckResult.GeneralError;
+            }
+        }
     }
 }
