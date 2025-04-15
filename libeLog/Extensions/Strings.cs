@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace libeLog.Extensions
@@ -262,6 +263,34 @@ namespace libeLog.Extensions
             FileInfo targetFileInfo = new(targetFilePath);
 
             return sourceFileInfo.LastWriteTime > targetFileInfo.LastWriteTime;
+        }
+
+        /// <summary>
+        /// Нормализованное имя детали
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static string NormalizedPartName(this string name) =>
+            name.ToLower().Replace("\"", "");
+
+        /// <summary>
+        /// Нормализованное имя детали без круглых скобок, кавычек и лишних пробелов
+        /// </summary>
+        /// <param name="name">Исходное имя детали</param>
+        /// <returns>Очщенное и нормализованное имя</returns>
+        public static string NormalizedPartNameWithoutComments(this string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return string.Empty;
+
+            // Удаляем всё в круглых скобках вместе со скобками
+            var cleaned = Regex.Replace(name, @"\([^)]*\)", string.Empty);
+
+            // Удаляем кавычки
+            cleaned = cleaned.Replace("\"", "");
+
+            // Убираем множественные пробелы и приводим к нижнему регистру
+            return Regex.Replace(cleaned, @"\s{2,}", " ").ToLower().Trim();
         }
 
         /// <summary>

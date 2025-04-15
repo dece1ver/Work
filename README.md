@@ -211,6 +211,13 @@ CREATE TABLE parts (
     LongSetupFixComment NVARCHAR(MAX) NULL,
     LongSetupEngeneerComment NVARCHAR(MAX) NULL
 );
+
+CREATE TABLE cnc_serial_parts (
+    Id INT IDENTITY(1,1) NOT NULL,
+    PartName NVARCHAR(255) NOT NULL,
+    CONSTRAINT PK_cnc_serial_parts PRIMARY KEY (Id),
+    CONSTRAINT UQ_PartName UNIQUE (PartName)
+);
 ```
 
 ### Настройка таблиц
@@ -326,7 +333,12 @@ VALUES (1.5, 240);
 - FullName: Фамилия Имя Отчество
 - IsActive: активен ли (будет отображаться в приложении remeLog)
 
+#### <ins>cnc_serial_parts</ins> (серийные детали)
+- Id: ID
+- PartName: Название детали
+
 _Таблицы_ <ins>__parts__</ins>_,_ <ins>__cnc_shifts__</ins> _и_ <ins>__cnc_tool_search_cases__</ins> _наполняются данными автоматически в процессе работы_
+
 
 ### Установка приложений
 

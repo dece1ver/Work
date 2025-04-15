@@ -1100,7 +1100,7 @@ namespace remeLog.ViewModels
                     Status = "Выбор файла отменён";
                     return;
                 }
-                Status = await Task.Run(() => Xl.ExportNormsAndWorkloadAnalysis(Parts, dates, path, progress));
+                Status = await Xl.ExportNormsAndWorkloadAnalysisAsync(Parts, dates, path, progress);
 
 
             }
