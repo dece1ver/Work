@@ -215,9 +215,9 @@ namespace remeLog.Infrastructure
         /// Генерируется, если итоговая строка подключения пуста или содержит только пробелы.
         /// </exception>
 
-        public async static Task<List<string>> GetSerialPartsAsync(string connectionString = null!, IProgress<string>? progress = null)
+        public async static Task<List<SerialPart>> GetSerialPartsAsync(string connectionString = null!, IProgress<string>? progress = null)
         {
-            List<string> parts = new();
+            List<SerialPart> parts = new();
             connectionString ??= AppSettings.Instance.ConnectionString!;
             if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString)) throw new ArgumentException("Строка подключения не может быть пустой");
             await Task.Run(async () =>
@@ -226,7 +226,7 @@ namespace remeLog.Infrastructure
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
-                    string query = $"SELECT PartName FROM cnc_serial_parts ORDER BY PartName ASC;";
+                    string query = $"SELECT Id, PartName FROM cnc_serial_parts ORDER BY PartName ASC;";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
@@ -234,9 +234,9 @@ namespace remeLog.Infrastructure
                             progress?.Report("Чтение данных о деталях из БД...");
                             while (await reader.ReadAsync())
                             {
-                                var part = (await reader.GetFieldValueAsync<string>(0)).NormalizedPartNameWithoutComments();
+                                var part = new SerialPart(await reader.GetFieldValueAsync<int>(0), await reader.GetFieldValueAsync<string>(1));
                                 parts.Add(part);
-                                progress?.Report($"Добавление: {part}");
+                                progress?.Report($"Добавление: {part.PartName}");
                             }
                         }
                     }
@@ -245,6 +245,85 @@ namespace remeLog.Infrastructure
             });
             return parts;
         }
+
+        /// <summary>
+        /// Сохраняет информацию о серийной детали в базе данных.
+        /// Если деталь с заданным Id существует, выполняется обновление её имени,
+        /// если Id равен 0 — создается новая запись.
+        /// </summary>
+        /// <param name="part">Объект серийной детали для сохранения.</param>
+        /// <param name="progress">Прогресс для отслеживания состояния выполнения.</param>
+        /// <returns>Асинхронная задача, представляющая операцию сохранения.</returns>
+        public static async Task SaveSerialPartAsync(SerialPart part, IProgress<string>? progress = null)
+        {
+            string query = part.Id == 0
+                ? "IF NOT EXISTS (SELECT 1 FROM cnc_serial_parts WHERE PartName = @PartName) " +
+                  "BEGIN INSERT INTO cnc_serial_parts (PartName) VALUES (@PartName); END"
+                : "UPDATE cnc_serial_parts SET PartName = @PartName WHERE Id = @Id;";
+
+            using var connection = new SqlConnection(AppSettings.Instance.ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@PartName", part.PartName);
+            if (part.Id != 0)
+                command.Parameters.AddWithValue("@Id", part.Id);
+
+            progress?.Report($"Сохранение детали '{part.PartName}'...");
+            await command.ExecuteNonQueryAsync();
+            progress?.Report($"Деталь '{part.PartName}' успешно сохранена.");
+        }
+
+
+        /// <summary>
+        /// Сохраняет список серийных деталей в базе данных.
+        /// Для каждой детали вызывается метод SaveSerialPartAsync,
+        /// который проверяет наличие Id и выполняет добавление или обновление.
+        /// </summary>
+        /// <param name="partNames">Список серийных деталей для сохранения.</param>
+        /// <param name="progress">Прогресс для отслеживания состояния выполнения.</param>
+        /// <returns>Асинхронная задача, представляющая операцию сохранения.</returns>
+        public static async Task SaveSerialPartsAsync(IEnumerable<SerialPart> partNames, IProgress<string>? progress = null)
+        {
+            progress?.Report("Сохранение серийных деталей в БД...");
+            foreach (var part in partNames)
+            {
+                await SaveSerialPartAsync(part, progress);
+            }
+            progress?.Report("Сохранение серийных деталей завершено.");
+        }
+
+
+        /// <summary>
+        /// Удаляет серийную деталь из базы данных по указанному идентификатору.
+        /// Если деталь с данным Id существует, она будет удалена.
+        /// </summary>
+        /// <param name="partId">Уникальный идентификатор детали, которую необходимо удалить.</param>
+        /// <param name="progress">Прогресс для отслеживания состояния выполнения.</param>
+        /// <returns>Асинхронная задача, представляющая операцию удаления.</returns>
+        public static async Task DeleteSerialPartAsync(int partId, IProgress<string>? progress = null)
+        {
+            const string query = "DELETE FROM cnc_serial_parts WHERE Id = @Id;";
+
+            using var connection = new SqlConnection(AppSettings.Instance.ConnectionString);
+            await connection.OpenAsync();
+
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", partId);
+
+            progress?.Report($"Удаление детали с Id = {partId} из БД...");
+            int rowsAffected = await command.ExecuteNonQueryAsync();
+
+            if (rowsAffected > 0)
+            {
+                progress?.Report("Деталь успешно удалена.");
+            }
+            else
+            {
+                progress?.Report("Деталь с указанным Id не найдена.");
+            }
+        }
+
 
         /// <summary>
         /// Асинхронно извлекает данные о случаях поиска инструмента, разделяя запросы на подсписки по 2000 элементов.

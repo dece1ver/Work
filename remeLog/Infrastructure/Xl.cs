@@ -1034,29 +1034,8 @@ namespace remeLog.Infrastructure
         public async static Task<string> ExportNormsAndWorkloadAnalysisAsync(ICollection<Part> parts, List<DateTime> dates, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();
-            //var wsNorms = wb.AddWorksheet("Нормативы");
-            //wsNorms.Style.Alignment.WrapText = true;
-            //progress.Report("Формирование листа \"Нормативы\"");
-
-            //var builder = new CM.Builder().Add(CM.Part);
-            //var setupColumns = new List<string>();
-            //var workloadColumns = new List<string>();
 
             dates.Sort();
-            //foreach (var date in dates)
-            //{
-            //    string setupColumn = $"Наладка{Environment.NewLine}на {date.ToString(Constants.ShortDateFormat)}";
-            //    string workloadColumn = $"Изготовление{Environment.NewLine}на {date.ToString(Constants.ShortDateFormat)}";
-            //    builder.Add(setupColumn, setupColumn)
-            //           .Add(workloadColumn, workloadColumn);
-            //    setupColumns.Add(setupColumn);
-            //    workloadColumns.Add(workloadColumn);
-            //}
-
-            //var cm = builder.Build();
-            //ConfigureWorksheetHeader(wsNorms, cm, HeaderRotateOption.Horizontal, 65, 10);
-            //int row = 3;
-            //var ci = cm.GetIndexes();
 
             // Группируем детали по нормализованному имени
             var partsDict = parts
@@ -1084,106 +1063,7 @@ namespace remeLog.Infrastructure
             // Создаем множество нормализованных имен деталей из totalUnique для быстрого поиска
             var totalUniqueNames = totalUnique.Select(p => p.PartName.NormalizedPartName()).ToHashSet();
 
-            //foreach (var part in totalUnique)
-            //{
-            //    var normalizedName = NormalizePartName(part.PartName);
-            //    var partsForName = partsDict[normalizedName];
-
-            //    wsNorms.Cell(row, ci[CM.Part]).Value = part.PartName;
-
-            //    // Для каждой даты вычисляем сумму нормативов по уникальным операциям с учетом корректировок
-            //    for (int i = 0; i < dates.Count; i++)
-            //    {
-            //        var date = dates[i];
-            //        var setupColumn = setupColumns[i];
-            //        var workloadColumn = workloadColumns[i];
-
-            //        // Первичная группировка с учётом нормативов:
-            //        var operationsUpToDate = partsForName
-            //            .Where(p => p.EndMachiningTime <= date)
-            //            .Select(p => new {
-            //                p.PartName,
-            //                EffectiveSetup = p.FixedSetupTimePlan != 0 ? p.FixedSetupTimePlan : p.SetupTimePlan,
-            //                EffectiveProduction = p.FixedProductionTimePlan != 0 ? p.FixedProductionTimePlan : p.SingleProductionTimePlan,
-            //                p.SetupTimePlan,
-            //                p.SingleProductionTimePlan,
-            //                p.FixedSetupTimePlan,
-            //                p.FixedProductionTimePlan,
-            //                p.Setup,
-            //                p.EndMachiningTime
-            //            })
-            //            .GroupBy(p => new { p.Setup, p.EffectiveSetup, p.EffectiveProduction })
-            //            .Select(g => g.OrderByDescending(p => p.EndMachiningTime).First())
-            //            .ToList();
-
-            //        var filteredOps = new List<(double SetupTimePlan, double ProductionTimePlan)>();
-
-            //        foreach (var op in operationsUpToDate)
-            //        {
-            //            if (filteredOps.Any(p => p.SetupTimePlan == op.SetupTimePlan && op.FixedSetupTimePlan != 0))
-            //            {
-            //                filteredOps.RemoveAll(p => p.SetupTimePlan == op.SetupTimePlan);
-            //            }
-            //            if (filteredOps.Any(p => p.ProductionTimePlan == op.SingleProductionTimePlan && op.FixedProductionTimePlan != 0))
-            //            {
-            //                filteredOps.RemoveAll(p => p.SetupTimePlan == op.SetupTimePlan);
-            //            }
-            //            filteredOps.Add((op.EffectiveSetup, op.EffectiveProduction));
-            //        }
-
-            //        double setupSum = filteredOps.Sum(op => op.SetupTimePlan);
-            //        double productionSum = filteredOps.Sum(op => op.ProductionTimePlan);
-
-            //        wsNorms.Cell(row, ci[setupColumn]).Value = setupSum;
-            //        wsNorms.Cell(row, ci[workloadColumn]).Value = productionSum;
-            //    }
-            //    row++;
-            //}
-
-            //// Условное форматирование для динамики изменений нормативов
-            //for (int i = 1; i < setupColumns.Count; i++)
-            //{
-            //    var currentSetupColumn = setupColumns[i];
-            //    var previousSetupColumn = setupColumns[i - 1];
-            //    var setupRange = wsNorms.Range(3, ci[currentSetupColumn], row - 1, ci[currentSetupColumn]);
-            //    var setupFormattingGreen = setupRange.AddConditionalFormat();
-            //    setupFormattingGreen.WhenIsTrue($"{setupRange.FirstCell().Address}<{wsNorms.Cell(3, ci[previousSetupColumn]).Address}")
-            //                          .Fill.BackgroundColor = _lightGreen;
-            //    var setupFormattingRed = setupRange.AddConditionalFormat();
-            //    setupFormattingRed.WhenIsTrue($"{setupRange.FirstCell().Address}>{wsNorms.Cell(3, ci[previousSetupColumn]).Address}")
-            //                       .Fill.BackgroundColor = _lightRed;
-            //}
-
-            //for (int i = 1; i < workloadColumns.Count; i++)
-            //{
-            //    var currentWorkloadColumn = workloadColumns[i];
-            //    var previousWorkloadColumn = workloadColumns[i - 1];
-            //    var workloadRange = wsNorms.Range(3, ci[currentWorkloadColumn], row - 1, ci[currentWorkloadColumn]);
-            //    var workloadFormattingGreen = workloadRange.AddConditionalFormat();
-            //    workloadFormattingGreen.WhenIsTrue($"{workloadRange.FirstCell().Address}<{wsNorms.Cell(3, ci[previousWorkloadColumn]).Address}")
-            //                           .Fill.BackgroundColor = _lightGreen;
-            //    var workloadFormattingRed = workloadRange.AddConditionalFormat();
-            //    workloadFormattingRed.WhenIsTrue($"{workloadRange.FirstCell().Address}>{wsNorms.Cell(3, ci[previousWorkloadColumn]).Address}")
-            //                         .Fill.BackgroundColor = _lightRed;
-            //}
-
-            //wsNorms.Range(2, 1, row - 1, ci.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-            //wsNorms.Range(2, 1, row - 1, cm.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            //wsNorms.Columns().AdjustToContents();
-
-            //foreach (var setupColumn in setupColumns)
-            //{
-            //    wsNorms.Column(ci[setupColumn]).Width = 14;
-            //}
-            //foreach (var workloadColumn in workloadColumns)
-            //{
-            //    wsNorms.Column(ci[workloadColumn]).Width = 14;
-            //}
-
-            //wsNorms.RangeUsed().SetAutoFilter(true);
-            //SetTitle(wsNorms, ci.Count, "Изменение нормативов");
-
-            var serialParts = await Database.GetSerialPartsAsync();
+            var serialParts = (await Database.GetSerialPartsAsync()).Select(p => p.PartName.NormalizedPartNameWithoutComments());
 
             // Создаем второй лист для отслеживания изменений нормативов
             var wsChanges = wb.AddWorksheet("Изменения нормативов");

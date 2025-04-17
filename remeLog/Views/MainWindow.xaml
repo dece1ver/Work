@@ -54,6 +54,8 @@
                               Command="{Binding ShowLongSetupsCommand}" Icon="{StaticResource HistoryLayersIcon}"/>
                     <MenuItem Header="Операторы"
                               Command="{Binding EditOperatorsCommand}" Icon="{StaticResource OperatorsIcon}"/>
+                    <MenuItem Header="Серийные детали"
+                              Command="{Binding EditSerialPartsCommand}" Icon="{StaticResource LookupListItemIcon}"/>
                 </MenuItem>
                 <MenuItem Header="Инструменты">
                     <MenuItem Header="Мониторинг"
