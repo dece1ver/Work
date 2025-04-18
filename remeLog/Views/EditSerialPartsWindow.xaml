@@ -62,12 +62,25 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+                <DataGridTextColumn Header="Количество в год" 
+                    Binding="{Binding YearCount, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                    Width="*" >
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsModified}" Value="True">
+                                    <Setter Property="Foreground" Value="Blue"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
 
         <Button Grid.Row="1" Content="Записать" Width="100" Height="30" Margin="10" HorizontalAlignment="Right" 
                 IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
-                Command="{Binding SavePartsCommand}"/>
+                Command="{Binding SaveSerialPartsCommand}"/>
 
         <ProgressBar Grid.Row="2" IsIndeterminate="{Binding InProgress}"/>
         <StatusBar Grid.Row="3">

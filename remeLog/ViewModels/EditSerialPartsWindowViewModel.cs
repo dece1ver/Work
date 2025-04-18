@@ -70,12 +70,12 @@ namespace remeLog.ViewModels
         {
             if (string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
             {
-                Status = "Операторы не могут быть сохранены т.к. строка подключения не настроена";
+                Status = "Детали не могут быть сохранены т.к. строка подключения не настроена";
                 return;
             }
             InProgress = true;
             await Database.SaveSerialPartsAsync(SerialParts, new Progress<string>(p => Status = p));
-            LoadSerialPartsAsync();
+            await LoadSerialPartsAsync();
             InProgress = false;
             Status = "Обновление завершено";
             await Task.Delay(3000);
@@ -85,11 +85,11 @@ namespace remeLog.ViewModels
         private bool CanSaveSerialPartsCommandExecute(object p) => !InProgress;
         #endregion
 
-        private async void LoadSerialPartsAsync()
+        private async Task LoadSerialPartsAsync()
         {
             if (string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
             {
-                Status = "Операторы не могут быть загружены т.к. строка подключения не настроена";
+                Status = "Детали не могут быть загружены т.к. строка подключения не настроена";
                 return;
             }
             var parts = await Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString, new Progress<string>(p => Status = p));

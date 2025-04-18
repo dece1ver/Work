@@ -226,7 +226,7 @@ namespace remeLog.Infrastructure
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
-                    string query = $"SELECT Id, PartName FROM cnc_serial_parts ORDER BY PartName ASC;";
+                    string query = $"SELECT Id, PartName, YearCount FROM cnc_serial_parts ORDER BY PartName ASC;";
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
@@ -234,7 +234,7 @@ namespace remeLog.Infrastructure
                             progress?.Report("Чтение данных о деталях из БД...");
                             while (await reader.ReadAsync())
                             {
-                                var part = new SerialPart(await reader.GetFieldValueAsync<int>(0), await reader.GetFieldValueAsync<string>(1));
+                                var part = new SerialPart(await reader.GetFieldValueAsync<int>(0), await reader.GetFieldValueAsync<string>(1), await reader.GetFieldValueAsync<int>(2));
                                 parts.Add(part);
                                 progress?.Report($"Добавление: {part.PartName}");
                             }
@@ -258,14 +258,15 @@ namespace remeLog.Infrastructure
         {
             string query = part.Id == 0
                 ? "IF NOT EXISTS (SELECT 1 FROM cnc_serial_parts WHERE PartName = @PartName) " +
-                  "BEGIN INSERT INTO cnc_serial_parts (PartName) VALUES (@PartName); END"
-                : "UPDATE cnc_serial_parts SET PartName = @PartName WHERE Id = @Id;";
+                  "BEGIN INSERT INTO cnc_serial_parts (PartName, YearCount) VALUES (@PartName, @YearCount); END"
+                : "UPDATE cnc_serial_parts SET PartName = @PartName, YearCount = @YearCount WHERE Id = @Id;";
 
             using var connection = new SqlConnection(AppSettings.Instance.ConnectionString);
             await connection.OpenAsync();
 
             using var command = new SqlCommand(query, connection);
             command.Parameters.AddWithValue("@PartName", part.PartName);
+            command.Parameters.AddWithValue("@YearCount", part.YearCount);
             if (part.Id != 0)
                 command.Parameters.AddWithValue("@Id", part.Id);
 
