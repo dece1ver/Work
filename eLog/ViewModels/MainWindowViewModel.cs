@@ -440,6 +440,7 @@ namespace eLog.ViewModels
             catch (Exception ex)
             {
                 Status = $"Ошибка при отправке: {ex.Message}";
+                await Util.WriteLogAsync(ex);
             }
             finally
             {

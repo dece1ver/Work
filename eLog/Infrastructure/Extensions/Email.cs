@@ -5,6 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Security;
+using System.Net.Sockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using static eLog.Infrastructure.Extensions.Util;
 
@@ -34,24 +38,103 @@ namespace eLog.Infrastructure.Extensions
                 </body>
                 </html>";
 
+
+        /// <summary>
+        /// Отправляет HTML-письмо на указанные адреса через SMTP-сервер с поддержкой SSL.
+        /// В случае ошибки выбрасывает исключение с кратким описанием, подробности записываются через Util.WriteLog().
+        /// </summary>
+        /// <param name="subject">Тема письма.</param>
+        /// <param name="body">HTML-тело письма.</param>
+        /// <param name="smtpAddress">Адрес SMTP-сервера.</param>
+        /// <param name="portNumber">Порт SMTP-сервера.</param>
+        /// <param name="enableSSL">Включить SSL при соединении.</param>
+        /// <param name="emailFrom">E-mail отправителя.</param>
+        /// <param name="password">Пароль отправителя.</param>
+        /// <param name="emailTo">Список e-mail получателей.</param>
+        /// <exception cref="AuthenticationException">Если не удалось установить защищённое соединение.</exception>
+        /// <exception cref="SmtpException">Если произошла ошибка при отправке письма.</exception>
+        /// <exception cref="Exception">Для остальных ошибок.</exception>
         public static void SendEmail(string subject, string body, string smtpAddress, int portNumber, bool enableSSL, string emailFrom, string password, List<string> emailTo)
         {
-            using (MailMessage mail = new MailMessage())
-            {
-                mail.From = new MailAddress(emailFrom, "Уведомлятель");
-                foreach (string s in emailTo) { mail.To.Add(s); }
-                mail.Subject = subject;
-                mail.Body = body;
-                mail.IsBodyHtml = true;
+            using MailMessage mail = new();
+            mail.From = new MailAddress(emailFrom, "Уведомлятель");
+            foreach (string s in emailTo) mail.To.Add(s);
 
-                using (SmtpClient smtp = new SmtpClient(smtpAddress, portNumber))
+            mail.Subject = subject;
+            mail.Body = body;
+            mail.IsBodyHtml = true;
+
+            using SmtpClient smtp = new(smtpAddress, portNumber)
+            {
+                Credentials = new NetworkCredential(emailFrom, password),
+                EnableSsl = enableSSL
+            };
+
+            string? certChainLog = null;
+
+            bool certCallback(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+            {
+                if (chain is { ChainStatus: { Length: > 0 } statuses })
                 {
-                    smtp.Credentials = new NetworkCredential(emailFrom, password);
-                    smtp.EnableSsl = enableSSL;
-                    smtp.Send(mail);
+                    var cert = certificate as X509Certificate2 ?? new X509Certificate2(certificate!);
+
+                    var builder = new StringBuilder();
+                    builder.AppendLine("Ошибка проверки SSL-сертификата:");
+                    builder.AppendLine($"→ Subject: {cert.Subject}");
+                    builder.AppendLine($"→ Выдан: {cert.NotBefore:yyyy-MM-dd HH:mm:ss}");
+                    builder.AppendLine($"→ Действителен до: {cert.NotAfter:yyyy-MM-dd HH:mm:ss}");
+                    builder.AppendLine("→ Статусы цепочки:");
+
+                    foreach (var status in statuses)
+                        builder.AppendLine($"   - {status.Status}: {status.StatusInformation.Trim()}");
+
+                    certChainLog = builder.ToString();
                 }
+
+                return false;
+            }
+
+            RemoteCertificateValidationCallback? oldCallback = ServicePointManager.ServerCertificateValidationCallback;
+            ServicePointManager.ServerCertificateValidationCallback = certCallback;
+
+            try
+            {
+                smtp.Send(mail);
+            }
+            catch (AuthenticationException authEx)
+            {
+                string shortMsg = "Не удалось установить защищённое соединение с почтовым сервером.";
+
+                Util.WriteLog(authEx,
+                    $"AuthenticationException при подключении к {smtpAddress}:{portNumber}, EmailFrom: {emailFrom}\n" +
+                    $"→ {authEx.Message}\n{certChainLog ?? "Доп. информация о сертификате недоступна."}");
+
+                throw new AuthenticationException(shortMsg, authEx);
+            }
+            catch (SmtpException smtpEx)
+            {
+                string shortMsg = "Ошибка при отправке письма.";
+                Util.WriteLog(smtpEx,
+                    $"SmtpException при отправке письма через {smtpAddress}:{portNumber}, EmailFrom: {emailFrom}\n" +
+                    $"→ {smtpEx.Message}");
+                throw new SmtpException(shortMsg, smtpEx);
+            }
+            catch (Exception ex)
+            {
+                string shortMsg = "Сбой при работе с почтой.";
+                Util.WriteLog(ex,
+                    $"Исключение при работе с почтовым сервером {smtpAddress}:{portNumber}, EmailFrom: {emailFrom}\n" +
+                    $"→ {ex.GetType().Name}: {ex.Message}");
+                throw new Exception(shortMsg, ex);
+            }
+            finally
+            {
+                ServicePointManager.ServerCertificateValidationCallback = oldCallback;
             }
         }
+
+
+
 
         public static bool SendLongSetupNotify(Part part, int limit)
         {
@@ -132,7 +215,7 @@ namespace eLog.Infrastructure.Extensions
                         <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
 
                         <div style=""margin-bottom: 15px;"">
-                            <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine.Name}</p>
+                            <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine?.Name}</p>
                             <p style=""margin: 6px 0;""><strong>Оператор:</strong> {part.Operator.FullName}</p>
                             <p style=""margin: 6px 0;""><strong>Деталь:</strong> {part.FullName.TrimLen(70)}</p>
                         </div>
@@ -173,7 +256,7 @@ namespace eLog.Infrastructure.Extensions
                         <hr style=""border: none; border-top: 1px solid #ddd; margin: 15px 0;"">
 
                         <div style=""margin-bottom: 15px;"">
-                            <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine.Name}</p>
+                            <p style=""margin: 6px 0;""><strong>Станок:</strong> {AppSettings.Instance.Machine?.Name}</p>
                             <p style=""margin: 6px 0;""><strong>Оператор:</strong> {part.Operator.FullName}</p>
                             <p style=""margin: 6px 0;""><strong>Деталь:</strong> {part.FullName.TrimLen(70)}</p>
                             <p style=""margin: 6px 0;""><strong>Установка:</strong> {part.Setup}</p>

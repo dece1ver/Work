@@ -119,6 +119,12 @@ CREATE TABLE cnc_remelog_config (
     long_setup_limit FLOAT NULL
 );
 
+CREATE TABLE cnc_serial_parts (
+    Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    PartName NVARCHAR(255) NOT NULL UNIQUE,
+    YearCount INT NOT NULL
+);
+
 CREATE TABLE cnc_shifts (
     Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     ShiftDate SMALLDATETIME NOT NULL,
