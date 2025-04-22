@@ -188,7 +188,8 @@ namespace remeLog.ViewModels
         {
             using (Overlay = new())
             {
-                EditOperatorsWindow editOperatorsWindow = new EditOperatorsWindow() { Owner = Application.Current.MainWindow };
+                EditOperatorsWindow editOperatorsWindow = new EditOperatorsWindow();
+                editOperatorsWindow.CenterTo(App.Current.MainWindow);
                 editOperatorsWindow.ShowDialog();
             }
         }
@@ -201,7 +202,8 @@ namespace remeLog.ViewModels
         {
             using (Overlay = new())
             {
-                EditSerialPartsWindow editSerialPartsWindow = new EditSerialPartsWindow() { Owner = Application.Current.MainWindow };
+                EditSerialPartsWindow editSerialPartsWindow = new EditSerialPartsWindow();
+                editSerialPartsWindow.CenterTo(App.Current.MainWindow);
                 editSerialPartsWindow.ShowDialog();
             }
         }
@@ -245,7 +247,8 @@ namespace remeLog.ViewModels
             using (Overlay = new())
             {
                 
-                LongSetupsWindow longSetupsWindow = new(longSetupParts.ToObservableCollection()) { Owner = App.Current.MainWindow};
+                LongSetupsWindow longSetupsWindow = new(longSetupParts.ToObservableCollection());
+                longSetupsWindow.CenterTo(App.Current.MainWindow);
                 longSetupsWindow.Show();
             }
         }
@@ -258,8 +261,9 @@ namespace remeLog.ViewModels
         {
             using (Overlay = new())
             {
-                FanucMonitor fanucMonitor = new() { Owner = App.Current.MainWindow };
-                fanucMonitor.ShowDialog();
+                FanucMonitor fanucMonitor = new();
+                fanucMonitor.CenterTo(App.Current.MainWindow);
+                fanucMonitor.Show();
             }
         }
         private bool CanShowMonitorCommandExecute(object p) => !InProgress;
@@ -287,7 +291,8 @@ namespace remeLog.ViewModels
                 var partsInfo = (CombinedParts)p;
                 partsInfo.FromDate = FromDate;
                 partsInfo.ToDate = ToDate;
-                var partsInfoWindow = new PartsInfoWindow(partsInfo) { Owner = Application.Current.MainWindow };
+                var partsInfoWindow = new PartsInfoWindow(partsInfo);
+                partsInfoWindow.CenterTo(App.Current.MainWindow);
                 partsInfoWindow.Closed += (_, _) => _ = LoadPartsAsync();
                 partsInfoWindow.Show();
             }

@@ -1080,27 +1080,26 @@ namespace remeLog.ViewModels
                 
                 IProgress<string> progress = new Progress<string>(m => Status = m);
                 InProgress = true;
-                progress.Report("Подключение к Google таблице");
 
-                List<DateTime> dates = new();
+                //List<DateTime> dates = new();
 
-                var dlg = new GetDatesWindow(ToDate);
-                if (dlg.ShowDialog() == false)
-                {
-                    Status = "Отмена";
-                    InProgress = false;
-                    await Task.Delay(3000);
-                    Status = "";
-                    return;
-                }
-                dates = dlg.Dates.ToList();
+                //var dlg = new GetDatesWindow(ToDate);
+                //if (dlg.ShowDialog() == false)
+                //{
+                //    Status = "Отмена";
+                //    InProgress = false;
+                //    await Task.Delay(3000);
+                //    Status = "";
+                //    return;
+                //}
+                //dates = dlg.Dates.ToList();
                 var path = Util.GetXlsxPath();
                 if (string.IsNullOrEmpty(path))
                 {
                     Status = "Выбор файла отменён";
                     return;
                 }
-                Status = await Xl.ExportNormsAndWorkloadAnalysisAsync(Parts, dates, path, progress);
+                Status = await Xl.ExportNormsAndWorkloadAnalysisAsync(Parts, path, progress);
 
 
             }

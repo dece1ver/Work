@@ -499,6 +499,11 @@ namespace remeLog.Infrastructure
         public const string Description = "description";
 
         /// <summary>
+        /// Годовая потребность
+        /// </summary>
+        public const string YearCount = "yearCount";
+
+        /// <summary>
         /// Успешно ли
         /// </summary>
         public const string IsSuccess = "isSuccess";
@@ -593,6 +598,7 @@ namespace remeLog.Infrastructure
             { Coefficient, $"Коэффициент" },
             { Type, $"Тип" },
             { Description, $"Описание" },
+            { YearCount, $"Годовая потребность" },
             { IsSuccess, $"Успешно ли" }
         };
 
