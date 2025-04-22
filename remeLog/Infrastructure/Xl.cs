@@ -912,9 +912,6 @@ namespace remeLog.Infrastructure
                         .Border.SetInsideBorder(XLBorderStyleValues.Thin);
                     row++;
                 }
-
-                //ws.Range(row - filteredParts.Count(p => p.Order == order) - 1, 1, row - 1, cm.Count)
-                //    .Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             }
 
             ws.Columns().AdjustToContents();
@@ -1031,13 +1028,12 @@ namespace remeLog.Infrastructure
             return path;
         }
 
-        public async static Task<string> ExportNormsAndWorkloadAnalysisAsync(ICollection<Part> parts, List<DateTime> dates, string path, IProgress<string> progress)
+        public async static Task<string> ExportNormsAndWorkloadAnalysisAsync(ICollection<Part> parts, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();
 
-            dates.Sort();
+            // dates.Sort();
 
-            // Группируем детали по нормализованному имени
             var partsDict = parts
                 .Select(p => new {
                     Part = p,
@@ -1049,7 +1045,6 @@ namespace remeLog.Infrastructure
                     g => g.Select(x => x.Part).ToList()
                 );
 
-            // Отбираем только детали, где в рамках 3-х уникальных заказов (с TotalCount >= 50) присутствуют записи
             var totalUnique = partsDict
                 .Where(kvp => kvp.Value
                     .Where(p => p.TotalCount >= 50)
@@ -1060,27 +1055,30 @@ namespace remeLog.Infrastructure
                 .Select(kvp => kvp.Value.First())
                 .ToList();
 
-            // Создаем множество нормализованных имен деталей из totalUnique для быстрого поиска
             var totalUniqueNames = totalUnique.Select(p => p.PartName.NormalizedPartName()).ToHashSet();
 
-            var serialParts = (await Database.GetSerialPartsAsync()).Select(p => p.PartName.NormalizedPartNameWithoutComments());
+            Dictionary<string, int> serialPartsDict = (await Database.GetSerialPartsAsync())
+                .ToDictionary(p => p.PartName.NormalizedPartNameWithoutComments(), p => p.YearCount);
 
-            // Создаем второй лист для отслеживания изменений нормативов
             var wsChanges = wb.AddWorksheet("Изменения нормативов");
             wsChanges.Style.Alignment.WrapText = false;
             progress.Report("Формирование листа \"Изменения нормативов\"");
 
-            // Создаем билдер для второго листа - добавляем столбец "Серийная"
             var changesBuilder = new CM.Builder()
                 .Add(CM.Part)
+                .Add(CM.YearCount)
                 .Add(CM.Machine, "Станок")
                 .Add(CM.Setup, "Установка")
                 .Add(CM.Type, "Тип")
                 .Add(CM.Date, "Дата")
                 .Add("oldValue", "Старое значение")
                 .Add("newValue", "Новое значение")
+                .Add("oldYearValue", $"Старое{Environment.NewLine}годовое значение")
+                .Add("newYearValue", $"Новое{Environment.NewLine}годовое значение")
                 .Add("change", "Изменение")
                 .Add("changeRatio", "Изменение %")
+                .Add("yearChange", "Изменение годовое")
+                .Add("yearChangeRatio", "Изменение % годовое")
                 .Add("serialPerRuns", $"Серийная{Environment.NewLine}по запускам")
                 .Add("serialPerList", $"Серийная{Environment.NewLine}по списку");
 
@@ -1089,22 +1087,19 @@ namespace remeLog.Infrastructure
             var changesCI = changesMap.GetIndexes();
             int changesRow = 3;
 
-            // Создаем структуру для хранения уникальных изменений
             var uniqueChanges = new HashSet<(string PartName, string Machine, int Setup, string ChangeType,
                                             double OldValue, double NewValue)>();
 
-            // Собираем все изменения с информацией о дате для сортировки
             var allChanges = new List<(string PartName, string Machine, int Setup, string ChangeType,
                                       double OldValue, double NewValue, DateTime Date, bool IsInTotalUnique, bool IsInSerialList)>();
 
-            // Собираем информацию об изменениях для всех деталей
             foreach (var partGroup in partsDict)
             {
                 var partsForName = partGroup.Value;
                 bool isInTotalUnique = totalUniqueNames.Contains(partGroup.Key);
-                bool isInSerialList = serialParts.Contains(partGroup.Key.NormalizedPartNameWithoutComments());
+                var normalizedPartName = partGroup.Key.NormalizedPartNameWithoutComments();
+                bool isInSerialList = serialPartsDict.ContainsKey(normalizedPartName);
 
-                // Собираем все части с фиксированными нормативами (изменениями)
                 var partsWithChanges = partsForName
                     .Where(p => (p.FixedSetupTimePlan != 0 && p.SetupTimePlan != 0) ||
                                 (p.FixedProductionTimePlan != 0 && p.SingleProductionTimePlan != 0))
@@ -1114,10 +1109,8 @@ namespace remeLog.Infrastructure
                 if (partsWithChanges.Count == 0)
                     continue;
 
-                // Для каждой части с изменениями
                 foreach (var changedPart in partsWithChanges)
                 {
-                    // Обрабатываем изменения в наладке
                     if (changedPart.FixedSetupTimePlan != 0 && changedPart.SetupTimePlan != 0 &&
                         Math.Abs(changedPart.FixedSetupTimePlan - changedPart.SetupTimePlan) > 0.001)
                     {
@@ -1130,7 +1123,6 @@ namespace remeLog.Infrastructure
                             changedPart.FixedSetupTimePlan
                         );
 
-                        // Добавляем только если такого изменения ещё не было
                         if (uniqueChanges.Add(changeKey))
                         {
                             allChanges.Add((
@@ -1147,7 +1139,6 @@ namespace remeLog.Infrastructure
                         }
                     }
 
-                    // Обрабатываем изменения в изготовлении
                     if (changedPart.FixedProductionTimePlan != 0 && changedPart.SingleProductionTimePlan != 0 &&
                         Math.Abs(changedPart.FixedProductionTimePlan - changedPart.SingleProductionTimePlan) > 0.001)
                     {
@@ -1160,7 +1151,6 @@ namespace remeLog.Infrastructure
                             changedPart.FixedProductionTimePlan
                         );
 
-                        // Добавляем только если такого изменения ещё не было
                         if (uniqueChanges.Add(changeKey))
                         {
                             allChanges.Add((
@@ -1179,69 +1169,79 @@ namespace remeLog.Infrastructure
                 }
             }
 
-            // Сортируем все изменения по дате
             allChanges = allChanges.OrderBy(c => c.Date).ToList();
 
-            // Заполняем второй лист отсортированными изменениями
             foreach (var change in allChanges)
             {
                 wsChanges.Cell(changesRow, changesCI[CM.Part]).Value = change.PartName;
+                var key = change.PartName.NormalizedPartNameWithoutComments();
+                if (!serialPartsDict.TryGetValue(key, out var yearCount))
+                {
+                    wsChanges.Cell(changesRow, changesCI[CM.YearCount]).SetValue(1)
+                        .Style.Fill.BackgroundColor = XLColor.LightYellow1;
+                }
+                else
+                {
+                    wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Value = yearCount == 0 ? 1 : yearCount;
+                }
                 wsChanges.Cell(changesRow, changesCI[CM.Machine]).Value = change.Machine;
                 wsChanges.Cell(changesRow, changesCI[CM.Setup]).Value = change.Setup;
                 wsChanges.Cell(changesRow, changesCI[CM.Type]).Value = change.ChangeType;
                 wsChanges.Cell(changesRow, changesCI[CM.Date]).Value = change.Date;
                 wsChanges.Cell(changesRow, changesCI["oldValue"]).Value = change.OldValue;
                 wsChanges.Cell(changesRow, changesCI["newValue"]).Value = change.NewValue;
+                wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 = 
+                    $"={wsChanges.Cell(changesRow, changesCI["oldValue"]).Address.ToStringRelative()}" +
+                    $"*{(change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1)}";
+                wsChanges.Cell(changesRow, changesCI["newYearValue"]).FormulaA1 =
+                    $"={wsChanges.Cell(changesRow, changesCI["newValue"]).Address.ToStringRelative()}" +
+                    $"*{(change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1)}";
                 wsChanges.Cell(changesRow, changesCI["serialPerRuns"]).Value = change.IsInTotalUnique;
                 wsChanges.Cell(changesRow, changesCI["serialPerList"]).Value = change.IsInSerialList;
 
-                // Ячейки для формул
                 var newValueCell = wsChanges.Cell(changesRow, changesCI["newValue"]).Address;
                 var oldValueCell = wsChanges.Cell(changesRow, changesCI["oldValue"]).Address;
 
-                // Формула для абсолютного изменения
-                wsChanges.Cell(changesRow, changesCI["change"]).FormulaA1 = $"={newValueCell}-{oldValueCell}";
+                var newYearValueCell = wsChanges.Cell(changesRow, changesCI["newYearValue"]).Address;
+                var oldYearValueCell = wsChanges.Cell(changesRow, changesCI["oldYearValue"]).Address;
 
-                // Формула для процентного изменения
+                wsChanges.Cell(changesRow, changesCI["change"]).FormulaA1 = $"={newValueCell}-{oldValueCell}";
                 wsChanges.Cell(changesRow, changesCI["changeRatio"]).FormulaA1 = $"=IF({oldValueCell}=0,0,{newValueCell}/{oldValueCell}-1)";
+
+                wsChanges.Cell(changesRow, changesCI["yearChange"]).FormulaA1 = $"={newYearValueCell}-{oldYearValueCell}";
+                wsChanges.Cell(changesRow, changesCI["yearChangeRatio"]).FormulaA1 = $"=IF({oldYearValueCell}=0,0,{newYearValueCell}/{oldYearValueCell}-1)";
 
                 changesRow++;
             }
 
-            // Форматирование таблицы изменений
-            if (changesRow > 3) // если есть данные
+            if (changesRow > 3)
             {
                 wsChanges.Range(2, 1, changesRow - 1, changesCI.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                 wsChanges.Range(2, 1, changesRow - 1, changesMap.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
 
-                // Форматирование процентов
-                var percentRange = wsChanges.Range(3, changesCI["changeRatio"], changesRow - 1, changesCI["changeRatio"]);
-                percentRange.Style.NumberFormat.Format = "0.00%";
+                wsChanges.Range(3, changesCI["changeRatio"], changesRow - 1, changesCI["changeRatio"]).Style.NumberFormat.Format = "0.00%";
+                wsChanges.Range(3, changesCI["yearChangeRatio"], changesRow - 1, changesCI["yearChangeRatio"]).Style.NumberFormat.Format = "0.00%";
 
-                // Форматирование даты
                 var dateRange = wsChanges.Range(3, changesCI[CM.Date], changesRow - 1, changesCI[CM.Date]);
                 dateRange.Style.NumberFormat.Format = Constants.ShortDateFormat;
 
-                // Форматирование значений нормативов
-                var valueColumns = new[] { "oldValue", "newValue", "change" };
+                var valueColumns = new[] { "oldValue", "newValue", "change", "oldYearValue", "newYearValue", "yearChange" };
                 foreach (var colName in valueColumns)
                 {
                     var valueRange = wsChanges.Range(3, changesCI[colName], changesRow - 1, changesCI[colName]);
                     valueRange.Style.NumberFormat.Format = "0.00";
                 }
 
-                // Форматирование столбца "Серийная"
                 var serialRange = wsChanges.Range(3, changesCI["serialPerRuns"], changesRow - 1, changesCI["serialPerList"]);
                 var cfInReport = serialRange.AddConditionalFormat();
-                cfInReport.WhenEquals("true").Fill.BackgroundColor = XLColor.LightBlue;
+                cfInReport.WhenEquals(1).Fill.BackgroundColor = XLColor.LightBlue;
 
-                // Добавляем условное форматирование для всей таблицы
                 var changeColRange = wsChanges.Range(3, changesCI["change"], changesRow - 1, changesCI["change"]);
-                var cfGreen = changeColRange.AddConditionalFormat();
-                cfGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+                var cfGreenChange = changeColRange.AddConditionalFormat();
+                cfGreenChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
 
-                var cfRed = changeColRange.AddConditionalFormat();
-                cfRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+                var cfRedChange = changeColRange.AddConditionalFormat();
+                cfRedChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
 
                 var percentColRange = wsChanges.Range(3, changesCI["changeRatio"], changesRow - 1, changesCI["changeRatio"]);
                 var cfPercentGreen = percentColRange.AddConditionalFormat();
@@ -1249,34 +1249,61 @@ namespace remeLog.Infrastructure
 
                 var cfPercentRed = percentColRange.AddConditionalFormat();
                 cfPercentRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+
+                var yearChangeColRange = wsChanges.Range(3, changesCI["yearChange"], changesRow - 1, changesCI["yearChange"]);
+                var cfGreenYearChange = yearChangeColRange.AddConditionalFormat();
+                cfGreenYearChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+                var cfRedYearChange = yearChangeColRange.AddConditionalFormat();
+                cfRedYearChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+
+                var percentYearColRange = wsChanges.Range(3, changesCI["yearChangeRatio"], changesRow - 1, changesCI["yearChangeRatio"]);
+                var cfPercentYearGreen = percentYearColRange.AddConditionalFormat();
+                cfPercentYearGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+                var cfPercentYearRed = percentYearColRange.AddConditionalFormat();
+                cfPercentYearRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
             }
 
             wsChanges.Columns().AdjustToContents();
             var table = wsChanges.RangeUsed().CreateTable();
             table.Name = "ИзмененияНормативов";
             table.Theme = XLTableTheme.TableStyleLight1;
-            //table.SetShowTotalsRow(true);
-            // Устанавливаем формулы для расчета
-            wsChanges.Cell(changesRow, changesCI["oldValue"]).FormulaA1 = $"=SUM(ИзмененияНормативов[Старое значение])";
-            wsChanges.Cell(changesRow, changesCI["newValue"]).FormulaA1 = $"=SUM(ИзмененияНормативов[Новое значение])";
 
-            // Формула для изменений
-            var sumOldValueCell = $"SUM(ИзмененияНормативов[Старое значение])";
-            var sumNewValueCell = $"SUM(ИзмененияНормативов[Новое значение])";
-
+            var oldAddress = wsChanges.Range(2, changesCI["oldValue"], changesRow - 1, changesCI["oldValue"]).RangeAddress.ToStringRelative();
+            var newAddress = wsChanges.Range(2, changesCI["newValue"], changesRow - 1, changesCI["newValue"]).RangeAddress.ToStringRelative();
+            wsChanges.Cell(changesRow, changesCI["oldValue"]).FormulaA1 = $"=SUBTOTAL(109, {oldAddress})";
+            wsChanges.Cell(changesRow, changesCI["newValue"]).FormulaA1 = $"=SUBTOTAL(109, {newAddress})";
+            var sumOldValueCell = wsChanges.Cell(changesRow, changesCI["oldValue"]).Address.ToStringRelative();
+            var sumNewValueCell = wsChanges.Cell(changesRow, changesCI["newValue"]).Address.ToStringRelative();
             wsChanges.Cell(changesRow, changesCI["change"]).FormulaA1 = $"={sumNewValueCell}-{sumOldValueCell}";
-
-            // Формула для соотношения изменений
             var ratioCell = wsChanges.Cell(changesRow, changesCI["changeRatio"]);
             ratioCell.SetFormulaA1($"=IF({sumOldValueCell}=0, 0, {sumNewValueCell}/{sumOldValueCell}-1)")
                 .Style.NumberFormat.Format = "0%";
 
-            // Применение условного форматирования к этой ячейке
+            var oldYearAddress = wsChanges.Range(2, changesCI["oldYearValue"], changesRow - 1, changesCI["oldYearValue"]).RangeAddress.ToStringRelative();
+            var newYearAddress = wsChanges.Range(2, changesCI["newYearValue"], changesRow - 1, changesCI["newYearValue"]).RangeAddress.ToStringRelative();
+            wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {oldAddress})";
+            wsChanges.Cell(changesRow, changesCI["newYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {newAddress})";
+            var sumOldYearValueCell = wsChanges.Cell(changesRow, changesCI["oldYearValue"]).Address.ToStringRelative();
+            var sumNewYearValueCell = wsChanges.Cell(changesRow, changesCI["newYearValue"]).Address.ToStringRelative();
+            wsChanges.Cell(changesRow, changesCI["yearChange"]).FormulaA1 = $"={sumNewValueCell}-{sumOldValueCell}";
+            var yearRatioCell = wsChanges.Cell(changesRow, changesCI["yearChangeRatio"]);
+            yearRatioCell.SetFormulaA1($"=IF({sumOldYearValueCell}=0, 0, {sumNewYearValueCell}/{sumOldYearValueCell}-1)")
+                .Style.NumberFormat.Format = "0%";
+
+
             var cfSumGreen = ratioCell.AddConditionalFormat();
             cfSumGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
 
             var cfSumRed = ratioCell.AddConditionalFormat();
             cfSumRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+
+            var cfSumYearGreen = yearRatioCell.AddConditionalFormat();
+            cfSumYearGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+            var cfSumYearRed = yearRatioCell.AddConditionalFormat();
+            cfSumYearRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
 
             SetTitle(wsChanges, changesCI.Count, "История изменений нормативов");
 
