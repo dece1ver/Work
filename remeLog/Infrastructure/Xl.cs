@@ -1031,7 +1031,7 @@ namespace remeLog.Infrastructure
         public async static Task<string> ExportNormsAndWorkloadAnalysisAsync(ICollection<Part> parts, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();
-
+            
             // dates.Sort();
 
             var partsDict = parts
@@ -1073,10 +1073,10 @@ namespace remeLog.Infrastructure
                 .Add(CM.Date, "Дата")
                 .Add("oldValue", "Старое значение")
                 .Add("newValue", "Новое значение")
-                .Add("oldYearValue", $"Старое{Environment.NewLine}годовое значение")
-                .Add("newYearValue", $"Новое{Environment.NewLine}годовое значение")
                 .Add("change", "Изменение")
                 .Add("changeRatio", "Изменение %")
+                .Add("oldYearValue", $"Старое{Environment.NewLine}годовое значение")
+                .Add("newYearValue", $"Новое{Environment.NewLine}годовое значение")
                 .Add("yearChange", "Изменение годовое")
                 .Add("yearChangeRatio", "Изменение % годовое")
                 .Add("serialPerRuns", $"Серийная{Environment.NewLine}по запускам")
@@ -1177,8 +1177,7 @@ namespace remeLog.Infrastructure
                 var key = change.PartName.NormalizedPartNameWithoutComments();
                 if (!serialPartsDict.TryGetValue(key, out var yearCount))
                 {
-                    wsChanges.Cell(changesRow, changesCI[CM.YearCount]).SetValue(1)
-                        .Style.Fill.BackgroundColor = XLColor.LightYellow1;
+                    wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Value = "Н/Д";
                 }
                 else
                 {
@@ -1190,12 +1189,12 @@ namespace remeLog.Infrastructure
                 wsChanges.Cell(changesRow, changesCI[CM.Date]).Value = change.Date;
                 wsChanges.Cell(changesRow, changesCI["oldValue"]).Value = change.OldValue;
                 wsChanges.Cell(changesRow, changesCI["newValue"]).Value = change.NewValue;
-                wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 = 
+                wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 =
                     $"={wsChanges.Cell(changesRow, changesCI["oldValue"]).Address.ToStringRelative()}" +
-                    $"*{(change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1)}";
+                    $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
                 wsChanges.Cell(changesRow, changesCI["newYearValue"]).FormulaA1 =
                     $"={wsChanges.Cell(changesRow, changesCI["newValue"]).Address.ToStringRelative()}" +
-                    $"*{(change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1)}";
+                    $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
                 wsChanges.Cell(changesRow, changesCI["serialPerRuns"]).Value = change.IsInTotalUnique;
                 wsChanges.Cell(changesRow, changesCI["serialPerList"]).Value = change.IsInSerialList;
 
@@ -1231,10 +1230,6 @@ namespace remeLog.Infrastructure
                     var valueRange = wsChanges.Range(3, changesCI[colName], changesRow - 1, changesCI[colName]);
                     valueRange.Style.NumberFormat.Format = "0.00";
                 }
-
-                var serialRange = wsChanges.Range(3, changesCI["serialPerRuns"], changesRow - 1, changesCI["serialPerList"]);
-                var cfInReport = serialRange.AddConditionalFormat();
-                cfInReport.WhenEquals(1).Fill.BackgroundColor = XLColor.LightBlue;
 
                 var changeColRange = wsChanges.Range(3, changesCI["change"], changesRow - 1, changesCI["change"]);
                 var cfGreenChange = changeColRange.AddConditionalFormat();
@@ -1283,11 +1278,11 @@ namespace remeLog.Infrastructure
 
             var oldYearAddress = wsChanges.Range(2, changesCI["oldYearValue"], changesRow - 1, changesCI["oldYearValue"]).RangeAddress.ToStringRelative();
             var newYearAddress = wsChanges.Range(2, changesCI["newYearValue"], changesRow - 1, changesCI["newYearValue"]).RangeAddress.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {oldAddress})";
-            wsChanges.Cell(changesRow, changesCI["newYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {newAddress})";
+            wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {oldYearAddress})";
+            wsChanges.Cell(changesRow, changesCI["newYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {newYearAddress})";
             var sumOldYearValueCell = wsChanges.Cell(changesRow, changesCI["oldYearValue"]).Address.ToStringRelative();
             var sumNewYearValueCell = wsChanges.Cell(changesRow, changesCI["newYearValue"]).Address.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI["yearChange"]).FormulaA1 = $"={sumNewValueCell}-{sumOldValueCell}";
+            wsChanges.Cell(changesRow, changesCI["yearChange"]).FormulaA1 = $"={sumNewYearValueCell}-{sumOldYearValueCell}";
             var yearRatioCell = wsChanges.Cell(changesRow, changesCI["yearChangeRatio"]);
             yearRatioCell.SetFormulaA1($"=IF({sumOldYearValueCell}=0, 0, {sumNewYearValueCell}/{sumOldYearValueCell}-1)")
                 .Style.NumberFormat.Format = "0%";
@@ -1306,6 +1301,10 @@ namespace remeLog.Infrastructure
             cfSumYearRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
 
             SetTitle(wsChanges, changesCI.Count, "История изменений нормативов");
+            wsChanges.Column(changesCI[CM.Part]).Width = 70;
+            wsChanges.Column(changesCI[CM.YearCount]).Width = 12;
+
+            wsChanges.Columns(changesCI["oldValue"], changesCI["serialPerList"]).Width = 14;
 
             progress.Report("Сохранение файла");
             wb.SaveAs(path);
@@ -1315,7 +1314,6 @@ namespace remeLog.Infrastructure
             {
                 Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
             }
-
             return path;
         }
 
