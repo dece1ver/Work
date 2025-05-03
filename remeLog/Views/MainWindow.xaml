@@ -91,6 +91,14 @@
                             </Style>
                         </Button.Resources>
                     </Button>
+                    <Button DockPanel.Dock="Right" Content="Тест" FontSize="16" Visibility="Collapsed"
+                            Margin="0" Width="60" Command="{Binding TestCommand}" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="2"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
                     <StackPanel DockPanel.Dock="Left">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="От" FontSize="16" VerticalAlignment="Center" TextAlignment="Center" Width="30"/>

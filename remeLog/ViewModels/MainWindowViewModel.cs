@@ -6,10 +6,12 @@ using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Types;
+using remeLog.Infrastructure.Winnum;
 using remeLog.Models;
 using remeLog.Views;
 using Syncfusion.Data.Extensions;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -40,6 +42,7 @@ namespace remeLog.ViewModels
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
+            TestCommand = new LambdaCommand(OnTestCommandExecuted, CanTestCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadPartsInfoCommand = new LambdaCommand(OnLoadPartsInfoCommandExecuted, CanLoadPartsInfoCommandExecute);
             ShowLongSetupsCommand = new LambdaCommand(OnShowLongSetupsCommandExecuted, CanShowLongSetupsCommandExecute);
@@ -155,6 +158,22 @@ namespace remeLog.ViewModels
             Application.Current.Shutdown();
         }
         private bool CanCloseApplicationCommandExecute(object p) => !InProgress;
+        #endregion
+
+        #region TestCommand
+        public ICommand TestCommand { get; }
+        private async void OnTestCommandExecuted(object p)
+        {
+            /// тесты
+            var goodway = new Machine(Machines.First(), 0, Guid.Parse(""));
+            var goodwayParts = Parts.Where(p => p.Machine.ToLowerInvariant().Contains(goodway.Name.ToLowerInvariant())).SelectMany(p => p.Parts);
+            var apiClient = new WinnumApiClient("http://...", goodway, "usr", "pwd" );
+            var res = await apiClient.GetCompletedOperationsAsync("winnum.org.app.WNApplicationInstance:2", 
+                goodwayParts.Last().StartMachiningTime, 
+                goodwayParts.Last().EndMachiningTime);
+            MessageBox.Show(res);
+        }
+        private bool CanTestCommandExecute(object p) => !InProgress;
         #endregion
 
         #region EditSettings
