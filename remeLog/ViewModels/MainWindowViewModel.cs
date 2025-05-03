@@ -168,7 +168,7 @@ namespace remeLog.ViewModels
             var goodway = new Machine(Machines.First(), 0, Guid.Parse(""));
             var goodwayParts = Parts.Where(p => p.Machine.ToLowerInvariant().Contains(goodway.Name.ToLowerInvariant())).SelectMany(p => p.Parts);
             var apiClient = new WinnumApiClient("http://...", goodway, "usr", "pwd" );
-            var res = await apiClient.GetCompletedOperationsAsync("winnum.org.app.WNApplicationInstance:2", 
+            var res = await apiClient.GetCompletedOperationsAsync(2, 
                 goodwayParts.Last().StartMachiningTime, 
                 goodwayParts.Last().EndMachiningTime);
             MessageBox.Show(res);
@@ -609,6 +609,16 @@ namespace remeLog.ViewModels
 
         private async Task BackgroundWorkerAsync()
         {
+            try
+            {
+                if (!string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
+                {
+                    var connection = new SqlConnection(AppSettings.Instance.ConnectionString);
+                    await connection.OpenAsync();
+                    await libeLog.Infrastructure.Sql.SqlSchemaBootstrapper.ApplyAllAsync(connection);
+                }
+            }
+            catch { }
             try
             {
                 var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;

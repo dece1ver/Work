@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using Microsoft.Data.SqlClient;
 
 namespace libeLog.Infrastructure.Sql
@@ -111,32 +113,35 @@ namespace libeLog.Infrastructure.Sql
         public async Task<bool> ApplyMissingColumnsAndConstraintsAsync(TableDefinition tableDefinition)
         {
             var tableName = tableDefinition.Name;
+            Console.WriteLine(tableName);
             var helper = new SqlSchemaHelper();
 
             if (!await TableExistsAsync(tableName))
             {
                 helper.AddTable(tableDefinition);
-                await ExecuteNonQueryAsync(helper.GenerateCreateScript());
+                Debug.WriteLine(helper.GenerateCreateScript());
+                //await ExecuteNonQueryAsync(helper.GenerateCreateScript());
                 return true;
             }
 
             var updated = false;
 
             var columnsToAdd = await GetColumnsToAddAsync(tableName, tableDefinition);
+            Console.WriteLine(columnsToAdd.ToString());
             if (columnsToAdd.Count > 0)
             {
                 var columnScript = SqlSchemaAlterHelper.GenerateAddColumnsScript(tableName, columnsToAdd);
-                await ExecuteNonQueryAsync(columnScript);
+                //await ExecuteNonQueryAsync(columnScript);
                 updated = true;
             }
-
             var constraintScript = SqlSchemaAlterHelper.GenerateAddConstraintsScript(tableName, tableDefinition);
+            Console.WriteLine(constraintScript.ToString());
             if (!string.IsNullOrWhiteSpace(constraintScript))
             {
-                await ExecuteNonQueryAsync(constraintScript);
+                //await ExecuteNonQueryAsync(constraintScript);
                 updated = true;
             }
-
+            Console.WriteLine(updated.ToString());
             return updated;
         }
     }

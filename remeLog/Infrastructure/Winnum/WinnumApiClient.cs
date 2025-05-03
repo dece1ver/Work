@@ -34,6 +34,7 @@ namespace remeLog.Infrastructure.Winnum
                 Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_usr}:{_pwd}")));
         }
 
+        private string FormatAppId(int id) => Uri.EscapeDataString($"winnum.org.app.WNApplicationInstance:{id}");
         private string FormatWnId() => Uri.EscapeDataString($"winnum.org.product.WNProduct:{_machine.WnId}");
         private string FormatWnUuid() => Uri.EscapeDataString(_machine.WnUuid.ToString());
 
@@ -146,7 +147,7 @@ namespace remeLog.Infrastructure.Winnum
 
         // Получение количества выполненных операций
         public async Task<string> GetCompletedOperationsAsync(
-            string appId,
+            int appId,
             DateTime fromDate,
             DateTime tillDate)
         {
@@ -154,7 +155,7 @@ namespace remeLog.Infrastructure.Winnum
             {
                 { "rpc", "winnum.views.url.WNCNCApplicationCompletedQtyHelper" },
                 { "men", "getCompletedQty" },
-                { "appid", Uri.EscapeDataString(appId) },
+                { "appid", FormatAppId(appId) },
                 { "pid", FormatWnId() },
                 { "from", fromDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) },
                 { "till", tillDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) }
