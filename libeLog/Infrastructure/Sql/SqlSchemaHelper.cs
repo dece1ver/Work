@@ -52,7 +52,7 @@ namespace libeLog.Infrastructure.Sql
             return sb.ToString();
         }
 
-        private void AddConstraints(StringBuilder sb, TableDefinition table)
+        private static void AddConstraints(StringBuilder sb, TableDefinition table)
         {
             if (table.CompositePrimaryKey.Count > 0)
             {

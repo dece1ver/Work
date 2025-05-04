@@ -43,6 +43,7 @@ namespace remeLog.ViewModels
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
             TestCommand = new LambdaCommand(OnTestCommandExecuted, CanTestCommandExecute);
+            UpdateDatabaseCommand = new LambdaCommand(OnUpdateDatabaseCommandExecuted, CanUpdateDatabaseCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadPartsInfoCommand = new LambdaCommand(OnLoadPartsInfoCommandExecuted, CanLoadPartsInfoCommandExecute);
             ShowLongSetupsCommand = new LambdaCommand(OnShowLongSetupsCommandExecuted, CanShowLongSetupsCommandExecute);
@@ -174,6 +175,16 @@ namespace remeLog.ViewModels
             MessageBox.Show(res);
         }
         private bool CanTestCommandExecute(object p) => !InProgress;
+        #endregion
+
+        #region UpdateDatabaseCommand
+        public ICommand UpdateDatabaseCommand { get; }
+        private void OnUpdateDatabaseCommandExecuted(object p)
+        {
+            UpdateDatabaseWindow updateDatabaseWindow = new();
+            updateDatabaseWindow.ShowDialog();
+        }
+        private bool CanUpdateDatabaseCommandExecute(object p) => !InProgress;
         #endregion
 
         #region EditSettings
@@ -609,16 +620,6 @@ namespace remeLog.ViewModels
 
         private async Task BackgroundWorkerAsync()
         {
-            try
-            {
-                if (!string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
-                {
-                    var connection = new SqlConnection(AppSettings.Instance.ConnectionString);
-                    await connection.OpenAsync();
-                    await libeLog.Infrastructure.Sql.SqlSchemaBootstrapper.ApplyAllAsync(connection);
-                }
-            }
-            catch { }
             try
             {
                 var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;

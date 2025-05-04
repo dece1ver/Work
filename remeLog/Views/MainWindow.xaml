@@ -60,6 +60,8 @@
                 <MenuItem Header="Инструменты">
                     <MenuItem Header="Мониторинг"
                               Command="{Binding ShowMonitorCommand}" Icon="{StaticResource AboutIcon}"/>
+                    <MenuItem Header="Проверка БД"
+                              Command="{Binding UpdateDatabaseCommand}" Icon="{StaticResource SyncIcon}"/>
                 </MenuItem>
                 <MenuItem Header="Справка">
                     <MenuItem Header="О программе"

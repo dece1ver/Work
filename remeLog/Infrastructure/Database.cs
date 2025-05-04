@@ -43,7 +43,6 @@ namespace remeLog.Infrastructure
             catch (Exception ex) 
             {
                 Util.WriteLog(ex);
-                MessageBox.Show(ex.Message);
                 return string.Empty;
             }
         }

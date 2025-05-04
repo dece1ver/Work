@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace remeLog
 {
@@ -17,9 +18,13 @@ namespace remeLog
     {
         private readonly string _uniqueEventName;
         private EventWaitHandle? _eventWaitHandle;
+        public static readonly Viewbox OkIcon = (Viewbox)App.Current.FindResource("StatusOkIcon");
+        public static readonly Viewbox SyncIcon = (Viewbox)App.Current.FindResource("SyncIcon");
+        public static readonly Viewbox ErrorIcon = (Viewbox)App.Current.FindResource("StatusErrorIcon");
 
         public App()
         {
+
             _uniqueEventName = CreateUniqueEventName();
 
             Util.WriteLog("Создан экземпляр приложения. Уникальное имя события: " + _uniqueEventName);
@@ -156,7 +161,7 @@ namespace remeLog
             Util.WriteLog("Инициализация настроек приложения");
             AppSettings.Instance.ReadConfig();
 
-            Util.WriteLog("Настройка лицензии Syncfusion");
+            //Util.WriteLog("Настройка лицензии Syncfusion");
             Util.TrySetupSyncfusionLicense();
 
             Util.WriteLog("Запуск наблюдателя активации окна");

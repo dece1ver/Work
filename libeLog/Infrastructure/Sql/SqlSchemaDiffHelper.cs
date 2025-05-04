@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using Microsoft.Data.SqlClient;
 
 namespace libeLog.Infrastructure.Sql
@@ -25,13 +24,14 @@ namespace libeLog.Infrastructure.Sql
         /// Проверяет существование таблицы в базе данных
         /// </summary>
         /// <param name="tableName">Имя таблицы</param>
+        /// <param name="cancellationToken">Токен отмены.</param>
         /// <returns>True, если таблица существует</returns>
-        public async Task<bool> TableExistsAsync(string tableName)
+        public async Task<bool> TableExistsAsync(string tableName, CancellationToken cancellationToken = default)
         {
             SqlValidationHelper.ValidateName(tableName);
 
             using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken);
 
             var sql = @"
                 SELECT COUNT(*) 
@@ -41,7 +41,7 @@ namespace libeLog.Infrastructure.Sql
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@TableName", tableName);
 
-            var result = await command.ExecuteScalarAsync();
+            var result = await command.ExecuteScalarAsync(cancellationToken);
             return Convert.ToInt32(result) > 0;
         }
 
@@ -49,15 +49,16 @@ namespace libeLog.Infrastructure.Sql
         /// Получает список существующих столбцов таблицы
         /// </summary>
         /// <param name="tableName">Имя таблицы</param>
+        /// <param name="cancellationToken">Токен отмены.</param>
         /// <returns>Список имен столбцов</returns>
-        public async Task<List<string>> GetExistingColumnsAsync(string tableName)
+        public async Task<List<string>> GetExistingColumnsAsync(string tableName, CancellationToken cancellationToken = default)
         {
             SqlValidationHelper.ValidateName(tableName);
 
             var columns = new List<string>();
 
             using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken);
 
             var sql = @"
                 SELECT COLUMN_NAME 
@@ -67,8 +68,8 @@ namespace libeLog.Infrastructure.Sql
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@TableName", tableName);
 
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
             {
                 columns.Add(reader.GetString(0));
             }
@@ -81,13 +82,14 @@ namespace libeLog.Infrastructure.Sql
         /// </summary>
         /// <param name="tableName">Имя таблицы</param>
         /// <param name="tableDefinition">Полное определение таблицы</param>
+        /// <param name="cancellationToken">Токен отмены.</param>
         /// <returns>Список столбцов для добавления</returns>
-        public async Task<List<ColumnDefinition>> GetColumnsToAddAsync(string tableName, TableDefinition tableDefinition)
+        public async Task<List<ColumnDefinition>> GetColumnsToAddAsync(string tableName, TableDefinition tableDefinition, CancellationToken cancellationToken = default)
         {
-            if (!await TableExistsAsync(tableName))
-                return tableDefinition.Columns; // Если таблица не существует, добавляем все столбцы
+            if (!await TableExistsAsync(tableName, cancellationToken))
+                return tableDefinition.Columns;
 
-            var existingColumns = await GetExistingColumnsAsync(tableName);
+            var existingColumns = await GetExistingColumnsAsync(tableName, cancellationToken);
             return tableDefinition.Columns
                 .Where(c => !existingColumns.Contains(c.Name, StringComparer.OrdinalIgnoreCase))
                 .ToList();
@@ -97,51 +99,50 @@ namespace libeLog.Infrastructure.Sql
         /// Выполняет SQL-скрипт без возврата результатов
         /// </summary>
         /// <param name="sql">SQL-скрипт</param>
+        /// <param name="cancellationToken">Токен отмены.</param>
         /// <returns>Количество затронутых строк</returns>
-        private async Task<int> ExecuteNonQueryAsync(string sql)
+        private async Task<int> ExecuteNonQueryAsync(string sql, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(sql))
                 return 0;
 
             using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
+            await connection.OpenAsync(cancellationToken);
 
             using var command = new SqlCommand(sql, connection);
-            return await command.ExecuteNonQueryAsync();
+            return await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        public async Task<bool> ApplyMissingColumnsAndConstraintsAsync(TableDefinition tableDefinition)
+        public async Task<bool> ApplyMissingColumnsAndConstraintsAsync(TableDefinition tableDefinition, IProgress<(string, Status?)>? progress = null, CancellationToken cancellationToken = default)
         {
+            await Task.Delay(1000, cancellationToken);
             var tableName = tableDefinition.Name;
-            Console.WriteLine(tableName);
             var helper = new SqlSchemaHelper();
 
-            if (!await TableExistsAsync(tableName))
+            if (!await TableExistsAsync(tableName, cancellationToken))
             {
                 helper.AddTable(tableDefinition);
-                Debug.WriteLine(helper.GenerateCreateScript());
-                //await ExecuteNonQueryAsync(helper.GenerateCreateScript());
+                await ExecuteNonQueryAsync(helper.GenerateCreateScript(), cancellationToken);
                 return true;
             }
 
             var updated = false;
 
-            var columnsToAdd = await GetColumnsToAddAsync(tableName, tableDefinition);
-            Console.WriteLine(columnsToAdd.ToString());
+            var columnsToAdd = await GetColumnsToAddAsync(tableName, tableDefinition, cancellationToken);
             if (columnsToAdd.Count > 0)
             {
+                progress?.Report(($"    | Требуется добавление столбцов:\n\t{string.Join(", ", columnsToAdd.Select(c => c.Name))}.", null));
                 var columnScript = SqlSchemaAlterHelper.GenerateAddColumnsScript(tableName, columnsToAdd);
-                //await ExecuteNonQueryAsync(columnScript);
+                await ExecuteNonQueryAsync(columnScript, cancellationToken);
                 updated = true;
             }
             var constraintScript = SqlSchemaAlterHelper.GenerateAddConstraintsScript(tableName, tableDefinition);
-            Console.WriteLine(constraintScript.ToString());
             if (!string.IsNullOrWhiteSpace(constraintScript))
             {
-                //await ExecuteNonQueryAsync(constraintScript);
+                progress?.Report(("    | Установка ограничений...", null));
+                await ExecuteNonQueryAsync(constraintScript, cancellationToken);
                 updated = true;
             }
-            Console.WriteLine(updated.ToString());
             return updated;
         }
     }

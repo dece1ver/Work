@@ -476,6 +476,10 @@ namespace remeLog.Infrastructure
             if (string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
             {
                 key = Database.GetLicenseKey("syncfusion");
+                if (string.IsNullOrEmpty(key))
+                {
+                    return;
+                }
                 Environment.SetEnvironmentVariable("SYNCFUSION_LICENSE", key, EnvironmentVariableTarget.User);
             }
             Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
@@ -520,7 +524,6 @@ namespace remeLog.Infrastructure
             {
                 try
                 {
-                    // Пропускаем свойства, которые требуют параметров
                     if (property.GetIndexParameters().Length > 0) continue;
 
                     var value = property.GetValue(obj);
@@ -536,7 +539,6 @@ namespace remeLog.Infrastructure
                 }
                 catch (Exception ex)
                 {
-                    // Логируем ошибку при доступе к свойству
                     System.Diagnostics.Debug.WriteLine($"{indentStr}{property.Name} = <Error: {ex.Message}>");
                 }
             }
