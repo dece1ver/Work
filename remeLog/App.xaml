@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:remeLog"
              xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
-             xmlns:stl="clr-namespace:remeLog.Infrastructure.Styles"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -30,7 +29,6 @@
             <cnv:TimeConverter x:Key="TimeConverter"/>
             <cnv:UserRoleVisibilityConverter x:Key="UserRoleVisibilityConverter"/>
             <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
-            <stl:CustomRowStyleSelector x:Key="CustomRowStyleSelector"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

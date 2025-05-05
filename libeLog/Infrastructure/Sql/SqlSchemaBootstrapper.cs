@@ -29,11 +29,10 @@ namespace libeLog.Infrastructure.Sql
         public static async Task ApplyAsync(SqlConnection connection, TableDefinition table, IProgress<(string, Status?)>? progress = null, CancellationToken cancellationToken = default)
         {
             var helper = new SqlSchemaDiffHelper(connection.ConnectionString);
-            await Task.Delay(1000, cancellationToken);
             progress?.Report(($"Таблица: {table.Name}", Status.Sync));
             var updated = await helper.ApplyMissingColumnsAndConstraintsAsync(table, progress, cancellationToken);
             if (updated)
-                progress?.Report(($"Таблица: {table.Name}", Status.Ok));
+                progress?.Report(($"Таблица: {table.Name}", Status.Warning));
             else
                 progress?.Report(($"Таблица: {table.Name}", Status.Ok));
         }
@@ -118,12 +117,13 @@ namespace libeLog.Infrastructure.Sql
 
             new TableBuilder("cnc_tool_search_cases")
                 .AddIdColumn()
-                .AddGuidColumn("PartGuid")
+                .AddGuidColumn("PartGuid", nullable: false)
                 .AddStringColumn("ToolType", 50, false)
                 .AddStringColumn("Value", -1, false)
                 .AddSmallDateTimeColumn("StartTime", false)
                 .AddSmallDateTimeColumn("EndTime", false)
                 .AddBoolColumn("IsSuccess")
+                .AddForeignKey("PartGuid", "parts", "Guid", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
                 .Build(),
 
             new TableBuilder("cnc_wnc_cfg")
@@ -183,6 +183,8 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("LongSetupReasonComment", -1)
                 .AddStringColumn("LongSetupFixComment", -1)
                 .AddStringColumn("LongSetupEngeneerComment", -1)
+                .AddDoubleColumn("ExcludedOperationsTime")
+                .AddStringColumn("IncreaseReason", -1)
                 .Build()
         };
     }

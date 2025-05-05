@@ -1,36 +1,26 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
 using libeLog;
 using libeLog.Extensions;
 using OfficeOpenXml;
-using OfficeOpenXml.Drawing.Chart;
 using OfficeOpenXml.Style;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
-using Syncfusion.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows;
 using Part = remeLog.Models.Part;
 using CM = remeLog.Infrastructure.ColumnManager;
 using System.Threading.Tasks;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.Office2010.PowerPoint;
-using DocumentFormat.OpenXml.Presentation;
 
 namespace remeLog.Infrastructure
 {
     public static class Xl
     {
-        static XLColor _lightRed = XLColor.FromHtml("#DA9694");
-        static XLColor _lightGreen = XLColor.FromHtml("#96DA94");
+        private static readonly XLColor _lightRed = XLColor.FromHtml("#DA9694");
+        private static readonly XLColor _lightGreen = XLColor.FromHtml("#96DA94");
 
         const double Coefficient1 = 1.2;
         const double Coefficient2 = 1.4;
@@ -573,38 +563,38 @@ namespace remeLog.Infrastructure
         /// <param name="path"></param>
         /// <param name="underOverBorder"></param>
         /// <returns></returns>
-        public static void AddDiagramToReportForPeriod(string path)
-        {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            FileInfo fileInfo = new FileInfo(path);
-            using (var package = new ExcelPackage(fileInfo))
-            {
-                var ws = package.Workbook.Worksheets[0];
-                var range = ws.Cells["B18:G18"];
-                var headers = ws.Cells["B2:G2"];
+        //public static void AddDiagramToReportForPeriod(string path)
+        //{
+        //    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        //    FileInfo fileInfo = new FileInfo(path);
+        //    using (var package = new ExcelPackage(fileInfo))
+        //    {
+        //        var ws = package.Workbook.Worksheets[0];
+        //        var range = ws.Cells["B18:G18"];
+        //        var headers = ws.Cells["B2:G2"];
 
-                var chart = ws.Drawings.AddChart("Эффективность работы", eChartType.PieExploded) as ExcelPieChart;
-                var series = chart?.Series.Add(range, headers);
-                chart!.Legend.Position = eLegendPosition.Left;
-                chart!.DataLabel.Format = "0.00%";
-                chart!.DataLabel.ShowValue = true;
-                chart!.DataLabel.ShowCategory = true;
-                chart!.DataLabel.ShowLegendKey = true;
-                chart!.DataLabel.Position = eLabelPosition.BestFit;
-                chart!.DataLabel.ShowLeaderLines = true;
-                chart!.DataLabel.SourceLinked = false;
+        //        var chart = ws.Drawings.AddChart("Эффективность работы", eChartType.PieExploded) as ExcelPieChart;
+        //        var series = chart?.Series.Add(range, headers);
+        //        chart!.Legend.Position = eLegendPosition.Left;
+        //        chart!.DataLabel.Format = "0.00%";
+        //        chart!.DataLabel.ShowValue = true;
+        //        chart!.DataLabel.ShowCategory = true;
+        //        chart!.DataLabel.ShowLegendKey = true;
+        //        chart!.DataLabel.Position = eLabelPosition.BestFit;
+        //        chart!.DataLabel.ShowLeaderLines = true;
+        //        chart!.DataLabel.SourceLinked = false;
 
-                chart.SetPosition(20, 0, 0, 0);
-                chart.SetSize(1000, 800);
+        //        chart.SetPosition(20, 0, 0, 0);
+        //        chart.SetSize(1000, 800);
 
-                // Заголовок диаграммы
-                chart.Title.Text = "Работа оборудования";
+        //        // Заголовок диаграммы
+        //        chart.Title.Text = "Работа оборудования";
 
-                // Сохраняем изменения
-                package.Save();
-            }
+        //        // Сохраняем изменения
+        //        package.Save();
+        //    }
 
-        }
+        //}
 
         /// <summary>
         /// Экспорт отчета по операторам
@@ -1067,20 +1057,22 @@ namespace remeLog.Infrastructure
             var changesBuilder = new CM.Builder()
                 .Add(CM.Part)
                 .Add(CM.YearCount)
-                .Add(CM.Machine, "Станок")
-                .Add(CM.Setup, "Установка")
-                .Add(CM.Type, "Тип")
-                .Add(CM.Date, "Дата")
-                .Add("oldValue", "Старое значение")
-                .Add("newValue", "Новое значение")
-                .Add("change", "Изменение")
-                .Add("changeRatio", "Изменение %")
-                .Add("oldYearValue", $"Старое{Environment.NewLine}годовое значение")
-                .Add("newYearValue", $"Новое{Environment.NewLine}годовое значение")
-                .Add("yearChange", "Изменение годовое")
-                .Add("yearChangeRatio", "Изменение % годовое")
-                .Add("serialPerRuns", $"Серийная{Environment.NewLine}по запускам")
-                .Add("serialPerList", $"Серийная{Environment.NewLine}по списку");
+                .Add(CM.Machine)
+                .Add(CM.Setup)
+                .Add(CM.Type)
+                .Add(CM.Date)
+                .Add(CM.OldValue)
+                .Add(CM.ExcludedOperationsTime)
+                .Add(CM.NewValue)
+                .Add(CM.Change)
+                .Add(CM.ChangeRatio)
+                .Add(CM.OldYearValue)
+                .Add(CM.NewYearValue)
+                .Add(CM.YearChange)
+                .Add(CM.YearChangeRatio)
+                .Add(CM.SerialPerRuns)
+                .Add(CM.SerialPerList)
+                .Add(CM.IncreaseReason);
 
             var changesMap = changesBuilder.Build();
             ConfigureWorksheetHeader(wsChanges, changesMap, HeaderRotateOption.Horizontal, 65, 10);
@@ -1088,10 +1080,10 @@ namespace remeLog.Infrastructure
             int changesRow = 3;
 
             var uniqueChanges = new HashSet<(string PartName, string Machine, int Setup, string ChangeType,
-                                            double OldValue, double NewValue)>();
+                                            double OldValue, double ExcludedOperationsTime, double NewValue)>();
 
             var allChanges = new List<(string PartName, string Machine, int Setup, string ChangeType,
-                                      double OldValue, double NewValue, DateTime Date, bool IsInTotalUnique, bool IsInSerialList)>();
+                                      double OldValue, double ExcludedOperationsTime, double NewValue, DateTime Date, bool IsInTotalUnique, bool IsInSerialList)>();
 
             foreach (var partGroup in partsDict)
             {
@@ -1118,8 +1110,9 @@ namespace remeLog.Infrastructure
                             changedPart.PartName,
                             changedPart.Machine,
                             changedPart.Setup,
-                            "Наладка",
+                            "Наладка", // 4
                             changedPart.SetupTimePlan,
+                            0.0, // 6
                             changedPart.FixedSetupTimePlan
                         );
 
@@ -1131,6 +1124,7 @@ namespace remeLog.Infrastructure
                                 changeKey.Setup,
                                 changeKey.Item4,
                                 changeKey.SetupTimePlan,
+                                changeKey.Item6,
                                 changeKey.FixedSetupTimePlan,
                                 changedPart.EndMachiningTime,
                                 isInTotalUnique,
@@ -1148,6 +1142,7 @@ namespace remeLog.Infrastructure
                             changedPart.Setup,
                             "Изготовление",
                             changedPart.SingleProductionTimePlan,
+                            changedPart.ExcludedOperationsTime,
                             changedPart.FixedProductionTimePlan
                         );
 
@@ -1159,6 +1154,7 @@ namespace remeLog.Infrastructure
                                 changeKey.Setup,
                                 changeKey.Item4,
                                 changeKey.SingleProductionTimePlan,
+                                changeKey.ExcludedOperationsTime,
                                 changeKey.FixedProductionTimePlan,
                                 changedPart.EndMachiningTime,
                                 isInTotalUnique,
@@ -1187,28 +1183,32 @@ namespace remeLog.Infrastructure
                 wsChanges.Cell(changesRow, changesCI[CM.Setup]).Value = change.Setup;
                 wsChanges.Cell(changesRow, changesCI[CM.Type]).Value = change.ChangeType;
                 wsChanges.Cell(changesRow, changesCI[CM.Date]).Value = change.Date;
-                wsChanges.Cell(changesRow, changesCI["oldValue"]).Value = change.OldValue;
-                wsChanges.Cell(changesRow, changesCI["newValue"]).Value = change.NewValue;
-                wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 =
-                    $"={wsChanges.Cell(changesRow, changesCI["oldValue"]).Address.ToStringRelative()}" +
+                wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Value = change.OldValue;
+                wsChanges.Cell(changesRow, changesCI[CM.ExcludedOperationsTime]).Value = change.ExcludedOperationsTime;
+                wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Value = change.NewValue;
+                wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).FormulaA1 =
+                    $"={wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Address.ToStringRelative()}" +
                     $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
-                wsChanges.Cell(changesRow, changesCI["newYearValue"]).FormulaA1 =
-                    $"={wsChanges.Cell(changesRow, changesCI["newValue"]).Address.ToStringRelative()}" +
+                wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).FormulaA1 =
+                    $"={wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Address.ToStringRelative()}" +
                     $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
-                wsChanges.Cell(changesRow, changesCI["serialPerRuns"]).Value = change.IsInTotalUnique;
-                wsChanges.Cell(changesRow, changesCI["serialPerList"]).Value = change.IsInSerialList;
+                wsChanges.Cell(changesRow, changesCI[CM.SerialPerRuns]).Value = change.IsInTotalUnique;
+                wsChanges.Cell(changesRow, changesCI[CM.SerialPerList]).Value = change.IsInSerialList;
 
-                var newValueCell = wsChanges.Cell(changesRow, changesCI["newValue"]).Address;
-                var oldValueCell = wsChanges.Cell(changesRow, changesCI["oldValue"]).Address;
+                var newValueCell = wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Address;
+                var oldValueCell = wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Address;
+                var excludedOperationsTimeCell = wsChanges.Cell(changesRow, changesCI[CM.ExcludedOperationsTime]).Address.ToStringRelative();
 
-                var newYearValueCell = wsChanges.Cell(changesRow, changesCI["newYearValue"]).Address;
-                var oldYearValueCell = wsChanges.Cell(changesRow, changesCI["oldYearValue"]).Address;
+                var newYearValueCell = wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).Address.ToStringRelative();
+                var oldYearValueCell = wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).Address.ToStringRelative();
 
-                wsChanges.Cell(changesRow, changesCI["change"]).FormulaA1 = $"={newValueCell}-{oldValueCell}";
-                wsChanges.Cell(changesRow, changesCI["changeRatio"]).FormulaA1 = $"=IF({oldValueCell}=0,0,{newValueCell}/{oldValueCell}-1)";
-
-                wsChanges.Cell(changesRow, changesCI["yearChange"]).FormulaA1 = $"={newYearValueCell}-{oldYearValueCell}";
-                wsChanges.Cell(changesRow, changesCI["yearChangeRatio"]).FormulaA1 = $"=IF({oldYearValueCell}=0,0,{newYearValueCell}/{oldYearValueCell}-1)";
+                wsChanges.Cell(changesRow, changesCI[CM.Change]).FormulaA1 = $"={newValueCell}-({oldValueCell}+{excludedOperationsTimeCell})";
+                wsChanges.Cell(changesRow, changesCI[CM.ChangeRatio]).FormulaA1 = $"=IF({oldValueCell}+{excludedOperationsTimeCell}=0,0,{newValueCell}/({oldValueCell}+{excludedOperationsTimeCell})-1)";
+                var oldYearValueFolrmula = change.ChangeType != "Изготовление" || yearCount < 1
+                    ? $"({oldYearValueCell}+{excludedOperationsTimeCell})"
+                    : $"({oldValueCell}+{excludedOperationsTimeCell})*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
+                wsChanges.Cell(changesRow, changesCI[CM.YearChange]).FormulaA1 = $"={newYearValueCell}-{oldYearValueFolrmula}";
+                wsChanges.Cell(changesRow, changesCI[CM.YearChangeRatio]).FormulaA1 = $"=IF({oldYearValueFolrmula}=0,0,({newYearValueCell}/({oldYearValueFolrmula}))-1)";
 
                 changesRow++;
             }
@@ -1216,43 +1216,43 @@ namespace remeLog.Infrastructure
             if (changesRow > 3)
             {
                 wsChanges.Range(2, 1, changesRow - 1, changesCI.Count).Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                wsChanges.Range(2, 1, changesRow - 1, changesMap.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+                wsChanges.Range(2, 1, changesRow - 1, changesCI.Count).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
 
-                wsChanges.Range(3, changesCI["changeRatio"], changesRow - 1, changesCI["changeRatio"]).Style.NumberFormat.Format = "0.00%";
-                wsChanges.Range(3, changesCI["yearChangeRatio"], changesRow - 1, changesCI["yearChangeRatio"]).Style.NumberFormat.Format = "0.00%";
+                wsChanges.Range(3, changesCI[CM.ChangeRatio], changesRow - 1, changesCI[CM.ChangeRatio]).Style.NumberFormat.Format = "0.00%";
+                wsChanges.Range(3, changesCI[CM.YearChangeRatio], changesRow - 1, changesCI[CM.YearChangeRatio]).Style.NumberFormat.Format = "0.00%";
 
                 var dateRange = wsChanges.Range(3, changesCI[CM.Date], changesRow - 1, changesCI[CM.Date]);
                 dateRange.Style.NumberFormat.Format = Constants.ShortDateFormat;
 
-                var valueColumns = new[] { "oldValue", "newValue", "change", "oldYearValue", "newYearValue", "yearChange" };
+                var valueColumns = new[] { CM.OldValue, CM.ExcludedOperationsTime, CM.NewValue, CM.Change, CM.OldYearValue, CM.NewYearValue, CM.YearChange };
                 foreach (var colName in valueColumns)
                 {
                     var valueRange = wsChanges.Range(3, changesCI[colName], changesRow - 1, changesCI[colName]);
                     valueRange.Style.NumberFormat.Format = "0.00";
                 }
 
-                var changeColRange = wsChanges.Range(3, changesCI["change"], changesRow - 1, changesCI["change"]);
+                var changeColRange = wsChanges.Range(3, changesCI[CM.Change], changesRow - 1, changesCI[CM.Change]);
                 var cfGreenChange = changeColRange.AddConditionalFormat();
                 cfGreenChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
 
                 var cfRedChange = changeColRange.AddConditionalFormat();
                 cfRedChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
 
-                var percentColRange = wsChanges.Range(3, changesCI["changeRatio"], changesRow - 1, changesCI["changeRatio"]);
+                var percentColRange = wsChanges.Range(3, changesCI[CM.ChangeRatio], changesRow - 1, changesCI[CM.ChangeRatio]);
                 var cfPercentGreen = percentColRange.AddConditionalFormat();
                 cfPercentGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
 
                 var cfPercentRed = percentColRange.AddConditionalFormat();
                 cfPercentRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
 
-                var yearChangeColRange = wsChanges.Range(3, changesCI["yearChange"], changesRow - 1, changesCI["yearChange"]);
+                var yearChangeColRange = wsChanges.Range(3, changesCI[CM.YearChange], changesRow - 1, changesCI[CM.YearChange]);
                 var cfGreenYearChange = yearChangeColRange.AddConditionalFormat();
                 cfGreenYearChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
 
                 var cfRedYearChange = yearChangeColRange.AddConditionalFormat();
                 cfRedYearChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
 
-                var percentYearColRange = wsChanges.Range(3, changesCI["yearChangeRatio"], changesRow - 1, changesCI["yearChangeRatio"]);
+                var percentYearColRange = wsChanges.Range(3, changesCI[CM.YearChangeRatio], changesRow - 1, changesCI[CM.YearChangeRatio]);
                 var cfPercentYearGreen = percentYearColRange.AddConditionalFormat();
                 cfPercentYearGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
 
@@ -1265,25 +1265,25 @@ namespace remeLog.Infrastructure
             table.Name = "ИзмененияНормативов";
             table.Theme = XLTableTheme.TableStyleLight1;
 
-            var oldAddress = wsChanges.Range(2, changesCI["oldValue"], changesRow - 1, changesCI["oldValue"]).RangeAddress.ToStringRelative();
-            var newAddress = wsChanges.Range(2, changesCI["newValue"], changesRow - 1, changesCI["newValue"]).RangeAddress.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI["oldValue"]).FormulaA1 = $"=SUBTOTAL(109, {oldAddress})";
-            wsChanges.Cell(changesRow, changesCI["newValue"]).FormulaA1 = $"=SUBTOTAL(109, {newAddress})";
-            var sumOldValueCell = wsChanges.Cell(changesRow, changesCI["oldValue"]).Address.ToStringRelative();
-            var sumNewValueCell = wsChanges.Cell(changesRow, changesCI["newValue"]).Address.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI["change"]).FormulaA1 = $"={sumNewValueCell}-{sumOldValueCell}";
-            var ratioCell = wsChanges.Cell(changesRow, changesCI["changeRatio"]);
+            var oldAddress = wsChanges.Range(2, changesCI[CM.OldValue], changesRow - 1, changesCI[CM.OldValue]).RangeAddress.ToStringRelative();
+            var newAddress = wsChanges.Range(2, changesCI[CM.NewValue], changesRow - 1, changesCI[CM.NewValue]).RangeAddress.ToStringRelative();
+            wsChanges.Cell(changesRow, changesCI[CM.OldValue]).FormulaA1 = $"=SUBTOTAL(109, {oldAddress})";
+            wsChanges.Cell(changesRow, changesCI[CM.NewValue]).FormulaA1 = $"=SUBTOTAL(109, {newAddress})";
+            var sumOldValueCell = wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Address.ToStringRelative();
+            var sumNewValueCell = wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Address.ToStringRelative();
+            wsChanges.Cell(changesRow, changesCI[CM.Change]).FormulaA1 = $"={sumNewValueCell}-{sumOldValueCell}";
+            var ratioCell = wsChanges.Cell(changesRow, changesCI[CM.ChangeRatio]);
             ratioCell.SetFormulaA1($"=IF({sumOldValueCell}=0, 0, {sumNewValueCell}/{sumOldValueCell}-1)")
                 .Style.NumberFormat.Format = "0%";
 
-            var oldYearAddress = wsChanges.Range(2, changesCI["oldYearValue"], changesRow - 1, changesCI["oldYearValue"]).RangeAddress.ToStringRelative();
-            var newYearAddress = wsChanges.Range(2, changesCI["newYearValue"], changesRow - 1, changesCI["newYearValue"]).RangeAddress.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI["oldYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {oldYearAddress})";
-            wsChanges.Cell(changesRow, changesCI["newYearValue"]).FormulaA1 = $"=SUBTOTAL(109, {newYearAddress})";
-            var sumOldYearValueCell = wsChanges.Cell(changesRow, changesCI["oldYearValue"]).Address.ToStringRelative();
-            var sumNewYearValueCell = wsChanges.Cell(changesRow, changesCI["newYearValue"]).Address.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI["yearChange"]).FormulaA1 = $"={sumNewYearValueCell}-{sumOldYearValueCell}";
-            var yearRatioCell = wsChanges.Cell(changesRow, changesCI["yearChangeRatio"]);
+            var oldYearAddress = wsChanges.Range(2, changesCI[CM.OldYearValue], changesRow - 1, changesCI[CM.OldYearValue]).RangeAddress.ToStringRelative();
+            var newYearAddress = wsChanges.Range(2, changesCI[CM.NewYearValue], changesRow - 1, changesCI[CM.NewYearValue]).RangeAddress.ToStringRelative();
+            wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).FormulaA1 = $"=SUBTOTAL(109, {oldYearAddress})";
+            wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).FormulaA1 = $"=SUBTOTAL(109, {newYearAddress})";
+            var sumOldYearValueCell = wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).Address.ToStringRelative();
+            var sumNewYearValueCell = wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).Address.ToStringRelative();
+            wsChanges.Cell(changesRow, changesCI[CM.YearChange]).FormulaA1 = $"={sumNewYearValueCell}-{sumOldYearValueCell}";
+            var yearRatioCell = wsChanges.Cell(changesRow, changesCI[CM.YearChangeRatio]);
             yearRatioCell.SetFormulaA1($"=IF({sumOldYearValueCell}=0, 0, {sumNewYearValueCell}/{sumOldYearValueCell}-1)")
                 .Style.NumberFormat.Format = "0%";
 
@@ -1304,7 +1304,7 @@ namespace remeLog.Infrastructure
             wsChanges.Column(changesCI[CM.Part]).Width = 70;
             wsChanges.Column(changesCI[CM.YearCount]).Width = 12;
 
-            wsChanges.Columns(changesCI["oldValue"], changesCI["serialPerList"]).Width = 14;
+            wsChanges.Columns(changesCI[CM.OldValue], changesCI[CM.SerialPerList]).Width = 14;
 
             progress.Report("Сохранение файла");
             wb.SaveAs(path);

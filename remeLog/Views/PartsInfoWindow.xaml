@@ -5,9 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:remeLog.Views" xmlns:controls="clr-namespace:remeLog.Views.Controls"
-        xmlns:ov="clr-namespace:remeLog.Infrastructure.Override"
-        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
-        mc:Ignorable="d" xmlns:inf="clr-namespace:remeLog.Infrastructure" xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
+        mc:Ignorable="d" xmlns:inf="clr-namespace:remeLog.Infrastructure" 
+        xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:remeLog.ViewModels" xmlns:md="clr-namespace:remeLog.Models" 
         d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
         Title="{Binding PartsInfo.Machine}" Height="720" Width="1280" 
@@ -582,6 +581,34 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
+        <DataGridTextColumn x:Key="ExcludedOperationsTimeColumn" Header="Исключённое время" Binding="{Binding ExcludedOperationsTime, 
+                    UpdateSourceTrigger=Default, StringFormat=0.##, 
+                    Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
+                    Visibility="{Binding DataContext.ViewMode, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Engineer, Developer'}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
+        <DataGridTextColumn x:Key="IncreaseReasonColumn" Header="Причина увеличения" Binding="{Binding IncreaseReason}" Width="125"
+                    Visibility="{Binding DataContext.ViewMode, 
+                    Source={x:Reference partsInfoWindow}, 
+                    Converter={StaticResource UserRoleVisibilityConverter}, 
+                    ConverterParameter='Viewer, Engineer, Developer'}">
+            <DataGridTextColumn.ElementStyle>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+            </DataGridTextColumn.ElementStyle>
+            <DataGridTextColumn.EditingElementStyle>
+                <Style TargetType="TextBox" BasedOn="{StaticResource TableLargeTextBox}"/>
+            </DataGridTextColumn.EditingElementStyle>
+        </DataGridTextColumn>
+
         <DataGridCheckBoxColumn x:Key="ExcludeFromReportsColumn" Header="Исключить" Binding="{Binding ExcludeFromReports, UpdateSourceTrigger=PropertyChanged}" Width="33"
                                 Visibility="{Binding DataContext.ViewMode, 
                                 Source={x:Reference partsInfoWindow}, 
@@ -616,7 +643,7 @@
                 </Button>-->
                 <Button DockPanel.Dock="Right" Margin="1 10 1 1" Width="100"
                         IsEnabled="{Binding HasErrors, Converter={StaticResource InvertedBoolConverter}, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
-                Command="{Binding OpenDailyReportWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
+                        Command="{Binding OpenDailyReportWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
                     <Button.Content>
                         <TextBlock Text="Сформировать отчет за смену" TextWrapping="Wrap" />
                     </Button.Content>
@@ -1034,7 +1061,7 @@
                                 <TextBlock Text="Отчет по сменам"/>
                             </MenuItem.Header>
                         </MenuItem>
-                        
+
                     </MenuItem>
 
                     <MenuItem Header="Сравнить факт/СЗН" Command="{Binding CheckAssignmentWithFactCommand}" Icon="{StaticResource ColumnComponent}">
@@ -1077,77 +1104,8 @@
                         <Border Width="1" Background="LightGray"/>
                     </MenuItem.Header>
                 </MenuItem>
-                
-            </Menu>
 
-            <syncfusion:SfDataGrid x:Name="SfDataGrid" Visibility="{Binding CompactView, Converter={StaticResource VisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                   ItemsSource="{Binding Parts}" AutoGenerateColumns="False" AllowCollectionView="True"
-                                   AllowFiltering="True" AllowGrouping="True" AllowDeleting="False" AllowEditing="False"
-                                   ShowBusyIndicator="True" ShowGroupDropArea="True" ColumnSizer="SizeToHeader" QueryRowHeight="SfDataGrid_QueryRowHeight"
-                                   AlternatingRowStyleSelector="{StaticResource CustomRowStyleSelector}">
-                <syncfusion:SfDataGrid.Resources>
-                <Style x:Key="rowStyle1" TargetType="syncfusion:VirtualizingCellsControl">
-                    <Setter Property="Background" Value="Transparent" />
-                </Style>
-                <Style x:Key="rowStyle2" TargetType="syncfusion:VirtualizingCellsControl">
-                    <Setter Property="Background" Value="#01D3D3D3" />
-                </Style>
-            </syncfusion:SfDataGrid.Resources>
-                <syncfusion:SfDataGrid.RowStyle>
-                    <Style TargetType="syncfusion:VirtualizingCellsControl">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding NeedUpdate, UpdateSourceTrigger=PropertyChanged}" Value="True">
-                                <Setter Property="Foreground" Value="Blue"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </syncfusion:SfDataGrid.RowStyle>
-                <syncfusion:SfDataGrid.Columns>
-                    <syncfusion:GridTextColumn HeaderText="Станок" MappingName="Machine" Width="100" TextWrapping="Wrap" TextAlignment="Center"/>
-                    <syncfusion:GridDateTimeColumn HeaderText="Дата" MappingName="ShiftDate" Width="64" TextAlignment="Center" CustomPattern="dd"/>
-                    <syncfusion:GridComboBoxColumn HeaderText="Смена" MappingName="Shift" Width="40" ItemsSource="{x:Static inf:AppSettings.ShiftTypes}"/>
-                    <syncfusion:GridTextColumn HeaderText="Оператор" MappingName="Operator" Width="100" TextWrapping="Wrap" TextAlignment="Center"/>
-                    <syncfusion:GridTextColumn HeaderText="Деталь" MappingName="PartName" TextAlignment="Center" TextWrapping="Wrap"/>
-                    <syncfusion:GridTextColumn HeaderText="М/Л" MappingName="Order" Width="100" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Всего по М/Л" MappingName="TotalCount" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Выполнено" MappingName="FinishedCount"  NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Установка" MappingName="Setup" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridDateTimeColumn HeaderText="Начало наладки" MappingName="StartSetupTime" Pattern="CustomPattern" CustomPattern = "dd.MM.yy hh:mm" Width="80" TextAlignment="Center"/>
-                    <syncfusion:GridDateTimeColumn HeaderText="Начало изготовления" MappingName="StartMachiningTime"  Pattern="CustomPattern" CustomPattern = "dd.MM.yy hh:mm" Width="80" TextAlignment="Center"/>
-                    <syncfusion:GridDateTimeColumn HeaderText="Конец изготовления" MappingName="EndMachiningTime" Pattern="CustomPattern" CustomPattern = "dd.MM.yy hh:mm" Width="80" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Норматив наладки" MappingName="SetupTimePlan" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Фактическая наладка" MappingName="SetupTimeFact" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Норматив штучный" MappingName="SingleProductionTimePlan" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridTimeSpanColumn HeaderText="Машинное время" MappingName="MachiningTime" Format="hh:mm:ss" Width="50" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Время замены" MappingName="PartReplacementTime" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Штучное фактическое" MappingName="SingleProductionTime" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Фактическое изготовление" MappingName="ProductionTimeFact" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Норматив на партию" MappingName="PlanForBatch" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridTextColumn HeaderText="Комментарий оператора" MappingName="OperatorComment" Width="250" TextWrapping="Wrap" TextAlignment="Left"/>
-                    <syncfusion:GridNumericColumn HeaderText="Простои в наладке" MappingName="SetupDowntimes" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Простои в изготовлении" MappingName="MachiningDowntimes" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Частичная наладка" MappingName="PartialSetupTime" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Обслуживание" MappingName="MaintenanceTime"  NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Поиск инструмента" MappingName="ToolSearchingTime" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Замена инструмента" MappingName="ToolChangingTime" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Обучение" MappingName="MentoringTime" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Другие службы" MappingName="ContactingDepartmentsTime" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Изготовление оснастки" MappingName="FixtureMakingTime" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Отказ оборудования" MappingName="HardwareFailureTime" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Отмеченные простои" MappingName="SpecifiedDowntimesRatio" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridComboBoxColumn HeaderText="Комментарий к простоям" MappingName="SpecifiedDowntimesComment" Width="120" TextAlignment="Center" TextWrapping="Wrap"/>
-                    <syncfusion:GridTextColumn HeaderText="Наладка" MappingName="SetupRatioTitle" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridComboBoxColumn HeaderText="Невыполнение норматива наладки" MappingName="MasterSetupComment" Width="120" TextWrapping="Wrap" TextAlignment="Center"/>
-                    <syncfusion:GridTextColumn HeaderText="Изготовление" MappingName="ProductionRatioTitle" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridComboBoxColumn HeaderText="Невыполнение норматива изготовления" MappingName="MasterMachiningComment" Width="120" TextWrapping="Wrap" TextAlignment="Center"/>
-                    <syncfusion:GridTextColumn HeaderText="Комментарий мастера" MappingName="MasterComment" Width="120" TextWrapping="Wrap" TextAlignment="Center" />
-                    <syncfusion:GridNumericColumn HeaderText="Норматив наладки (И)" MappingName="FixedSetupTimePlan" NumberDecimalDigits="0" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridNumericColumn HeaderText="Норматив изготовления (И)" MappingName="FixedProductionTimePlan" Width="40" TextAlignment="Center"/>
-                    <syncfusion:GridTextColumn HeaderText="Комментарий техотдела" MappingName="EngineerComment" Width="120" TextWrapping="Wrap" TextAlignment="Center"/>
-                    <syncfusion:GridCheckBoxColumn HeaderText="Исключить" MappingName="ExcludeFromReports" Width="40" TextAlignment="Center"/>
-                </syncfusion:SfDataGrid.Columns>
-            </syncfusion:SfDataGrid>
-            
+            </Menu>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
                       VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
                       ColumnWidth="SizeToCells" CanUserSortColumns="False" 
@@ -1191,6 +1149,7 @@
                         <Setter Property="BorderThickness" Value="0 1 1 1"/>
                         <Setter Property="Foreground" Value="Black"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="FontSize" Value="9"/>
                         <Setter Property="Padding" Value="3"/>
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
                         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -1202,7 +1161,7 @@
                                 <DataTemplate>
                                     <TextBlock TextWrapping="Wrap" Text="{Binding}"
                                        SnapsToDevicePixels="True"
-                                       Width="100"
+                                       Width="80"
                                        VerticalAlignment="Center" TextAlignment="Center"
                                        HorizontalAlignment="Center">
                                         <TextBlock.LayoutTransform>
@@ -1258,7 +1217,9 @@
                     <StaticResource ResourceKey="MasterCommentColumn"/>
                     <StaticResource ResourceKey="FixedSetupTimePlanColumn"/>
                     <StaticResource ResourceKey="FixedProductionTimePlanColumn"/>
+                    <StaticResource ResourceKey="ExcludedOperationsTimeColumn"/>
                     <StaticResource ResourceKey="EngineerCommentColumn"/>
+                    <StaticResource ResourceKey="IncreaseReasonColumn"/>
                     <StaticResource ResourceKey="ExcludeFromReportsColumn"/>
                 </DataGrid.Columns>
             </DataGrid>

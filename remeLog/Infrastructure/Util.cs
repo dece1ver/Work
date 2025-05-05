@@ -470,20 +470,20 @@ namespace remeLog.Infrastructure
         /// <summary>
         /// Настраивает лицензию Syncfusion, используя переменную окружения или данные из базы данных.
         /// </summary>
-        internal static void TrySetupSyncfusionLicense()
-        {
-            var key = Environment.GetEnvironmentVariable("SYNCFUSION_LICENSE", EnvironmentVariableTarget.User);
-            if (string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
-            {
-                key = Database.GetLicenseKey("syncfusion");
-                if (string.IsNullOrEmpty(key))
-                {
-                    return;
-                }
-                Environment.SetEnvironmentVariable("SYNCFUSION_LICENSE", key, EnvironmentVariableTarget.User);
-            }
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
-        }
+        //internal static void TrySetupSyncfusionLicense()
+        //{
+        //    var key = Environment.GetEnvironmentVariable("SYNCFUSION_LICENSE", EnvironmentVariableTarget.User);
+        //    if (string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(AppSettings.Instance.ConnectionString))
+        //    {
+        //        key = Database.GetLicenseKey("syncfusion");
+        //        if (string.IsNullOrEmpty(key))
+        //        {
+        //            return;
+        //        }
+        //        Environment.SetEnvironmentVariable("SYNCFUSION_LICENSE", key, EnvironmentVariableTarget.User);
+        //    }
+        //    Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(key);
+        //}
 
         [Conditional("DEBUG")]
         public static void Debug(

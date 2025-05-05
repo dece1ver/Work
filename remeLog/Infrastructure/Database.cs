@@ -22,11 +22,11 @@ namespace remeLog.Infrastructure
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     string query = $"SELECT license_key FROM licensing WHERE license_name = '{licenseName}';";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
@@ -50,11 +50,11 @@ namespace remeLog.Infrastructure
         public static List<OperatorInfo> GetOperators()
         {
             List<OperatorInfo> operators = new();
-            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
                 connection.Open();
                 string query = $"SELECT * FROM cnc_operators ORDER BY LastName ASC;";
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlCommand command = new(query, connection))
                 {
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
@@ -81,11 +81,11 @@ namespace remeLog.Infrastructure
             await Task.Run(async () =>
             {
                 progress.Report("Подключение к БД...");
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     string query = $"SELECT * FROM cnc_operators ORDER BY LastName ASC;";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
@@ -222,11 +222,11 @@ namespace remeLog.Infrastructure
             await Task.Run(async () =>
             {
                 progress?.Report("Подключение к БД...");
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new(connectionString))
                 {
                     await connection.OpenAsync();
                     string query = $"SELECT Id, PartName, YearCount FROM cnc_serial_parts ORDER BY PartName ASC;";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
@@ -410,11 +410,11 @@ namespace remeLog.Infrastructure
             List<Part> parts = new();
             await Task.Run(async () =>
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync(cancellationToken);
                     string query = $"SELECT * FROM Parts WHERE {conditions} ORDER BY StartSetupTime ASC;";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         await FillPartsAsync(parts, command, cancellationToken);
                     }
@@ -426,12 +426,12 @@ namespace remeLog.Infrastructure
         public async static Task<ObservableCollection<Part>> ReadPartsByShiftDateAndMachine(DateTime fromDate, DateTime toDate, string machine, CancellationToken cancellationToken)
         {
             ObservableCollection<Part> parts = new();
-            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
                 connection.Open();
 
                 string query = "SELECT * FROM Parts WHERE ShiftDate BETWEEN @FromDate AND @ToDate AND Machine = @Machine ORDER BY StartSetupTime ASC;";
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlCommand command = new(query, connection))
                 {
                     command.Parameters.AddWithValue("@FromDate", fromDate);
                     command.Parameters.AddWithValue("@ToDate", toDate);
@@ -506,12 +506,12 @@ namespace remeLog.Infrastructure
         public async static Task<ObservableCollection<Part>> ReadPartsByPartNameAndOrder(string[] partNames, string[] orders, CancellationToken cancellationToken)
         {
             ObservableCollection<Part> parts = new();
-            using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+            using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
                 connection.Open();
 
                 string query = "SELECT * FROM Parts WHERE PartName IN ('" + string.Join("','", partNames) + "') AND [Order] IN ('" + string.Join("','", orders) + "')";
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlCommand command = new(query, connection))
                 {
                     await parts.FillPartsAsync(command, cancellationToken);
                 }
@@ -567,9 +567,11 @@ namespace remeLog.Infrastructure
                         "ExcludeFromReports = @ExcludeFromReports, " +
                         "LongSetupReasonComment = @LongSetupReasonComment, " +
                         "LongSetupFixComment = @LongSetupFixComment, " +
-                        "LongSetupEngeneerComment = @LongSetupEngeneerComment " +
+                        "LongSetupEngeneerComment = @LongSetupEngeneerComment, " +
+                        "ExcludedOperationsTime = @ExcludedOperationsTime, " +
+                        "IncreaseReason = @IncreaseReason " +
                         "WHERE Guid = @Guid";
-                    using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
+                    using (SqlCommand cmd = new(updateQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
                         cmd.Parameters.AddWithValue("@Machine", part.Machine);
@@ -612,6 +614,8 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@LongSetupReasonComment", part.LongSetupReasonComment);
                         cmd.Parameters.AddWithValue("@LongSetupFixComment", part.LongSetupFixComment);
                         cmd.Parameters.AddWithValue("@LongSetupEngeneerComment", part.LongSetupEngeneerComment);
+                        cmd.Parameters.AddWithValue("@ExcludedOperationsTime", part.ExcludedOperationsTime);
+                        cmd.Parameters.AddWithValue("@IncreaseReason", part.IncreaseReason);
 
                         var execureResult = await cmd.ExecuteNonQueryAsync();
                     }
@@ -690,6 +694,8 @@ namespace remeLog.Infrastructure
                     var longSetupReasonComment = await reader.GetValueOrDefaultAsync(40, "", cancellationToken);
                     var longSetupFixComment = await reader.GetValueOrDefaultAsync(41, "", cancellationToken);
                     var longSetupEngeneerComment = await reader.GetValueOrDefaultAsync(42, "", cancellationToken);
+                    var excludedOperationsTime = await reader.GetValueOrDefaultAsync(43, 0.0, cancellationToken);
+                    var increaseReason = await reader.GetValueOrDefaultAsync(44, "", cancellationToken);
 
                     Part part = new(
                         guid,
@@ -734,7 +740,9 @@ namespace remeLog.Infrastructure
                         excludeFromReports, 
                         longSetupReasonComment, 
                         longSetupFixComment, 
-                        longSetupEngeneerComment);
+                        longSetupEngeneerComment,
+                        excludedOperationsTime, 
+                        increaseReason);
                     parts.Add(part);
                 }
             }
@@ -744,11 +752,11 @@ namespace remeLog.Infrastructure
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     string query = $"SELECT FullName FROM masters WHERE IsActive = 1 ORDER BY FullName ASC";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
@@ -785,11 +793,11 @@ namespace remeLog.Infrastructure
             machines.Clear();
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     string query = $"SELECT Name FROM cnc_machines WHERE IsActive = 1 ORDER BY Name ASC";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
@@ -825,11 +833,11 @@ namespace remeLog.Infrastructure
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     string query = $"SELECT Name, Type FROM cnc_machines WHERE IsActive = 1 ORDER BY Name ASC";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
@@ -866,7 +874,7 @@ namespace remeLog.Infrastructure
             try
             {
                 reasons.Clear();
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     var typeCondition = type switch
                     {
@@ -876,7 +884,7 @@ namespace remeLog.Infrastructure
                     };
                     connection.Open();
                     string query = $"SELECT Reason, RequireComment FROM cnc_deviation_reasons WHERE Type IS NULL OR {typeCondition} ORDER BY Reason ASC";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
@@ -913,11 +921,11 @@ namespace remeLog.Infrastructure
             try
             {
                 reasons.Clear();
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     string query = $"SELECT Reason FROM cnc_downtime_reasons ORDER BY Reason ASC";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
@@ -964,13 +972,13 @@ namespace remeLog.Infrastructure
                     Util.WriteLog("Найдена больше чем одна запись за смену.");
                     return DbResult.Error;
                 }
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Запись в БД информации о смене.");
                     connection.Open();
                     string query = $"INSERT INTO cnc_shifts (ShiftDate, Shift, Machine, Master, UnspecifiedDowntimes, DowntimesComment, CommonComment, IsChecked) " +
                         $"VALUES (@ShiftDate, @Shift, @Machine, @Master, @UnspecifiedDowntimes, @DowntimesComment, @CommonComment, @IsChecked); SELECT SCOPE_IDENTITY()";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         command.Parameters.AddWithValue("ShiftDate", shiftInfo.ShiftDate);
                         command.Parameters.AddWithValue("Shift", shiftInfo.Shift);
@@ -1016,11 +1024,11 @@ namespace remeLog.Infrastructure
             shifts = new List<ShiftInfo>();
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     string query = $"SELECT * FROM cnc_shifts WHERE ShiftDate = @ShiftDate AND Shift = @Shift AND Machine = @Machine";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         command.Parameters.AddWithValue("ShiftDate", shiftInfo.ShiftDate);
                         command.Parameters.AddWithValue("Shift", shiftInfo.Shift);
@@ -1085,7 +1093,7 @@ namespace remeLog.Infrastructure
             shifts = new List<ShiftInfo>();
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     //string machineNums = string.Join(", ", machines.Select((_, i) => $"@machine{i}"));
@@ -1093,7 +1101,7 @@ namespace remeLog.Infrastructure
 
                     string query = $"SELECT * FROM cnc_shifts WHERE ShiftDate BETWEEN @FromDate AND @ToDate AND Machine IN ({machinesNames})";
                     if (shift.Type != Types.ShiftType.All) query += $" AND Shift = '{shift.Name}'";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         command.Parameters.AddWithValue("FromDate", fromDate);
                         command.Parameters.AddWithValue("ToDate", toDate);
@@ -1162,13 +1170,13 @@ namespace remeLog.Infrastructure
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
 
                     string query = $"UPDATE cnc_shifts SET Master = @Master, UnspecifiedDowntimes = @UnspecifiedDowntimes, DowntimesComment = @DowntimesComment, CommonComment = @CommonComment, IsChecked = @IsChecked  " +
                         $"WHERE ShiftDate = @ShiftDate AND Shift = @Shift AND Machine = @Machine";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         command.Parameters.AddWithValue("ShiftDate", shiftInfo.ShiftDate);
                         command.Parameters.AddWithValue("Shift", shiftInfo.Shift);
@@ -1221,11 +1229,11 @@ namespace remeLog.Infrastructure
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     connection.Open();
                     string query = $"DELETE FROM parts WHERE GUID = @Guid";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         command.Parameters.AddWithValue("Guid", part.Guid);
                         command.ExecuteNonQuery();

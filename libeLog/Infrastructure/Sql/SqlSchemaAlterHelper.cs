@@ -148,18 +148,21 @@ namespace libeLog.Infrastructure.Sql
             for (int i = 0; i < tableDefinition.ForeignKeys.Count; i++)
             {
                 var fk = tableDefinition.ForeignKeys[i];
-                if (fk.Columns.Count == 1) continue;
 
                 string columns = string.Join(",", fk.Columns.Select(c => $"[{c}]"));
                 string refColumns = string.Join(",", fk.ReferencedColumns.Select(c => $"[{c}]"));
 
+                string constraintName = fk.Columns.Count == 1
+                    ? $"FK_{tableName}_{fk.Columns[0]}_{fk.ReferencedTable}_{fk.ReferencedColumns[0]}"
+                    : $"FK_{tableName}_{fk.ReferencedTable}_{i}";
+
                 sb.AppendLine($@"
                 IF NOT EXISTS (
                     SELECT * FROM sys.foreign_keys 
-                    WHERE name = N'FK_{tableName}_{fk.ReferencedTable}_{i}' AND parent_object_id = OBJECT_ID(N'dbo.{tableName}')
+                    WHERE name = N'{constraintName}' AND parent_object_id = OBJECT_ID(N'dbo.{tableName}')
                 )
                 BEGIN
-                    ALTER TABLE [dbo].[{tableName}] ADD CONSTRAINT [FK_{tableName}_{fk.ReferencedTable}_{i}]
+                    ALTER TABLE [dbo].[{tableName}] ADD CONSTRAINT [{constraintName}]
                     FOREIGN KEY ({columns}) REFERENCES [dbo].[{fk.ReferencedTable}] ({refColumns})
                     {(fk.OnDelete != ForeignKeyAction.NoAction ? $"ON DELETE {SqlSchemaHelper.ToSqlAction(fk.OnDelete)}" : "")}
                     {(fk.OnUpdate != ForeignKeyAction.NoAction ? $"ON UPDATE {SqlSchemaHelper.ToSqlAction(fk.OnUpdate)}" : "")};

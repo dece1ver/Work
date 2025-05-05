@@ -14,7 +14,7 @@ using System.Net.Http.Headers;
 
 namespace remeLog.Infrastructure.Winnum
 {
-    public class WinnumApiClient
+    public class ApiClient
     {
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
@@ -22,7 +22,7 @@ namespace remeLog.Infrastructure.Winnum
         private readonly string _usr;
         private readonly string _pwd;
 
-        public WinnumApiClient(string baseUrl, Machine machine, string usr, string pwd)
+        public ApiClient(string baseUrl, Machine machine, string usr, string pwd)
         {
             _baseUrl = baseUrl;
             _machine = machine;
@@ -55,7 +55,7 @@ namespace remeLog.Infrastructure.Winnum
         }
 
         // Сохранение значения сигнала
-        public async Task SaveSignalAsync(string signal, string value, string pid = null, DateTime? eventTime = null)
+        public async Task SaveSignalAsync(string signal, string value, string pid = null!, DateTime? eventTime = null)
         {
             var parameters = new Dictionary<string, string>
         {

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using DocumentFormat.OpenXml.Bibliography;
@@ -42,6 +44,7 @@ namespace remeLog.ViewModels
         {
             StartCommand = new LambdaCommand(OnStartCommandExecuted, CanStartCommandExecute);
             CancelCommand = new LambdaCommand(OnCancelCommandExecuted, CanCancelCommandExecute);
+            ExportCommand = new LambdaCommand(OnExportCommandExecuted, CanExportCommandExecute);
             _status = "";
             
         }
@@ -61,9 +64,29 @@ namespace remeLog.ViewModels
         public ICommand CancelCommand { get; }
         private void OnCancelCommandExecuted(object p)
         {
-            
+            _cts.Cancel();
         }
         private bool CanCancelCommandExecute(object p) => IsBusy;
+        #endregion
+
+        #region Export
+        public ICommand ExportCommand { get; }
+        private async void OnExportCommandExecuted(object p)
+        {
+            var fileDialog = new SaveFileDialog() { Filter = "Markdown (*.md)|*.md", DefaultExt = "md" };
+
+            if (fileDialog.ShowDialog() != DialogResult.OK)
+            {
+                Status = "Выбор отменён.";
+                return;
+            }
+
+            await File.WriteAllTextAsync(fileDialog.FileName, SqlSchemaDocumentation.GenerateMarkdownForTables(SqlSchemaBootstrapper.GetAllTableDefinitions()));
+            Status = "Сохранено.";
+            await Task.Delay(3000);
+            if (Status == "Сохранено.") Status = "";
+        }
+        private bool CanExportCommandExecute(object p) => true;
         #endregion
 
 
@@ -119,18 +142,6 @@ namespace remeLog.ViewModels
             {
                 IsBusy = false;
             }
-        }
-
-        Viewbox IconFromStatus(Status status)
-        {
-            return status switch
-            {
-                libeLog.Infrastructure.Status.Ok => App.OkIcon,
-                libeLog.Infrastructure.Status.Warning => throw new NotImplementedException(),
-                libeLog.Infrastructure.Status.Error => App.ErrorIcon,
-                libeLog.Infrastructure.Status.Sync => App.SyncIcon,
-                _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Неизвестный статус")
-            };
         }
     }
 }

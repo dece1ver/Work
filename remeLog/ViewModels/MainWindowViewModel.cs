@@ -9,9 +9,7 @@ using remeLog.Infrastructure.Types;
 using remeLog.Infrastructure.Winnum;
 using remeLog.Models;
 using remeLog.Views;
-using Syncfusion.Data.Extensions;
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -168,7 +166,7 @@ namespace remeLog.ViewModels
             /// тесты
             var goodway = new Machine(Machines.First(), 0, Guid.Parse(""));
             var goodwayParts = Parts.Where(p => p.Machine.ToLowerInvariant().Contains(goodway.Name.ToLowerInvariant())).SelectMany(p => p.Parts);
-            var apiClient = new WinnumApiClient("http://...", goodway, "usr", "pwd" );
+            var apiClient = new ApiClient("http://...", goodway, "usr", "pwd" );
             var res = await apiClient.GetCompletedOperationsAsync(2, 
                 goodwayParts.Last().StartMachiningTime, 
                 goodwayParts.Last().EndMachiningTime);
@@ -204,7 +202,7 @@ namespace remeLog.ViewModels
                     AppSettings.Instance.InstantUpdateOnMainWindow = settings.InstantUpdateOnMainWindow;
                     AppSettings.Instance.User = settings.Role;
                     AppSettings.Save();
-                    Util.TrySetupSyncfusionLicense();
+                    //Util.TrySetupSyncfusionLicense();
                     Status = "Параметры сохранены";
                 }
             }

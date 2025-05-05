@@ -162,7 +162,7 @@ namespace remeLog
             AppSettings.Instance.ReadConfig();
 
             //Util.WriteLog("Настройка лицензии Syncfusion");
-            Util.TrySetupSyncfusionLicense();
+            //Util.TrySetupSyncfusionLicense();
 
             Util.WriteLog("Запуск наблюдателя активации окна");
             StartWindowActivationWatcher();

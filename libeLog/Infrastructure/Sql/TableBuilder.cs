@@ -133,9 +133,10 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="name">Имя столбца.</param>
         /// <param name="isPrimaryKey">Делает столбец первичным ключом, если true.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddGuidColumn(string name, bool isPrimaryKey = false)
+        public TableBuilder AddGuidColumn(string name, bool isPrimaryKey = false, bool nullable = true)
         {
             return AddColumn(name, "UNIQUEIDENTIFIER", opt => {
+                opt.Nullable(nullable);
                 if (isPrimaryKey) opt.PrimaryKey().Nullable(false);
             });
         }
