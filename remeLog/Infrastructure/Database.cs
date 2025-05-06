@@ -198,6 +198,37 @@ namespace remeLog.Infrastructure
             }
         }
 
+        public async static Task<List<Machine>> GetMachinesAsync(IProgress<string> progress)
+        {
+            List<Machine> machines = new();
+
+            await Task.Run(async () =>
+            {
+                progress.Report("Подключение к БД...");
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = $"SELECT Name, WnId, WnUuid FROM cnc_machines WHERE IsActive = 1;";
+                    using (SqlCommand command = new(query, connection))
+                    {
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            progress.Report("Чтение данных из БД...");
+                            while (await reader.ReadAsync())
+                            {
+                                machines.Add(new Machine(
+                                    await reader.GetValueOrDefaultAsync(0, "", CancellationToken.None),
+                                    await reader.GetValueOrDefaultAsync(1, 0, CancellationToken.None),
+                                    await reader.GetValueOrDefaultAsync(2, Guid.Empty, CancellationToken.None)));
+                            }
+                        }
+                    }
+                }
+                progress.Report("Чтение завершено");
+            });
+            return machines;
+        }
+
         /// <summary>
         /// Асинхронно получает список наименований серийных деталей из базы данных.
         /// </summary>
@@ -829,6 +860,11 @@ namespace remeLog.Infrastructure
             }
         }
 
+        /// <summary>
+        /// Это для MachineFilter, для Machine использовать GetMachinesAsync
+        /// </summary>
+        /// <param name="machines"></param>
+        /// <returns></returns>
         public async static Task<DbResult> ReadMachines(this ICollection<MachineFilter> machines)
         {
             try

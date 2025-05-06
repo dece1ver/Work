@@ -840,8 +840,8 @@ namespace remeLog.Infrastructure
                 .Add(CM.Setup)
                 .Add(CM.MachiningTime)
                 .Add(CM.OperatorComment)
-                .Add(CM.Problems)
                 .Add(CM.MasterComment)
+                .Add(CM.EngineerComment)
                 .Build();
 
             ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 65, 8);
@@ -896,6 +896,9 @@ namespace remeLog.Infrastructure
                     ws.Cell(row, ci[CM.OperatorComment]).SetValue(comment)
                         .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
+                    ws.Cell(row, ci[CM.MasterComment]).SetValue(part.MasterComment);
+                    ws.Cell(row, ci[CM.EngineerComment]).SetValue(part.EngineerComment);
+
                     var cells = ws.Range(row, 1, row, cm.Count).Style
                         .Border.SetLeftBorder(XLBorderStyleValues.Medium)
                         .Border.SetRightBorder(XLBorderStyleValues.Medium)
@@ -912,8 +915,9 @@ namespace remeLog.Infrastructure
             ws.Column(ci[CM.Part]).Width = 15;
             ws.Columns(ci[CM.Finished], ci[CM.Setup]).Width = 3;
             ws.Column(ci[CM.MachiningTime]).Width = 7;
-            ws.Columns(ci[CM.OperatorComment], ci[CM.Problems]).Width = 30;
+            ws.Column(ci[CM.OperatorComment]).Width = 40;
             ws.Column(ci[CM.MasterComment]).Width = 20;
+            ws.Column(ci[CM.EngineerComment]).Width = 20;
 
             ws.PageSetup.PrintAreas.Add(1, 1, row - 1, cm.Count);
             ws.PageSetup.PageOrientation = XLPageOrientation.Landscape;

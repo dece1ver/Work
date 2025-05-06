@@ -544,5 +544,34 @@ namespace remeLog.Infrastructure
             }
 #endif
         }
+
+        public static string FormatDictionaryAsString(Dictionary<string, string> dictionary, string separator = ", ", string keyValueSeparator = ": ")
+        {
+            if (dictionary == null || dictionary.Count == 0)
+                return string.Empty;
+
+            var formatted = dictionary
+                .Select(kvp => $"{kvp.Key}{keyValueSeparator}{kvp.Value}")
+                .ToArray();
+
+            return string.Join(separator, formatted);
+        }
+
+        public static string FormatDictionariesAsString(IEnumerable<Dictionary<string, string>> dictionaries, string entrySeparator = "\n", string keyValueSeparator = ": ")
+        {
+            if (dictionaries == null)
+                return string.Empty;
+
+            var formattedItems = dictionaries
+                .Select(dict =>
+                {
+                    if (dict == null || dict.Count == 0)
+                        return string.Empty;
+
+                    return string.Join(entrySeparator, dict.Select(kvp => $"{kvp.Key}{keyValueSeparator}{kvp.Value}"));
+                });
+
+            return string.Join($"\n\n---\n\n", formattedItems);
+        }
     }
 }

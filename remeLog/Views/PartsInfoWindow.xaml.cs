@@ -239,6 +239,18 @@ namespace remeLog.Views
                             //e.Handled = true;
                             //break;
 
+                        case Key.W:
+                            var progress = new Progress<string>(m => d.Status = m);
+                            try
+                            {
+                                var machines = Database.GetMachinesAsync(progress);
+                                var winnumClient = new Infrastructure.Winnum.ApiClient("", "", "");
+                                var operation = new Infrastructure.Winnum.Operation(winnumClient, null!);
+                            }
+                            catch { }
+                            
+                            
+                            break;
                         case Key.Delete:
                             if (d.SelectedPart is Part dp)
                             {

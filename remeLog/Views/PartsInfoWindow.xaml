@@ -9,7 +9,7 @@
         xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:remeLog.ViewModels" xmlns:md="clr-namespace:remeLog.Models" 
         d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
-        Title="{Binding PartsInfo.Machine}" Height="720" Width="1280" 
+        Title="{Binding PartsInfo.Machine}" Height="1440" Width="2560" 
         WindowStartupLocation="CenterOwner" 
         WindowState="Maximized" 
         PreviewKeyDown="partsInfoWindow_PreviewKeyDown">
@@ -537,7 +537,7 @@
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
 
-        <DataGridTextColumn x:Key="FixedSetupTimePlanColumn" Header="Норматив наладки (И)" Binding="{Binding FixedSetupTimePlan, 
+        <DataGridTextColumn x:Key="FixedSetupTimePlanColumn" Header="(И) Норматив наладки" Binding="{Binding FixedSetupTimePlan, 
                             UpdateSourceTrigger=Default, 
                             StringFormat=0.##,
                             Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
@@ -553,7 +553,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="FixedProductionTimePlanColumn" Header="Норматив изготовления (И)" Binding="{Binding FixedProductionTimePlan, 
+        <DataGridTextColumn x:Key="FixedProductionTimePlanColumn" Header="(И) Норматив изготовления" Binding="{Binding FixedProductionTimePlan, 
                             UpdateSourceTrigger=Default, StringFormat=0.##, 
                             Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
                             Visibility="{Binding DataContext.ViewMode, 
@@ -1149,8 +1149,8 @@
                         <Setter Property="BorderThickness" Value="0 1 1 1"/>
                         <Setter Property="Foreground" Value="Black"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="FontSize" Value="9"/>
-                        <Setter Property="Padding" Value="3"/>
+                        <Setter Property="FontSize" Value="12"/>
+                        <Setter Property="Padding" Value="0 2"/>
                         <Setter Property="HorizontalContentAlignment" Value="Center" />
                         <Setter Property="VerticalContentAlignment" Value="Center" />
                         <Setter Property="SnapsToDevicePixels" Value="True"/>
@@ -1161,7 +1161,7 @@
                                 <DataTemplate>
                                     <TextBlock TextWrapping="Wrap" Text="{Binding}"
                                        SnapsToDevicePixels="True"
-                                       Width="80"
+                                       Width="90"
                                        VerticalAlignment="Center" TextAlignment="Center"
                                        HorizontalAlignment="Center">
                                         <TextBlock.LayoutTransform>
@@ -1217,8 +1217,8 @@
                     <StaticResource ResourceKey="MasterCommentColumn"/>
                     <StaticResource ResourceKey="FixedSetupTimePlanColumn"/>
                     <StaticResource ResourceKey="FixedProductionTimePlanColumn"/>
-                    <StaticResource ResourceKey="ExcludedOperationsTimeColumn"/>
                     <StaticResource ResourceKey="EngineerCommentColumn"/>
+                    <StaticResource ResourceKey="ExcludedOperationsTimeColumn"/>
                     <StaticResource ResourceKey="IncreaseReasonColumn"/>
                     <StaticResource ResourceKey="ExcludeFromReportsColumn"/>
                 </DataGrid.Columns>
