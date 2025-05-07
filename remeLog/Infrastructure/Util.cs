@@ -554,7 +554,7 @@ namespace remeLog.Infrastructure
                 .Select(kvp => $"{kvp.Key}{keyValueSeparator}{kvp.Value}")
                 .ToArray();
 
-            return string.Join(separator, formatted);
+            return Uri.UnescapeDataString(string.Join(separator, formatted));
         }
 
         public static string FormatDictionariesAsString(IEnumerable<Dictionary<string, string>> dictionaries, string entrySeparator = "\n", string keyValueSeparator = ": ")
@@ -571,7 +571,7 @@ namespace remeLog.Infrastructure
                     return string.Join(entrySeparator, dict.Select(kvp => $"{kvp.Key}{keyValueSeparator}{kvp.Value}"));
                 });
 
-            return string.Join($"\n\n---\n\n", formattedItems);
+            return Uri.UnescapeDataString(string.Join($"\n\n---\n\n", formattedItems));
         }
     }
 }

@@ -161,16 +161,10 @@ namespace remeLog.ViewModels
 
         #region TestCommand
         public ICommand TestCommand { get; }
-        private async void OnTestCommandExecuted(object p)
+        private void OnTestCommandExecuted(object p)
         {
             /// тесты
-            var goodway = new Machine(Machines.First(), 0, Guid.Parse(""));
-            var goodwayParts = Parts.Where(p => p.Machine.ToLowerInvariant().Contains(goodway.Name.ToLowerInvariant())).SelectMany(p => p.Parts);
-            var apiClient = new ApiClient("http://...", goodway, "usr", "pwd" );
-            var res = await apiClient.GetCompletedOperationsAsync(2, 
-                goodwayParts.Last().StartMachiningTime, 
-                goodwayParts.Last().EndMachiningTime);
-            MessageBox.Show(res);
+            
         }
         private bool CanTestCommandExecute(object p) => !InProgress;
         #endregion

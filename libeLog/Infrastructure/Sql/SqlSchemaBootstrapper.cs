@@ -68,6 +68,8 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("Type", 50, false)
                 .AddIntColumn("SetupLimit", false)
                 .AddDoubleColumn("SetupCoefficient", false)
+                .AddIntColumn("WnId", false)
+                .AddGuidColumn("WnUuid", false, false)
                 .Build(),
 
             new TableBuilder("cnc_operators")
@@ -131,6 +133,13 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("User", 50, false)
                 .AddStringColumn("Pass", 50, false)
                 .AddStringColumn("LocalType", 50, false)
+                .Build(),
+
+            new TableBuilder("cnc_winnum_cfg")
+                .AddIdColumn()
+                .AddStringColumn("BaseUri", 255, false)
+                .AddStringColumn("User", 50, false)
+                .AddStringColumn("Pass", 50, false)
                 .Build(),
 
             new TableBuilder("masters")

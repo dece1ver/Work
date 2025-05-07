@@ -1,4 +1,5 @@
-﻿using libeLog.Models;
+﻿using libeLog.Extensions;
+using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -115,6 +116,42 @@ namespace libeLog.Infrastructure
             catch (Exception ex)
             {
                 return (DbResult.Error, null, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Асинхронно получает конфигурационные параметры для подключения к API Winnum из таблицы <c>cnc_winnum_cfg</c>.
+        /// </summary>
+        /// <param name="connectionString">Строка подключения к базе данных SQL Server.</param>
+        /// <returns>
+        /// Кортеж из трёх строк: <c>BaseUri</c> — базовый адрес API, <c>User</c> — имя пользователя, <c>Pass</c> — пароль.
+        /// Если строка не найдена, возвращается кортеж по умолчанию <c>(null, null, null)</c>.
+        /// </returns>
+        /// <remarks>
+        /// Ожидается, что таблица <c>cnc_winnum_cfg</c> содержит не более одной строки с параметрами конфигурации.
+        /// Значения, отсутствующие в БД, заменяются на пустую строку.
+        /// </remarks>
+        public static async Task<(string BaseUri, string User, string Pass)> GetWinnumConfigAsync(string connectionString)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                await connection.OpenAsync();
+                string query = "SELECT [BaseUri], [User], [Pass] FROM cnc_winnum_cfg";
+                using (SqlCommand command = new(query, connection))
+                {
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            var baseUri = await reader.GetValueOrDefaultAsync(0, "");
+                            var user = await reader.GetValueOrDefaultAsync(1, "");
+                            var pass = await reader.GetValueOrDefaultAsync(2, "");
+                            return (baseUri, user, pass);
+                        }
+                    }
+                    return default;
+                }
             }
         }
     }

@@ -1,14 +1,17 @@
-﻿using remeLog.Infrastructure;
+﻿using libeLog.Infrastructure;
+using remeLog.Infrastructure;
 using remeLog.Models;
 using remeLog.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Database = remeLog.Infrastructure.Database;
 using SelectionChangedEventArgs = System.Windows.Controls.SelectionChangedEventArgs;
 
 namespace remeLog.Views
@@ -195,7 +198,7 @@ namespace remeLog.Views
             }
         }
 
-        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        private async void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (DataContext is PartsInfoWindowViewModel d)
             {
@@ -240,14 +243,36 @@ namespace remeLog.Views
                             //break;
 
                         case Key.W:
-                            var progress = new Progress<string>(m => d.Status = m);
+                            IProgress<string> progress = new Progress<string>(m => d.Status = m);
                             try
                             {
-                                var machines = Database.GetMachinesAsync(progress);
-                                var winnumClient = new Infrastructure.Winnum.ApiClient("", "", "");
-                                var operation = new Infrastructure.Winnum.Operation(winnumClient, null!);
+                                if (d.SelectedPart == null || string.IsNullOrEmpty(AppSettings.Instance.ConnectionString)) return;
+                                var machines = await Database.GetMachinesAsync(progress);
+                                var machine = machines.FirstOrDefault(m => m.Name == d.SelectedPart.Machine);
+                                if (machine == null)
+                                {
+                                    progress.Report("Не удалось сопоставить станок указанный при изготовлении со станков в Winnum");
+                                    await Task.Delay(3000);
+                                    return;
+                                }
+                                progress.Report("Чтение конфигурации");
+                                var (baseUri, user, pass) = await libeLog.Infrastructure.Database.GetWinnumConfigAsync(AppSettings.Instance.ConnectionString);
+                                var winnumClient = new Infrastructure.Winnum.ApiClient(baseUri, user, pass);
+                                var operation = new Infrastructure.Winnum.Operation(winnumClient, machine);
+                                progress.Report("Чтение данных из Winnum");
+                                var xml = await operation.GetPriorityTagDurationAsync(2, d.SelectedPart.StartMachiningTime, d.SelectedPart.EndMachiningTime);
+                                var dicts = Infrastructure.Winnum.Parser.ParseXmlItems(xml);
+                                var result = Util.FormatDictionariesAsString(Infrastructure.Winnum.Parser.ParseXmlItems(xml));
+                                progress.Report("");
+                                var win = new WinnumInfoWindow();
+                                win.SetData(dicts);
+                                win.ShowDialog();
                             }
-                            catch { }
+                            catch (Exception ex)
+                            {
+                                progress.Report(ex.Message);
+                                await Task.Delay(3000);
+                            }
                             
                             
                             break;
@@ -266,6 +291,7 @@ namespace remeLog.Views
 
         private void partsInfoWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            return;
             if (DataContext is PartsInfoWindowViewModel d)
             {
                 if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.W)
