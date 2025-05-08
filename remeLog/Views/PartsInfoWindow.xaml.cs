@@ -260,12 +260,14 @@ namespace remeLog.Views
                                 var winnumClient = new Infrastructure.Winnum.ApiClient(baseUri, user, pass);
                                 var operation = new Infrastructure.Winnum.Operation(winnumClient, machine);
                                 progress.Report("Чтение данных из Winnum");
-                                var xml = await operation.GetPriorityTagDurationAsync(2, d.SelectedPart.StartMachiningTime, d.SelectedPart.EndMachiningTime);
-                                var dicts = Infrastructure.Winnum.Parser.ParseXmlItems(xml);
+                                var xml = await operation.GetPriorityTagDurationAsync(2, d.SelectedPart.StartSetupTime, d.SelectedPart.EndMachiningTime);
+                                var rawData = Infrastructure.Winnum.Parser.ParseXmlItems(xml);
+                                rawData = Infrastructure.Winnum.Parser.FilterByDateRange(rawData, "START", d.SelectedPart.StartSetupTime, "END", d.SelectedPart.EndMachiningTime);
+                                var priorityTagDurations = Infrastructure.Winnum.Parser.ParsePriorityTagDurations(xml, d.SelectedPart.StartSetupTime, d.SelectedPart.EndMachiningTime);
                                 var result = Util.FormatDictionariesAsString(Infrastructure.Winnum.Parser.ParseXmlItems(xml));
                                 progress.Report("");
-                                var win = new WinnumInfoWindow();
-                                win.SetData(dicts);
+                                var win = new WinnumInfoWindow(priorityTagDurations);
+                                win.SetData(rawData);
                                 win.ShowDialog();
                             }
                             catch (Exception ex)

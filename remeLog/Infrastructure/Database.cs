@@ -580,6 +580,7 @@ namespace remeLog.Infrastructure
                         "SetupDowntimes = @SetupDowntimes, " +
                         "MachiningDowntimes = @MachiningDowntimes, " +
                         "PartialSetupTime = @PartialSetupTime, " +
+                        "CreateNcProgramTime = @CreateNcProgramTime, " +
                         "MaintenanceTime = @MaintenanceTime, " +
                         "ToolSearchingTime = @ToolSearchingTime, " +
                         "MentoringTime = @MentoringTime, " +
@@ -626,6 +627,7 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@SetupDowntimes", part.SetupDowntimes);
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", part.MachiningDowntimes);
                         cmd.Parameters.AddWithValue("@PartialSetupTime", part.PartialSetupTime);
+                        cmd.Parameters.AddWithValue("@CreateNcProgramTime", part.CreateNcProgramTime);
                         cmd.Parameters.AddWithValue("@MaintenanceTime", part.MaintenanceTime);
                         cmd.Parameters.AddWithValue("@ToolSearchingTime", part.ToolSearchingTime);
                         cmd.Parameters.AddWithValue("@MentoringTime", part.MentoringTime);

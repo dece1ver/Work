@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
@@ -32,7 +33,7 @@ namespace remeLog.Infrastructure.Winnum
             var url = $"{_baseUrl}?{query}&mode=yes";
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            return Uri.UnescapeDataString(await response.Content.ReadAsStringAsync());
         }
     }
 }

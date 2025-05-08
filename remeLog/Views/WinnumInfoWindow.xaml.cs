@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using remeLog.Infrastructure.Winnum.Data;
 
 namespace remeLog.Views
 {
@@ -12,8 +13,9 @@ namespace remeLog.Views
     /// </summary>
     public partial class WinnumInfoWindow : Window
     {
-        public WinnumInfoWindow()
+        public WinnumInfoWindow(List<PriorityTagDuration> priorityTagDurations)
         {
+            PriorityTagDurations = priorityTagDurations;
             InitializeComponent();
         }
 
@@ -29,11 +31,13 @@ namespace remeLog.Views
             {
                 var row = table.NewRow();
                 foreach (var key in allKeys)
-                    row[key] = dict.TryGetValue(key, out var value) ? Uri.UnescapeDataString(value) : "";
+                    row[key] = dict.TryGetValue(key, out var value) ? value : "";
                 table.Rows.Add(row);
             }
 
             DataGrid.ItemsSource = table.DefaultView;
         }
+
+        public List<PriorityTagDuration> PriorityTagDurations { get; set; }
     }
 }

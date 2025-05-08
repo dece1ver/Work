@@ -23,14 +23,14 @@ namespace remeLog.Infrastructure.Winnum
             foreach (var item in items)
             {
                 var dict = item.Attributes()
-                               .ToDictionary(a => a.Name.LocalName, a => a.Value);
+                               .ToDictionary(a => Uri.UnescapeDataString(a.Name.LocalName), a => Uri.UnescapeDataString(a.Value));
                 result.Add(dict);
             }
 
             return result;
         }
 
-        public static List<PriorityTagDuration> ParsePriorityTagDurations(string xml)
+        public static List<PriorityTagDuration> ParsePriorityTagDurations(string xml, DateTime start, DateTime end)
         {
             var xDoc = XDocument.Parse(xml);
             var items = xDoc.Root?.Elements("item") ?? Enumerable.Empty<XElement>();
@@ -58,11 +58,51 @@ namespace remeLog.Infrastructure.Winnum
                     Duration = double.TryParse(el.Attribute("DURATION")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0
                 };
 
-                result.Add(dto);
+                if (dto.Start < end && dto.End > start)
+                {
+                    result.Add(dto);
+                }
             }
 
             return result;
         }
 
+        /// <summary>
+        /// Возвращает элементы, у которых интервалы между ключами startKey и endKey
+        /// хотя бы частично пересекаются с указанным диапазоном времени.
+        /// </summary>
+        /// <param name="items">Исходная коллекция словарей.</param>
+        /// <param name="startKey">Ключ начала интервала в словаре.</param>
+        /// <param name="start">Начало интересующего диапазона.</param>
+        /// <param name="endKey">Ключ конца интервала в словаре.</param>
+        /// <param name="end">Конец интересующего диапазона.</param>
+        /// <param name="format">Формат дат в словаре.</param>
+        /// <returns>Список словарей, чьи интервалы пересекаются с указанным диапазоном.</returns>
+        public static List<Dictionary<string, string>> FilterByDateRange(
+            List<Dictionary<string, string>> items,
+            string startKey,
+            DateTime start,
+            string endKey,
+            DateTime end,
+            string format = "dd.MM.yyyy HH:mm:ss.fff")
+        {
+            var filtered = new List<Dictionary<string, string>>();
+
+            foreach (var item in items)
+            {
+                if (!item.TryGetValue(startKey, out var startStr) ||
+                    !item.TryGetValue(endKey, out var endStr))
+                    continue;
+
+                if (!DateTime.TryParseExact(startStr, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var itemStart) ||
+                    !DateTime.TryParseExact(endStr, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var itemEnd))
+                    continue;
+
+                if (itemStart < end && itemEnd > start)
+                    filtered.Add(item);
+            }
+
+            return filtered;
+        }
     }
 }

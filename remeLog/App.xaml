@@ -15,6 +15,7 @@
             <cnv:EnumDescriptionConverter x:Key="EnumDescriptionConverter"/>
             <cnv:ExpressionToDoubleConverter x:Key="ExpressionToDoubleConverter"/>
             <cnv:ExpressionToIntConverter x:Key="ExpressionToIntConverter"/>
+            <cnv:HoursToTimeStringConverter x:Key="HoursToTimeStringConverter"/>
             <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
             <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
