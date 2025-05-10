@@ -1,4 +1,5 @@
-﻿using libeLog.Infrastructure;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using libeLog.Infrastructure;
 using remeLog.Infrastructure;
 using remeLog.Models;
 using remeLog.ViewModels;
@@ -9,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using Database = remeLog.Infrastructure.Database;
@@ -125,18 +127,51 @@ namespace remeLog.Views
                     }
                 }
             }
-        }
-
-        private T FindVisualParent<T>(DependencyObject obj) where T : DependencyObject
-        {
-            DependencyObject parent = VisualTreeHelper.GetParent(obj);
-            while (parent != null && !(parent is T))
+            else if (e.RightButton == MouseButtonState.Pressed)
             {
-                parent = VisualTreeHelper.GetParent(parent);
-            }
-            return parent as T;
-        }
+                DependencyObject depObj = (DependencyObject)e.OriginalSource;
 
+                TextBox editingTextBox = FindVisualParent<TextBox>(depObj);
+                if (editingTextBox != null)
+                {
+                    editingTextBox.Focus();
+                    e.Handled = true;
+                    var extendedTextBoxMenu = (ContextMenu)FindResource("EditingTextBoxContextMenu");
+
+                    extendedTextBoxMenu.PlacementTarget = editingTextBox;
+                    extendedTextBoxMenu.IsOpen = true;
+
+                    return;
+                }
+
+                DataGridCell cell = FindVisualParent<DataGridCell>(depObj);
+                if (cell != null)
+                {
+                    DataGridColumn column = cell.Column;
+                    object value = cell.DataContext;
+                    if (DataContext is PartsInfoWindowViewModel d && value is Part p)
+                    {
+                        switch (column.DisplayIndex)
+                        {
+                            case 39:
+                                e.Handled = true;
+                                cell.Focus();
+                                var masterCommentContextMenu = (ContextMenu)FindResource("MasterCommentCellContextMenu");
+                                masterCommentContextMenu.PlacementTarget = cell;
+                                masterCommentContextMenu.IsOpen = true;
+                                break;
+                            case 42:
+                                e.Handled = true;
+                                cell.Focus();
+                                var engeneerCommentContextMenu = (ContextMenu)FindResource("EngeneerCommentCellContextMenu");
+                                engeneerCommentContextMenu.PlacementTarget = cell;
+                                engeneerCommentContextMenu.IsOpen = true;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
 
         private void DataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
@@ -206,7 +241,7 @@ namespace remeLog.Views
                 {
                     switch (e.Key)
                     {
-                        case Key.D:
+                        case Key.I:
                             var infoCell = dataGrid.SelectedCells.FirstOrDefault();
                             var colIndex = infoCell.Column.DisplayIndex;
                             var infoCellContent = infoCell.Column.GetCellContent(infoCell.Item);
@@ -224,59 +259,38 @@ namespace remeLog.Views
                         case Key.F:
                             // не работает - надо разобраться
                             break; // временно закрыл
-                            //var baseCell = dataGrid.SelectedCells.FirstOrDefault();
-                            //if (!baseCell.IsValid) return;
-                            //var content = baseCell.Column.GetCellContent(baseCell.Item);
-                            //if (content is TextBlock textBlock)
-                            //{
-                            //    var value = textBlock.Text;
-                            //    foreach (var cell in dataGrid.SelectedCells.Skip(1))
-                            //    {
-                            //        var cellContent = cell.Column.GetCellContent(cell.Item);
-                            //        if (cellContent is TextBlock textBlockToUpdate)
-                            //        {
-                            //            textBlockToUpdate.Text = value;
-                            //        }
-                            //    }
-                            //}
-                            //e.Handled = true;
-                            //break;
+                                   //var baseCell = dataGrid.SelectedCells.FirstOrDefault();
+                                   //if (!baseCell.IsValid) return;
+                                   //var content = baseCell.Column.GetCellContent(baseCell.Item);
+                                   //if (content is TextBlock textBlock)
+                                   //{
+                                   //    var value = textBlock.Text;
+                                   //    foreach (var cell in dataGrid.SelectedCells.Skip(1))
+                                   //    {
+                                   //        var cellContent = cell.Column.GetCellContent(cell.Item);
+                                   //        if (cellContent is TextBlock textBlockToUpdate)
+                                   //        {
+                                   //            textBlockToUpdate.Text = value;
+                                   //        }
+                                   //    }
+                                   //}
+                                   //e.Handled = true;
+                                   //break;
 
+                        case Key.V:
+                            var pasteCell = dataGrid.SelectedCells.FirstOrDefault();
+                            if (pasteCell.Column.DisplayIndex is 21 or 34 or 39 or 42 or 44)
+                            {
+                                OnPaste();
+                            }
+
+                            break;
                         case Key.W:
-                            IProgress<string> progress = new Progress<string>(m => d.Status = m);
-                            try
+                            if (d.SelectedPart is Part)
                             {
-                                if (d.SelectedPart == null || string.IsNullOrEmpty(AppSettings.Instance.ConnectionString)) return;
-                                var machines = await Database.GetMachinesAsync(progress);
-                                var machine = machines.FirstOrDefault(m => m.Name == d.SelectedPart.Machine);
-                                if (machine == null)
-                                {
-                                    progress.Report("Не удалось сопоставить станок указанный при изготовлении со станков в Winnum");
-                                    await Task.Delay(3000);
-                                    return;
-                                }
-                                progress.Report("Чтение конфигурации");
-                                var (baseUri, user, pass) = await libeLog.Infrastructure.Database.GetWinnumConfigAsync(AppSettings.Instance.ConnectionString);
-                                var winnumClient = new Infrastructure.Winnum.ApiClient(baseUri, user, pass);
-                                var operation = new Infrastructure.Winnum.Operation(winnumClient, machine);
-                                progress.Report("Чтение данных из Winnum");
-                                var xml = await operation.GetPriorityTagDurationAsync(2, d.SelectedPart.StartSetupTime, d.SelectedPart.EndMachiningTime);
-                                var rawData = Infrastructure.Winnum.Parser.ParseXmlItems(xml);
-                                rawData = Infrastructure.Winnum.Parser.FilterByDateRange(rawData, "START", d.SelectedPart.StartSetupTime, "END", d.SelectedPart.EndMachiningTime);
-                                var priorityTagDurations = Infrastructure.Winnum.Parser.ParsePriorityTagDurations(xml, d.SelectedPart.StartSetupTime, d.SelectedPart.EndMachiningTime);
-                                var result = Util.FormatDictionariesAsString(Infrastructure.Winnum.Parser.ParseXmlItems(xml));
-                                progress.Report("");
-                                var win = new WinnumInfoWindow(priorityTagDurations);
-                                win.SetData(rawData);
-                                win.ShowDialog();
-                            }
-                            catch (Exception ex)
-                            {
-                                progress.Report(ex.Message);
-                                await Task.Delay(3000);
-                            }
-                            
-                            
+                                d.SearchInWinnumCommand.Execute(d.SelectedPart);
+                                e.Handled = true;
+                            }                        
                             break;
                         case Key.Delete:
                             if (d.SelectedPart is Part dp)
@@ -291,24 +305,212 @@ namespace remeLog.Views
             }
         }
 
-        private void partsInfoWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void PartsInfoWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            // если обрабатывать, то окно кнопки в окне нажимаются не с первого раза
             return;
             if (DataContext is PartsInfoWindowViewModel d)
             {
-                if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.W)
+                if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.H || e.Key is Key.Help or Key.F1)
                 {
-                    try
-                    {
-                        d.SearchInWindchillCommand.Execute(this);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
+                    var helpWindow = new PartsInfoHelpWindow();
+                    helpWindow.ShowDialog();
+                }
+                else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.E)
+                {
+                    d.ExportToExcelCommand.Execute(null);
 
                 }
             }
+        }
+
+        private void OnVariantClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item) return;
+
+            string newText = item.Header?.ToString() ?? "";
+
+            if (Keyboard.FocusedElement is not DataGridCell cell) return;
+
+            var row = DataGridRow.GetRowContainingElement(cell);
+            var itemData = row?.Item;
+            if (itemData == null) return;
+
+            string? propertyName = null;
+
+            if (cell.Column is DataGridTextColumn textColumn && textColumn.Binding is Binding binding)
+            {
+                propertyName = binding.Path?.Path;
+            }
+            else
+            {
+                FrameworkElement? boundElement = FindBoundFrameworkElement<TextBox>(cell) as FrameworkElement;
+                boundElement ??= FindBoundFrameworkElement<TextBlock>(cell) as FrameworkElement;
+
+                if (boundElement != null)
+                {
+                    if (BindingOperations.GetBinding(boundElement, GetDependencyProperty(boundElement)) is Binding innerBinding)
+                    {
+                        propertyName = innerBinding.Path?.Path;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(propertyName))
+            {
+                var prop = itemData.GetType().GetProperty(propertyName);
+                if (prop != null && prop.CanWrite)
+                {
+                    prop.SetValue(itemData, newText);
+                }
+            }
+        }
+
+        private void OnInsertSymbolClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item) return;
+            string specialChar = item.Tag?.ToString() ?? item.Header?.ToString() ?? "";
+
+            if (Keyboard.FocusedElement is TextBox textBox)
+            {
+                int caretIndex = textBox.CaretIndex;
+                textBox.Text = textBox.Text.Insert(caretIndex, specialChar);
+                textBox.CaretIndex = caretIndex + specialChar.Length;
+                textBox.Focus();
+                return;
+            }
+
+            ContextMenu? contextMenu = FindVisualParent<ContextMenu>(item);
+
+            if (contextMenu?.PlacementTarget is TextBox placementTextBox)
+            {
+                int caretIndex = placementTextBox.CaretIndex;
+                placementTextBox.Text = placementTextBox.Text.Insert(caretIndex, specialChar);
+                placementTextBox.CaretIndex = caretIndex + specialChar.Length;
+                placementTextBox.Focus();
+                return;
+            }
+        }
+
+
+        private void OnClearVariantClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem) return;
+
+            string newText = "";
+
+            if (Keyboard.FocusedElement is not DataGridCell cell) return;
+
+            var row = DataGridRow.GetRowContainingElement(cell);
+            var itemData = row?.Item;
+            if (itemData == null) return;
+
+            string? propertyName = null;
+
+            if (cell.Column is DataGridTextColumn textColumn && textColumn.Binding is Binding binding)
+            {
+                propertyName = binding.Path?.Path;
+            }
+            else
+            {
+                FrameworkElement? boundElement = FindBoundFrameworkElement<TextBox>(cell) as FrameworkElement;
+                boundElement ??= FindBoundFrameworkElement<TextBlock>(cell) as FrameworkElement;
+
+                if (boundElement != null)
+                {
+                    if (BindingOperations.GetBinding(boundElement, GetDependencyProperty(boundElement)) is Binding innerBinding)
+                    {
+                        propertyName = innerBinding.Path?.Path;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(propertyName))
+            {
+                var prop = itemData.GetType().GetProperty(propertyName);
+                if (prop != null && prop.CanWrite)
+                {
+                    prop.SetValue(itemData, newText);
+                }
+            }
+        }
+
+        private static void OnPaste()
+        {
+            if (!Clipboard.ContainsText()) return;
+
+            string clipboardText = Clipboard.GetText();
+
+            if (Keyboard.FocusedElement is not DataGridCell cell) return;
+
+            var row = DataGridRow.GetRowContainingElement(cell);
+            var itemData = row?.Item;
+            if (itemData == null) return;
+
+            string? propertyName = null;
+
+            if (cell.Column is DataGridTextColumn textColumn && textColumn.Binding is Binding binding)
+            {
+                propertyName = binding.Path?.Path;
+            }
+            else
+            {
+                FrameworkElement? boundElement = FindBoundFrameworkElement<TextBox>(cell) as FrameworkElement;
+                boundElement ??= FindBoundFrameworkElement<TextBlock>(cell) as FrameworkElement;
+
+                if (boundElement != null)
+                {
+                    if (BindingOperations.GetBinding(boundElement, GetDependencyProperty(boundElement)) is Binding innerBinding)
+                    {
+                        propertyName = innerBinding.Path?.Path;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(propertyName))
+            {
+                var prop = itemData.GetType().GetProperty(propertyName);
+                if (prop != null && prop.CanWrite)
+                {
+                    prop.SetValue(itemData, clipboardText);
+                }
+            }
+        }
+
+        private static T? FindBoundFrameworkElement<T>(DependencyObject parent) where T : FrameworkElement
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T element && BindingOperations.IsDataBound(element, GetDependencyProperty(element)))
+                {
+                    return element;
+                }
+
+                var result = FindBoundFrameworkElement<T>(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
+        private static DependencyProperty GetDependencyProperty(FrameworkElement element)
+        {
+            if (element is TextBox)
+                return TextBox.TextProperty;
+            if (element is TextBlock)
+                return TextBlock.TextProperty;
+            throw new NotSupportedException("Unsupported element type");
+        }
+
+        private static T FindVisualParent<T>(DependencyObject obj) where T : DependencyObject
+        {
+            DependencyObject parent = VisualTreeHelper.GetParent(obj);
+            while (parent != null && parent is not T)
+            {
+                parent = VisualTreeHelper.GetParent(parent);
+            }
+            return (T)parent!;
         }
     }
 }

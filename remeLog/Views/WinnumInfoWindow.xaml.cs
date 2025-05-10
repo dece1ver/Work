@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using remeLog.Infrastructure.Winnum.Data;
+using remeLog.ViewModels;
 
 namespace remeLog.Views
 {
@@ -13,31 +14,10 @@ namespace remeLog.Views
     /// </summary>
     public partial class WinnumInfoWindow : Window
     {
-        public WinnumInfoWindow(List<PriorityTagDuration> priorityTagDurations)
+        public WinnumInfoWindow(string generalInfo, List<Dictionary<string, string>> dictList, List<PriorityTagDuration> priorityTagDurations)
         {
-            PriorityTagDurations = priorityTagDurations;
+            DataContext = new WinnumInfoViewModel(generalInfo, dictList, priorityTagDurations);
             InitializeComponent();
         }
-
-        public void SetData(List<Dictionary<string, string>> dictList)
-        {
-            var allKeys = dictList.SelectMany(d => d.Keys).Distinct().ToList();
-
-            var table = new DataTable();
-            foreach (var key in allKeys)
-                table.Columns.Add(key);
-
-            foreach (var dict in dictList)
-            {
-                var row = table.NewRow();
-                foreach (var key in allKeys)
-                    row[key] = dict.TryGetValue(key, out var value) ? value : "";
-                table.Rows.Add(row);
-            }
-
-            DataGrid.ItemsSource = table.DefaultView;
-        }
-
-        public List<PriorityTagDuration> PriorityTagDurations { get; set; }
     }
 }

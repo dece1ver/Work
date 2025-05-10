@@ -1,8 +1,9 @@
 ﻿<Window x:Class="remeLog.Views.WinnumInfoWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WinnumInfoWindow" Height="450" Width="800" DataContext="{Binding RelativeSource={RelativeSource Self}}">
-    <Grid>
+        Title="WinnumInfoWindow" MinHeight="400" MinWidth="600">
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="{Binding GeneralInfo}"/>
         <TabControl>
             <TabItem Header="Тэги с приритетом">
                 <DataGrid ItemsSource="{Binding PriorityTagDurations}" AutoGenerateColumns="False"
@@ -17,12 +18,12 @@
                 </DataGrid>
             </TabItem>
             <TabItem Header="Сырые данные">
-                <DataGrid x:Name="DataGrid"
+                <DataGrid ItemsSource="{Binding Dicts}"
                           AutoGenerateColumns="True"
                           IsReadOnly="True"
                           CanUserAddRows="False"
                           CanUserReorderColumns="True"/>
             </TabItem>
         </TabControl>
-    </Grid>
+    </DockPanel>
 </Window>

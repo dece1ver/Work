@@ -1955,6 +1955,7 @@ namespace remeLog.Infrastructure
                 .Add(CM.SetupDowntimes)
                 .Add(CM.MachiningDowntimes)
                 .Add(CM.PartialSetupTime)
+                .Add(CM.CreateNcProgramTime)
                 .Add(CM.MaintenanceTime)
                 .Add(CM.ToolSearchingTime)
                 .Add(CM.ToolChangingTime)
@@ -2044,6 +2045,8 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[CM.MachiningDowntimes]).SetValue(part.MachiningDowntimes);
 
                 ws.Cell(row, ci[CM.PartialSetupTime]).SetValue(part.PartialSetupTime);
+
+                ws.Cell(row, ci[CM.CreateNcProgramTime]).SetValue(part.CreateNcProgramTime);
 
                 ws.Cell(row, ci[CM.MaintenanceTime]).SetValue(part.MaintenanceTime);
 

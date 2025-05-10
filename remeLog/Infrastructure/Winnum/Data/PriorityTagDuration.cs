@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static remeLog.Infrastructure.Winnum.Types;
 
 namespace remeLog.Infrastructure.Winnum.Data
 {
@@ -16,7 +17,7 @@ namespace remeLog.Infrastructure.Winnum.Data
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
         public double Duration { get; set; }
-        public string TagOid { get; set; } = default!;
+        public TagId TagOid { get; set; } = default!;
         public string TimeDataRaw { get; set; } = default!;
 
         public (long startTicks, long endTicks) TimeData

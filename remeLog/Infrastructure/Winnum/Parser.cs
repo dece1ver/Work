@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using remeLog.Infrastructure.Winnum.Data;
+using static remeLog.Infrastructure.Winnum.Types;
 
 namespace remeLog.Infrastructure.Winnum
 {
@@ -45,7 +46,7 @@ namespace remeLog.Infrastructure.Winnum
                     Model = el.Attribute("MODEL")?.Value ?? "",
                     Tag = el.Attribute("TAG")?.Value ?? "",
                     Program = el.Attribute("PROGRAM")?.Value,
-                    TagOid = el.Attribute("tagOid")?.Value ?? "",
+                    //TagOid = TryParseTagOid(el.Attribute("tagOid")?.Value, out var tagOid) ? tagOid : TagId.NONE,
                     TimeDataRaw = el.Attribute("timeData")?.Value ?? "",
                     Start = DateTime.ParseExact(
                         el.Attribute("START")?.Value ?? "",
@@ -65,6 +66,25 @@ namespace remeLog.Infrastructure.Winnum
             }
 
             return result;
+        }
+
+        private static bool TryParseTagOid(string? rawValue, out TagId result)
+        {
+            const string prefix = "winnum.org.tag.WNTag:";
+            result = TagId.NONE;
+
+            if (string.IsNullOrWhiteSpace(rawValue) || !rawValue.StartsWith(prefix))
+                return false;
+
+            var numericPart = rawValue.Substring(prefix.Length);
+
+            if (int.TryParse(numericPart, out var id))
+            {
+                result = (TagId)id;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
