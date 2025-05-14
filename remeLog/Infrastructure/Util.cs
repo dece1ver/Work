@@ -8,6 +8,7 @@ using libeLog.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using remeLog.Infrastructure.Services;
+using remeLog.Infrastructure.Winnum.Data;
 using remeLog.Models;
 using System;
 using System.Collections.Generic;
@@ -412,6 +413,94 @@ namespace remeLog.Infrastructure
 
                 return new ObservableCollection<Part>(mockParts); // Возвращаем результат
             });
+        }
+
+        /// <summary>
+        /// Генерирует список временных интервалов с паузами между ними.
+        /// </summary>
+        /// <param name="start">Начальная граница диапазона.</param>
+        /// <param name="end">Конечная граница диапазона.</param>
+        /// <param name="count">Количество интервалов.</param>
+        /// <returns>Список кортежей (начало, конец) каждого интервала.</returns>
+        public static List<TimeInterval> GenerateMockIntervals(DateTime start, DateTime end, int count = 10)
+        {
+            Random _random = new();
+
+            if (end <= start)
+                throw new ArgumentException("Параметр 'end' должен быть позже 'start'.");
+            if (count <= 0)
+                throw new ArgumentOutOfRangeException(nameof(count), "Количество интервалов должно быть положительным.");
+
+            const int minIntervalSeconds = 5;
+            const int minPauseSeconds = 5;
+
+            double totalSeconds = (end - start).TotalSeconds;
+            int minRequiredTime = count * minIntervalSeconds + (count - 1) * minPauseSeconds;
+
+            if (totalSeconds < minRequiredTime)
+                throw new InvalidOperationException("Недостаточно времени для размещения интервалов с минимальными паузами.");
+
+            int freeSeconds = (int)(totalSeconds - minRequiredTime);
+
+            int slots = count + (count - 1);
+            int[] timeChunks = new int[slots];
+
+
+            for (int i = 0; i < slots; i++)
+            {
+                timeChunks[i] = (i % 2 == 0) ? minIntervalSeconds : minPauseSeconds;
+            }
+
+            for (int i = 0; i < freeSeconds; i++)
+            {
+                int index = _random.Next(0, slots);
+                timeChunks[index]++;
+            }
+
+            var intervals = new List<TimeInterval>(count);
+            DateTime current = start;
+
+            for (int i = 0; i < slots; i += 2)
+            {
+                var intervalStart = current;
+                var intervalEnd = intervalStart.AddSeconds(timeChunks[i]);
+                intervals.Add(new TimeInterval(intervalStart, intervalEnd));
+
+                current = intervalEnd;
+
+                if (i + 1 < slots)
+                    current = current.AddSeconds(timeChunks[i + 1]);
+            }
+
+            return intervals;
+        }
+
+        public static (DateTime RoundedStart, DateTime RoundedEnd) GetRoundedHourBounds(DateTime start, DateTime end)
+        {
+            if (end < start)
+                throw new ArgumentException("Завершение должно быть позже начала.");
+
+            var roundedStart = new DateTime(start.Year, start.Month, start.Day, start.Hour, 0, 0);
+
+            var needsRounding = end.Minute != 0 || end.Second != 0 || end.Millisecond != 0;
+            var roundedEnd = needsRounding
+                ? new DateTime(end.Year, end.Month, end.Day, end.Hour, 0, 0).AddHours(1)
+                : new DateTime(end.Year, end.Month, end.Day, end.Hour, 0, 0);
+
+            return (roundedStart, roundedEnd);
+        }
+
+        public static IEnumerable<DateTime> GetTimeTicks(DateTime start, DateTime end, TimeSpan step)
+        {
+            if (end < start)
+                throw new ArgumentException("Завершение должно быть позже начала.");
+            if (step <= TimeSpan.Zero)
+                throw new ArgumentException("Шаг должен быть больше нуля (и желательно кратный диапазону).");
+
+            for (var current = start; current <= end; current = current.Add(step))
+            {
+                yield return current;
+            }
         }
 
         public static async Task<string> SearchInWindchill(string searchQuery, CancellationToken cancellationToken)

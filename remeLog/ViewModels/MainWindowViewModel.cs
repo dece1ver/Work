@@ -163,8 +163,9 @@ namespace remeLog.ViewModels
         public ICommand TestCommand { get; }
         private void OnTestCommandExecuted(object p)
         {
-            /// тесты
-            
+            var durations = Util.GenerateMockIntervals(new DateTime(2025, 5, 12, 06, 55, 00), new DateTime(2025, 5, 12, 19, 03, 00));
+            var winnumWindow = new WinnumInfoWindow("", new List<Infrastructure.Winnum.Data.PriorityTagDuration>(), durations);
+            winnumWindow.ShowDialog();
         }
         private bool CanTestCommandExecute(object p) => !InProgress;
         #endregion

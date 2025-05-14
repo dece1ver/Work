@@ -9,6 +9,7 @@ using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
 using remeLog.Infrastructure.Winnum;
+using remeLog.Infrastructure.Winnum.Data;
 using remeLog.Models;
 using remeLog.Views;
 using System;
@@ -844,8 +845,7 @@ namespace remeLog.ViewModels
                     var m2 = h2 * 60 / c;
                     var m3 = h3 * 60 / c;
 
-                    completedQty = Util.FormatDictionariesAsString(Parser.ParseXmlItems(completedQty));
-
+                    var intervals = orderedTagIntervalCalculations.Select(interval => new TimeInterval(interval.Start, interval.End)).ToList();
                     var win = new WinnumInfoWindow($"" +
                         $"Текущее локальное время: {DateTime.Now:g}\n" +
                         $"Время на платформе: {platformDateTime:g}\n" +
@@ -855,7 +855,7 @@ namespace remeLog.ViewModels
                         $"Вариант 1: {TimeSpan.FromMinutes(m1)}\n" +
                         $"Вариант 2: {TimeSpan.FromMinutes(m2)}\n" +
                         $"Вариант 3: {m3}\n\n" +
-                        $"Выполненные операции:\n\n{completedQty}", priorityTagDurations);
+                        $"", priorityTagDurations, intervals);
                     win.ShowDialog();
                 }
                 catch (Exception ex)

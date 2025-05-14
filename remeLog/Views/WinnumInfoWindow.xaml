@@ -1,12 +1,28 @@
 ﻿<Window x:Class="remeLog.Views.WinnumInfoWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WinnumInfoWindow" Height="400" Width="600">
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:vm="clr-namespace:remeLog.ViewModels"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+        mc:Ignorable="d"
+        Title="WinnumInfoWindow" Height="720" Width="1368"
+        d:DataContext="{d:DesignInstance Type=vm:WinnumInfoViewModel}">
     <DockPanel>
         
         <TabControl>
             <TabItem Header="Общее">
-                <TextBlock DockPanel.Dock="Top" Text="{Binding GeneralInfo}"/>
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="{Binding GeneralInfo}"/>
+                    <lvc:CartesianChart Series="{Binding Intervals}" 
+                                        ZoomMode="X" 
+                                        FindingStrategy="CompareOnlyX"
+                                        XAxes="{Binding XAxes}"
+                                        YAxes="{Binding YAxes}"
+                                        >
+                        
+                    </lvc:CartesianChart>
+                </DockPanel>
             </TabItem>
             <TabItem Header="Тэги с приритетом">
                 <DataGrid ItemsSource="{Binding PriorityTagDurations}" AutoGenerateColumns="False"
