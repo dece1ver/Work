@@ -9,7 +9,7 @@
         xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
         xmlns:vm="clr-namespace:remeLog.ViewModels" xmlns:md="clr-namespace:remeLog.Models" 
         d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
-        Title="{Binding PartsInfo.Machine}" Height="1440" Width="2560" 
+        Title="{Binding PartsInfo.Machine}" Height="800" Width="1600" 
         WindowStartupLocation="CenterOwner" 
         WindowState="Maximized" 
         PreviewKeyDown="PartsInfoWindow_PreviewKeyDown">

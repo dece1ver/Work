@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using remeLog.Models;
+using static remeLog.Infrastructure.Winnum.Types;
 
 namespace remeLog.Infrastructure.Winnum
 {
@@ -18,8 +19,24 @@ namespace remeLog.Infrastructure.Winnum
             _machine = machine;
         }
 
+        private static string FormatSignalType(SignalType type) =>
+        type switch
+        {
+            SignalType.ByCount => "bycount",
+            SignalType.ByTime => "bytime",
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, $"Неизвестное значение перечисления: {type}")
+        };
+
+        private static string FormatOrder(Order order) =>
+        order switch
+        {
+            Order.Asc => "asc",
+            Order.Desc => "desc",
+            _ => throw new ArgumentOutOfRangeException(nameof(order), order, $"Неизвестное значение перечисления: {order}")
+        };
+
         private string FormatWnUuid() =>
-            Uri.EscapeDataString(_machine.WnUuid.ToString());
+            _machine.WnUuid.ToString().ToUpperInvariant();
 
         public async Task SaveSignalAsync(string signal, string value, string? pid = null, DateTime? eventTime = null)
         {
@@ -41,17 +58,33 @@ namespace remeLog.Infrastructure.Winnum
             await _client.ExecuteRequestAsync(parameters);
         }
 
-        public async Task<string> GetSignalAsync(string signal, string stype, string order,
+        public async Task<string> GetSignalAsync(string signal, SignalType stype, Order order,
             DateTime? start = null, DateTime? end = null, int? count = null)
         {
+            switch (stype)
+            {
+                case SignalType.ByCount:
+                    if (!count.HasValue)
+                        throw new ArgumentException("Для сигнала с типом 'ByCount' необходимо указать параметр 'count'.", nameof(count));
+                    break;
+
+                case SignalType.ByTime:
+                    if (!start.HasValue || !end.HasValue)
+                        throw new ArgumentException("Для сигнала с типом 'ByTime' необходимо указать параметры 'start' и 'end'.");
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(stype), stype, $"Неизвестное значение перечисления: {stype}");
+            }
+
             var parameters = new Dictionary<string, string>
             {
                 { "rpc", "winnum.views.url.WNConnectorHelper" },
                 { "men", "getSignal" },
                 { "uuid", FormatWnUuid() },
                 { "signal", signal },
-                { "stype", stype },
-                { "order", order }
+                { "stype", FormatSignalType(stype) },
+                { "order", FormatOrder(order) }
             };
 
             if (start.HasValue)

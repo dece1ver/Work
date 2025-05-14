@@ -9,9 +9,131 @@ namespace remeLog.Infrastructure.Winnum
 {
     public class Types
     {
+        /// <summary>
+        /// Получать данные по количеству или по времени
+        /// </summary>
+        public enum SignalType
+        {
+            /// <summary>
+            /// По количеству
+            /// </summary>
+            ByCount, 
+            /// <summary>
+            /// По времени
+            /// </summary>
+            ByTime
+        }
+
+        /// <summary>
+        /// Порядок сортировки
+        /// </summary>
+        public enum Order
+        {
+            /// <summary>
+            /// По возрастанию
+            /// </summary>
+            Asc,
+            /// <summary>
+            /// По убыванию
+            /// </summary>
+            Desc
+        }
+
+
+        /// <summary>
+        /// Приложения
+        /// </summary>
         public enum AppId
         {
-            Monitorng = 2
+            /// <summary>Мониторинг (с учетом нагрузки)</summary>
+            /// <remarks>Мониторинг станков с ЧПУ с дополнительными критериями</remarks>
+            [Description("Мониторинг (с учетом нагрузки)")]
+            CNC_MONITORING_WITH_LOAD = 1,
+
+            /// <summary>Мониторинг оборудования</summary>
+            /// <remarks>Мониторинг оборудования</remarks>
+            [Description("Мониторинг оборудования")]
+            CNC_MONITORING = 2,
+
+            /// <summary>OEE (ЧПУ)</summary>
+            /// <remarks>Приложение OEE для оборудования с ЧПУ</remarks>
+            [Description("OEE (ЧПУ)")]
+            OEE_CNC = 3,
+
+            /// <summary>Планировки</summary>
+            /// <remarks>2D планировки и 3D сцены</remarks>
+            [Description("Планировки")]
+            LAYOUTS = 5,
+
+            /// <summary>Мониторинг с учетом ручных режимов работы</summary>
+            /// <remarks>Мониторинг с учетом ручных режимов работы</remarks>
+            [Description("Мониторинг с учетом ручных режимов работы")]
+            CNC_MONITORING_WITH_MANUAL_MODES = 6,
+
+            /// <summary>Мониторинг с учетом терминального учета</summary>
+            /// <remarks>Мониторинг с учетом терминального учета (выбора причин простоя)</remarks>
+            [Description("Мониторинг с учетом терминального учета")]
+            CNC_MONITORING_WITH_TERMINAL = 7,
+
+            /// <summary>Dynamic with loads CNC</summary>
+            /// <remarks>Динамическое приложение с расчетом загрузки и операций производства</remarks>
+            [Description("Dynamic with loads CNC")]
+            DYNAMIC_WITH_LOADS = 8,
+
+            /// <summary>Dynamic with 3D</summary>
+            /// <remarks>Динамическое приложение с 3D</remarks>
+            [Description("Dynamic with 3D")]
+            DYNAMIC_WITH_3D = 9,
+
+            /// <summary>Мониторинг с учетом терминального учета без обеда</summary>
+            /// <remarks></remarks>
+            [Description("Мониторинг с учетом терминального учета без обеда")]
+            CNC_MONITORING_WITH_TERMINAL_NO_LUNCH = 10,
+
+            /// <summary>Тест коннектора Mazak Smooth</summary>
+            /// <remarks></remarks>
+            [Description("Тест коннектора Mazak Smooth")]
+            TEST_MAZAK_SMOOTH = 11,
+
+            /// <summary>ОТК</summary>
+            /// <remarks>ОТК</remarks>
+            [Description("ОТК")]
+            QUALITY_CONTROL = 13,
+
+            /// <summary>123</summary>
+            /// <remarks>123</remarks>
+            [Description("123")]
+            TEST_APP = 14,
+
+            /// <summary>Базовое приложение по мониторингу</summary>
+            /// <remarks>Базовое приложение по мониторингу</remarks>
+            [Description("Базовое приложение по мониторингу")]
+            BASIC_MONITORING = 15,
+
+            /// <summary>ТЕСТ</summary>
+            /// <remarks></remarks>
+            [Description("ТЕСТ")]
+            TEST = 16,
+
+            /// <summary>WINNUM Станки Архив</summary>
+            /// <remarks>Данные со старых версий станков</remarks>
+            [Description("WINNUM Станки Архив")]
+            CNC_ARCHIVE = 17,
+
+            /// <summary>Мониторинг с учетом остановов и ручных режимов</summary>
+            /// <remarks>Мониторинг с учетом технологических остановов и ручных режимов работы</remarks>
+            [Description("Мониторинг с учетом остановов и ручных режимов")]
+            CNC_MONITORING_WITH_STOPS_AND_MANUAL = 18,
+
+            /// <summary>Бюллетени</summary>
+            /// <remarks>Бюллетени - динамическое приложение</remarks>
+            [Description("Бюллетени")]
+            BULLETINS = 19,
+
+            /// <summary>Отчёт OEE</summary>
+            /// <remarks>OEE - динамическое приложение</remarks>
+            [Description("Отчёт OEE")]
+            OEE_REPORT = 20
         }
 
 

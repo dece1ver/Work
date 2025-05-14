@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,38 @@ namespace remeLog.Infrastructure.Winnum
 {
     internal class Parser
     {
+        private static readonly string[] WinnumDateFormats = new[]
+        {
+            "yyyy-MM-dd",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss.f",
+            "yyyy-MM-dd HH:mm:ss.ff",
+            "yyyy-MM-dd HH:mm:ss.fff",
+            "yyyy-MM-ddTHH:mm:ss",
+            "yyyy-MM-ddTHH:mm:ss.f",
+            "yyyy-MM-ddTHH:mm:ss.ff",
+            "yyyy-MM-ddTHH:mm:ss.fff"
+        };
+
+        /// <summary>
+        /// Преобразует строку в DateTime, если она соответствует одному из разрешённых ISO-форматов:
+        /// - yyyy-MM-dd
+        /// - yyyy-MM-ddTHH:mm:ss
+        /// - yyyy-MM-ddTHH:mm:ss.fff
+        /// </summary>
+        /// <param name="input">Строка в одном из поддерживаемых форматов</param>
+        /// <returns>Распарсенный объект DateTime</returns>
+        /// <exception cref="FormatException">Если строка не соответствует ни одному из форматов</exception>
+        public static DateTime FromWinnumDateTime(string input)
+        {
+            return DateTime.ParseExact(
+                input,
+                WinnumDateFormats,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None
+            );
+        }
+
         public static List<Dictionary<string, string>> ParseXmlItems(string xml)
         {
             var xDoc = XDocument.Parse(xml);
@@ -30,6 +63,8 @@ namespace remeLog.Infrastructure.Winnum
 
             return result;
         }
+
+        
 
         public static List<PriorityTagDuration> ParsePriorityTagDurations(string xml, DateTime start, DateTime end)
         {
@@ -68,23 +103,49 @@ namespace remeLog.Infrastructure.Winnum
             return result;
         }
 
-        private static bool TryParseTagOid(string? rawValue, out TagId result)
+        /// <summary>
+        /// Извлекает пары временных интервалов из словарей, где значения по ключу timeData — строки с миллисекундными Unix-метками времени через запятую.
+        /// </summary>
+        /// <param name="dicts">Коллекция словарей со строками меток времени</param>
+        /// <param name="asLocalTime">Если true — преобразует в локальное время, иначе — в UTC</param>
+        /// <returns>Перечисление пар DateTime (начало, конец)</returns>
+        public static IEnumerable<(DateTime Start, DateTime End)> ParseTimeIntervals(
+            IEnumerable<Dictionary<string, string>> dicts,
+            bool asLocalTime = false)
         {
-            const string prefix = "winnum.org.tag.WNTag:";
-            result = TagId.NONE;
-
-            if (string.IsNullOrWhiteSpace(rawValue) || !rawValue.StartsWith(prefix))
-                return false;
-
-            var numericPart = rawValue.Substring(prefix.Length);
-
-            if (int.TryParse(numericPart, out var id))
+            foreach (var dict in dicts)
             {
-                result = (TagId)id;
-                return true;
-            }
+                if (!dict.TryGetValue("timeData", out var raw)) continue;
 
-            return false;
+                var timestamps = raw.Split(',')
+                    .Select(s => long.TryParse(s, out var ms) ? ms : (long?)null)
+                    .Where(ms => ms.HasValue)
+                    .Select(ms =>
+                    {
+                        var dto = DateTimeOffset.FromUnixTimeMilliseconds(ms.Value);
+                        return asLocalTime ? dto.LocalDateTime : dto.UtcDateTime;
+                    })
+                    .ToList();
+
+                for (int i = 0; i + 1 < timestamps.Count; i += 2)
+                {
+                    yield return (timestamps[i], timestamps[i + 1]);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Возвращает общую длительность всех интервалов времени из словарей.
+        /// </summary>
+        /// <param name="dicts">Коллекция словарей со строками меток времени</param>
+        /// <param name="asLocalTime">Если true — учитываются локальные DateTime, иначе UTC</param>
+        /// <returns>Суммарная длительность всех интервалов</returns>
+        public static TimeSpan SumTotalDuration(
+            IEnumerable<Dictionary<string, string>> dicts,
+            bool asLocalTime = false)
+        {
+            return ParseTimeIntervals(dicts, asLocalTime)
+                .Aggregate(TimeSpan.Zero, (acc, pair) => acc + (pair.End - pair.Start));
         }
 
         /// <summary>

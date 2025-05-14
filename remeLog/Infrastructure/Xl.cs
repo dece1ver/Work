@@ -14,6 +14,7 @@ using System.Windows;
 using Part = remeLog.Models.Part;
 using CM = remeLog.Infrastructure.ColumnManager;
 using System.Threading.Tasks;
+using remeLog.Models.Reports;
 
 namespace remeLog.Infrastructure
 {
@@ -1025,9 +1026,6 @@ namespace remeLog.Infrastructure
         public async static Task<string> ExportNormsAndWorkloadAnalysisAsync(ICollection<Part> parts, string path, IProgress<string> progress)
         {
             var wb = new XLWorkbook();
-            
-            // dates.Sort();
-
             var partsDict = parts
                 .Select(p => new {
                     Part = p,
@@ -1039,6 +1037,7 @@ namespace remeLog.Infrastructure
                     g => g.Select(x => x.Part).ToList()
                 );
 
+            // Выбор уникальных деталей, которые встречаются в 3+ заказах с количеством >= 50
             var totalUnique = partsDict
                 .Where(kvp => kvp.Value
                     .Where(p => p.TotalCount >= 50)
@@ -1083,11 +1082,7 @@ namespace remeLog.Infrastructure
             var changesCI = changesMap.GetIndexes();
             int changesRow = 3;
 
-            var uniqueChanges = new HashSet<(string PartName, string Machine, int Setup, string ChangeType,
-                                            double OldValue, double ExcludedOperationsTime, double NewValue)>();
-
-            var allChanges = new List<(string PartName, string Machine, int Setup, string ChangeType,
-                                      double OldValue, double ExcludedOperationsTime, double NewValue, DateTime Date, bool IsInTotalUnique, bool IsInSerialList)>();
+            var allChanges = new List<NormChange>();
 
             foreach (var partGroup in partsDict)
             {
@@ -1107,73 +1102,66 @@ namespace remeLog.Infrastructure
 
                 foreach (var changedPart in partsWithChanges)
                 {
+                    // наладка
                     if (changedPart.FixedSetupTimePlan != 0 && changedPart.SetupTimePlan != 0 &&
                         Math.Abs(changedPart.FixedSetupTimePlan - changedPart.SetupTimePlan) > 0.001)
                     {
-                        var changeKey = (
+                        allChanges.Add(new NormChange(
                             changedPart.PartName,
                             changedPart.Machine,
                             changedPart.Setup,
-                            "Наладка", // 4
+                            "Наладка",
                             changedPart.SetupTimePlan,
-                            0.0, // 6
-                            changedPart.FixedSetupTimePlan
-                        );
-
-                        if (uniqueChanges.Add(changeKey))
-                        {
-                            allChanges.Add((
-                                changeKey.PartName,
-                                changeKey.Machine,
-                                changeKey.Setup,
-                                changeKey.Item4,
-                                changeKey.SetupTimePlan,
-                                changeKey.Item6,
-                                changeKey.FixedSetupTimePlan,
-                                changedPart.EndMachiningTime,
-                                isInTotalUnique,
-                                isInSerialList
-                            ));
-                        }
+                            0.0,
+                            changedPart.FixedSetupTimePlan,
+                            changedPart.EndMachiningTime,
+                            isInTotalUnique,
+                            isInSerialList,
+                            changedPart.IncreaseReason
+                        ));
                     }
 
+                    // изготовление
                     if (changedPart.FixedProductionTimePlan != 0 && changedPart.SingleProductionTimePlan != 0 &&
                         Math.Abs(changedPart.FixedProductionTimePlan - changedPart.SingleProductionTimePlan) > 0.001)
                     {
-                        var changeKey = (
+                        allChanges.Add(new NormChange(
                             changedPart.PartName,
                             changedPart.Machine,
                             changedPart.Setup,
                             "Изготовление",
                             changedPart.SingleProductionTimePlan,
                             changedPart.ExcludedOperationsTime,
-                            changedPart.FixedProductionTimePlan
-                        );
-
-                        if (uniqueChanges.Add(changeKey))
-                        {
-                            allChanges.Add((
-                                changeKey.PartName,
-                                changeKey.Machine,
-                                changeKey.Setup,
-                                changeKey.Item4,
-                                changeKey.SingleProductionTimePlan,
-                                changeKey.ExcludedOperationsTime,
-                                changeKey.FixedProductionTimePlan,
-                                changedPart.EndMachiningTime,
-                                isInTotalUnique,
-                                isInSerialList
-                            ));
-                        }
+                            changedPart.FixedProductionTimePlan,
+                            changedPart.EndMachiningTime,
+                            isInTotalUnique,
+                            isInSerialList,
+                            changedPart.IncreaseReason
+                        ));
                     }
                 }
             }
+            var uniqueChanges = allChanges
+                .GroupBy(c => new
+                {
+                    c.PartName,
+                    c.Machine,
+                    c.Setup,
+                    c.ChangeType,
+                    c.OldValue,
+                    c.ExcludedOperationsTime,
+                    c.NewValue,
+                    c.IsInTotalUnique,
+                    c.IsInSerialList,
+                    c.IncreaseReason
+                })
+                .Select(g => g.OrderByDescending(c => c.Date).First())
+                .ToList();
 
-            allChanges = allChanges.OrderBy(c => c.Date).ToList();
-
-            foreach (var change in allChanges)
+            foreach (var change in uniqueChanges)
             {
                 wsChanges.Cell(changesRow, changesCI[CM.Part]).Value = change.PartName;
+
                 var key = change.PartName.NormalizedPartNameWithoutComments();
                 if (!serialPartsDict.TryGetValue(key, out var yearCount))
                 {
@@ -1183,6 +1171,7 @@ namespace remeLog.Infrastructure
                 {
                     wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Value = yearCount == 0 ? 1 : yearCount;
                 }
+
                 wsChanges.Cell(changesRow, changesCI[CM.Machine]).Value = change.Machine;
                 wsChanges.Cell(changesRow, changesCI[CM.Setup]).Value = change.Setup;
                 wsChanges.Cell(changesRow, changesCI[CM.Type]).Value = change.ChangeType;
@@ -1190,12 +1179,15 @@ namespace remeLog.Infrastructure
                 wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Value = change.OldValue;
                 wsChanges.Cell(changesRow, changesCI[CM.ExcludedOperationsTime]).Value = change.ExcludedOperationsTime;
                 wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Value = change.NewValue;
+
                 wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).FormulaA1 =
                     $"={wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Address.ToStringRelative()}" +
                     $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
+
                 wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).FormulaA1 =
                     $"={wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Address.ToStringRelative()}" +
                     $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
+
                 wsChanges.Cell(changesRow, changesCI[CM.SerialPerRuns]).Value = change.IsInTotalUnique;
                 wsChanges.Cell(changesRow, changesCI[CM.SerialPerList]).Value = change.IsInSerialList;
 
@@ -1208,11 +1200,15 @@ namespace remeLog.Infrastructure
 
                 wsChanges.Cell(changesRow, changesCI[CM.Change]).FormulaA1 = $"={newValueCell}-({oldValueCell}+{excludedOperationsTimeCell})";
                 wsChanges.Cell(changesRow, changesCI[CM.ChangeRatio]).FormulaA1 = $"=IF({oldValueCell}+{excludedOperationsTimeCell}=0,0,{newValueCell}/({oldValueCell}+{excludedOperationsTimeCell})-1)";
-                var oldYearValueFolrmula = change.ChangeType != "Изготовление" || yearCount < 1
+
+                var oldYearValueFormula = change.ChangeType != "Изготовление" || yearCount < 1
                     ? $"({oldYearValueCell}+{excludedOperationsTimeCell})"
                     : $"({oldValueCell}+{excludedOperationsTimeCell})*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
-                wsChanges.Cell(changesRow, changesCI[CM.YearChange]).FormulaA1 = $"={newYearValueCell}-{oldYearValueFolrmula}";
-                wsChanges.Cell(changesRow, changesCI[CM.YearChangeRatio]).FormulaA1 = $"=IF({oldYearValueFolrmula}=0,0,({newYearValueCell}/({oldYearValueFolrmula}))-1)";
+
+                wsChanges.Cell(changesRow, changesCI[CM.YearChange]).FormulaA1 = $"={newYearValueCell}-{oldYearValueFormula}";
+                wsChanges.Cell(changesRow, changesCI[CM.YearChangeRatio]).FormulaA1 = $"=IF({oldYearValueFormula}=0,0,({newYearValueCell}/({oldYearValueFormula}))-1)";
+
+                wsChanges.Cell(changesRow, changesCI[CM.IncreaseReason]).Value = change.IncreaseReason;
 
                 changesRow++;
             }
@@ -1235,33 +1231,7 @@ namespace remeLog.Infrastructure
                     valueRange.Style.NumberFormat.Format = "0.00";
                 }
 
-                var changeColRange = wsChanges.Range(3, changesCI[CM.Change], changesRow - 1, changesCI[CM.Change]);
-                var cfGreenChange = changeColRange.AddConditionalFormat();
-                cfGreenChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
-
-                var cfRedChange = changeColRange.AddConditionalFormat();
-                cfRedChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
-
-                var percentColRange = wsChanges.Range(3, changesCI[CM.ChangeRatio], changesRow - 1, changesCI[CM.ChangeRatio]);
-                var cfPercentGreen = percentColRange.AddConditionalFormat();
-                cfPercentGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
-
-                var cfPercentRed = percentColRange.AddConditionalFormat();
-                cfPercentRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
-
-                var yearChangeColRange = wsChanges.Range(3, changesCI[CM.YearChange], changesRow - 1, changesCI[CM.YearChange]);
-                var cfGreenYearChange = yearChangeColRange.AddConditionalFormat();
-                cfGreenYearChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
-
-                var cfRedYearChange = yearChangeColRange.AddConditionalFormat();
-                cfRedYearChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
-
-                var percentYearColRange = wsChanges.Range(3, changesCI[CM.YearChangeRatio], changesRow - 1, changesCI[CM.YearChangeRatio]);
-                var cfPercentYearGreen = percentYearColRange.AddConditionalFormat();
-                cfPercentYearGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
-
-                var cfPercentYearRed = percentYearColRange.AddConditionalFormat();
-                cfPercentYearRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+                ApplyConditionalFormatting(wsChanges, changesRow, changesCI);
             }
 
             wsChanges.Columns().AdjustToContents();
@@ -1269,29 +1239,87 @@ namespace remeLog.Infrastructure
             table.Name = "ИзмененияНормативов";
             table.Theme = XLTableTheme.TableStyleLight1;
 
-            var oldAddress = wsChanges.Range(2, changesCI[CM.OldValue], changesRow - 1, changesCI[CM.OldValue]).RangeAddress.ToStringRelative();
-            var newAddress = wsChanges.Range(2, changesCI[CM.NewValue], changesRow - 1, changesCI[CM.NewValue]).RangeAddress.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI[CM.OldValue]).FormulaA1 = $"=SUBTOTAL(109, {oldAddress})";
-            wsChanges.Cell(changesRow, changesCI[CM.NewValue]).FormulaA1 = $"=SUBTOTAL(109, {newAddress})";
-            var sumOldValueCell = wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Address.ToStringRelative();
-            var sumNewValueCell = wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Address.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI[CM.Change]).FormulaA1 = $"={sumNewValueCell}-{sumOldValueCell}";
-            var ratioCell = wsChanges.Cell(changesRow, changesCI[CM.ChangeRatio]);
+            CalculateTotals(wsChanges, changesRow, changesCI);
+
+            SetTitle(wsChanges, changesCI.Count, "История изменений нормативов");
+            wsChanges.Column(changesCI[CM.Part]).Width = 70;
+            wsChanges.Column(changesCI[CM.YearCount]).Width = 12;
+            wsChanges.Columns(changesCI[CM.OldValue], changesCI[CM.SerialPerList]).Width = 14;
+            wsChanges.Column(changesCI[CM.IncreaseReason]).Width = 70;
+
+            progress.Report("Сохранение файла");
+            wb.SaveAs(path);
+
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes)
+            {
+                Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
+            }
+            return path;
+        }
+
+        private static void ApplyConditionalFormatting(IXLWorksheet ws, int lastRow, Dictionary<string, int> columnIndexes)
+        {
+            var changeColRange = ws.Range(3, columnIndexes[CM.Change], lastRow - 1, columnIndexes[CM.Change]);
+            var cfGreenChange = changeColRange.AddConditionalFormat();
+            cfGreenChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+            var cfRedChange = changeColRange.AddConditionalFormat();
+            cfRedChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+
+            var percentColRange = ws.Range(3, columnIndexes[CM.ChangeRatio], lastRow - 1, columnIndexes[CM.ChangeRatio]);
+            var cfPercentGreen = percentColRange.AddConditionalFormat();
+            cfPercentGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+            var cfPercentRed = percentColRange.AddConditionalFormat();
+            cfPercentRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+
+            var yearChangeColRange = ws.Range(3, columnIndexes[CM.YearChange], lastRow - 1, columnIndexes[CM.YearChange]);
+            var cfGreenYearChange = yearChangeColRange.AddConditionalFormat();
+            cfGreenYearChange.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+            var cfRedYearChange = yearChangeColRange.AddConditionalFormat();
+            cfRedYearChange.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+
+            var percentYearColRange = ws.Range(3, columnIndexes[CM.YearChangeRatio], lastRow - 1, columnIndexes[CM.YearChangeRatio]);
+            var cfPercentYearGreen = percentYearColRange.AddConditionalFormat();
+            cfPercentYearGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
+
+            var cfPercentYearRed = percentYearColRange.AddConditionalFormat();
+            cfPercentYearRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
+        }
+
+        private static void CalculateTotals(IXLWorksheet ws, int lastRow, Dictionary<string, int> columnIndexes)
+        {
+            var oldAddress = ws.Range(2, columnIndexes[CM.OldValue], lastRow - 1, columnIndexes[CM.OldValue]).RangeAddress.ToStringRelative();
+            var newAddress = ws.Range(2, columnIndexes[CM.NewValue], lastRow - 1, columnIndexes[CM.NewValue]).RangeAddress.ToStringRelative();
+
+            ws.Cell(lastRow, columnIndexes[CM.OldValue]).FormulaA1 = $"=SUBTOTAL(109, {oldAddress})";
+            ws.Cell(lastRow, columnIndexes[CM.NewValue]).FormulaA1 = $"=SUBTOTAL(109, {newAddress})";
+
+            var sumOldValueCell = ws.Cell(lastRow, columnIndexes[CM.OldValue]).Address.ToStringRelative();
+            var sumNewValueCell = ws.Cell(lastRow, columnIndexes[CM.NewValue]).Address.ToStringRelative();
+            ws.Cell(lastRow, columnIndexes[CM.Change]).FormulaA1 = $"={sumNewValueCell}-{sumOldValueCell}";
+
+            var ratioCell = ws.Cell(lastRow, columnIndexes[CM.ChangeRatio]);
             ratioCell.SetFormulaA1($"=IF({sumOldValueCell}=0, 0, {sumNewValueCell}/{sumOldValueCell}-1)")
                 .Style.NumberFormat.Format = "0%";
 
-            var oldYearAddress = wsChanges.Range(2, changesCI[CM.OldYearValue], changesRow - 1, changesCI[CM.OldYearValue]).RangeAddress.ToStringRelative();
-            var newYearAddress = wsChanges.Range(2, changesCI[CM.NewYearValue], changesRow - 1, changesCI[CM.NewYearValue]).RangeAddress.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).FormulaA1 = $"=SUBTOTAL(109, {oldYearAddress})";
-            wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).FormulaA1 = $"=SUBTOTAL(109, {newYearAddress})";
-            var sumOldYearValueCell = wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).Address.ToStringRelative();
-            var sumNewYearValueCell = wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).Address.ToStringRelative();
-            wsChanges.Cell(changesRow, changesCI[CM.YearChange]).FormulaA1 = $"={sumNewYearValueCell}-{sumOldYearValueCell}";
-            var yearRatioCell = wsChanges.Cell(changesRow, changesCI[CM.YearChangeRatio]);
+            var oldYearAddress = ws.Range(2, columnIndexes[CM.OldYearValue], lastRow - 1, columnIndexes[CM.OldYearValue]).RangeAddress.ToStringRelative();
+            var newYearAddress = ws.Range(2, columnIndexes[CM.NewYearValue], lastRow - 1, columnIndexes[CM.NewYearValue]).RangeAddress.ToStringRelative();
+
+            ws.Cell(lastRow, columnIndexes[CM.OldYearValue]).FormulaA1 = $"=SUBTOTAL(109, {oldYearAddress})";
+            ws.Cell(lastRow, columnIndexes[CM.NewYearValue]).FormulaA1 = $"=SUBTOTAL(109, {newYearAddress})";
+
+            var sumOldYearValueCell = ws.Cell(lastRow, columnIndexes[CM.OldYearValue]).Address.ToStringRelative();
+            var sumNewYearValueCell = ws.Cell(lastRow, columnIndexes[CM.NewYearValue]).Address.ToStringRelative();
+            ws.Cell(lastRow, columnIndexes[CM.YearChange]).FormulaA1 = $"={sumNewYearValueCell}-{sumOldYearValueCell}";
+
+            var yearRatioCell = ws.Cell(lastRow, columnIndexes[CM.YearChangeRatio]);
             yearRatioCell.SetFormulaA1($"=IF({sumOldYearValueCell}=0, 0, {sumNewYearValueCell}/{sumOldYearValueCell}-1)")
                 .Style.NumberFormat.Format = "0%";
 
-
+            // Условное форматирование для итогов
             var cfSumGreen = ratioCell.AddConditionalFormat();
             cfSumGreen.WhenLessThan(0).Fill.BackgroundColor = _lightGreen;
 
@@ -1303,22 +1331,6 @@ namespace remeLog.Infrastructure
 
             var cfSumYearRed = yearRatioCell.AddConditionalFormat();
             cfSumYearRed.WhenGreaterThan(0).Fill.BackgroundColor = _lightRed;
-
-            SetTitle(wsChanges, changesCI.Count, "История изменений нормативов");
-            wsChanges.Column(changesCI[CM.Part]).Width = 70;
-            wsChanges.Column(changesCI[CM.YearCount]).Width = 12;
-
-            wsChanges.Columns(changesCI[CM.OldValue], changesCI[CM.SerialPerList]).Width = 14;
-
-            progress.Report("Сохранение файла");
-            wb.SaveAs(path);
-
-            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
-                == MessageBoxResult.Yes)
-            {
-                Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = path });
-            }
-            return path;
         }
 
         public static string ExportAssignmentCheckResult(IEnumerable<Part> factParts, Dictionary<string, string> assignmentParts, string path, IProgress<string> progress)

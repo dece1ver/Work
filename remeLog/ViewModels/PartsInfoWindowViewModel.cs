@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -803,20 +804,58 @@ namespace remeLog.ViewModels
                     var (baseUri, user, pass) = await libeLog.Infrastructure.Database.GetWinnumConfigAsync(AppSettings.Instance.ConnectionString);
                     var winnumClient = new ApiClient(baseUri, user, pass);
                     var operation = new Operation(winnumClient, machine);
+                    var signal = new Signal(winnumClient, machine);
                     progress.Report("Чтение данных из Winnum");
+
                     var startTime = SelectedPart.StartMachiningTime;
-                    var xml = await operation.GetPriorityTagDurationAsync(AppId.Monitorng, startTime, SelectedPart.EndMachiningTime);
-                    var rawData = Parser.ParseXmlItems(xml);
-                    rawData = Parser.FilterByDateRange(rawData, "START", startTime, "END", SelectedPart.EndMachiningTime);
-                    var priorityTagDurations = Parser.ParsePriorityTagDurations(xml, startTime, SelectedPart.EndMachiningTime);
-                    var result = Util.FormatDictionariesAsString(Parser.ParseXmlItems(xml));
-                    xml = await operation.GetSimpleTagCalculationAsync(AppId.Monitorng, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime);
-                    var totalTimeFromtSimpleTagCalculation = TimeSpan.FromHours(double.Parse(Parser.ParseXmlItems(xml).First()["hours"]));
-                    //var totalTimeFromPriorityTagDurations = TimeSpan.FromHours(priorityTagDurations.Where(p => p.Tag == "Программа выполняется").Sum(x => x.Duration));
-                    //MessageBox.Show($"totalTimeFromtSimpleTagCalculation: {totalTimeFromtSimpleTagCalculation}\n" +
-                    //    $"totalTimeFromPriorityTagDurations: {totalTimeFromPriorityTagDurations}");
-                    progress.Report("");
-                    var win = new WinnumInfoWindow("", rawData, priorityTagDurations);
+
+                    var platformDateTimeTask = operation.GetPlatformDateTimeAsync();
+                    var cloudDateTimeTask = operation.GetCloudDateTimeAsync();
+                    var priorityTagDurationTask = operation.GetPriorityTagDurationAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
+                    var tagIntervalCalculationTask = operation.GetTagIntervalCalculationAsync(AppId.CNC_MONITORING, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime, base_shift: false);
+                    var operationsSummaryTask = operation.GetOperationSummaryAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
+                    var completedQtyTask = operation.GetCompletedQtyAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
+                    var startCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, startTime, startTime.AddSeconds(30));
+                    var endCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, SelectedPart.EndMachiningTime, SelectedPart.EndMachiningTime.AddSeconds(30));
+
+                    await Task.WhenAll(platformDateTimeTask, cloudDateTimeTask, priorityTagDurationTask, tagIntervalCalculationTask, operationsSummaryTask, completedQtyTask, startCountTask, endCountTask);
+
+                    var platformDateTime = await platformDateTimeTask;
+                    var cloudDateTime = await cloudDateTimeTask;
+                    var priorityTagDuration = await priorityTagDurationTask;
+                    var tagIntervalCalculation = await tagIntervalCalculationTask;
+                    var operationsSummary = await operationsSummaryTask;
+                    var completedQty = await completedQtyTask;
+                    var startCount = await startCountTask;
+                    var endCount = await endCountTask;
+
+                    var tagIntervalCalculations = Parser.ParseTimeIntervals(Parser.ParseXmlItems(tagIntervalCalculation), true);
+                    var orderedTagIntervalCalculations = tagIntervalCalculations.OrderBy(x => x.Start);
+                    var priorityTagDurations = Parser.ParsePriorityTagDurations(priorityTagDuration, startTime, SelectedPart.EndMachiningTime);
+
+                    var h1 = double.Parse(Parser.ParseXmlItems(tagIntervalCalculation).First()["hours"]);
+                    var h2 = Parser.SumTotalDuration(Parser.ParseXmlItems(tagIntervalCalculation)).TotalHours;
+                    var h3 = TimeSpan.FromHours(priorityTagDurations.Where(p => p.Tag == "Программа выполняется").Sum(x => x.Duration)).TotalHours;
+                    var sc = int.Parse(Parser.ParseXmlItems(startCount).First()["value"]);
+                    var fc = int.Parse(Parser.ParseXmlItems(endCount).First()["value"]);
+                    var c = fc - sc;
+
+                    var m1 = h1 * 60 / c;
+                    var m2 = h2 * 60 / c;
+                    var m3 = h3 * 60 / c;
+
+                    completedQty = Util.FormatDictionariesAsString(Parser.ParseXmlItems(completedQty));
+
+                    var win = new WinnumInfoWindow($"" +
+                        $"Текущее локальное время: {DateTime.Now:g}\n" +
+                        $"Время на платформе: {platformDateTime:g}\n" +
+                        $"Время на облаке: {cloudDateTime:g}\n" +
+                        $"Выполнено операций: {c}\n" +
+                        $"Машинное время:\n" +
+                        $"Вариант 1: {TimeSpan.FromMinutes(m1)}\n" +
+                        $"Вариант 2: {TimeSpan.FromMinutes(m2)}\n" +
+                        $"Вариант 3: {m3}\n\n" +
+                        $"Выполненные операции:\n\n{completedQty}", priorityTagDurations);
                     win.ShowDialog();
                 }
                 catch (Exception ex)

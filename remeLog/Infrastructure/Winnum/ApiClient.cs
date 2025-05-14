@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
@@ -31,6 +32,10 @@ namespace remeLog.Infrastructure.Winnum
                 query[param.Key] = param.Value;
 
             var url = $"{_baseUrl}?{query}&mode=yes";
+            Debug.WriteLine(url);
+            url = Uri.UnescapeDataString(url);
+            url = Uri.UnescapeDataString(url);
+            url = Uri.UnescapeDataString(url);
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
             return Uri.UnescapeDataString(await response.Content.ReadAsStringAsync());
