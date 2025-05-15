@@ -93,7 +93,7 @@
                             </Style>
                         </Button.Resources>
                     </Button>
-                    <Button DockPanel.Dock="Right" Content="Тест" FontSize="16" Visibility="Collapsed"
+                    <Button DockPanel.Dock="Right" Content="Тест" FontSize="16" Visibility="Visible"
                             Margin="0" Width="60" Command="{Binding TestCommand}" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
                         <Button.Resources>
                             <Style TargetType="Border">

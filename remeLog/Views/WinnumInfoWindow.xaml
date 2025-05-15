@@ -17,6 +17,8 @@
                     <lvc:CartesianChart Series="{Binding Intervals}" 
                                         ZoomMode="X" 
                                         FindingStrategy="CompareOnlyX"
+                                        SnapsToDevicePixels="True"
+                                        TooltipTextSize="8"
                                         XAxes="{Binding XAxes}"
                                         YAxes="{Binding YAxes}"
                                         >

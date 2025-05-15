@@ -43,8 +43,10 @@ namespace remeLog.ViewModels
                     Stroke = null,
                     GeometryFill = null,
                     GeometryStroke = null,
-                    XToolTipLabelFormatter = point =>
+                    XToolTipLabelFormatter = _ => "",
+                    YToolTipLabelFormatter = point =>
                     {
+                        if (point.Model?.Value == 0) return "";
                         var x = point.Model?.DateTime ?? DateTime.MinValue;
                         return point.Index switch
                         {
@@ -53,7 +55,6 @@ namespace remeLog.ViewModels
                             _ => $"{x:HH:mm:ss}"
                         };
                     },
-                    YToolTipLabelFormatter = point => "Программа выполняется",
                     
                 });
             }
@@ -65,7 +66,7 @@ namespace remeLog.ViewModels
                 new DateTimeAxis(TimeSpan.FromHours(1), date => date.ToString("HH:mm:ss"))
                 {
                     Name = "Изготовление по ЭЖ",
-                    MinStep = 10,
+                    MinStep = 0.1,
                     LabelsRotation = 45,
                     TextSize = 12,
                     NameTextSize = 14,
@@ -81,7 +82,7 @@ namespace remeLog.ViewModels
                     Name = "Программа выполняется",
                     NameTextSize = 14,
                     Labels = new List<string>(),
-                    MaxLimit = 1
+                    MaxLimit = 10
                 }
             };
         }

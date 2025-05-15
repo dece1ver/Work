@@ -123,6 +123,23 @@ namespace remeLog.Infrastructure.Winnum
             return await _client.ExecuteRequestAsync(parameters);
         }
 
+        public async Task<string> GetSimpleTagIntervalCalculationAsync(AppId appId, TagId tagId, DateTime fromDate, DateTime tillDate, int? timeout = null)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "rpc", "winnum.views.url.WNApplicationTagHelper" },
+                { "men", "getSimpleTagIntervalCalculation" },
+                { "appid", FormatAppId(appId) },
+                { "pid", FormatWnId() },
+                { "tid", FormatTagId(tagId) },
+                { "from", fromDate.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) },
+                { "till", tillDate.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) }
+            };
+            if (timeout.HasValue) parameters.Add("timeout", timeout.Value.ToString());
+
+            return await _client.ExecuteRequestAsync(parameters);
+        }
+
         public async Task<string> GetTagIntervalCalculationAsync(AppId appId, TagId tagId, DateTime fromDate, DateTime tillDate, int? timeout = null, bool? check_success = null, bool? base_shift = null)
         {
             var parameters = new Dictionary<string, string>

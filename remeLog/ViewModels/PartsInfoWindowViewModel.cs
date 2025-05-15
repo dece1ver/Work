@@ -814,17 +814,28 @@ namespace remeLog.ViewModels
                     var cloudDateTimeTask = operation.GetCloudDateTimeAsync();
                     var priorityTagDurationTask = operation.GetPriorityTagDurationAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
                     var tagIntervalCalculationTask = operation.GetTagIntervalCalculationAsync(AppId.CNC_MONITORING, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime, base_shift: false);
+                    var simpleTagIntervalCalculationTask = operation.GetSimpleTagIntervalCalculationAsync(AppId.CNC_MONITORING, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime);
                     var operationsSummaryTask = operation.GetOperationSummaryAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
                     var completedQtyTask = operation.GetCompletedQtyAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
-                    var startCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, startTime, startTime.AddSeconds(30));
-                    var endCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, SelectedPart.EndMachiningTime, SelectedPart.EndMachiningTime.AddSeconds(30));
+                    var startCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
+                    var endCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
 
-                    await Task.WhenAll(platformDateTimeTask, cloudDateTimeTask, priorityTagDurationTask, tagIntervalCalculationTask, operationsSummaryTask, completedQtyTask, startCountTask, endCountTask);
+                    await Task.WhenAll(
+                        platformDateTimeTask, 
+                        cloudDateTimeTask, 
+                        priorityTagDurationTask, 
+                        tagIntervalCalculationTask, 
+                        simpleTagIntervalCalculationTask, 
+                        operationsSummaryTask,
+                        completedQtyTask, 
+                        startCountTask, 
+                        endCountTask);
 
                     var platformDateTime = await platformDateTimeTask;
                     var cloudDateTime = await cloudDateTimeTask;
                     var priorityTagDuration = await priorityTagDurationTask;
                     var tagIntervalCalculation = await tagIntervalCalculationTask;
+                    var simpleTagIntervalCalculation = await simpleTagIntervalCalculationTask;
                     var operationsSummary = await operationsSummaryTask;
                     var completedQty = await completedQtyTask;
                     var startCount = await startCountTask;
@@ -835,26 +846,49 @@ namespace remeLog.ViewModels
                     var priorityTagDurations = Parser.ParsePriorityTagDurations(priorityTagDuration, startTime, SelectedPart.EndMachiningTime);
 
                     var h1 = double.Parse(Parser.ParseXmlItems(tagIntervalCalculation).First()["hours"]);
-                    var h2 = Parser.SumTotalDuration(Parser.ParseXmlItems(tagIntervalCalculation)).TotalHours;
+                    var h2 = double.Parse(Parser.ParseXmlItems(simpleTagIntervalCalculation).First()["hours"]);
                     var h3 = TimeSpan.FromHours(priorityTagDurations.Where(p => p.Tag == "Программа выполняется").Sum(x => x.Duration)).TotalHours;
-                    var sc = int.Parse(Parser.ParseXmlItems(startCount).First()["value"]);
-                    var fc = int.Parse(Parser.ParseXmlItems(endCount).First()["value"]);
-                    var c = fc - sc;
+                    int completed;
+                    if (Parser.ParseXmlItems(startCount) is { Count: > 0} sc && Parser.ParseXmlItems(endCount) is { Count: > 0} fc)
+                    {
+                        completed = int.Parse(fc.Last()["value"]) - int.Parse(sc.First()["value"]);
+                    }
+                    else
+                    {
+                        throw new InvalidDataException("Не удалось получить данные о количестве деталей");
+                    }
 
-                    var m1 = h1 * 60 / c;
-                    var m2 = h2 * 60 / c;
-                    var m3 = h3 * 60 / c;
+                    var m1 = h1 * 60 / completed;
+                    var m2 = h2 * 60 / completed;
+                    var m3 = h3 * 60 / completed;
 
                     var intervals = orderedTagIntervalCalculations.Select(interval => new TimeInterval(interval.Start, interval.End)).ToList();
+                    var sb = new StringBuilder();
+                    foreach (var item in Parser.ParseXmlItems(completedQty))
+                    {
+                        sb.Append("УП: ");
+                        sb.Append(item["program_name"]);
+                        sb.Append(" | Завершена раз: ");
+                        sb.Append(item["count_completed"]);
+                        sb.Append(" | Прервана раз: ");
+                        sb.Append(item["count_incompleted"]);
+                        sb.Append(" | Счётчик: ");
+                        sb.AppendLine(item["count_parts"]);
+                    }
+                    var completedInfo = sb.ToString();
                     var win = new WinnumInfoWindow($"" +
                         $"Текущее локальное время: {DateTime.Now:g}\n" +
                         $"Время на платформе: {platformDateTime:g}\n" +
                         $"Время на облаке: {cloudDateTime:g}\n" +
-                        $"Выполнено операций: {c}\n" +
+                        $"Выполнено по глобавльному счётчику: {completed}\n" +
+                        $"Информация по операциям за период " +
+                        $"{new DateTime(startTime.Year, startTime.Month, startTime.Day):d} - " +
+                        $"{new DateTime(SelectedPart.EndMachiningTime.Year, SelectedPart.EndMachiningTime.Month, SelectedPart.EndMachiningTime.Day):d}\n" +
+                        $"{completedInfo}\n" +
                         $"Машинное время:\n" +
-                        $"Вариант 1: {TimeSpan.FromMinutes(m1)}\n" +
-                        $"Вариант 2: {TimeSpan.FromMinutes(m2)}\n" +
-                        $"Вариант 3: {m3}\n\n" +
+                        $"Вариант 1: {TimeSpan.FromMinutes(m1):hh\\:mm\\:ss}\n" +
+                        $"Вариант 2: {TimeSpan.FromMinutes(m2):hh\\:mm\\:ss}\n" +
+                        $"Вариант 3: {TimeSpan.FromMinutes(m3):hh\\:mm\\:ss}\n\n" +
                         $"", priorityTagDurations, intervals);
                     win.ShowDialog();
                 }
