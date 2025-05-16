@@ -70,6 +70,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddDoubleColumn("SetupCoefficient", false)
                 .AddIntColumn("WnId", false)
                 .AddGuidColumn("WnUuid", false, false)
+                .AddStringColumn("WnCounterSignal", 8, true)
                 .Build(),
 
             new TableBuilder("cnc_operators")

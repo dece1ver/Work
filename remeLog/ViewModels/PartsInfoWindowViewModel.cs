@@ -817,8 +817,8 @@ namespace remeLog.ViewModels
                     var simpleTagIntervalCalculationTask = operation.GetSimpleTagIntervalCalculationAsync(AppId.CNC_MONITORING, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime);
                     var operationsSummaryTask = operation.GetOperationSummaryAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
                     var completedQtyTask = operation.GetCompletedQtyAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime);
-                    var startCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
-                    var endCountTask = signal.GetSignalAsync("A700", SignalType.ByTime, Order.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
+                    var startCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Order.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
+                    var endCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Order.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
 
                     await Task.WhenAll(
                         platformDateTimeTask, 
@@ -848,14 +848,14 @@ namespace remeLog.ViewModels
                     var h1 = double.Parse(Parser.ParseXmlItems(tagIntervalCalculation).First()["hours"]);
                     var h2 = double.Parse(Parser.ParseXmlItems(simpleTagIntervalCalculation).First()["hours"]);
                     var h3 = TimeSpan.FromHours(priorityTagDurations.Where(p => p.Tag == "Программа выполняется").Sum(x => x.Duration)).TotalHours;
-                    int completed;
+                    double completed;
                     if (Parser.ParseXmlItems(startCount) is { Count: > 0} sc && Parser.ParseXmlItems(endCount) is { Count: > 0} fc)
                     {
-                        completed = int.Parse(fc.Last()["value"]) - int.Parse(sc.First()["value"]);
+                        completed = double.Parse(fc.Last()["value"]) - int.Parse(sc.First()["value"]);
                     }
                     else
                     {
-                        throw new InvalidDataException("Не удалось получить данные о количестве деталей");
+                        completed = SelectedPart.FinishedCount;
                     }
 
                     var m1 = h1 * 60 / completed;
@@ -880,7 +880,7 @@ namespace remeLog.ViewModels
                         $"Текущее локальное время: {DateTime.Now:g}\n" +
                         $"Время на платформе: {platformDateTime:g}\n" +
                         $"Время на облаке: {cloudDateTime:g}\n" +
-                        $"Выполнено по глобавльному счётчику: {completed}\n" +
+                        $"Выполнено по глобальному счётчику: {completed}\n" +
                         $"Информация по операциям за период " +
                         $"{new DateTime(startTime.Year, startTime.Month, startTime.Day):d} - " +
                         $"{new DateTime(SelectedPart.EndMachiningTime.Year, SelectedPart.EndMachiningTime.Month, SelectedPart.EndMachiningTime.Day):d}\n" +

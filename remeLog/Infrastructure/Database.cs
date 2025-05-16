@@ -40,7 +40,7 @@ namespace remeLog.Infrastructure
                 }
                 return string.Empty;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Util.WriteLog(ex);
                 return string.Empty;
@@ -77,7 +77,7 @@ namespace remeLog.Infrastructure
         public async static Task<List<OperatorInfo>> GetOperatorsAsync(IProgress<string> progress)
         {
             List<OperatorInfo> operators = new();
-            
+
             await Task.Run(async () =>
             {
                 progress.Report("Подключение к БД...");
@@ -93,11 +93,11 @@ namespace remeLog.Infrastructure
                             while (await reader.ReadAsync())
                             {
                                 operators.Add(new OperatorInfo(
-                                    reader.GetInt32(0), 
-                                    reader.GetString(1).Trim(), 
-                                    reader.GetString(2).Trim(), 
-                                    reader.GetString(3).Trim(), 
-                                    reader.GetInt32(4), 
+                                    reader.GetInt32(0),
+                                    reader.GetString(1).Trim(),
+                                    reader.GetString(2).Trim(),
+                                    reader.GetString(3).Trim(),
+                                    reader.GetInt32(4),
                                     reader.GetBoolean(5)));
                             }
                         }
@@ -118,7 +118,7 @@ namespace remeLog.Infrastructure
         /// <returns>Асинхронная задача, представляющая операцию сохранения.</returns>
         public static async Task SaveOperatorAsync(OperatorInfo operatorInfo, IProgress<string> progress)
         {
-            
+
             string query = "IF EXISTS (SELECT 1 FROM cnc_operators WHERE Id = @Id) " +
                            "BEGIN " +
                            "    UPDATE cnc_operators SET FirstName = @FirstName, LastName = @LastName, Patronymic = @Patronymic, Qualification = @Qualification, IsActive = @IsActive WHERE Id = @Id; " +
@@ -184,7 +184,7 @@ namespace remeLog.Infrastructure
                     command.Parameters.AddWithValue("@Id", operatorId);
 
                     progress.Report("Удаление оператора из БД...");
-                    int rowsAffected = await command.ExecuteNonQueryAsync(); 
+                    int rowsAffected = await command.ExecuteNonQueryAsync();
 
                     if (rowsAffected > 0)
                     {
@@ -208,7 +208,7 @@ namespace remeLog.Infrastructure
                 using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
-                    string query = $"SELECT Name, WnId, WnUuid FROM cnc_machines WHERE IsActive = 1;";
+                    string query = $"SELECT Name, WnId, WnUuid, WnCounterSignal FROM cnc_machines WHERE IsActive = 1;";
                     using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
@@ -217,9 +217,10 @@ namespace remeLog.Infrastructure
                             while (await reader.ReadAsync())
                             {
                                 machines.Add(new Machine(
-                                    await reader.GetValueOrDefaultAsync(0, "", CancellationToken.None),
-                                    await reader.GetValueOrDefaultAsync(1, 0, CancellationToken.None),
-                                    await reader.GetValueOrDefaultAsync(2, Guid.Empty, CancellationToken.None)));
+                                    await reader.GetValueOrDefaultAsync(0, "", CancellationToken.None),             // Name
+                                    await reader.GetValueOrDefaultAsync(1, 0, CancellationToken.None),              // Winnum Id
+                                    await reader.GetValueOrDefaultAsync(2, Guid.Empty, CancellationToken.None),     // Winnum Uuid
+                                    await reader.GetValueOrDefaultAsync(3, string.Empty, CancellationToken.None))); // Winnum Counter Signal
                             }
                         }
                     }
@@ -384,7 +385,7 @@ namespace remeLog.Infrastructure
 
             for (int currentChunk = 0; currentChunk < guidsChunks.Count; currentChunk++)
             {
-                
+
 
                 var chunk = guidsChunks[currentChunk];
                 var parameters = chunk.Select((guid, index) => $"@p{index}").ToArray();
@@ -770,11 +771,11 @@ namespace remeLog.Infrastructure
                         fixedSetupTimePlan,
                         fixedMachineTimePlan,
                         engineerComment,
-                        excludeFromReports, 
-                        longSetupReasonComment, 
-                        longSetupFixComment, 
+                        excludeFromReports,
+                        longSetupReasonComment,
+                        longSetupFixComment,
                         longSetupEngeneerComment,
-                        excludedOperationsTime, 
+                        excludedOperationsTime,
                         increaseReason);
                     parts.Add(part);
                 }
@@ -1326,7 +1327,7 @@ namespace remeLog.Infrastructure
         /// - Error: строка с описанием ошибки, если она произошла.
         /// </returns>
         /// <exception cref="InvalidOperationException">Выбрасывается, если строка подключения отсутствует в настройках приложения.</exception>
-        public static (DbResult Result, double? SetupCoefficient, string Error) GetMachineSetupCoefficient(this string machine) 
+        public static (DbResult Result, double? SetupCoefficient, string Error) GetMachineSetupCoefficient(this string machine)
         {
             if (AppSettings.Instance.ConnectionString == null) throw new InvalidOperationException("Невозомжно получить коэффициент лимита наладки т.к. отсуствтует строка подключения");
             return machine.GetMachineSetupCoefficient(AppSettings.Instance.ConnectionString);
