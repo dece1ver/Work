@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "eLog": {
+      "commandName": "Project",
+      "remoteDebugEnabled": false
+    }
+  }
+}

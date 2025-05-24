@@ -7,6 +7,7 @@ using libeLog.Extensions;
 using libeLog.Interfaces;
 using libeLog.Models;
 using libeLog.WinApi.Windows;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -244,7 +245,7 @@ namespace eLog.Views.Windows.Dialogs
 
                 var validPlanTimes = (Part.SetupTimePlan > 0 || Part.SetupTimePlan == 0 && PartSetupTimePlan == "-") &&
                                      (Part.SingleProductionTimePlan > 0 || Part.SingleProductionTimePlan == 0 && SingleProductionTimePlan == "-");
-                if (Part is { IsFinished: Part.State.Finished, DownTimesIsClosed: true, FinishedCount: > 1 } && validPlanTimes) return true;
+                //if (Part is { IsFinished: Part.State.Finished, DownTimesIsClosed: true, FinishedCount: > 1 } && validPlanTimes) return true;
                 switch (validPlanTimes)
                 {
                     // старт наладки
@@ -261,9 +262,17 @@ namespace eLog.Views.Windows.Dialogs
                     case true when Part is { FinishedCount: 0, TotalCount: > 0, SetupIsFinished: true } && FinishedCount == "0" && EndMachiningTime == StartMachiningTime:
                         Status = _ReadyPartialSetupStatus;
                         return true;
+                    // частичная наладка с частичным изготовлением
+                    case true when Part is { FinishedCount: > 0 and < 1, TotalCount: > 0, SetupIsFinished: true } && !string.IsNullOrEmpty(FinishedCount) && EndMachiningTime == StartMachiningTime:
+                        Status = _ReadyPartialSetupPlusStatus;
+                        return true;
                     // изготовление одной детали
                     case true when Part is { FinishedCount: 1, TotalCount: > 0, SetupIsFinished: true, SetupTimeFact.Ticks: > 0 } && EndMachiningTime == StartMachiningTime:
                         Status = _ReadyCompleteOnePartStatus;
+                        return true;
+                    // изготовление полутора деталей (2 паллеты)
+                    case true when Part is { FinishedCount: > 1 and < 2, TotalCount: > 0, SetupIsFinished: true, SetupTimeFact.Ticks: > 0 } && EndMachiningTime == StartMachiningTime:
+                        Status = _ReadyCompleteOnePartPlusStatus;
                         return true;
                     // полная отметка
                     case true when Part is { FinishedCount: > 1, TotalCount: > 0, SetupIsFinished: true, FullProductionTimeFact.Ticks: > 0, MachineTime.Ticks: > 0, SetupTimeFact.Ticks: > 0 }:
@@ -274,7 +283,7 @@ namespace eLog.Views.Windows.Dialogs
                         Status = _ReadyCompleteStatus;
                         return true;
                     default:
-                        if (Status is _ReadyPartialSetupStatus or _ReadyCompleteStatus or _ReadyMachiningStatus or _ReadySetupStatus or _ReadyCompleteOnePartStatus) Status = string.Empty;
+                        if (Status is _ReadyPartialSetupStatus or _ReadyPartialSetupPlusStatus or _ReadyCompleteStatus or _ReadyMachiningStatus or _ReadySetupStatus or _ReadyCompleteOnePartStatus or _ReadyCompleteOnePartPlusStatus) Status = string.Empty;
                         return false;
                 }
             }
@@ -465,9 +474,11 @@ namespace eLog.Views.Windows.Dialogs
 
         private const string _ReadySetupStatus = "При подтверждении будет запущена наладка.";
         private const string _ReadyPartialSetupStatus = "При подтверждении деталь будет завершена с частичной наладкой.";
+        private const string _ReadyPartialSetupPlusStatus = "При подтверждении деталь будет завершена с частичной наладкой и частичным изготовлением.";
         private const string _ReadyMachiningStatus = "При подтверждении будет запущено изготовление.";
         private const string _ReadyCompleteStatus = "При подтверждении будет отмечено полное изготовление.";
         private const string _ReadyCompleteOnePartStatus = "При подтверждении будет отмечено полное изготовление одной детали.";
+        private const string _ReadyCompleteOnePartPlusStatus = "При подтверждении будет отмечено полное изготовление одной детали и половина следующей (2 паллеты).";
         private string _SingleProductionTimePlan;
         private Visibility _KeyboardVisibility;
         private bool _WithSetup;
@@ -510,7 +521,7 @@ namespace eLog.Views.Windows.Dialogs
                         error = string.IsNullOrWhiteSpace(EndMachiningTime) switch
                         {
                             true when Part.FinishedCount > 0 => Text.ValidationErrors.EndMachiningTime,
-                            false when Part.EndMachiningTime <= Part.StartMachiningTime && Part.FinishedCount > 1 => Text.ValidationErrors.EndMachiningTime,
+                            false when Part.EndMachiningTime <= Part.StartMachiningTime && Part.FinishedCount >= 2 => Text.ValidationErrors.EndMachiningTime,
                             false when Part.SetupTimeFact.Ticks > 0 && Part.StartMachiningTime != Part.EndMachiningTime && Part.FinishedCount == 1 => Text.ValidationErrors.EndMachiningTimeOnePart,
                             _ => error
                         };
@@ -527,6 +538,8 @@ namespace eLog.Views.Windows.Dialogs
                         {
                             0 when Part.FullProductionTimeFact > TimeSpan.Zero => Text.ValidationErrors.FinishedCount,
                             0 when !string.IsNullOrWhiteSpace(FinishedCount) && FinishedCount != "0" => Text.ValidationErrors.FinishedCount,
+                            0 when string.IsNullOrWhiteSpace(FinishedCount) && Part.EndMachiningTime != DateTime.MinValue => Text.ValidationErrors.FinishedCount,
+                            < 1 when Part.StartMachiningTime != Part.EndMachiningTime && Part.EndMachiningTime != DateTime.MinValue && Part.FullSetupTimeFact > TimeSpan.Zero => "При указанной наладке, количество изготовленных деталей должно быть более 1, т.к. одна уже произведена в наладке.",
                             _ => error
                         };
                         break;

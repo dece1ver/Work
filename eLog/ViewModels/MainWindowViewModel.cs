@@ -205,7 +205,7 @@ namespace eLog.ViewModels
         }
 
         public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
-        public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { };
+        public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { } && Machine is { };
         public bool CanStartShift => CurrentOperator is { } && !string.IsNullOrEmpty(CurrentShift);
         public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;
         public bool CanEndShift => ShiftStarted && WorkIsNotInProgress;

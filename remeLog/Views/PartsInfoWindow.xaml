@@ -51,11 +51,11 @@
         <Style TargetType="ComboBox">
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        
+
         <Style TargetType="Button">
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
-        
+
         <ControlTemplate x:Key="ValidationTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -84,7 +84,7 @@
                 <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
-        
+
         <DataGridTextColumn x:Key="ShiftDateColumn" Header="Дата" Binding="{Binding ShiftDate, StringFormat=dd.MM.yy, Converter={StaticResource ShortDateConverter}}" Width="50"
                             >
             <DataGridTextColumn.ElementStyle>
@@ -108,7 +108,7 @@
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
-        
+
         <DataGridTextColumn x:Key="OperatorColumn" Header="Оператор" Binding="{Binding Operator}" Width="95">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
@@ -219,7 +219,7 @@
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
 
-        <DataGridTextColumn x:Key="MachiningTimeColumn" Header="Машинное время" Binding="{Binding MachiningTime}" Width="50">
+        <DataGridTextColumn x:Key="MachiningTimeColumn" Header="Машинное время" Binding="{Binding MachiningTime, StringFormat='hh\\:mm\\:ss'}" Width="50">
             <DataGridTextColumn.ElementStyle>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
             </DataGridTextColumn.ElementStyle>
@@ -237,7 +237,7 @@
                 <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
-        
+
         <DataGridTextColumn x:Key="SingleProductionTimeColumn" Header="Штучное фактическое" Binding="{Binding SingleProductionTime, StringFormat=0.#, Mode=OneWay}" 
                     Width="35" IsReadOnly="True">
             <DataGridTextColumn.ElementStyle>
@@ -247,7 +247,7 @@
                 <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
             </DataGridTextColumn.EditingElementStyle>
         </DataGridTextColumn>
-        
+
         <DataGridTextColumn x:Key="ProductionTimeFactColumn" Header="Фактическое изготовление" Binding="{Binding ProductionTimeFact, StringFormat=0.#}" 
                     Width="35" IsReadOnly="True" 
                     Visibility="{Binding DataContext.ViewMode, 
@@ -487,7 +487,7 @@
                         <ComboBox ItemsSource="{Binding DataContext.SetupReasons, Source={x:Reference partsInfoWindow}}" 
                                   SelectedItem="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
                                   Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"
-                                  />                    
+                                  />
                     </Grid>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
@@ -658,7 +658,7 @@
             <Separator/>
             <MenuItem Header="Очистить" Click="OnClearVariantClick" Icon="{StaticResource CleanData}"/>
         </ContextMenu>
-        
+
         <ContextMenu x:Key="EngeneerCommentCellContextMenu">
             <MenuItem Header="Исправлено" Click="OnVariantClick"/>
             <MenuItem Header="Исправлено ранее" Click="OnVariantClick"/>
@@ -690,7 +690,11 @@
 
     </Window.Resources>
     <Grid>
-        <DockPanel>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="9*"/>
+            <ColumnDefinition Width="11*"/>
+        </Grid.ColumnDefinitions>
+        <DockPanel Grid.ColumnSpan="2">
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>
                     <TextBlock Text="{Binding Status}" FontSize="16" Margin="0 -1"/>
@@ -726,7 +730,7 @@
                         </Style>
                     </Button.Resources>
                 </Button>
-                
+
                 <StackPanel Orientation="Horizontal">
                     <GroupBox Header="{Binding Parts.Count}" HeaderStringFormat="Итог по выборке (элементов: {0})" d:Header="0">
                         <Grid>
@@ -745,9 +749,9 @@
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="Наладка общая:"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}" d:Text="100%" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SetupTimeRatio, StringFormat=0%}" d:Text="100%"/>
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Наладка средняя:"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}" d:Text="100%"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageSetupRatio, StringFormat=0%}" d:Text="100%" FontWeight="SemiBold"/>
 
                             <TextBlock Grid.Row="0" Grid.Column="2" Text="Изготовление общее:"/>
                             <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ProductionTimeRatio, StringFormat=0%}" d:Text="100%" FontWeight="SemiBold"/>
@@ -789,7 +793,6 @@
                             <TextBox Grid.Row="1" Grid.Column="2" Margin="3 -1 5 0" Height="17" Width="80" HorizontalAlignment="Left" Style="{StaticResource ClearableTextBox}"
                                      Text="{Binding AdditionalDescreaseValue, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Static sys:String.Empty},
                                             Converter={StaticResource ExpressionToIntConverter}}"/>
-
                         </Grid>
                     </GroupBox>
                 </StackPanel>
@@ -843,7 +846,7 @@
                                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}">
                                 <Button.Style>
                                     <Style TargetType="Button">
-                                        <Setter Property="Content" Value="🔎"/>
+                                        <Setter Property="Content" Value="{StaticResource LookupListItemIcon}"/>
                                         <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                         <Setter Property="VerticalContentAlignment" Value="Center"/>
                                         <Style.Triggers>
@@ -858,7 +861,7 @@
                                                                  VerticalAlignment="Center">
                                                                 <Label Content="{StaticResource SyncIcon}" Margin="-2"
                                                                        RenderTransformOrigin="0.5 0.5"
-                                                                       Padding="0">                 
+                                                                       Padding="0">
                                                                     <Label.RenderTransform>
                                                                         <RotateTransform CenterX="0" CenterY="0"/>
                                                                     </Label.RenderTransform>
@@ -915,7 +918,7 @@
                                      Style="{StaticResource ClearableTextBox}" BorderThickness="1 0 0 1"/>
                             <controls:IncDecControl Grid.Row="0" Grid.Column="5" Grid.RowSpan="2" Value="{Binding SetupFilter, Delay=500, Mode=TwoWay}" Width="22" Margin="-2 -1 0 0"/>
                         </Grid>
-                        
+
                         <ComboBox Grid.Column="5" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
                                   ItemsSource="{Binding MachineFilters}" Margin="25 0" Width="180"
                                   HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
@@ -1058,16 +1061,60 @@
                     </MenuItem>
                     <MenuItem Header="Мастер" Padding="0"
                               Command="{Binding ChangeRoleCommand}"
-                              CommandParameter="Master"
-                              Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Master}"/>
+                              CommandParameter="Master">
+                        <MenuItem.Style>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Icon" Value="{x:Null}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewMode}" Value="Master">
+                                        <Setter Property="Icon">
+                                            <Setter.Value>
+                                                <TextBlock Text="●" FontSize="16" Margin="4 0 0 3" TextAlignment="Center"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </MenuItem.Style>
+                    </MenuItem>
+
                     <MenuItem Header="Технолог" Padding="0"
                               Command="{Binding ChangeRoleCommand}"
-                              CommandParameter="Engineer"
-                              Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Engineer}"/>
+                              CommandParameter="Engineer">
+                        <MenuItem.Style>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Icon" Value="{x:Null}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewMode}" Value="Engineer">
+                                        <Setter Property="Icon">
+                                            <Setter.Value>
+                                                <TextBlock Text="●" FontSize="16" Margin="4 0 0 3" TextAlignment="Center"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </MenuItem.Style>
+                    </MenuItem>
+
                     <MenuItem Header="Показать всё" Padding="0"
                               Command="{Binding ChangeRoleCommand}"
-                              CommandParameter="Viewer"
-                              Foreground="{Binding ViewMode, Converter={StaticResource RoleColorConverter}, ConverterParameter=Viewer}"/>
+                              CommandParameter="Viewer">
+                        <MenuItem.Style>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Icon" Value="{x:Null}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ViewMode}" Value="Viewer">
+                                        <Setter Property="Icon">
+                                            <Setter.Value>
+                                                <TextBlock Text="●" FontSize="16" Margin="4 0 0 3" TextAlignment="Center"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </MenuItem.Style>
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Расчет">
                     <MenuItem Command="{Binding ChangeCalcFixedCommand}" Icon="{StaticResource ConfirmIconFlex}"
@@ -1086,91 +1133,68 @@
                     </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Экспорт">
-                    <MenuItem Header="Операторы" Icon="{StaticResource OperatorsIcon}">
-                        <MenuItem Command="{Binding OperatorReportToExcelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
-                                  ToolTip="Выработка по операторам" HorizontalAlignment="Stretch">
-                            <MenuItem.Header>
-                                <TextBlock Text="Выработка по операторам"/>
-                            </MenuItem.Header>
-                        </MenuItem>
-                        <MenuItem Command="{Binding OperatorsShiftsReportToExcelCommand}"
+                    <MenuItem Header="Отчёты" Icon="{StaticResource OrderedListIcon}">
+                        <MenuItem Header="Выработка операторов"
+                                  Command="{Binding OperatorReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
                                   CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
-                                  ToolTip="Операторы-смены" HorizontalAlignment="Stretch">
-                            <MenuItem.Header>
-                                <TextBlock Text="Операторы-смены"/>
-                            </MenuItem.Header>
-                        </MenuItem>
-                    </MenuItem>
-
-                    <MenuItem Header="Станки" Icon="{StaticResource CalendarIcon}">
-                        <MenuItem Command="{Binding ExportReportForPeriodToExcelCommand}"
-                                  ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch">
-                            <MenuItem.Header>
-                                <TextBlock Text="Отчёт за период"/>
-                            </MenuItem.Header>
-                        </MenuItem>
-                        <MenuItem Command="{Binding ExportPartsReportToExcelCommand}" 
-                                  ToolTip="Экспорт отчёта по деталям" HorizontalAlignment="Stretch">
-                            <MenuItem.Header>
-                                <TextBlock Text="Отчёт по деталям"/>
-                            </MenuItem.Header>
-                        </MenuItem>
-                        <MenuItem Command="{Binding ExportLongSetupsCommand}"
-                                  ToolTip="Экспорт отчёта по длительным наладкам" HorizontalAlignment="Stretch">
-                            <MenuItem.Header>
-                                <TextBlock Text="Отчет по длительным наладкам"/>
-                            </MenuItem.Header>
-                        </MenuItem>
-                        <MenuItem Command="{Binding ExportShiftsInfoReportCommand}"
-                                  ToolTip="Экспорт отчёта по сменам" HorizontalAlignment="Stretch">
+                                  ToolTip="Экспорт отчёта по выработке по операторов" HorizontalAlignment="Stretch"/>
+                        <MenuItem Header="Эффективность работы оборудования (новый)" Icon="не" IsEnabled="False"
+                                  Command="{Binding ExportReportForPeriodToExcelCommand}"
+                                  ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch"/>
+                        <MenuItem Header="Эффективность работы оборудования (старый)" Icon="{StaticResource ComparePerformanceIcon}"
+                                  Command="{Binding ExportReportForPeriodToExcelCommand}"
+                                  ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch"/>
+                        <MenuItem Header="Изменение нормативов" ToolTip="Экспорт отчёта по изменению нормативов" Icon="{StaticResource ColumnComponent}"
+                                  Command="{Binding NormsAndWorkloadAnalysisCommand }"/>
+                        <MenuItem Header="Детали-станки" Icon="{StaticResource ExportDataIcon}"
+                                  Command="{Binding ExportPartsReportToExcelCommand}" 
+                                  ToolTip="Какие детали сколько раз запускались и на каком оборудовании" HorizontalAlignment="Stretch"/>
+                        <MenuItem Header="Длительные наладки" Icon="{StaticResource CalendarIcon}"
+                                  Command="{Binding ExportLongSetupsCommand}"
+                                  ToolTip="Длительные наладки" HorizontalAlignment="Stretch"/>
+                        <MenuItem Header="Поиски инструмента" Command="{Binding ExportToolSearchCasesToExcelCommand}"
+                                  Icon="{StaticResource FindPartIcon}"
+                                  ToolTip="Экспорт отчёта по поискам" HorizontalAlignment="Stretch"/>
+                        <MenuItem Command="{Binding ExportShiftsInfoReportCommand}" IsEnabled="False" Icon="не"
+                                  ToolTip="Смены" HorizontalAlignment="Stretch">
                             <MenuItem.Header>
                                 <TextBlock Text="Отчет по сменам"/>
                             </MenuItem.Header>
                         </MenuItem>
-
                     </MenuItem>
 
-                    <MenuItem Header="Сравнить факт/СЗН" Command="{Binding CheckAssignmentWithFactCommand}" Icon="{StaticResource ColumnComponent}">
+                    <MenuItem Header="Сравнить факт/СЗН" Command="{Binding CheckAssignmentWithFactCommand}" Icon="{StaticResource DataTableIcon}"/>
 
-                    </MenuItem>
 
-                    <MenuItem Header="АИННиИиФТ" ToolTip="Анализ Изменения Нормативов Наладки и Изготовления и Фактической Трудоемкости" 
-                              Command="{Binding NormsAndWorkloadAnalysisCommand }" Icon="{StaticResource ColumnComponent}">
-                    </MenuItem>
 
-                    <MenuItem Command="{Binding ExportToolSearchCasesToExcelCommand}"
-                              ToolTip="Экспорт отчёта по поискам" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Отчет по поискам"/>
-                        </MenuItem.Header>
-                    </MenuItem>
-
-                    <MenuItem Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource ShowFullHistoryIcon}"
+                    <MenuItem Header="История запусков детали"
+                              Command="{Binding ExportHistoryToExcelCommand}" Icon="{StaticResource ShowFullHistoryIcon}"
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
-                        ToolTip="Экспорт истории запусков детали" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Отчет по истории"/>
-                        </MenuItem.Header>
-                    </MenuItem>
-                    <MenuItem Command="{Binding ExportVerevkinReportCommand}" Icon="{StaticResource ComparePerformanceIcon}"
-                              ToolTip="Экспорт отчета Верёвкина" HorizontalAlignment="Stretch">
-                        <MenuItem.Header>
-                            <TextBlock Text="Отчет Верёвкина"/>
-                        </MenuItem.Header>
-                    </MenuItem>
+                        ToolTip="Экспорт история запусков детали" HorizontalAlignment="Stretch"/>
+
                     <MenuItem Command="{Binding ExportToExcelCommand}" Icon="{StaticResource ExcelWorksheetIcon}"
                               ToolTip="Экспорт текущей выборки" HorizontalAlignment="Stretch">
                         <MenuItem.Header>
                             <TextBlock Text="Текущая выборка"/>
                         </MenuItem.Header>
                     </MenuItem>
-                </MenuItem>
-                <MenuItem HorizontalAlignment="Right" Margin="0,0,10,0">
-                    <MenuItem.Header>
-                        <Border Width="1" Background="LightGray"/>
-                    </MenuItem.Header>
-                </MenuItem>
 
+                    <MenuItem Header="Разное">
+
+                        <MenuItem Command="{Binding ExportVerevkinReportCommand}" Icon="{StaticResource ComparePerformanceIcon}"
+                                  ToolTip="Для отчёта Верёвкина" HorizontalAlignment="Stretch">
+                            <MenuItem.Header>
+                                <TextBlock Text="Отчет Верёвкина"/>
+                            </MenuItem.Header>
+                        </MenuItem>
+
+                        <MenuItem Header="Операторы-смены" Command="{Binding OperatorsShiftsReportToExcelCommand}"
+                                  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
+                                  ToolTip="Операторы-смены" HorizontalAlignment="Stretch">
+                        </MenuItem>
+
+                    </MenuItem>
+                </MenuItem>
             </Menu>
             <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
                       VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
@@ -1292,6 +1316,6 @@
         </DockPanel>
         <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
               Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
-              Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>
+              Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}" Grid.ColumnSpan="2"/>
     </Grid>
 </Window>

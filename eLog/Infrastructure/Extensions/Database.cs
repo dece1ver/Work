@@ -110,7 +110,7 @@ namespace eLog.Infrastructure.Extensions
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Добавление информации об изготовлении в БД.");
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
@@ -219,7 +219,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact.TotalMinutes);
-                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime.Ticks);
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));
@@ -379,7 +379,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact.TotalMinutes);
-                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime.Ticks);
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));

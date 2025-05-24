@@ -624,7 +624,7 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", part.SetupTimePlanForReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact);
-                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachiningTime);
+                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachiningTime.Ticks);
                         cmd.Parameters.AddWithValue("@SetupDowntimes", part.SetupDowntimes);
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", part.MachiningDowntimes);
                         cmd.Parameters.AddWithValue("@PartialSetupTime", part.PartialSetupTime);
@@ -703,7 +703,7 @@ namespace remeLog.Infrastructure
                     var setupTimePlanForReport = await reader.GetFieldValueAsync<double>(15, cancellationToken);
                     var singleProductionTimePlan = await reader.GetFieldValueAsync<double>(16, cancellationToken);
                     var productionTimeFact = await reader.GetFieldValueAsync<double>(17, cancellationToken);
-                    var machininhTime = await reader.GetFieldValueAsync<TimeSpan>(18, cancellationToken);
+                    var machiningTime = await reader.GetFieldValueAsync<long>(18, cancellationToken);
                     var setupDowntimes = await reader.GetFieldValueAsync<double>(19, cancellationToken);
                     var machiningDowntimes = await reader.GetFieldValueAsync<double>(20, cancellationToken);
                     var partialSetupTime = await reader.GetFieldValueAsync<double>(21, cancellationToken);
@@ -750,7 +750,7 @@ namespace remeLog.Infrastructure
                         setupTimePlanForReport,
                         singleProductionTimePlan,
                         productionTimeFact,
-                        machininhTime,
+                        TimeSpan.FromTicks(machiningTime),
                         setupDowntimes,
                         machiningDowntimes,
                         partialSetupTime,

@@ -520,6 +520,9 @@ namespace eLog.Models
             }
         }
 
+        [JsonIgnore]
+        public bool InProgress => IsFinished == State.InProgress;
+
         public string OperatorComments
         {
             get => _OperatorComments;
@@ -566,7 +569,7 @@ namespace eLog.Models
                 if (EndMachiningTime >= StartMachiningTime && SetupIsFinished && FinishedCount > 0 &&
                     MachineTime > TimeSpan.Zero && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.Finished;
                 if (EndMachiningTime == DateTime.MinValue && FinishedCount == 0) return State.InProgress;
-                if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount == 0) return State.PartialSetup;
+                if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount is >= 0 and < 1) return State.PartialSetup;
                 if (DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.PartialSetup;
                 return State.InProgress;
             }

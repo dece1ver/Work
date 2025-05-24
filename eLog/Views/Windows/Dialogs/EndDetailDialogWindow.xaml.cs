@@ -73,6 +73,7 @@ namespace eLog.Views.Windows.Dialogs
                         "При завершении с 0 будет выполнено неполное завершение наладки. (Машинное время должно быть пустым)",
                     0 when !string.IsNullOrWhiteSpace(FinishedCount) =>
                         "Неверно указано количество изготовленных деталей.",
+                    < 1 when Part.StartMachiningTime != Part.EndMachiningTime => "При завершении с количеством менее 1 шт, наладка будет преобразована в частичную с частичным изготовлением.",
                     _ => string.Empty,
                 };
 

@@ -168,7 +168,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddDoubleColumn("SetupTimePlanForReport", false)
                 .AddDoubleColumn("SingleProductionTimePlan", false)
                 .AddDoubleColumn("ProductionTimeFact", false)
-                .AddSqlServerColumn("MachiningTime", "TIME", o => o.Nullable(false))
+                .AddSqlServerColumn("MachiningTime", "BIGINT", o => o.Nullable(false))
                 .AddDoubleColumn("SetupDowntimes", false)
                 .AddDoubleColumn("MachiningDowntimes", false)
                 .AddDoubleColumn("PartialSetupTime", false)

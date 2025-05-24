@@ -57,6 +57,7 @@ namespace remeLog.ViewModels
             ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
             ExportReportForPeriodToExcelCommand = new LambdaCommand(OnExportReportForPeriodToExcelCommandExecuted, CanExportReportForPeriodToExcelCommandExecute);
+            ExportNewReportForPeriodToExcelCommand = new LambdaCommand(OnExportNewReportForPeriodToExcelCommandExecuted, CanExportNewReportForPeriodToExcelCommandExecute);
             ExportShiftsInfoReportCommand = new LambdaCommand(OnExportShiftsInfoReportCommandExecuted, CanExportShiftsInfoReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
             ExportToolSearchCasesToExcelCommand = new LambdaCommand(OnExportToolSearchCasesToExcelCommandExecuted, CanExportToolSearchCasesToExcelCommandExecute);
@@ -857,6 +858,7 @@ namespace remeLog.ViewModels
                     {
                         completed = SelectedPart.FinishedCount;
                     }
+                    if (completed == 0) completed = SelectedPart.FinishedCount;
 
                     var m1 = h1 * 60 / completed;
                     var m2 = h2 * 60 / completed;
@@ -1008,6 +1010,54 @@ namespace remeLog.ViewModels
             finally { InProgress = false; }
         }
         private static bool CanExportPartsReportToExcelCommandExecute(object p) => true;
+        #endregion
+
+        #region ExportNewReportForPeriodToExcel
+        public ICommand ExportNewReportForPeriodToExcelCommand { get; }
+        private async void OnExportNewReportForPeriodToExcelCommandExecuted(object p)
+        {
+            try
+            {
+                string runCountFilter = "";
+                bool addSheetPerMachine = true;
+                if (MessageBox.Show("Задать фильтр по количеству запусков?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    var dialog = new PartSelectionFilterWindow("", true)
+                    {
+                        Owner = p as PartsInfoWindow
+                    };
+                    if (dialog.ShowDialog() != true)
+                    {
+                        Status = "Отмена";
+                        return;
+                    }
+                    runCountFilter = dialog.RunCountFilter;
+                    addSheetPerMachine = dialog.AddSheetPerMachine;
+                }
+                var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                var progress = new Progress<string>(message =>
+                {
+                    Status = message;
+                });
+
+                await Task.Run(() =>
+                {
+                    InProgress = true;
+                    Status = Xl.ExportReportForPeroid(Parts, FromDate, ToDate, ShiftFilter, path, AdditionalDescreaseValue, runCountFilter, addSheetPerMachine, progress);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportNewReportForPeriodToExcelCommandExecute(object p) => true;
         #endregion
 
         #region ExportReportForPeriodToExcel
