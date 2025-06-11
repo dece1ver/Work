@@ -642,7 +642,7 @@ namespace remeLog.Infrastructure
 
             double? Coefficient(int qualification, double specDowntimesEx, double generalRatio, double averageSetupRatio, int workedShifts)
             {
-                return averageSetupRatio < 0.5 || specDowntimesEx > 0.1 || workedShifts < workDays / 4 ? null :
+                return averageSetupRatio < 0.5 || specDowntimesEx > 0.1 || workedShifts < workDays / 6 ? null :
                     (qualification, generalRatio) switch
                     {
                         (1 or 2, > 1) => Coefficient2,     // 1.4
