@@ -38,7 +38,7 @@ namespace remeLog.Infrastructure.Winnum
             url = Uri.UnescapeDataString(url);
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
-            return Uri.UnescapeDataString(await response.Content.ReadAsStringAsync());
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }

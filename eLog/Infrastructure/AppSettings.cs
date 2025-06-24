@@ -130,7 +130,7 @@ namespace eLog.Infrastructure
             set => Set(ref _OrdersSourcePath, value);
         }
 
-        /// <summary> Путь к таблице с номенклатурой </summary>
+        /// <summary> Квалификаторы заказов </summary>
         public string[] OrderQualifiers
         {
             get => _OrderQualifiers;

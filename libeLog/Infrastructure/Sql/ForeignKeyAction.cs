@@ -10,6 +10,7 @@ namespace libeLog.Infrastructure.Sql
     {
         NoAction,
         Cascade,
+        Restrict,
         SetNull,
         SetDefault
     }

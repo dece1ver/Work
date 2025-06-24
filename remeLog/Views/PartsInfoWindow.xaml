@@ -1008,11 +1008,21 @@
                         <StaticResource ResourceKey="SyncIcon"/>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding DeletePartCommand}" CommandParameter="{Binding SelectedPart}" ToolTip="Удалить выбранную деталь">
+                <MenuItem Command="{Binding DeletePartCommand}" 
+                          CommandParameter="{Binding SelectedPart}" 
+                          ToolTip="Удалить выбранную деталь">
                     <MenuItem.Header>
                         <StaticResource ResourceKey="DeleteCell"/>
                     </MenuItem.Header>
                 </MenuItem>
+                <MenuItem Command="{Binding SearchInWinnumCommand}" 
+                          CommandParameter="{Binding SelectedPart}" 
+                          ToolTip="Посмотреть в Winnum">
+                    <MenuItem.Header>
+                        <TextBlock Text="Ⓦ" FontSize="20" Margin="0 -7 0 -4" TextAlignment="Center" Width="21"/>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Header="|" Margin="0" Padding="0 -4 0 0" IsEnabled="False"/>
                 <MenuItem Header="Станки">
                     <MenuItem Command="{Binding ShowAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Выбрать все"/>
                     <MenuItem Command="{Binding HideAllMachinesCommand}" HorizontalAlignment="Stretch" Header="Снять все"/>
@@ -1138,8 +1148,8 @@
                                   Command="{Binding OperatorReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
                                   CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
                                   ToolTip="Экспорт отчёта по выработке по операторов" HorizontalAlignment="Stretch"/>
-                        <MenuItem Header="Эффективность работы оборудования (новый)" Icon="не" IsEnabled="False"
-                                  Command="{Binding ExportReportForPeriodToExcelCommand}"
+                        <MenuItem Header="Эффективность работы оборудования (новый)"
+                                  Command="{Binding ExportNewReportForPeriodToExcelCommand}"
                                   ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch"/>
                         <MenuItem Header="Эффективность работы оборудования (старый)" Icon="{StaticResource ComparePerformanceIcon}"
                                   Command="{Binding ExportReportForPeriodToExcelCommand}"

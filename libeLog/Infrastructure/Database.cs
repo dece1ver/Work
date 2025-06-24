@@ -131,12 +131,12 @@ namespace libeLog.Infrastructure
         /// Ожидается, что таблица <c>cnc_winnum_cfg</c> содержит не более одной строки с параметрами конфигурации.
         /// Значения, отсутствующие в БД, заменяются на пустую строку.
         /// </remarks>
-        public static async Task<(string BaseUri, string User, string Pass)> GetWinnumConfigAsync(string connectionString)
+        public static async Task<(string BaseUri, string User, string Pass, string NcProgramFolder)> GetWinnumConfigAsync(string connectionString)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                 await connection.OpenAsync();
-                string query = "SELECT [BaseUri], [User], [Pass] FROM cnc_winnum_cfg";
+                string query = "SELECT [BaseUri], [User], [Pass], [NcProgramFolder] FROM cnc_winnum_cfg";
                 using (SqlCommand command = new(query, connection))
                 {
 
@@ -147,7 +147,8 @@ namespace libeLog.Infrastructure
                             var baseUri = await reader.GetValueOrDefaultAsync(0, "");
                             var user = await reader.GetValueOrDefaultAsync(1, "");
                             var pass = await reader.GetValueOrDefaultAsync(2, "");
-                            return (baseUri, user, pass);
+                            var ncProgramFolder = await reader.GetValueOrDefaultAsync(3, "");
+                            return (baseUri, user, pass, ncProgramFolder);
                         }
                     }
                     return default;

@@ -27,40 +27,43 @@ namespace remeLog.Infrastructure.Winnum
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, $"Неизвестное значение перечисления: {type}")
         };
 
-        private static string FormatOrder(Order order) =>
+        private static string FormatOrder(Ordering order) =>
         order switch
         {
-            Order.Asc => "asc",
-            Order.Desc => "desc",
+            Ordering.Asc => "asc",
+            Ordering.Desc => "desc",
             _ => throw new ArgumentOutOfRangeException(nameof(order), order, $"Неизвестное значение перечисления: {order}")
         };
 
         private string FormatWnUuid() =>
             _machine.WnUuid.ToString().ToUpperInvariant();
 
-        public async Task SaveSignalAsync(string signal, string value, string? pid = null, DateTime? eventTime = null)
-        {
-            var parameters = new Dictionary<string, string>
-            {
-                { "rpc", "winnum.views.url.WNConnectorHelper" },
-                { "men", "saveSignal" },
-                { "uuid", FormatWnUuid() },
-                { "signal", signal },
-                { "value", value }
-            };
 
-            if (!string.IsNullOrEmpty(pid))
-                parameters.Add("pid", pid);
+        // если понадобится, то переработать
+        //public async Task SaveSignalAsync(string signal, string value, string? pid = null, DateTime? eventTime = null)
+        //{
+        //    var parameters = new Dictionary<string, string>
+        //    {
+        //        { "rpc", "winnum.views.url.WNConnectorHelper" },
+        //        { "men", "saveSignal" },
+        //        { "uuid", FormatWnUuid() },
+        //        { "signal", signal },
+        //        { "value", value }
+        //    };
 
-            if (eventTime.HasValue)
-                parameters.Add("event", eventTime.Value.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+        //    if (!string.IsNullOrEmpty(pid))
+        //        parameters.Add("pid", pid);
 
-            await _client.ExecuteRequestAsync(parameters);
-        }
+        //    if (eventTime.HasValue)
+        //        parameters.Add("event", eventTime.Value.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
-        public async Task<string> GetSignalAsync(string signal, SignalType stype, Order order,
+        //    await _client.ExecuteRequestAsync(parameters);
+        //}
+
+        public async Task<string> GetSignalAsync(string signal, SignalType stype, Ordering order, IProgress<string> progress,
             DateTime? start = null, DateTime? end = null, int? count = null)
         {
+            progress.Report($"Получение значений сигнала: {signal}");
             switch (stype)
             {
                 case SignalType.ByCount:
@@ -97,15 +100,16 @@ namespace remeLog.Infrastructure.Winnum
             return await _client.ExecuteRequestAsync(parameters);
         }
 
-        public async Task<string> GetUniqSignalsAsync(string signal, string order, DateTime start, DateTime end)
+        public async Task<string> GetUniqSignalsAsync(string signal, Ordering order, DateTime start, DateTime end, IProgress<string> progress)
         {
+            progress.Report($"Получение уникальных значений сигнала: {signal}");
             var parameters = new Dictionary<string, string>
             {
                 { "rpc", "winnum.views.url.WNConnectorHelper" },
                 { "men", "getUniqSignals" },
                 { "uuid", FormatWnUuid() },
                 { "signal", signal },
-                { "order", order },
+                { "order", FormatOrder(order) },
                 { "start", start.ToString("yyyy-MM-dd HH:mm:ss.fff") },
                 { "end", end.ToString("yyyy-MM-dd HH:mm:ss.fff") }
             };
@@ -113,21 +117,22 @@ namespace remeLog.Infrastructure.Winnum
             return await _client.ExecuteRequestAsync(parameters);
         }
 
-        public async Task SendSignalAsync(string signalId, string equipmentId, string signalValue, string? forwardSerial = null)
-        {
-            var parameters = new Dictionary<string, string>
-            {
-                { "rpc", "winnum.views.url.WNConnectorHelper" },
-                { "men", "sendSignal" },
-                { "oid", signalId },
-                { "pid", equipmentId },
-                { "signalValue", signalValue }
-            };
+        // если понадобится, то переработать
+        //public async Task SendSignalAsync(string signalId, string equipmentId, string signalValue, string? forwardSerial = null)
+        //{
+        //    var parameters = new Dictionary<string, string>
+        //    {
+        //        { "rpc", "winnum.views.url.WNConnectorHelper" },
+        //        { "men", "sendSignal" },
+        //        { "oid", signalId },
+        //        { "pid", equipmentId },
+        //        { "signalValue", signalValue }
+        //    };
 
-            if (!string.IsNullOrEmpty(forwardSerial))
-                parameters.Add("forwardSerial", forwardSerial);
+        //    if (!string.IsNullOrEmpty(forwardSerial))
+        //        parameters.Add("forwardSerial", forwardSerial);
 
-            await _client.ExecuteRequestAsync(parameters);
-        }
+        //    await _client.ExecuteRequestAsync(parameters);
+        //}
     }
 }

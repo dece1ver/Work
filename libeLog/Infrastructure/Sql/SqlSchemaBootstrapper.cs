@@ -59,6 +59,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("SearchToolTypes", 50)
                 .AddStringColumn("UpdatePath", -1)
                 .AddStringColumn("LogPath", -1)
+                .AddStringColumn("OrderPrefixes", -1)
                 .Build(),
 
             new TableBuilder("cnc_machines")
@@ -71,6 +72,8 @@ namespace libeLog.Infrastructure.Sql
                 .AddIntColumn("WnId", false)
                 .AddGuidColumn("WnUuid", false, false)
                 .AddStringColumn("WnCounterSignal", 8, true)
+                .AddStringColumn("WnNcNameSignal", 8, true)
+                .AddStringColumn("WnNcPartNameSignal", 8, true)
                 .Build(),
 
             new TableBuilder("cnc_operators")
@@ -83,8 +86,11 @@ namespace libeLog.Infrastructure.Sql
                 .Build(),
 
             new TableBuilder("cnc_remelog_config")
-                .AddDoubleColumn("max_setup_limit")
-                .AddDoubleColumn("long_setup_limit")
+                .AddIdColumn()
+                .AddDoubleColumn("max_setup_limit", false)
+                .AddDoubleColumn("long_setup_limit", false)
+                .AddStringColumn("NcArchivePath")
+                .AddStringColumn("NcIntermediatePath")
                 .Build(),
 
             new TableBuilder("cnc_serial_parts")
@@ -141,6 +147,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("BaseUri", 255, false)
                 .AddStringColumn("User", 50, false)
                 .AddStringColumn("Pass", 50, false)
+                .AddStringColumn("NcProgramFolder")
                 .Build(),
 
             new TableBuilder("masters")

@@ -107,6 +107,19 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
+                // если характеристика есть в 3 столбце
+                if (row.Cell(3).Value.TryGetText(out string characteristic) && !string.IsNullOrEmpty(characteristic))
+                {
+                    characteristic = characteristic.ToLowerInvariant().Trim();
+                    var partName = row.Cell(2).Value.GetText();
+                    if (characteristic != "готовая продукция") partName += $" {characteristic}";
+                    return new Part
+                    {
+                        Name = partName,
+                        TotalCount = Convert.ToInt32(row.Cell(4).Value.GetNumber())
+                    };
+                }
+                // если нету, то пробуем вытянуть из первого
                 var prefix = row.Cell(2).Value.GetText();
                 var cellValue = row.Cell(1).Value.GetText();
                 var suffix = cellValue.Contains(prefix) ? cellValue.Split(

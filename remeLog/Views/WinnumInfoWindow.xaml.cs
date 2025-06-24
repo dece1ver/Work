@@ -14,9 +14,9 @@ namespace remeLog.Views
     /// </summary>
     public partial class WinnumInfoWindow : Window
     {
-        public WinnumInfoWindow(string generalInfo, List<PriorityTagDuration> priorityTagDurations, List<TimeInterval> timeIntervals)
+        public WinnumInfoWindow(string generalInfo, string ncProgramFolder, List<PriorityTagDuration> priorityTagDurations, List<TimeInterval> timeIntervals)
         {
-            DataContext = new WinnumInfoViewModel(generalInfo, priorityTagDurations, timeIntervals);
+            DataContext = new WinnumInfoViewModel(generalInfo, ncProgramFolder, priorityTagDurations, timeIntervals);
             InitializeComponent();
         }
     }

@@ -10,18 +10,30 @@ using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using remeLog.Infrastructure;
+using libeLog;
+using System.Windows.Input;
+using System.Diagnostics;
+using System.Security.Policy;
+using System.IO;
+using System.Windows;
 
 namespace remeLog.ViewModels
 {
     public class WinnumInfoViewModel : ViewModel
     {
 
-        public WinnumInfoViewModel(string generalInfo, List<PriorityTagDuration> priorityTagDurations, List<TimeInterval> timeIntervals)
+        public WinnumInfoViewModel(string generalInfo, string ncProgramFolder, List<PriorityTagDuration> priorityTagDurations, List<TimeInterval> timeIntervals)
         {
+            OpenArchiveNcProgramFolderCommand = new LambdaCommand(OnOpenArchiveNcProgramFolderCommandExecuted, CanOpenArchiveNcProgramFolderCommandExecute);
+            OpenIntermediateNcProgramFolderCommand = new LambdaCommand(OnOpenIntermediateNcProgramFolderCommandExecuted, CanOpenIntermediateNcProgramFolderCommandExecute);
+            OpenWinnumNcProgramFolderCommand = new LambdaCommand(OnOpenWinnumNcProgramFolderCommandExecuted, CanOpenWinnumNcProgramFolderCommandExecute);
+
             GeneralInfo = generalInfo;
+            NcArchiveProgramFolder = AppSettings.NcArchivePath;
+            NcIntermediateProgramFolder = AppSettings.NcIntermediatePath;
+            NcWinnumProgramFolder = ncProgramFolder;
 
             PriorityTagDurations = priorityTagDurations;
-
             TimeIntervals = timeIntervals;
 
             var series = new ObservableCollection<ISeries>();
@@ -86,13 +98,68 @@ namespace remeLog.ViewModels
                 }
             };
         }
+
+        #region OpenArchiveNcProgramFolder
+        public ICommand OpenArchiveNcProgramFolderCommand { get; }
+        private void OnOpenArchiveNcProgramFolderCommandExecuted(object p)
+        {
+            TryOpenDirectory(NcArchiveProgramFolder);
+        }
+        private bool CanOpenArchiveNcProgramFolderCommandExecute(object p) => !string.IsNullOrWhiteSpace(NcArchiveProgramFolder);
+        #endregion
+
+        #region OpenIntermediateNcProgramFolder
+        public ICommand OpenIntermediateNcProgramFolderCommand { get; }
+        private void OnOpenIntermediateNcProgramFolderCommandExecuted(object p)
+        {
+            TryOpenDirectory(NcIntermediateProgramFolder);
+        }
+        private bool CanOpenIntermediateNcProgramFolderCommandExecute(object p) => !string.IsNullOrWhiteSpace(NcIntermediateProgramFolder);
+        #endregion
+
+        #region OpenWinnumNcProgramFolder
+        public ICommand OpenWinnumNcProgramFolderCommand { get; }
+        private void OnOpenWinnumNcProgramFolderCommandExecuted(object p)
+        {
+            TryOpenDirectory(NcWinnumProgramFolder, true);
+        }
+        private bool CanOpenWinnumNcProgramFolderCommandExecute(object p) => !string.IsNullOrWhiteSpace(NcWinnumProgramFolder);
+        #endregion
+
         public ObservableCollection<ISeries> Intervals { get; set; }
 
         public string GeneralInfo { get; set; }
+        public string NcArchiveProgramFolder { get; set; }
+        public string NcIntermediateProgramFolder { get; set; }
+        public string NcWinnumProgramFolder { get; set; }
 
         public List<PriorityTagDuration> PriorityTagDurations { get; set; }
         public List<TimeInterval> TimeIntervals { get; set; }
         public Axis[] XAxes { get; set; }
         public Axis[] YAxes { get; set; }
+
+        void TryOpenDirectory(string path, bool tryParent = false)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return;
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                }
+                else if (tryParent && Directory.GetParent(path) is DirectoryInfo parent)
+                {
+                    Process.Start(new ProcessStartInfo(parent.FullName) { UseShellExecute = true });
+                }
+                else 
+                {
+                    MessageBox.Show("Не открывается :с", "Ошибочка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибочка вышла", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@
         xmlns:vm="clr-namespace:remeLog.ViewModels"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-        mc:Ignorable="d"
+        mc:Ignorable="d" FontFamily="Consolas"
         Title="WinnumInfoWindow" Height="720" Width="1368"
         d:DataContext="{d:DesignInstance Type=vm:WinnumInfoViewModel}">
     <DockPanel>
@@ -14,6 +14,26 @@
             <TabItem Header="Общее">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="{Binding GeneralInfo}"/>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <TextBlock Margin="4 0">
+                            <Hyperlink NavigateUri="{Binding NcArchiveProgramFolder}" 
+                                       Command="{Binding OpenArchiveNcProgramFolderCommand}">
+                                Архив УП
+                            </Hyperlink>
+                        </TextBlock>
+                        <TextBlock Margin="4 0">
+                            <Hyperlink NavigateUri="{Binding NcIntermediateProgramFolder}" 
+                                       Command="{Binding OpenIntermediateNcProgramFolderCommand}">
+                                Промежуточная
+                            </Hyperlink>
+                        </TextBlock>
+                        <TextBlock Margin="4 0">
+                            <Hyperlink NavigateUri="{Binding NcWinnumProgramFolder}" 
+                                       Command="{Binding OpenWinnumNcProgramFolderCommand}">
+                                УП из Winnum
+                            </Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
                     <lvc:CartesianChart Series="{Binding Intervals}" 
                                         ZoomMode="X" 
                                         FindingStrategy="CompareOnlyX"

@@ -9,6 +9,7 @@ using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Interfaces;
 using libeLog.Models;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -72,6 +73,7 @@ namespace eLog.ViewModels
             shiftHandoverWatcher.Start();
 
             Task.Run(UpdateToolTypes);
+            Task.Run(UpdateOrderQualifiers);
 
             WriteLog("Старт");
         }
@@ -99,13 +101,44 @@ namespace eLog.ViewModels
             }
         }
 
+        private async Task UpdateOrderQualifiers()
+        {
+            try
+            {
+                var orderQualifiers = await Database.GetOrderQualifiersAsync();
+
+                var updatedQualifiers = orderQualifiers
+                    .Union(AppSettings.Instance.OrderQualifiers)
+                    .OrderBy(x => x)
+                    .ToArray();
+
+                if (!AppSettings.Instance.OrderQualifiers.SequenceEqual(updatedQualifiers))
+                {
+                    AppSettings.Instance.OrderQualifiers = updatedQualifiers;
+                    AppSettings.Save();
+                    var message = $"Список префиксов обновлён: {string.Join(", ", AppSettings.Instance.OrderQualifiers.Skip(1))}";
+                    Status = message;
+                    await Task.Delay(3000);
+                    if (Status == message) Status = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                var message = $"Ошибка при обновлении префиксов М/Л: {ex.Message} (Код ошибки: {ex.HResult})";
+                Status = message;
+                Util.WriteLog(ex, "Ошибка при обновлении префиксов М/Л");
+                await Task.Delay(3000);
+                if (Status == message) Status = "";
+            }
+        }
+
         #region Свойства-обертки настроек
 
 
         /// <summary> Станок </summary>
-        public Machine Machine
+        public static Machine Machine
         {
-            get => AppSettings.Instance.Machine;
+            get => AppSettings.Instance.Machine!;
             set => AppSettings.Instance.Machine = value;
         }
 
@@ -122,7 +155,7 @@ namespace eLog.ViewModels
         }
 
         /// <summary> Список операторов </summary>
-        public DeepObservableCollection<Operator> Operators
+        public static DeepObservableCollection<Operator> Operators
         {
             get => AppSettings.Instance.Operators;
             set => AppSettings.Instance.Operators = value;
@@ -130,7 +163,7 @@ namespace eLog.ViewModels
 
         public static string[] Shifts => Text.Shifts;
 
-        public string CurrentShift
+        public static string CurrentShift
         {
             get => AppSettings.Instance.CurrentShift;
             set => AppSettings.Instance.CurrentShift = value;
@@ -204,7 +237,7 @@ namespace eLog.ViewModels
             set => Set(ref _ProductionTasksIsLoading, value);
         }
 
-        public bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
+        public static bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { } && Machine is { };
         public bool CanStartShift => CurrentOperator is { } && !string.IsNullOrEmpty(CurrentShift);
         public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;

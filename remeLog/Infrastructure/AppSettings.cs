@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using remeLog.Infrastructure.Types;
 using remeLog.Models;
+using remeLog.Views;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -52,9 +53,13 @@ namespace remeLog.Infrastructure
         [JsonIgnore]
         public List<string> UnspecifiedDowntimesReasons = new();
         [JsonIgnore]
-        public static double MaxSetupLimit = 2;
+        public static double MaxSetupLimit { get; set; } = 2;
         [JsonIgnore]
-        public static double LongSetupLimit = 240;
+        public static double LongSetupLimit { get; set; } = 240;
+        [JsonIgnore]
+        public static string NcArchivePath { get; set; } = "";
+        [JsonIgnore]
+        public static string NcIntermediatePath { get; set; } = "";
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode { get; set; }

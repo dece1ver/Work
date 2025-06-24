@@ -208,7 +208,7 @@ namespace remeLog.Infrastructure
                 using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
-                    string query = $"SELECT Name, WnId, WnUuid, WnCounterSignal FROM cnc_machines WHERE IsActive = 1;";
+                    string query = $"SELECT Name, WnId, WnUuid, WnCounterSignal, WnNcNameSignal FROM cnc_machines WHERE IsActive = 1;";
                     using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
@@ -220,7 +220,8 @@ namespace remeLog.Infrastructure
                                     await reader.GetValueOrDefaultAsync(0, "", CancellationToken.None),             // Name
                                     await reader.GetValueOrDefaultAsync(1, 0, CancellationToken.None),              // Winnum Id
                                     await reader.GetValueOrDefaultAsync(2, Guid.Empty, CancellationToken.None),     // Winnum Uuid
-                                    await reader.GetValueOrDefaultAsync(3, string.Empty, CancellationToken.None))); // Winnum Counter Signal
+                                    await reader.GetValueOrDefaultAsync(3, string.Empty, CancellationToken.None),   // Winnum Counter Signal
+                                    await reader.GetValueOrDefaultAsync(4, string.Empty, CancellationToken.None))); // Winnum NcName Signal
                             }
                         }
                     }
@@ -1380,7 +1381,7 @@ namespace remeLog.Infrastructure
             using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
                 await connection.OpenAsync();
-                string query = $"SELECT max_setup_limit, long_setup_limit FROM cnc_remelog_config;";
+                string query = $"SELECT max_setup_limit, long_setup_limit, NcArchivePath, NcIntermediatePath FROM cnc_remelog_config;";
                 using (SqlCommand command = new(query, connection))
                 {
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
@@ -1389,6 +1390,8 @@ namespace remeLog.Infrastructure
                         {
                             AppSettings.MaxSetupLimit = await reader.GetValueOrDefaultAsync(0, 1.5);
                             AppSettings.LongSetupLimit = await reader.GetValueOrDefaultAsync(1, 240.0);
+                            AppSettings.NcArchivePath = await reader.GetValueOrDefaultAsync(2, "");
+                            AppSettings.NcIntermediatePath = await reader.GetValueOrDefaultAsync(3, "");
                         }
                     }
                 }

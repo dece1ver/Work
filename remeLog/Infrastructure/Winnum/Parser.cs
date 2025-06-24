@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using remeLog.Infrastructure.Winnum.Data;
@@ -57,14 +58,48 @@ namespace remeLog.Infrastructure.Winnum
             foreach (var item in items)
             {
                 var dict = item.Attributes()
-                               .ToDictionary(a => Uri.UnescapeDataString(a.Name.LocalName), a => Uri.UnescapeDataString(a.Value));
+                               .ToDictionary(
+                                   a => Uri.UnescapeDataString(a.Name.LocalName), 
+                                    a => Uri.UnescapeDataString(a.Value));
                 result.Add(dict);
             }
 
             return result;
         }
 
-        
+        public static bool TryParseXmlItems(string xml, out List<Dictionary<string, string>> result)
+        {
+            result = new List<Dictionary<string, string>>();
+
+            try
+            {
+                var xDoc = XDocument.Parse(xml);
+                var items = xDoc.Root?.Elements("item");
+
+                if (items == null)
+                    return true;
+
+                foreach (var item in items)
+                {
+                    var dict = item.Attributes()
+                                   .ToDictionary(
+                                       a => Uri.UnescapeDataString(a.Name.LocalName),
+                                       a => Uri.UnescapeDataString(a.Value)
+                                   );
+                    result.Add(dict);
+                }
+
+                return true;
+            }
+            catch
+            {
+                result = null!;
+                return false;
+            }
+        }
+
+
+
 
         public static List<PriorityTagDuration> ParsePriorityTagDurations(string xml, DateTime start, DateTime end)
         {
@@ -74,24 +109,26 @@ namespace remeLog.Infrastructure.Winnum
 
             foreach (var el in items)
             {
+                string UnescapeAttr(string name) =>
+                    Uri.UnescapeDataString(el.Attribute(name)?.Value ?? "");
+
                 var dto = new PriorityTagDuration
                 {
-                    SerialNumber = el.Attribute("SERIAL_NUMBER")?.Value ?? "",
-                    Name = el.Attribute("NAME")?.Value ?? "",
-                    Model = el.Attribute("MODEL")?.Value ?? "",
-                    Tag = el.Attribute("TAG")?.Value ?? "",
-                    Program = el.Attribute("PROGRAM")?.Value,
-                    //TagOid = TryParseTagOid(el.Attribute("tagOid")?.Value, out var tagOid) ? tagOid : TagId.NONE,
-                    TimeDataRaw = el.Attribute("timeData")?.Value ?? "",
+                    SerialNumber = UnescapeAttr("SERIAL_NUMBER"),
+                    Name = UnescapeAttr("NAME"),
+                    Model = UnescapeAttr("MODEL"),
+                    Tag = UnescapeAttr("TAG"),
+                    Program = el.Attribute("PROGRAM") is { } p ? Uri.UnescapeDataString(p.Value) : null,
+                    TimeDataRaw = UnescapeAttr("timeData"),
                     Start = DateTime.ParseExact(
-                        el.Attribute("START")?.Value ?? "",
+                        UnescapeAttr("START"),
                         "dd.MM.yyyy HH:mm:ss.fff",
                         CultureInfo.InvariantCulture),
                     End = DateTime.ParseExact(
-                        el.Attribute("END")?.Value ?? "",
+                        UnescapeAttr("END"),
                         "dd.MM.yyyy HH:mm:ss.fff",
                         CultureInfo.InvariantCulture),
-                    Duration = double.TryParse(el.Attribute("DURATION")?.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0
+                    Duration = double.TryParse(UnescapeAttr("DURATION"), NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0
                 };
 
                 if (dto.Start < end && dto.End > start)

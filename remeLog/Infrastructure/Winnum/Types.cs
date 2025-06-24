@@ -27,7 +27,7 @@ namespace remeLog.Infrastructure.Winnum
         /// <summary>
         /// Порядок сортировки
         /// </summary>
-        public enum Order
+        public enum Ordering
         {
             /// <summary>
             /// По возрастанию
