@@ -1149,11 +1149,11 @@
                                   CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=local:PartsInfoWindow}}" 
                                   ToolTip="Экспорт отчёта по выработке по операторов" HorizontalAlignment="Stretch"/>
                         <MenuItem Header="Эффективность работы оборудования (новый)"
-                                  Command="{Binding ExportNewReportForPeriodToExcelCommand}"
-                                  ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch"/>
+                                  Command="{Binding ExportNewReportForPeriodToExcelCommand}" Icon="{StaticResource ComparePerformanceIcon}"
+                                  ToolTip="Экспорт отчёта за период где признаком серийности является соответствие списку" HorizontalAlignment="Stretch"/>
                         <MenuItem Header="Эффективность работы оборудования (старый)" Icon="{StaticResource ComparePerformanceIcon}"
                                   Command="{Binding ExportReportForPeriodToExcelCommand}"
-                                  ToolTip="Экспорт отчёта за период" HorizontalAlignment="Stretch"/>
+                                  ToolTip="Экспорт отчёта за период где признаком серийности является количество запусков и количество в партии" HorizontalAlignment="Stretch"/>
                         <MenuItem Header="Изменение нормативов" ToolTip="Экспорт отчёта по изменению нормативов" Icon="{StaticResource ColumnComponent}"
                                   Command="{Binding NormsAndWorkloadAnalysisCommand }"/>
                         <MenuItem Header="Детали-станки" Icon="{StaticResource ExportDataIcon}"

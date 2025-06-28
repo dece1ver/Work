@@ -865,9 +865,9 @@ namespace remeLog.ViewModels
                     }
                     if (completed.HasValue && completed.Value == 0) completed = SelectedPart.FinishedCount;
 
-                    var m1 = h1 * 60 / completed ?? SelectedPart.FinishedCount;
-                    var m2 = h2 * 60 / completed ?? SelectedPart.FinishedCount;
-                    var m3 = h3 * 60 / completed ?? SelectedPart.FinishedCount;
+                    var m1 = h1 * 60 / SelectedPart.FinishedCount;
+                    var m2 = h2 * 60 / SelectedPart.FinishedCount;
+                    var m3 = h3 * 60 / SelectedPart.FinishedCount;
 
                     var intervals = orderedTagIntervalCalculations.Select(interval => new TimeInterval(interval.Start, interval.End)).ToList();
                     var sb = new StringBuilder();
@@ -931,7 +931,7 @@ namespace remeLog.ViewModels
                         $"Время на платформе:   {platformDateTime:g} │ М/В Вар.2:   {(double.IsFinite(m2) ? $"{TimeSpan.FromMinutes(m2):hh\\:mm\\:ss}" : "00:00:00")} │\n" +
                         $"Время на облаке:      {cloudDateTime:g} │ М/В Вар.3:   {(double.IsFinite(m3) ? $"{TimeSpan.FromMinutes(m3):hh\\:mm\\:ss}" : "00:00:00")} │\n" +
                         $"───────────────────────────────────────┴───────────────────────┘\n" +
-                        $"Выполнено по глобальному счётчику: {(completed.HasValue ? completed.Value : $"{SelectedPart.FinishedCount} (р/в)")}\n\n" +
+                        $"Выполнено по счётчику Winnum: {(completed.HasValue ? completed.Value : $"{SelectedPart.FinishedCount} (не удалось получить из Winnum, отображается количество из ЭЖ)")}\n\n" +
                         $"Информация по операциям за период " +
                         $"{new DateTime(startTime.Year, startTime.Month, startTime.Day):d} - " +
                         $"{new DateTime(SelectedPart.EndMachiningTime.Year, SelectedPart.EndMachiningTime.Month, SelectedPart.EndMachiningTime.Day):d}\n" +
@@ -982,11 +982,12 @@ namespace remeLog.ViewModels
                     }
                     if (dlg.DataContext is ExportOperatorDailogWindowViewModel dx)
                     {
+                        var serialParts = dx.OnlySerialParts ? (await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!)).PartNamesHashSet(EnumerableExtensions.PartNameNormalizeOption.NormalizeAndRemoveParentheses) : null;
                         await Task.Run(() =>
                         {
 
                             InProgress = true;
-                            Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, dx.Type.ToLowerInvariant() == "до" ? 1 : dx.Count, dx.Type.ToLowerInvariant() == "до" ? dx.Count : int.MaxValue);
+                            Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, dx.Type.ToLowerInvariant() == "до" ? 1 : dx.Count, dx.Type.ToLowerInvariant() == "до" ? dx.Count : int.MaxValue, serialParts);
                         });
                     }
                 }

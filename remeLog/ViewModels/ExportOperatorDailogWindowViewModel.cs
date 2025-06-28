@@ -35,6 +35,14 @@ namespace remeLog.ViewModels
 
         public int Count { get; set; }
 
+        private bool _OnlySerialParts;
+        /// <summary> Только серийная продукция </summary>
+        public bool OnlySerialParts
+        {
+            get => _OnlySerialParts;
+            set => Set(ref _OnlySerialParts, value);
+        }
+
 
         #region ExportCommand
         public ICommand ExportCommand { get; }

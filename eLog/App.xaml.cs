@@ -259,9 +259,9 @@ namespace eLog
         {
             base.OnStartup(e);
             ConfigureCulture();
-            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-            DispatcherUnhandledException += OnDispatcherUnhandledException;
-            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+            //AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            //DispatcherUnhandledException += OnDispatcherUnhandledException;
+            //TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -270,20 +270,20 @@ namespace eLog
             base.OnExit(e);
         }
 
-        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            var exception = e.ExceptionObject as Exception;
-            string message = exception != null
-                ? $"Необработанное исключение: {exception.Message}\n{exception.StackTrace}"
-                : $"Необработанное исключение. Тип: {e.ExceptionObject?.GetType()}";
+        //private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        //{
+        //    var exception = e.ExceptionObject as Exception;
+        //    string message = exception != null
+        //        ? $"Необработанное исключение: {exception.Message}\n{exception.StackTrace}"
+        //        : $"Необработанное исключение. Тип: {e.ExceptionObject?.GetType()}";
 
-            Util.WriteLog(message);
+        //    Util.WriteLog(message);
 
-            MessageBox.Show("Произошла критическая ошибка. Приложение будет закрыто.",
-                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    MessageBox.Show("Произошла критическая ошибка. Приложение будет закрыто.",
+        //        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            Shutdown(1);
-        }
+        //    Shutdown(1);
+        //}
 
         private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {

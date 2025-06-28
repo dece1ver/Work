@@ -9,7 +9,6 @@ using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Interfaces;
 using libeLog.Models;
-using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -57,6 +56,7 @@ namespace eLog.ViewModels
             EditOperatorsCommand = new LambdaCommand(OnEditOperatorsCommandExecuted, CanEditOperatorsCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadProductionTasksCommand = new LambdaCommand(OnLoadProductionTasksCommandExecuted, CanLoadProductionTasksCommandExecute);
+            LoadAssignedPartsCommand = new LambdaCommand(OnLoadAssignedPartsCommandExecuted, CanLoadAssignedPartsCommandExecute);
             SendMessageCommand = new LambdaCommand(OnSendMessageCommandExecuted, CanSendMessageCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
             TestCommand = new LambdaCommand(OnTestCommandExecuted, CanTestCommandExecute);
@@ -66,11 +66,14 @@ namespace eLog.ViewModels
             var syncPartsThread = new Thread(() => _ = SyncParts()) { IsBackground = true };
             syncPartsThread.Start();
 
-            var notifyThread = new Thread(() => NotifyWatcher()) { IsBackground = true };
+            var notifyThread = new Thread(NotifyWatcher) { IsBackground = true };
             notifyThread.Start();
 
-            var shiftHandoverWatcher = new Thread(() => ShiftHandoverWatcher()) { IsBackground = true };
+            var shiftHandoverWatcher = new Thread(ShiftHandoverWatcher) { IsBackground = true };
             shiftHandoverWatcher.Start();
+
+            var serialPartsWatcher = new Thread(SerialPartsWatcher) { IsBackground = true };
+            serialPartsWatcher.Start();
 
             Task.Run(UpdateToolTypes);
             Task.Run(UpdateOrderQualifiers);
@@ -235,6 +238,14 @@ namespace eLog.ViewModels
         {
             get => _ProductionTasksIsLoading;
             set => Set(ref _ProductionTasksIsLoading, value);
+        }
+
+        private bool _AssignedPartsIsLoading;
+        /// <summary> В процессе ли загрузка закрепленных деталей </summary>
+        public bool AssignedPartsIsLoading
+        {
+            get => _AssignedPartsIsLoading;
+            set => Set(ref _AssignedPartsIsLoading, value);
         }
 
         public static bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
@@ -413,6 +424,58 @@ namespace eLog.ViewModels
         }
         private static bool CanLoadProductionTasksCommandExecute(object p) => !(string.IsNullOrWhiteSpace(AppSettings.Instance.GsId) || string.IsNullOrWhiteSpace(AppSettings.Instance.GoogleCredentialsPath));
         public bool _CanLoadProductionTasksCommandExecute => LoadProductionTasksCommand.CanExecute(null);
+        #endregion
+
+        #region LoadAssignedParts
+        public ICommand LoadAssignedPartsCommand { get; }
+        private async void OnLoadAssignedPartsCommandExecuted(object p)
+        {
+            if (AssignedPartsIsLoading) _cts.Cancel();
+            if (string.IsNullOrEmpty(AppSettings.Instance.GsId) || !File.Exists(AppSettings.Instance.GoogleCredentialsPath))
+                _cts = new CancellationTokenSource();
+            try
+            {
+                ProgressBarVisibility = Visibility.Visible;
+                AssignedPartsIsLoading = true;
+                var progress = new Progress<string>(m => Status = m);
+                var gsId = await Database.GetAssignedPartsGsIdAsync();
+                var gs = new GoogleSheet(AppSettings.Instance.GoogleCredentialsPath, gsId);
+                var parts = await gs.GetAssignedPartsData(AppSettings.Instance.Machine?.Name ?? "", progress, _cts.Token);
+                AssignedPartsIsLoading = false;
+                ProgressBarVisibility = Visibility.Collapsed;
+                var assignedPartsWindow = new AssignedPartsWindow(parts, AppSettings.Instance.Machine?.Name ?? "") { Owner = App.Current.MainWindow };
+                assignedPartsWindow.ShowDialog();
+                //using (Overlay = new())
+                //{
+                //    if (tasks.Count > 0)
+                //    {
+                //        TasksForProductionWindow tasksWindow = new(tasks) { Owner = Application.Current.MainWindow };
+                //        tasksWindow.ShowDialog();
+                //        if (tasksWindow.NeedStart) StartDetailCommand.Execute(tasksWindow.SelectedTask);
+                //    }
+                //    else
+                //    {
+                //        MessageBox.Show("В списке нет заданий под данный станок.", "Задания на производство");
+                //    }
+                //}
+
+            }
+            catch (OperationCanceledException)
+            {
+                Status = "Загрузка списка отменена.";
+            }
+            catch
+            {
+                Status = "Список работы недоступен.";
+            }
+            finally
+            {
+                AssignedPartsIsLoading = false;
+                ProgressBarVisibility = Visibility.Collapsed;
+            }
+        }
+        private static bool CanLoadAssignedPartsCommandExecute(object p) => !(string.IsNullOrWhiteSpace(AppSettings.Instance.Machine?.Name) || string.IsNullOrWhiteSpace(AppSettings.Instance.GoogleCredentialsPath));
+        public bool _CanLoadAssignedPartsCommandExecute => LoadAssignedPartsCommand.CanExecute(null);
         #endregion
 
         #region SendMessage
@@ -882,6 +945,41 @@ namespace eLog.ViewModels
 
         #endregion
 
+
+        private void SerialPartsWatcher()
+        {
+            while (true) 
+            {
+                try
+                {
+                    HashSet<string> serialParts = libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString)
+                        .GetAwaiter()
+                        .GetResult()
+                        .Select(p => p.PartName.NormalizedPartNameWithoutComments())
+                        .ToHashSet();
+                    if (AppSettings.Instance.SerialParts != serialParts)
+                    {
+                        AppSettings.Instance.SerialParts = serialParts;
+                        AppSettings.Save();
+                    }
+
+                    foreach (var part in Parts)
+                    {
+                        App.Current.Dispatcher.Invoke(() => part.IsSerial = serialParts.Contains(part.FullName.NormalizedPartNameWithoutComments()));
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Util.WriteLog(ex);
+                }
+                finally
+                {
+                    Thread.Sleep(60000);
+                }
+            }
+        }
+
         private void NotifyWatcher()
         {
             while (true)
@@ -929,7 +1027,7 @@ namespace eLog.ViewModels
                         int limit;
                         if (Parts[0].SetupTimePlan > 0)
                         {
-                            var (result, setupCoefficient, error) = AppSettings.Instance.Machine.Name.GetMachineSetupCoefficient();
+                            var (result, setupCoefficient, error) = AppSettings.Instance.Machine!.Name.GetMachineSetupCoefficient();
                             if (result == DbResult.Ok && setupCoefficient.HasValue)
                             {
                                 limit = (int)(setupCoefficient.Value * Parts[0].SetupTimePlan);
@@ -941,7 +1039,7 @@ namespace eLog.ViewModels
                             }
                         } else
                         {
-                            var (result, setupLimit, error) = AppSettings.Instance.Machine.Name.GetMachineSetupLimit();
+                            var (result, setupLimit, error) = AppSettings.Instance.Machine!.Name.GetMachineSetupLimit();
                             if (result == DbResult.Ok && setupLimit.HasValue)
                             {
                                 limit = setupLimit.Value;
@@ -1001,7 +1099,7 @@ namespace eLog.ViewModels
             }
         }
 
-        private async void ShiftHandoverWatcher()
+        private static async void ShiftHandoverWatcher()
         {
             while (true)
             {

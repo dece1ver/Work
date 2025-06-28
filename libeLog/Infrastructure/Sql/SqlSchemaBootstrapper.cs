@@ -60,6 +60,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("UpdatePath", -1)
                 .AddStringColumn("LogPath", -1)
                 .AddStringColumn("OrderPrefixes", -1)
+                .AddStringColumn("AssignedPartsGsId")
                 .Build(),
 
             new TableBuilder("cnc_machines")

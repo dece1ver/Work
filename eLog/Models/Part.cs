@@ -49,6 +49,7 @@ namespace eLog.Models
         private string _OperatorComments;
         private PartTaskInfo _TaskInfo;
         private bool _IsTaskStatusWritten;
+        private bool _IsSerial;
 
         public Guid Guid { get; init; }
 
@@ -352,6 +353,19 @@ namespace eLog.Models
             set => Set(ref _MasterReactions, value);
         }
 
+        /// <summary>
+        /// Является ли деталь серийной
+        /// </summary>
+        public bool IsSerial
+        {
+            get => _IsSerial;
+            set
+            {
+                Set(ref _IsSerial, value);
+                OnPropertyChanged(nameof(Title));
+            }
+        }
+
 
 
         /// <summary> Информация об окончании наладки </summary>
@@ -513,10 +527,10 @@ namespace eLog.Models
         {
             get
             {
-                if (IsFinished == State.InProgress) return FullName.Length >= 75 ? FullName[..72] + "..." : FullName;
-                var symbol = IsSynced ? "✓" : "🗘";
-                var partName = FullName.Length >= 75 ? FullName[..72] + "..." : FullName;
-                return $"{symbol} {partName}".Trim();
+                if (IsFinished == State.InProgress) return FullName.TrimLen(65);
+                var suffix = IsSerial ? " [Cерийная продукция]" : "";
+                var partName = FullName.TrimLen(75);
+                return $"{partName}".Trim();
             }
         }
 

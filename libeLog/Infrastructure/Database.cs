@@ -155,5 +155,51 @@ namespace libeLog.Infrastructure
                 }
             }
         }
+
+        /// <summary>
+        /// Асинхронно получает список наименований серийных деталей из базы данных.
+        /// </summary>
+        /// <param name="connectionString">
+        /// Необязательная строка подключения к базе данных. Если не указана, используется значение из <c>AppSettings.Instance.ConnectionString</c>.
+        /// </param>
+        /// <param name="progress">
+        /// Необязательный объект для отслеживания прогресса выполнения. При наличии отправляются сообщения о ходе подключения, чтения и добавления деталей.
+        /// </param>
+        /// <returns>
+        /// Асинхронная задача, содержащая список имён деталей, отсортированных по возрастанию.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Генерируется, если итоговая строка подключения пуста или содержит только пробелы.
+        /// </exception>
+
+        public async static Task<List<SerialPart>> GetSerialPartsAsync(string connectionString, IProgress<string>? progress = null)
+        {
+            List<SerialPart> parts = new();
+            if (string.IsNullOrWhiteSpace(connectionString)) throw new ArgumentException("Строка подключения не может быть пустой");
+            await Task.Run(async () =>
+            {
+                progress?.Report("Подключение к БД...");
+                using (SqlConnection connection = new(connectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = $"SELECT Id, PartName, YearCount FROM cnc_serial_parts ORDER BY PartName ASC;";
+                    using (SqlCommand command = new(query, connection))
+                    {
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            progress?.Report("Чтение данных о деталях из БД...");
+                            while (await reader.ReadAsync())
+                            {
+                                var part = new SerialPart(await reader.GetFieldValueAsync<int>(0), await reader.GetFieldValueAsync<string>(1), await reader.GetFieldValueAsync<int>(2));
+                                parts.Add(part);
+                                progress?.Report($"Добавление: {part.PartName}");
+                            }
+                        }
+                    }
+                }
+                progress?.Report("Чтение завершено");
+            });
+            return parts;
+        }
     }
 }

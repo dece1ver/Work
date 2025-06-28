@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.VariantTypes;
 using libeLog;
 using libeLog.Base;
+using libeLog.Models;
 using remeLog.Infrastructure;
 using remeLog.Models;
 using remeLog.Views;
@@ -23,7 +24,7 @@ namespace remeLog.ViewModels
             _Status = "";
             _SerialParts = new ObservableCollection<SerialPart>();
             SerialParts.CollectionChanged += OnSerialPartsCollectionChanged!;
-            LoadSerialPartsAsync();
+            Task.Run(LoadSerialPartsAsync);
         }
 
         private ObservableCollection<SerialPart> _SerialParts;
@@ -92,7 +93,7 @@ namespace remeLog.ViewModels
                 Status = "Детали не могут быть загружены т.к. строка подключения не настроена";
                 return;
             }
-            var parts = await Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString, new Progress<string>(p => Status = p));
+            var parts = await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString, new Progress<string>(p => Status = p));
             SerialParts = new ObservableCollection<SerialPart>(parts);
             ValidateSerialParts();
         }

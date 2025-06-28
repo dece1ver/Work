@@ -535,7 +535,7 @@ namespace remeLog.Infrastructure
             var row = 3;
             var firstDataRow = row;
             progress?.Report("Получение списка серийных деталей...");
-            var serialParts = await Database.GetSerialPartsAsync();
+            var serialParts = await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!);
             progress?.Report("Подготовка данных...");
             var serialPartNames = serialParts.Select(p => p.PartName.NormalizedPartNameWithoutComments()).ToImmutableHashSet();
             var filteredParts = parts
@@ -955,10 +955,8 @@ namespace remeLog.Infrastructure
         /// <param name="fromDate">Начальная дата</param>
         /// <param name="toDate">Конечная дата</param>
         /// <param name="path">Путь к формируемому файлу</param>
-        /// <param name="underOverBorder">Граничное значение отсечки результатов</param>
-        /// <param name="reportType">Тип расчета: Under = от underOverBorder, Below = до underOverBorder</param>
         /// <returns>При удачном выполнении возвращает путь к записанному файлу</returns>
-        public static string ExportOperatorReport(ICollection<Part> parts, DateTime fromDate, DateTime toDate, string path, int minPartsCount, int maxPartsCount, ExportOperatorReportType reportType = ExportOperatorReportType.Under)
+        public static string ExportOperatorReport(IEnumerable<Part> parts, DateTime fromDate, DateTime toDate, string path, int minPartsCount, int maxPartsCount, HashSet<string>? serialParts = null)
         {
             var operators = Database.GetOperators();
             var wb = new XLWorkbook();
@@ -1007,6 +1005,11 @@ namespace remeLog.Infrastructure
             }
             ConfigureWorksheetHeader(ws, cm);
             var row = 3;
+            var onlySerial = serialParts != null && serialParts.Any();
+            if (onlySerial) 
+            {
+                parts = parts.Where(p => serialParts!.Contains(p.PartName.NormalizedPartNameWithoutComments())).ToList();
+            }
 
             foreach (var partGroup in parts
                 .Where(p => !p.ExcludeFromReports)
@@ -1104,7 +1107,7 @@ namespace remeLog.Infrastructure
             ws.Column(ci[CM.Qualification]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             ws.Column(ci[CM.Qualification]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Columns(ci[CM.CreateNcProgramTime], ci[CM.SpecifiedDowntimes]).Group(true);
-            ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)} (изготовление от {minPartsCount}{(maxPartsCount == int.MaxValue ? "" : $" до {maxPartsCount}")} шт.)";
+            ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)} (изготовление от {minPartsCount}{(maxPartsCount == int.MaxValue ? "" : $" до {maxPartsCount}")} шт.{(onlySerial ? " (Только серийка)" : "")})";
             ws.Range(1, ci[CM.Operator], 1, cm.Count).Merge();
             ws.Range(1, ci[CM.Operator], 1, 1).Style.Font.FontSize = 14;
             ws.Columns(ci[CM.SetupRatio], cm.Count).Width = 7;
@@ -1401,7 +1404,7 @@ namespace remeLog.Infrastructure
 
             var totalUniqueNames = totalUnique.Select(p => p.PartName.NormalizedPartName()).ToHashSet();
 
-            Dictionary<string, int> serialPartsDict = (await Database.GetSerialPartsAsync())
+            Dictionary<string, int> serialPartsDict = (await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!))
                 .ToDictionary(p => p.PartName.NormalizedPartNameWithoutComments(), p => p.YearCount);
 
             var wsChanges = wb.AddWorksheet("Изменения нормативов");

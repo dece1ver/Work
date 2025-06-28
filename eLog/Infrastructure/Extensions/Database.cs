@@ -126,6 +126,26 @@ namespace eLog.Infrastructure.Extensions
             return orderQualifiers.OrderBy(o => o).ToArray();
         }
 
+        public static async Task<string> GetAssignedPartsGsIdAsync(IProgress<string>? progress = null)
+        {
+            progress?.Report("Подключение к БД...");
+            await using SqlConnection connection = new(AppSettings.Instance.ConnectionString);
+            await connection.OpenAsync();
+
+            const string query = "SELECT AssignedPartsGsId FROM cnc_elog_config;";
+            await using SqlCommand command = new(query, connection);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+            progress?.Report("Чтение данных из БД...");
+            while (await reader.ReadAsync())
+            {
+                if (!await reader.IsDBNullAsync(0))
+                    return await reader.GetFieldValueAsync<string>(0);
+            }
+
+            return "";
+        }
+
         /// <summary>
         /// Запись информации о детали в БД
         /// </summary>

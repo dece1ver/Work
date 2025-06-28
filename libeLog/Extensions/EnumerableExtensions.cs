@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using libeLog.Models;
 
 namespace libeLog.Extensions
 {
     public static class EnumerableExtensions
     {
+        public enum PartNameNormalizeOption
+        {
+            None, Simple, NormalizeAndRemoveParentheses
+        }
+
         /// <summary>
         /// Объединяет две последовательности, возвращая элементы из первой коллекции,
         /// дополненные недостающими элементами из второй без дубликатов.
@@ -41,6 +47,29 @@ namespace libeLog.Extensions
                 if (seen.Add(item))
                     yield return item;
             }
+        }
+
+        /// <summary>
+        /// Получает множество наименований деталей из коллекции с применением выбранной стратегии нормализации.
+        /// </summary>
+        /// <param name="source">Коллекция объектов SerialPart.</param>
+        /// <param name="partNameNormalizeOption">Опция нормализации названий.</param>
+        /// <returns>Хэш-множество нормализованных названий деталей.</returns>
+        public static HashSet<string> PartNamesHashSet(this IEnumerable<SerialPart> source, PartNameNormalizeOption partNameNormalizeOption = PartNameNormalizeOption.None)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            Func<SerialPart, string> selector = partNameNormalizeOption switch
+            {
+                PartNameNormalizeOption.None => p => p.PartName,
+                PartNameNormalizeOption.Simple => p => p.PartName.NormalizedPartName(),
+                PartNameNormalizeOption.NormalizeAndRemoveParentheses => p => p.PartName.NormalizedPartNameWithoutComments(),
+                _ => throw new ArgumentOutOfRangeException(nameof(partNameNormalizeOption),
+                        $"Опция нормализации '{partNameNormalizeOption}' не поддерживается.")
+            };
+
+            return source.Select(selector).ToHashSet();
         }
     }
 }

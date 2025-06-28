@@ -85,6 +85,8 @@ namespace eLog.Infrastructure
         private string _PathToRecievers;
 
 
+        
+
         /// <summary> Текущий станок </summary>
         public Machine? Machine
         {
@@ -273,6 +275,14 @@ namespace eLog.Infrastructure
         {
             get => _Machines;
             set => Set(ref _Machines, value);
+        }
+
+        private HashSet<string> _SerialParts;
+        /// <summary> Серийные детали </summary>
+        public HashSet<string> SerialParts
+        {
+            get => _SerialParts;
+            set => Set(ref _SerialParts, value);
         }
 
         /// <summary> Создает конфиг с параметрами по-умолчанию </summary>
