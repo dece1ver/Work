@@ -1533,14 +1533,19 @@ namespace remeLog.Infrastructure
                 wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Value = change.OldValue;
                 wsChanges.Cell(changesRow, changesCI[CM.ExcludedOperationsTime]).Value = change.ExcludedOperationsTime;
                 wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Value = change.NewValue;
-
-                wsChanges.Cell(changesRow, changesCI[CM.OldYearValue]).FormulaA1 =
-                    $"={wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Address.ToStringRelative()}" +
+                
+                var oldYearValueFormula = $"({wsChanges.Cell(changesRow, changesCI[CM.OldValue]).Address.ToStringRelative()}" +
+                    $"+{wsChanges.Cell(changesRow, changesCI[CM.ExcludedOperationsTime]).Address.ToStringRelative()})" +
                     $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
 
-                wsChanges.Cell(changesRow, changesCI[CM.NewYearValue]).FormulaA1 =
-                    $"={wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Address.ToStringRelative()}" +
-                    $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
+                wsChanges.Cell(changesRow, changesCI[CM.OldYearValue])
+                    .FormulaA1 = $"={oldYearValueFormula}";
+
+                var newYearValueFormula = $"({wsChanges.Cell(changesRow, changesCI[CM.NewValue]).Address.ToStringRelative()}" +
+                    $"*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)})";
+
+                wsChanges.Cell(changesRow, changesCI[CM.NewYearValue])
+                    .FormulaA1 = $"={newYearValueFormula}";
 
                 wsChanges.Cell(changesRow, changesCI[CM.SerialPerRuns]).Value = change.IsInTotalUnique;
                 wsChanges.Cell(changesRow, changesCI[CM.SerialPerList]).Value = change.IsInSerialList;
@@ -1554,10 +1559,6 @@ namespace remeLog.Infrastructure
 
                 wsChanges.Cell(changesRow, changesCI[CM.Change]).FormulaA1 = $"={newValueCell}-({oldValueCell}+{excludedOperationsTimeCell})";
                 wsChanges.Cell(changesRow, changesCI[CM.ChangeRatio]).FormulaA1 = $"=IF({oldValueCell}+{excludedOperationsTimeCell}=0,0,{newValueCell}/({oldValueCell}+{excludedOperationsTimeCell})-1)";
-
-                var oldYearValueFormula = change.ChangeType != "Изготовление" || yearCount < 1
-                    ? $"({oldYearValueCell}+{excludedOperationsTimeCell})"
-                    : $"({oldValueCell}+{excludedOperationsTimeCell})*{(yearCount != 0 ? (change.ChangeType == "Изготовление" ? wsChanges.Cell(changesRow, changesCI[CM.YearCount]).Address.ToStringRelative() : 1) : 1)}";
 
                 wsChanges.Cell(changesRow, changesCI[CM.YearChange]).FormulaA1 = $"={newYearValueCell}-{oldYearValueFormula}";
                 wsChanges.Cell(changesRow, changesCI[CM.YearChangeRatio]).FormulaA1 = $"=IF({oldYearValueFormula}=0,0,({newYearValueCell}/({oldYearValueFormula}))-1)";
