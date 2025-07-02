@@ -662,5 +662,12 @@ namespace remeLog.Infrastructure
 
             return Uri.UnescapeDataString(string.Join($"\n\n---\n\n", formattedItems));
         }
+
+        public static async Task UpdateAppSettingsAsync()
+        {
+            await Database.UpdateAppSettings();
+            AppSettings.SerialParts = (await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!))
+                .PartNamesHashSet(EnumerableExtensions.PartNameNormalizeOption.NormalizeAndRemoveParentheses);
+        }
     }
 }

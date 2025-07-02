@@ -120,7 +120,16 @@
 
         <DataGridTextColumn x:Key="PartNameColumn" Header="Деталь" Binding="{Binding PartName}" Width="130">
             <DataGridTextColumn.ElementStyle>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}">
+                    <Setter Property="TextDecorations" Value="None"/>
+                    <Setter Property="ToolTip" Value="Не серийная"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSerial}" Value="True">
+                            <Setter Property="TextDecorations" Value="Underline"/>
+                            <Setter Property="ToolTip" Value="Серийная"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
             </DataGridTextColumn.ElementStyle>
             <DataGridTextColumn.EditingElementStyle>
                 <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>

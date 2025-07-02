@@ -43,6 +43,9 @@ namespace remeLog.Infrastructure
         /// <summary> Путь к файлу логов </summary>
         [JsonIgnore] public static readonly string LogFile = Path.Combine(BasePath, "log");
 
+        /// <summary> Нормализованные имена серийных деталей </summary>
+        [JsonIgnore] public static HashSet<string> SerialParts { get; set; } = new();
+
         [JsonIgnore]
         public static readonly string[] ShiftTypes = new string[] { "День", "Ночь" };
 

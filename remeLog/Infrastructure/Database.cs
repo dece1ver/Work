@@ -1331,7 +1331,7 @@ namespace remeLog.Infrastructure
             }
         }
 
-        internal static async void UpdateAppSettings()
+        internal static async Task UpdateAppSettings()
         {
             using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {

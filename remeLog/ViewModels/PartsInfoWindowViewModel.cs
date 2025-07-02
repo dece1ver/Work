@@ -1783,7 +1783,7 @@ namespace remeLog.ViewModels
                     Status = "Не настроено соединение с БД";
                     return false;
                 }
-                Database.UpdateAppSettings();
+                await Util.UpdateAppSettingsAsync();
                 if (!first) await Task.Delay(1000, cancellationToken);
 
                 if (UseMockData)
