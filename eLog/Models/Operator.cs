@@ -46,7 +46,7 @@ namespace eLog.Models
             get
             {
                 var result = LastName;
-                if (string.IsNullOrEmpty(FirstName)) return result;
+                if (string.IsNullOrEmpty(FirstName) || FirstName == "⠀") return result;
                 result += " " + FirstName[0] + ".";
                 if (!string.IsNullOrEmpty(Patronymic))
                     result += " " + Patronymic[0] + ".";

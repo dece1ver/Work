@@ -1,12 +1,7 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
+﻿using System.Collections.Generic;
 using libeLog.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace remeLog.Models
+namespace libeLog.Models
 {
     public class SerialPart : ViewModel
     {

@@ -10,6 +10,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace remeLog.ViewModels
@@ -19,6 +20,7 @@ namespace remeLog.ViewModels
         public EditOperatorsWindowViewModel()
         {
             SaveOperatorsCommand = new LambdaCommand(OnSaveOperatorsCommandExecuted, CanSaveOperatorsCommandExecute);
+            CopyOperatorInfoCommand = new LambdaCommand(OnCopyOperatorInfoCommandExecuted, CanCopyOperatorInfoCommandExecute);
 
             _Status = "";
             _Operators = new ObservableCollection<OperatorInfo>();
@@ -81,6 +83,23 @@ namespace remeLog.ViewModels
 
         private bool CanSaveOperatorsCommandExecute(object p) => !InProgress;
         #endregion
+
+        #region CopyOperatorInfo
+        public ICommand CopyOperatorInfoCommand { get; }
+        private async void OnCopyOperatorInfoCommandExecuted(object p)
+        {
+            if (p is OperatorInfo operatorInfo)
+            {
+                Clipboard.SetText(operatorInfo.FullName);
+                Status = $"Скопировано в буфер обмена: '{operatorInfo.FullName}'";
+                await Task.Delay(3000);
+            }
+            Status = "";
+        }
+
+        private bool CanCopyOperatorInfoCommandExecute(object p) => !InProgress;
+        #endregion
+
 
         private async void LoadOperatorsAsync()
         {

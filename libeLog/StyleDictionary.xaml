@@ -19,7 +19,7 @@
     <Brush x:Key="OutlineButtonBackgroundColor">#e0e0e0</Brush>
     <Brush x:Key="OutlineForegroundColor">Black</Brush>
     <Brush x:Key="OutlineBorderColor">Gray</Brush>
-    
+
     <Brush x:Key="FlatWindowBackgroundColor">White</Brush>
     <Brush x:Key="FlatForegroundColor">Black</Brush>
     <Brush x:Key="FlatTitleBarBackgroundColor">#1E1E1E</Brush>
@@ -115,8 +115,8 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
-    
+
+
     <Style x:Key="ComboBoxEditableTextBox" TargetType="{x:Type TextBox}">
         <Setter Property="OverridesDefaultStyle" Value="true"/>
         <Setter Property="AllowDrop" Value="true"/>
@@ -156,6 +156,11 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type GroupBox}">
                     <Grid SnapsToDevicePixels="true">
+                        <Grid.Resources>
+                            <!-- Анимируемая кисть -->
+                            <SolidColorBrush x:Key="AnimatedBrush" x:Name="AnimatedBrush" Color="DarkGray"/>
+                        </Grid.Resources>
+
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="6"/>
                             <ColumnDefinition Width="Auto"/>
@@ -168,8 +173,19 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="6"/>
                         </Grid.RowDefinitions>
-                        <Border Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2" Grid.Column="0" Grid.ColumnSpan="4" Grid.RowSpan="3" Grid.Row="1"/>
-                        <Border BorderBrush="White" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2" Grid.ColumnSpan="4" Grid.RowSpan="3" Grid.Row="1">
+
+                        <!-- Основной фон -->
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="Transparent"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2"
+                            Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="1" Grid.RowSpan="3"/>
+
+                        <!-- Граница с анимацией -->
+                        <Border BorderBrush="White"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2"
+                            Grid.ColumnSpan="4" Grid.Row="1" Grid.RowSpan="3">
                             <Border.OpacityMask>
                                 <MultiBinding ConverterParameter="7" Converter="{StaticResource BorderGapMaskConverter}">
                                     <Binding ElementName="Header" Path="ActualWidth"/>
@@ -177,19 +193,67 @@
                                     <Binding Path="ActualHeight" RelativeSource="{RelativeSource Mode=Self}"/>
                                 </MultiBinding>
                             </Border.OpacityMask>
-                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2">
-                                <Border BorderBrush="White" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="2"/>
+
+                            <!-- Вложенные границы -->
+                            <Border BorderBrush="{StaticResource AnimatedBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2">
+                                <Border BorderBrush="White"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="2"/>
                             </Border>
                         </Border>
-                        <Border x:Name="Header" Grid.Column="1" Padding="2 0 2 0" Grid.RowSpan="2" Grid.Row="0">
-                            <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+
+                        <!-- Заголовок -->
+                        <Border x:Name="Header"
+                            Grid.Column="1"
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Padding="2 0 2 0">
+                            <ContentPresenter ContentSource="Header"
+                                          RecognizesAccessKey="True"
+                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                         </Border>
-                        <ContentPresenter Grid.Column="1" Grid.ColumnSpan="2" Margin="{TemplateBinding Padding}" Grid.Row="2" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+
+                        <!-- Контент -->
+                        <ContentPresenter Grid.Column="1"
+                                      Grid.ColumnSpan="2"
+                                      Grid.Row="2"
+                                      Margin="{TemplateBinding Padding}"
+                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                     </Grid>
+
+                    <!-- Анимация при IsSerial=True -->
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsSerial}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard Name="PulseStoryboard">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="AnimatedBrush"
+                                                    Storyboard.TargetProperty="Color"
+                                                    From="Green" To="DarkGray"
+                                                    Duration="0:0:0.9"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="PulseStoryboard"/>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="AnimatedBrush"
+                                                    Storyboard.TargetProperty="Color"
+                                                    To="#D5DFE5"
+                                                    Duration="0:0:0.2"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+
     <LinearGradientBrush x:Key="ComboBox.MouseOver.Editable.Button.Background" EndPoint="0,1" StartPoint="0,0">
         <GradientStop Color="#FFEBF4FC" Offset="0.0"/>
         <GradientStop Color="#FFDCECFC" Offset="1.0"/>
@@ -1005,7 +1069,7 @@
         <Setter Property="Padding" Value="0"/>
         <Setter Property="AcceptsReturn" Value="True"/>
     </Style>
-    
+
     <Style TargetType="ComboBox" x:Key="TableComboBox">
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Stretch"/>

@@ -4,9 +4,8 @@
         xmlns:models="clr-namespace:remeLog.Models"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Title="Справка" Height="600" Width="400">
+        Title="Справка" Height="600" Width="500">
     <Window.Resources>
-        <!-- Style for ListView -->
         <Style TargetType="ListView">
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="#DDDDDD"/>
@@ -15,7 +14,6 @@
             <Setter Property="Margin" Value="5"/>
         </Style>
 
-        <!-- Style for GridViewColumn headers -->
         <Style TargetType="GridViewColumnHeader">
             <Setter Property="Background" Value="#F7F7F7"/>
             <Setter Property="Foreground" Value="#333333"/>
@@ -25,42 +23,33 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
-        <!-- Data template for ListView items -->
         <DataTemplate x:Key="CommandInfoTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding KeyCombination}" Margin="2,0" FontWeight="Bold" Grid.Column="0" Foreground="#0056A0" FontSize="12"/>
-                <TextBlock Text="{Binding Description}" Margin="2,0" Grid.Column="1" Foreground="#444444" FontSize="12"/>
+                <TextBlock Text="{Binding KeyCombination}" Margin="2 0" FontWeight="Bold" Grid.Column="0" Foreground="#0056A0" FontSize="12"/>
+                <TextBlock Text="{Binding Description}" Margin="2 0" Grid.Column="1" Foreground="#444444" FontSize="12"/>
             </Grid>
         </DataTemplate>
 
-        <!-- Data template for Group headers with transparent background -->
         <DataTemplate x:Key="GroupHeaderTemplate">
-            <Border Background="Transparent" Padding="4" Margin="0,2,0,2" BorderBrush="#CCCCCC" BorderThickness="0">
+            <Border Background="Transparent" Padding="4" Margin="0 2 0 2" BorderBrush="#CCCCCC" BorderThickness="0">
                 <TextBlock FontWeight="Bold" FontSize="12" Foreground="#333333" Text="{Binding Name}"/>
             </Border>
         </DataTemplate>
 
-        <!-- Define the static resource for the collection -->
         <x:Array x:Key="CommandInfoCollection" Type="{x:Type models:CommandInfo}">
             <models:CommandInfo Category="Общие команды" KeyCombination="Ctrl + H" Description="Показать это сообщение"/>
-            <models:CommandInfo Category="Навигация по датам" KeyCombination="Стрелка вверх" Description="+1 день"/>
-            <models:CommandInfo Category="Навигация по датам" KeyCombination="Стрелка вниз" Description="-1 день"/>
-            <models:CommandInfo Category="Навигация по датам" KeyCombination="Page Up" Description="+7 дней"/>
-            <models:CommandInfo Category="Навигация по датам" KeyCombination="Page Down" Description="-7 дней"/>
-            <models:CommandInfo Category="Навигация по датам" KeyCombination="Home" Description="Начало 2023 года (03.01.2023)"/>
-            <models:CommandInfo Category="Навигация по датам" KeyCombination="End" Description="Сегодня"/>
-            <models:CommandInfo Category="Модификаторы при изменении дат" KeyCombination="Без модификатора" Description="Изменить обе даты"/>
-            <models:CommandInfo Category="Модификаторы при изменении дат" KeyCombination="Shift" Description="Изменить только начальную дату"/>
-            <models:CommandInfo Category="Модификаторы при изменении дат" KeyCombination="Ctrl" Description="Изменить только конечную дату"/>
-            <models:CommandInfo Category="Управление таблицей" KeyCombination="Ctrl + D" Description="Информация о ячейке"/>
-            <models:CommandInfo Category="Управление таблицей" KeyCombination="Ctrl + Delete" Description="Удаление выбранной детали"/>
+            <models:CommandInfo Category="Общие команды" KeyCombination="Ctrl + E" Description="Экпортировать текущую выборку в Excel"/>
+            
+            <models:CommandInfo Category="При выборе строки" KeyCombination="Ctrl + W" Description="Информация об этом изготовлении в Winnum"/>
+            <models:CommandInfo Category="При выборе строки" KeyCombination="Ctrl + Delete" Description="Удаление выбранной детали"/>
+
+            <models:CommandInfo Category="При выборе чего попало" KeyCombination="Ctrl + I" Description="Информация о выделении"/>
         </x:Array>
 
-        <!-- Define the CollectionViewSource with grouped data -->
         <CollectionViewSource x:Key="GroupedCommandInfoSource" 
                               Source="{Binding Source={StaticResource CommandInfoCollection}}">
             <CollectionViewSource.GroupDescriptions>
@@ -84,7 +73,7 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Комбинация клавиш" Width="140" CellTemplate="{StaticResource CommandInfoTemplate}" DisplayMemberBinding="{Binding KeyCombination}"/>
-                    <GridViewColumn Header="Описание" Width="200" CellTemplate="{StaticResource CommandInfoTemplate}" DisplayMemberBinding="{Binding Description}"/>
+                    <GridViewColumn Header="Описание" Width="320" CellTemplate="{StaticResource CommandInfoTemplate}" DisplayMemberBinding="{Binding Description}"/>
                 </GridView>
             </ListView.View>
         </ListView>

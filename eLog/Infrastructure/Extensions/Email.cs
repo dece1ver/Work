@@ -184,7 +184,15 @@ namespace eLog.Infrastructure.Extensions
                 }
 
                 emailBody.Append(_bottom);
-                SendEmail("Уведомление о длительной наладке", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.LongSetupsMailRecievers);
+                try
+                {
+                    SendEmail("Уведомление о длительной наладке", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.LongSetupsMailRecievers);
+                }
+                catch
+                {
+                    SendEmail("Уведомление о длительной наладке", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, false, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.LongSetupsMailRecievers);
+                }
+
 
                 return true;
             }
@@ -227,7 +235,14 @@ namespace eLog.Infrastructure.Extensions
 
 
                 emailBody.Append(_bottom);
-                SendEmail("Уведомление об инструменте", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.ToolSearchMailRecievers);
+                try
+                {
+                    SendEmail("Уведомление об инструменте", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.ToolSearchMailRecievers);
+                }
+                catch
+                {
+                    SendEmail("Уведомление об инструменте", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, false, AppSettings.Instance.SmtpUsername, smtpPwd, AppSettings.ToolSearchMailRecievers);
+                }
 
                 return true;
             }
@@ -270,7 +285,14 @@ namespace eLog.Infrastructure.Extensions
 
 
             emailBody.Append(_bottom);
-            SendEmail("Сообщение от оператора", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, recievers);
+            try
+            {
+                SendEmail("Сообщение от оператора", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, true, AppSettings.Instance.SmtpUsername, smtpPwd, recievers);
+            }
+            catch
+            {
+                SendEmail("Сообщение от оператора", emailBody.ToString(), AppSettings.Instance.SmtpAddress, AppSettings.Instance.SmtpPort, false, AppSettings.Instance.SmtpUsername, smtpPwd, recievers);
+            }
         }
     }
 }

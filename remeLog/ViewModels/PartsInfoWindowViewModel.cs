@@ -8,17 +8,17 @@ using Microsoft.IdentityModel.Tokens;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
+using remeLog.Infrastructure.Winnum;
+using remeLog.Infrastructure.Winnum.Data;
 using remeLog.Models;
 using remeLog.Views;
-using Syncfusion.Data.Extensions;
 using System;
-using System.CodeDom;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.DirectoryServices;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using static remeLog.Infrastructure.Winnum.Types;
 using Database = remeLog.Infrastructure.Database;
 using Part = remeLog.Models.Part;
 
@@ -43,47 +44,49 @@ namespace remeLog.ViewModels
         public PartsInfoWindowViewModel(CombinedParts parts)
         {
             lockUpdate = true;
-            ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
-            SearchInWindchillCommand = new LambdaCommand(OnSearchInWindchillCommandExecuted, CanSearchInWindchillCommandExecute);
-            IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
-            DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
-            SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
-            SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
-            SetMonthDateCommand = new LambdaCommand(OnSetMonthDateCommandExecuted, CanSetMonthDateCommandExecute);
-            SetYearDateCommand = new LambdaCommand(OnSetYearDateCommandExecuted, CanSetYearDateCommandExecute);
-            SetAllDateCommand = new LambdaCommand(OnSetAllDateCommandExecuted, CanSetAllDateCommandExecute);
-            IncreaseSetupCommand = new LambdaCommand(OnIncreaseSetupCommandExecuted, CanIncreaseSetupCommandExecute);
-            DecreaseSetupCommand = new LambdaCommand(OnDecreaseSetupCommandExecuted, CanDecreaseSetupCommandExecute);
-            UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecutedAsync, CanUpdatePartsCommandExecute);
-            RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
+            ChangeCalcFixedCommand = new LambdaCommand(OnChangeCalcFixedCommandExecuted, CanChangeCalcFixedCommandExecute);
             ChangeCompactViewCommand = new LambdaCommand(OnChangeCompactViewCommandExecuted, CanChangeCompactViewCommandExecute);
             ChangeRoleCommand = new LambdaCommand(OnChangeRoleCommandExecuted, CanChangeRoleCommandExecute);
             ChangeShowUncheckedCommand = new LambdaCommand(OnChangeShowUncheckedCommandExecuted, CanChangeShowUncheckedCommandExecute);
-            ChangeCalcFixedCommand = new LambdaCommand(OnChangeCalcFixedCommandExecuted, CanChangeCalcFixedCommandExecute);
-            OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
-            ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
-            ShowArchiveTableCommand = new LambdaCommand(OnShowArchiveTableCommandExecuted, CanShowArchiveTableCommandExecute);
+            CheckAssignmentWithFactCommand = new LambdaCommand(OnCheckAssignmentWithFactCommandExecuted, CanCheckAssignmentWithFactCommandExecute);
+            ClearContentCommand = new LambdaCommand(OnClearContentCommandExecuted, CanClearContentCommandExecute);
+            DecreaseDateCommand = new LambdaCommand(OnDecreaseDateCommandExecuted, CanDecreaseDateCommandExecute);
+            DecreaseSetupCommand = new LambdaCommand(OnDecreaseSetupCommandExecuted, CanDecreaseSetupCommandExecute);
+            DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
+            DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
+            ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
+            ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
+            ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
+            ExportReportForPeriodToExcelCommand = new LambdaCommand(OnExportReportForPeriodToExcelCommandExecuted, CanExportReportForPeriodToExcelCommandExecute);
+            ExportNewReportForPeriodToExcelCommand = new LambdaCommand(OnExportNewReportForPeriodToExcelCommandExecuted, CanExportNewReportForPeriodToExcelCommandExecute);
             ExportShiftsInfoReportCommand = new LambdaCommand(OnExportShiftsInfoReportCommandExecuted, CanExportShiftsInfoReportCommandExecute);
-            ExportVerevkinReportCommand = new LambdaCommand(OnExportVerevkinReportCommandExecuted, CanExportVerevkinReportCommandExecute);
             ExportToExcelCommand = new LambdaCommand(OnExportToExcelCommandExecuted, CanExportToExcelCommandExecute);
+            ExportToolSearchCasesToExcelCommand = new LambdaCommand(OnExportToolSearchCasesToExcelCommandExecuted, CanExportToolSearchCasesToExcelCommandExecute);
+            ExportVerevkinReportCommand = new LambdaCommand(OnExportVerevkinReportCommandExecuted, CanExportVerevkinReportCommandExecute);
+            HideAllMachinesCommand = new LambdaCommand(OnHideAllMachinesCommandExecuted, CanHideAllMachinesCommandExecute);
+            IncreaseDateCommand = new LambdaCommand(OnIncreaseDateCommandExecuted, CanIncreaseDateCommandExecute);
+            IncreaseSetupCommand = new LambdaCommand(OnIncreaseSetupCommandExecuted, CanIncreaseSetupCommandExecute);
+            InvertMachinesCommand = new LambdaCommand(OnInvertMachinesCommandExecuted, CanInvertMachinesCommandExecute);
+            NormsAndWorkloadAnalysisCommand = new LambdaCommand(OnNormsAndWorkloadAnalysisCommandExecuted, CanNormsAndWorkloadAnalysisCommandExecute);
+            OpenDailyReportWindowCommand = new LambdaCommand(OnOpenDailyReportWindowCommandExecuted, CanOpenDailyReportWindowCommandExecute);
             OperatorReportToExcelCommand = new LambdaCommand(OnOperatorReportToExcelCommandExecuted, CanOperatorReportToExcelCommandExecute);
             OperatorsShiftsReportToExcelCommand = new LambdaCommand(OnOperatorsShiftsReportToExcelCommandExecuted, CanOperatorsShiftsReportToExcelCommandExecute);
-            ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
-            ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
-            ExportReportForPeriodToExcelCommand = new LambdaCommand(OnExportReportForPeriodToExcelCommandExecuted, CanExportReportForPeriodToExcelCommandExecute);
-            ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
-            ExportToolSearchCasesToExcelCommand = new LambdaCommand(OnExportToolSearchCasesToExcelCommandExecuted, CanExportToolSearchCasesToExcelCommandExecute);
-            CheckAssignmentWithFactCommand = new LambdaCommand(OnCheckAssignmentWithFactCommandExecuted, CanCheckAssignmentWithFactCommandExecute);
-            DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
-            ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
-            HideAllMachinesCommand = new LambdaCommand(OnHideAllMachinesCommandExecuted, CanHideAllMachinesCommandExecute);
-            InvertMachinesCommand = new LambdaCommand(OnInvertMachinesCommandExecuted, CanInvertMachinesCommandExecute);
+            RefreshPartsCommand = new LambdaCommand(OnRefreshPartsCommandExecuted, CanRefreshPartsCommandExecute);
+            SearchInWindchillCommand = new LambdaCommand(OnSearchInWindchillCommandExecuted, CanSearchInWindchillCommandExecute);
+            SearchInWinnumCommand = new LambdaCommand(OnSearchInWinnumCommandExecuted, CanSearchInWinnumCommandExecute);
+            SetAllDateCommand = new LambdaCommand(OnSetAllDateCommandExecuted, CanSetAllDateCommandExecute);
+            SetHorMillMachinesCommand = new LambdaCommand(OnSetHorMillMachinesCommandExecuted, CanSetHorMillMachinesCommandExecute);
             SetLatheMachinesCommand = new LambdaCommand(OnSetLatheMachinesCommandExecuted, CanSetLatheMachinesCommandExecute);
             SetMillMachinesCommand = new LambdaCommand(OnSetMillMachinesCommandExecuted, CanSetMillMachinesCommandExecute);
-            SetHorMillMachinesCommand = new LambdaCommand(OnSetHorMillMachinesCommandExecuted, CanSetHorMillMachinesCommandExecute);
+            SetMonthDateCommand = new LambdaCommand(OnSetMonthDateCommandExecuted, CanSetMonthDateCommandExecute);
+            SetWeekDateCommand = new LambdaCommand(OnSetWeekDateCommandExecuted, CanSetWeekDateCommandExecute);
             SetVerMillMachinesCommand = new LambdaCommand(OnSetVerMillMachinesCommandExecuted, CanSetVerMillMachinesCommandExecute);
-            DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
-            NormsAndWorkloadAnalysisCommand = new LambdaCommand(OnNormsAndWorkloadAnalysisCommandExecuted, CanNormsAndWorkloadAnalysisCommandExecute);
+            SetYearDateCommand = new LambdaCommand(OnSetYearDateCommandExecuted, CanSetYearDateCommandExecute);
+            SetYesterdayDateCommand = new LambdaCommand(OnSetYesterdayDateCommandExecuted, CanSetYesterdayDateCommandExecute);
+            ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
+            ShowArchiveTableCommand = new LambdaCommand(OnShowArchiveTableCommandExecuted, CanShowArchiveTableCommandExecute);
+            ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
+            UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecutedAsync, CanUpdatePartsCommandExecute);
 
             CalcFixed = Part.CalcFixed;
             PartsInfo = parts;
@@ -781,6 +784,172 @@ namespace remeLog.ViewModels
         private bool CanSearchInWindchillCommandExecute(object p) => !string.IsNullOrWhiteSpace(PartNameFilter) && p is PartsInfoWindow;
         #endregion
 
+        #region SearchInWinnum
+        public ICommand SearchInWinnumCommand { get; }
+        private async void OnSearchInWinnumCommandExecuted(object p)
+        {
+            if (p is Part part && part == SelectedPart)
+            {
+                IProgress<string> progress = new Progress<string>(m => Status = m);
+                try
+                {
+                    if (SelectedPart == null || string.IsNullOrEmpty(AppSettings.Instance.ConnectionString)) return;
+                    progress.Report("Получение данных о станках");
+                    var machines = await Database.GetMachinesAsync(progress);
+                    var machine = machines.FirstOrDefault(m => m.Name == SelectedPart.Machine);
+                    if (machine == null)
+                    {
+                        progress.Report("Не удалось сопоставить станок указанный при изготовлении со станком в Winnum");
+                        await Task.Delay(3000);
+                        return;
+                    }
+                    progress.Report("Чтение конфигурации Winnum");
+                    var winnumConfig = await libeLog.Infrastructure.Database.GetWinnumConfigAsync(AppSettings.Instance.ConnectionString);
+                    var winnumClient = new ApiClient(winnumConfig.BaseUri, winnumConfig.User, winnumConfig.Pass);
+                    var operation = new Operation(winnumClient, machine);
+                    var signal = new Signal(winnumClient, machine);
+                    progress.Report("Чтение данных из Winnum");
+
+                    var startTime = SelectedPart.StartMachiningTime;
+
+                    var platformDateTimeTask = operation.GetPlatformDateTimeAsync(progress);
+                    var cloudDateTimeTask = operation.GetCloudDateTimeAsync(progress);
+                    var priorityTagDurationTask = operation.GetPriorityTagDurationAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime, progress);
+                    var tagIntervalCalculationTask = operation.GetTagIntervalCalculationAsync(AppId.CNC_MONITORING, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime, progress, base_shift: false);
+                    var simpleTagIntervalCalculationTask = operation.GetSimpleTagIntervalCalculationAsync(AppId.CNC_MONITORING, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime, progress);
+                    var operationsSummaryTask = operation.GetOperationSummaryAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime, progress);
+                    var completedQtyTask = operation.GetCompletedQtyAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime, progress);
+                    var startCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Ordering.Asc, progress, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
+                    var endCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Ordering.Asc, progress, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
+                    var programNamesTask = signal.GetUniqSignalsAsync(machine.WnNcProgramNameSignal, Ordering.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5), progress);
+                    var machineInfoTask = operation.GetMachineInfo(AppId.CNC_MONITORING, progress);
+
+                    await Task.WhenAll(
+                        platformDateTimeTask, 
+                        cloudDateTimeTask, 
+                        priorityTagDurationTask, 
+                        tagIntervalCalculationTask, 
+                        simpleTagIntervalCalculationTask, 
+                        operationsSummaryTask,
+                        completedQtyTask, 
+                        startCountTask, 
+                        endCountTask, 
+                        machineInfoTask);
+
+                    var platformDateTime = await platformDateTimeTask;
+                    var cloudDateTime = await cloudDateTimeTask;
+                    var priorityTagDuration = await priorityTagDurationTask;
+                    var tagIntervalCalculation = await tagIntervalCalculationTask;
+                    var simpleTagIntervalCalculation = await simpleTagIntervalCalculationTask;
+                    var operationsSummary = await operationsSummaryTask;
+                    var completedQty = await completedQtyTask;
+                    var startCount = await startCountTask;
+                    var endCount = await endCountTask;
+                    var programNamesRaw = await programNamesTask;
+                    var machineInfoRaw = await machineInfoTask;
+
+                    var tagIntervalCalculations = Parser.ParseTimeIntervals(Parser.ParseXmlItems(tagIntervalCalculation), true);
+                    var orderedTagIntervalCalculations = tagIntervalCalculations.OrderBy(x => x.Start);
+                    var priorityTagDurations = Parser.ParsePriorityTagDurations(priorityTagDuration, startTime, SelectedPart.EndMachiningTime);
+                    var programNames = Parser.ParseXmlItems(programNamesRaw).Select(x => x["value"]).OrderBy(x => x).ToList();
+                    var machineInfo = Parser.ParseXmlItems(machineInfoRaw).First();
+                    var serialNumber = machineInfo["SerialNumber"];
+
+                    var h1 = double.Parse(Parser.ParseXmlItems(tagIntervalCalculation).First()["hours"]);
+                    var h2 = double.Parse(Parser.ParseXmlItems(simpleTagIntervalCalculation).First()["hours"]);
+                    var h3 = TimeSpan.FromHours(priorityTagDurations.Where(p => p.Tag == "Программа выполняется").Sum(x => x.Duration)).TotalHours;
+                    double? completed = null;
+                    if (Parser.ParseXmlItems(startCount) is { Count: > 0} sc && Parser.ParseXmlItems(endCount) is { Count: > 0} fc)
+                    {
+                        completed = double.Parse(fc.Last()["value"]) - int.Parse(sc.First()["value"]);
+                    }
+                    if (completed.HasValue && completed.Value == 0) completed = SelectedPart.FinishedCount;
+
+                    var m1 = h1 * 60 / SelectedPart.FinishedCount;
+                    var m2 = h2 * 60 / SelectedPart.FinishedCount;
+                    var m3 = h3 * 60 / SelectedPart.FinishedCount;
+
+                    var intervals = orderedTagIntervalCalculations.Select(interval => new TimeInterval(interval.Start, interval.End)).ToList();
+                    var sb = new StringBuilder();
+
+                    var end = SelectedPart.EndMachiningTime.AddMinutes(5);
+                    var start = startTime.AddMinutes(-5);
+                    var signalNames = Enumerable.Range(0, 2000).Select(i => $"A{i}").ToList();
+                    var signals = new ConcurrentDictionary<string, ConcurrentBag<string>>();
+
+                    #region Шляпа
+                    // шляпа чтобы посмотреть все сигналы
+                    //await Parallel.ForEachAsync(signalNames, new ParallelOptions { MaxDegreeOfParallelism = 100 },
+                    //    async (signalName, _) =>
+                    //    {
+                    //        try
+                    //        {
+                    //            var raw = await signal.GetUniqSignalsAsync(signalName, Ordering.Asc, start, end, progress);
+                    //            var parsedItems = Parser.ParseXmlItems(raw);
+
+                    //            var signalValues = signals.GetOrAdd(signalName, _ => new ConcurrentBag<string>());
+
+                    //            foreach (var item in parsedItems)
+                    //            {
+                    //                if (item.ContainsKey("value"))
+                    //                {
+                    //                    signalValues.Add(item["value"]);
+                    //                }
+                    //            }
+                    //        }
+                    //        catch (InvalidOperationException ex)
+                    //        {
+                    //        }
+                    //        catch (Exception ex)
+                    //        {
+                    //            MessageBox.Show(ex.Message);
+                    //        }
+                    //    });
+
+                    //var signalsFinal = signals.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
+                    #endregion 
+
+                    if (Parser.TryParseXmlItems(completedQty, out var cqty))
+                    {
+                        foreach (var item in cqty)
+                        {
+                            sb.Append("УП: ");
+                            sb.Append(item["program_name"]);
+                            sb.Append(" | Завершена раз: ");
+                            sb.Append(item["count_completed"]);
+                            sb.Append(" | Прервана раз: ");
+                            sb.Append(item["count_incompleted"]);
+                            sb.Append(" | Счётчик: ");
+                            sb.AppendLine(item["count_parts"]);
+                        }
+                    }
+                    
+                    sb.AppendLine($"Файлы УП: {string.Join(", ", programNames)}");
+                    var completedInfo = sb.ToString();
+                    var win = new WinnumInfoWindow($"" +
+                        $"Локальное время:      {DateTime.Now:g} │ М/В Вар.1:   {(double.IsFinite(m1) ? $"{TimeSpan.FromMinutes(m1):hh\\:mm\\:ss}" : "00:00:00")} │\n" +
+                        $"Время на платформе:   {platformDateTime:g} │ М/В Вар.2:   {(double.IsFinite(m2) ? $"{TimeSpan.FromMinutes(m2):hh\\:mm\\:ss}" : "00:00:00")} │\n" +
+                        $"Время на облаке:      {cloudDateTime:g} │ М/В Вар.3:   {(double.IsFinite(m3) ? $"{TimeSpan.FromMinutes(m3):hh\\:mm\\:ss}" : "00:00:00")} │\n" +
+                        $"───────────────────────────────────────┴───────────────────────┘\n" +
+                        $"Выполнено по счётчику Winnum: {(completed.HasValue ? completed.Value : $"{SelectedPart.FinishedCount} (не удалось получить из Winnum, отображается количество из ЭЖ)")}\n\n" +
+                        $"Информация по операциям за период " +
+                        $"{new DateTime(startTime.Year, startTime.Month, startTime.Day):d} - " +
+                        $"{new DateTime(SelectedPart.EndMachiningTime.Year, SelectedPart.EndMachiningTime.Month, SelectedPart.EndMachiningTime.Day):d}\n" +
+                        $"{completedInfo}" +
+                        $"", Path.Combine(winnumConfig.NcProgramFolder, serialNumber), priorityTagDurations, intervals);
+                    win.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    Util.WriteLog(ex);
+                    progress.Report(ex.Message);
+                    await Task.Delay(3000);
+                }
+            }
+        }
+        private bool CanSearchInWinnumCommandExecute(object p) => SelectedPart is { };
+        #endregion
+
         #region ShowInfo
         public ICommand ShowInfoCommand { get; }
         private void OnShowInfoCommandExecuted(object p)
@@ -813,11 +982,12 @@ namespace remeLog.ViewModels
                     }
                     if (dlg.DataContext is ExportOperatorDailogWindowViewModel dx)
                     {
+                        var serialParts = dx.OnlySerialParts ? (await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!)).PartNamesHashSet(EnumerableExtensions.PartNameNormalizeOption.NormalizeAndRemoveParentheses) : null;
                         await Task.Run(() =>
                         {
 
                             InProgress = true;
-                            Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, dx.Type.ToLowerInvariant() == "до" ? 1 : dx.Count, dx.Type.ToLowerInvariant() == "до" ? dx.Count : int.MaxValue);
+                            Status = Xl.ExportOperatorReport(Parts, FromDate, ToDate, path, dx.Type.ToLowerInvariant() == "до" ? 1 : dx.Count, dx.Type.ToLowerInvariant() == "до" ? dx.Count : int.MaxValue, serialParts);
                         });
                     }
                 }
@@ -887,6 +1057,39 @@ namespace remeLog.ViewModels
             finally { InProgress = false; }
         }
         private static bool CanExportPartsReportToExcelCommandExecute(object p) => true;
+        #endregion
+
+        #region ExportNewReportForPeriodToExcel
+        public ICommand ExportNewReportForPeriodToExcelCommand { get; }
+        private async void OnExportNewReportForPeriodToExcelCommandExecuted(object p)
+        {
+            try
+            {
+                var path = Util.GetXlsxPath();
+                if (string.IsNullOrEmpty(path))
+                {
+                    Status = "Выбор файла отменён";
+                    return;
+                }
+                var progress = new Progress<string>(message =>
+                {
+                    Status = message;
+                });
+
+                await App.Current.Dispatcher.InvokeAsync(() => InProgress = true);
+                Status = await Task.Run(() =>
+                    Xl.ExportNewReportForPeroidAsync(
+                        Parts, FromDate, ToDate, ShiftFilter, path, true, progress
+                    ).GetAwaiter().GetResult()
+                );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally { InProgress = false; }
+        }
+        private static bool CanExportNewReportForPeriodToExcelCommandExecute(object p) => true;
         #endregion
 
         #region ExportReportForPeriodToExcel
@@ -1406,7 +1609,7 @@ namespace remeLog.ViewModels
                 }
             };
         }
-        private static bool CanDeletePartCommandExecute(object p) => true;
+        private bool CanDeletePartCommandExecute(object p) => SelectedPart is { };
         #endregion
 
         #region UpdateParts

@@ -6,9 +6,9 @@ using libeLog.Models;
 using Microsoft.Data.SqlClient;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Types;
+using remeLog.Infrastructure.Winnum;
 using remeLog.Models;
 using remeLog.Views;
-using Syncfusion.Data.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,6 +40,8 @@ namespace remeLog.ViewModels
         public MainWindowViewModel()
         {
             CloseApplicationCommand = new LambdaCommand(OnCloseApplicationCommandExecuted, CanCloseApplicationCommandExecute);
+            TestCommand = new LambdaCommand(OnTestCommandExecuted, CanTestCommandExecute);
+            UpdateDatabaseCommand = new LambdaCommand(OnUpdateDatabaseCommandExecuted, CanUpdateDatabaseCommandExecute);
             EditSettingsCommand = new LambdaCommand(OnEditSettingsCommandExecuted, CanEditSettingsCommandExecute);
             LoadPartsInfoCommand = new LambdaCommand(OnLoadPartsInfoCommandExecuted, CanLoadPartsInfoCommandExecute);
             ShowLongSetupsCommand = new LambdaCommand(OnShowLongSetupsCommandExecuted, CanShowLongSetupsCommandExecute);
@@ -157,6 +159,27 @@ namespace remeLog.ViewModels
         private bool CanCloseApplicationCommandExecute(object p) => !InProgress;
         #endregion
 
+        #region TestCommand
+        public ICommand TestCommand { get; }
+        private void OnTestCommandExecuted(object p)
+        {
+            var durations = Util.GenerateMockIntervals(new DateTime(2025, 5, 12, 06, 55, 00), new DateTime(2025, 5, 12, 19, 03, 00));
+            var winnumWindow = new WinnumInfoWindow("", "", new List<Infrastructure.Winnum.Data.PriorityTagDuration>(), durations);
+            winnumWindow.ShowDialog();
+        }
+        private bool CanTestCommandExecute(object p) => !InProgress;
+        #endregion
+
+        #region UpdateDatabaseCommand
+        public ICommand UpdateDatabaseCommand { get; }
+        private void OnUpdateDatabaseCommandExecuted(object p)
+        {
+            UpdateDatabaseWindow updateDatabaseWindow = new();
+            updateDatabaseWindow.ShowDialog();
+        }
+        private bool CanUpdateDatabaseCommandExecute(object p) => !InProgress;
+        #endregion
+
         #region EditSettings
         public ICommand EditSettingsCommand { get; }
         private void OnEditSettingsCommandExecuted(object p)
@@ -174,7 +197,7 @@ namespace remeLog.ViewModels
                     AppSettings.Instance.InstantUpdateOnMainWindow = settings.InstantUpdateOnMainWindow;
                     AppSettings.Instance.User = settings.Role;
                     AppSettings.Save();
-                    Util.TrySetupSyncfusionLicense();
+                    //Util.TrySetupSyncfusionLicense();
                     Status = "Параметры сохранены";
                 }
             }

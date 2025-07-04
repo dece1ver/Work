@@ -22,10 +22,10 @@ namespace eLog.Infrastructure.Extensions
         {
             try
             {
-                using SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString);
+                using SqlConnection connection = new(AppSettings.Instance.ConnectionString);
                 connection.Open();
                 var query = "SELECT UpdatePath FROM cnc_elog_config";
-                using SqlCommand command = new SqlCommand(query, connection);
+                using SqlCommand command = new(query, connection);
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -47,11 +47,11 @@ namespace eLog.Infrastructure.Extensions
             await Task.Run(async () =>
             {
                 progress?.Report("Подключение к БД...");
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     string query = $"SELECT * FROM cnc_operators WHERE IsActive = 1 ORDER BY LastName ASC;";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
@@ -78,11 +78,11 @@ namespace eLog.Infrastructure.Extensions
             await Task.Run(async () =>
             {
                 progress?.Report("Подключение к БД...");
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new(connectionString))
                 {
                     await connection.OpenAsync();
                     string query = $"SELECT * FROM cnc_machines WHERE IsActive = 1 ORDER BY Name ASC;";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = await command.ExecuteReaderAsync())
                         {
@@ -99,6 +99,53 @@ namespace eLog.Infrastructure.Extensions
             return machines;
         }
 
+        public async static Task<string[]> GetOrderQualifiersAsync(IProgress<string>? progress = null)
+        {
+            var orderQualifiers = new HashSet<string>();
+            await Task.Run(async () =>
+            {
+                progress?.Report("Подключение к БД...");
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
+                {
+                    await connection.OpenAsync();
+                    string query = $"SELECT OrderPrefixes FROM cnc_elog_config;";
+                    using (SqlCommand command = new(query, connection))
+                    {
+                        using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            progress?.Report("Чтение данных об операторах из БД...");
+                            while (await reader.ReadAsync())
+                            {
+                                if (!(await reader.IsDBNullAsync(0))) orderQualifiers.Add(await reader.GetFieldValueAsync<string>(0));
+                            }
+                        }
+                    }
+                }
+                progress?.Report("Чтение завершено");
+            });
+            return orderQualifiers.OrderBy(o => o).ToArray();
+        }
+
+        public static async Task<string> GetAssignedPartsGsIdAsync(IProgress<string>? progress = null)
+        {
+            progress?.Report("Подключение к БД...");
+            await using SqlConnection connection = new(AppSettings.Instance.ConnectionString);
+            await connection.OpenAsync();
+
+            const string query = "SELECT AssignedPartsGsId FROM cnc_elog_config;";
+            await using SqlCommand command = new(query, connection);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+
+            progress?.Report("Чтение данных из БД...");
+            while (await reader.ReadAsync())
+            {
+                if (!await reader.IsDBNullAsync(0))
+                    return await reader.GetFieldValueAsync<string>(0);
+            }
+
+            return "";
+        }
+
         /// <summary>
         /// Запись информации о детали в БД
         /// </summary>
@@ -110,7 +157,7 @@ namespace eLog.Infrastructure.Extensions
             if (AppSettings.Instance.DebugMode) Util.WriteLog(part, "Добавление информации об изготовлении в БД.");
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
@@ -188,7 +235,7 @@ namespace eLog.Infrastructure.Extensions
                         "@HardwareFailureTime, " +
                         "@OperatorComment" +
                         "); SELECT SCOPE_IDENTITY();";
-                    using (SqlCommand cmd = new SqlCommand(insertQuery, connection))
+                    using (SqlCommand cmd = new(insertQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
                         cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine?.Name ?? "");
@@ -219,7 +266,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact.TotalMinutes);
-                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime.Ticks);
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));
@@ -237,7 +284,7 @@ namespace eLog.Infrastructure.Extensions
                         var execureResult = await cmd.ExecuteNonQueryAsync();
                         if (!passive)
                         {
-                            using (SqlCommand countCmd = new SqlCommand("SELECT COUNT(*) FROM Parts", connection))
+                            using (SqlCommand countCmd = new("SELECT COUNT(*) FROM Parts", connection))
                             {
                                 part.Id = (int)countCmd.ExecuteScalar();
                             }
@@ -245,7 +292,7 @@ namespace eLog.Infrastructure.Extensions
 
                         var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime, IsSuccess) " +
                             "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime, @IsSuccess);";
-                        using (SqlCommand insertToolSearchCmd = new SqlCommand(insertToolSearchQuery, connection))
+                        using (SqlCommand insertToolSearchCmd = new(insertToolSearchQuery, connection))
                         {
                             foreach (var d in part.DownTimes.Where(d => d.Type == DownTime.Types.ToolSearching))
                             {
@@ -312,7 +359,7 @@ namespace eLog.Infrastructure.Extensions
             var partial = Util.SetPartialState(ref part, false);
             try
             {
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     if (AppSettings.Instance.DebugMode) Util.WriteLog("Соединение к БД открыто.");
@@ -348,7 +395,7 @@ namespace eLog.Infrastructure.Extensions
                         "HardwareFailureTime = @HardwareFailureTime, " +
                         "OperatorComment = @OperatorComment " +
                         "WHERE Guid = @Guid";
-                    using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
+                    using (SqlCommand cmd = new(updateQuery, connection))
                     {
                         cmd.Parameters.AddWithValue("@Guid", part.Guid);
                         cmd.Parameters.AddWithValue("@Machine", AppSettings.Instance.Machine?.Name ?? "");
@@ -379,7 +426,7 @@ namespace eLog.Infrastructure.Extensions
                         cmd.Parameters.AddWithValue("@SetupTimePlanForReport", partSetupTimePlanReport);
                         cmd.Parameters.AddWithValue("@SingleProductionTimePlan", part.SingleProductionTimePlan);
                         cmd.Parameters.AddWithValue("@ProductionTimeFact", part.ProductionTimeFact.TotalMinutes);
-                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime);
+                        cmd.Parameters.AddWithValue("@MachiningTime", part.MachineTime.Ticks);
                         cmd.Parameters.AddWithValue("@SetupDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Setup, Type: not DownTime.Types.PartialSetup }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@MachiningDowntimes", Math.Round(part.DownTimes.Where(x => x is { Relation: DownTime.Relations.Machining }).TotalMinutes(), 0));
                         cmd.Parameters.AddWithValue("@PartialSetupTime", Math.Round(part.DownTimes.Where(x => x is { Type: DownTime.Types.PartialSetup }).TotalMinutes(), 0));
@@ -404,7 +451,7 @@ namespace eLog.Infrastructure.Extensions
                         }
                         
                         var deleteToolSearchQuery = "DELETE FROM cnc_tool_search_cases WHERE PartGuid = @PartGuid";
-                        using (SqlCommand deleteToolSearchCmd = new SqlCommand(deleteToolSearchQuery, connection))
+                        using (SqlCommand deleteToolSearchCmd = new(deleteToolSearchQuery, connection))
                         {
                             deleteToolSearchCmd.Parameters.AddWithValue("@PartGuid", part.Guid);
                             await deleteToolSearchCmd.ExecuteNonQueryAsync();
@@ -412,7 +459,7 @@ namespace eLog.Infrastructure.Extensions
 
                         var insertToolSearchQuery = "INSERT INTO cnc_tool_search_cases (PartGuid, ToolType, Value, StartTime, EndTime, IsSuccess) " +
                             "VALUES (@PartGuid, @ToolType, @Value, @StartTime, @EndTime, @IsSuccess);";
-                        using (SqlCommand insertToolSearchCmd = new SqlCommand(insertToolSearchQuery, connection))
+                        using (SqlCommand insertToolSearchCmd = new(insertToolSearchQuery, connection))
                         {
                             foreach (var d in part.DownTimes.Where(d => d.Type == DownTime.Types.ToolSearching))
                             {
@@ -459,11 +506,11 @@ namespace eLog.Infrastructure.Extensions
             {
                 await Task.Run(() =>
                 {
-                    using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                    using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                     {
                         connection.Open();
                         var query = "INSERT INTO maintenance_log (machine, creation_date, rq_status, comments, plandate) VALUES (@Machine, @Date, @Status, @Comment, @PlanDate);";
-                        using (SqlCommand cmd = new SqlCommand(query, connection))
+                        using (SqlCommand cmd = new(query, connection))
                         {
                             cmd.Parameters.AddWithValue("Machine", AppSettings.Instance.Machine?.Name ?? "");
                             cmd.Parameters.AddWithValue("Date", DateTime.Now);
@@ -519,7 +566,7 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 var who = shiftInfo.Giver ? "Giver" : "Reciever";
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     var query = $@"
@@ -544,7 +591,7 @@ namespace eLog.Infrastructure.Extensions
                             {who}WorkplaceCleaned, {who}Failures, {who}ExtraneousNoises, {who}LiquidLeaks, {who}ToolBreakage, {who}CoolantConcentration)
                     VALUES (source.ShiftDate, source.ShiftType, source.Machine, source.Master, source.UnspecifiedDowntimes, source.DowntimesComment, source.CommonComment, source.IsChecked, 
                             source.WorkplaceCleaned, source.Failures, source.ExtraneousNoises, source.LiquidLeaks, source.ToolBreakage, source.CoolantConcentration);";
-                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    using (SqlCommand cmd = new(query, connection))
                     {
                         cmd.Parameters.AddWithValue("@ShiftDate", shiftInfo.Date);
                         cmd.Parameters.AddWithValue("@ShiftType", shiftInfo.Type);
@@ -595,11 +642,11 @@ namespace eLog.Infrastructure.Extensions
             try
             {
                 
-                using (SqlConnection connection = new SqlConnection(AppSettings.Instance.ConnectionString))
+                using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
                 {
                     await connection.OpenAsync();
                     string query = "SELECT SearchToolTypes FROM cnc_elog_config WHERE SearchToolTypes IS NOT NULL;";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         using (SqlDataReader reader = command.ExecuteReader())
                         {

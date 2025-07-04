@@ -24,8 +24,8 @@
                   CanUserAddRows="True" CanUserDeleteRows="True" PreviewKeyDown="EmployeesDataGrid_PreviewKeyDown">
             <DataGrid.Resources>
                 <Style TargetType="{x:Type DataGridRow}">
-                    <Setter Property="Background" Value="Transparent" />
-                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
                     <Style.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="White"/>
@@ -49,11 +49,23 @@
                 </Style>
             </DataGrid.Resources>
             <DataGrid.Columns>
+                
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="📋" BorderThickness="0" Background="Transparent" ToolTip="Копировать ФИО в буфер обмена"
+                                    Command="{Binding DataContext.CopyOperatorInfoCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                    CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                
                 <DataGridTextColumn Header="Фамилия" 
                     Binding="{Binding LastName, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
                     Width="*" >
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
+                            <Setter Property="Margin" Value="5 2"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsModified}" Value="True">
                                     <Setter Property="Foreground" Value="Blue"/>
@@ -67,6 +79,7 @@
                                     Width="*" >
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
+                            <Setter Property="Margin" Value="5 2"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsModified}" Value="True">
                                     <Setter Property="Foreground" Value="Blue"/>
@@ -80,6 +93,7 @@
                     Width="*" >
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
+                            <Setter Property="Margin" Value="5 2"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsModified}" Value="True">
                                     <Setter Property="Foreground" Value="Blue"/>
@@ -93,6 +107,8 @@
                                     Width="Auto">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
+                            <Setter Property="Margin" Value="5 2"/>
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsModified}" Value="True">
                                     <Setter Property="Foreground" Value="Blue"/>
@@ -104,7 +120,14 @@
 
                 <DataGridCheckBoxColumn Header="Активен" 
                                         Binding="{Binding IsActive}" 
-                                        Width="Auto" />
+                                        Width="Auto" >
+                    <DataGridCheckBoxColumn.ElementStyle>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="Margin" Value="5 2"/>
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridCheckBoxColumn.ElementStyle>
+                </DataGridCheckBoxColumn>
             </DataGrid.Columns>
         </DataGrid>
 

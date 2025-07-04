@@ -60,6 +60,8 @@
                 <MenuItem Header="Инструменты">
                     <MenuItem Header="Мониторинг"
                               Command="{Binding ShowMonitorCommand}" Icon="{StaticResource AboutIcon}"/>
+                    <MenuItem Header="Проверка БД"
+                              Command="{Binding UpdateDatabaseCommand}" Icon="{StaticResource SyncIcon}"/>
                 </MenuItem>
                 <MenuItem Header="Справка">
                     <MenuItem Header="О программе"
@@ -85,6 +87,14 @@
                     </Button>
                     <Button DockPanel.Dock="Right" Content="Сформировать" FontSize="16" 
                             Margin="4 0" Width="143" Command="{Binding LoadPartsInfoCommand}" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="2"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button DockPanel.Dock="Right" Content="Тест" FontSize="16" Visibility="Collapsed"
+                            Margin="0" Width="60" Command="{Binding TestCommand}" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
                         <Button.Resources>
                             <Style TargetType="Border">
                                 <Setter Property="CornerRadius" Value="2"/>

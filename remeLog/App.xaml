@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:remeLog"
              xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
-             xmlns:stl="clr-namespace:remeLog.Infrastructure.Styles"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -16,6 +15,7 @@
             <cnv:EnumDescriptionConverter x:Key="EnumDescriptionConverter"/>
             <cnv:ExpressionToDoubleConverter x:Key="ExpressionToDoubleConverter"/>
             <cnv:ExpressionToIntConverter x:Key="ExpressionToIntConverter"/>
+            <cnv:HoursToTimeStringConverter x:Key="HoursToTimeStringConverter"/>
             <cnv:IntNullableConverter x:Key="IntNullableConverter"/>
             <cnv:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <cnv:InvertedVisibilityConverter x:Key="InvertedVisibilityConverter"/>
@@ -30,7 +30,6 @@
             <cnv:TimeConverter x:Key="TimeConverter"/>
             <cnv:UserRoleVisibilityConverter x:Key="UserRoleVisibilityConverter"/>
             <cnv:VisibilityConverter x:Key="VisibilityConverter"/>
-            <stl:CustomRowStyleSelector x:Key="CustomRowStyleSelector"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

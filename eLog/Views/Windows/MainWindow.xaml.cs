@@ -1,9 +1,15 @@
 ﻿using eLog.Infrastructure;
 using eLog.Models;
+using eLog.ViewModels;
 using libeLog.Models;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace eLog.Views.Windows
 {
@@ -12,10 +18,13 @@ namespace eLog.Views.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
+        private DispatcherTimer _serialTimer;
+
         public MainWindow()
         {
             InitializeComponent();
             Closing += OnWindowClosing!;
+            _serialTimer = new DispatcherTimer();
         }
 
         public void OnWindowClosing(object sender, CancelEventArgs e)
@@ -52,6 +61,57 @@ namespace eLog.Views.Windows
                         break;
                     }
             }
+        }
+
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            _serialTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(4)
+            };
+            _serialTimer.Tick += SerialTimer_Tick!;
+            _serialTimer.Start();
+        }
+
+        private void SerialTimer_Tick(object sender, EventArgs e)
+        {
+            var listView = FindVisualChild<ListView>(this);
+            if (listView != null)
+            {
+                for (int i = 0; i < listView.Items.Count; i++)
+                {
+                    var container = listView.ItemContainerGenerator.ContainerFromIndex(i) as ListViewItem;
+                    if (container != null)
+                    {
+                        var part = container.DataContext as Part;
+                        if (part?.IsSerial == true)
+                        {
+                            var image = FindVisualChild<Image>(container, "SerialBadge");
+                            if (image != null)
+                            {
+                                var storyboard = (Storyboard)Resources["SerialShowStoryboard"];
+                                Storyboard sb = storyboard.Clone();
+                                sb.Begin(image);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private T FindVisualChild<T>(DependencyObject parent, string name = null) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T t && (name == null || (child as FrameworkElement)?.Name == name))
+                    return t;
+
+                var result = FindVisualChild<T>(child, name);
+                if (result != null) return result;
+            }
+            return null;
         }
     }
 }

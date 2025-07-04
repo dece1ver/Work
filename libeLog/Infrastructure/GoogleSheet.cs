@@ -6,6 +6,7 @@ using libeLog.Extensions;
 using libeLog.Models;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -150,6 +151,38 @@ namespace libeLog.Infrastructure
             await updateRequest.ExecuteAsync();
             progress.Report((1, "Записано"));
             await Task.Delay(1000);
+        }
+
+        public async Task<HashSet<string>> GetAssignedPartsData(string machine, IProgress<string> progress, CancellationToken cancellationToken)
+        {
+            Credential = GetCredentialsFromFile(_credentialFile);
+            SheetsService = new SheetsService(new BaseClientService.Initializer
+            {
+                HttpClientInitializer = Credential,
+            });
+
+            var request = SheetsService.Spreadsheets.Values.Get(_sheetId, "Список общий!A:B");
+
+            progress.Report("Подключение к списку...");
+            var response = await request.ExecuteAsync(cancellationToken);
+
+            progress.Report("Формирование списка деталей...");
+            var values = response.Values;
+            if (values is not { Count: > 0 }) return new();
+
+            var parts = new List<string>();
+
+            foreach (var row in values)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (row?.Count > 1 && row[1] is string m && m == machine && row[0] is string p)
+                {
+                    parts.Add(p.ToUpperInvariant());
+                }
+            }
+
+            progress.Report("Сортировка списка.");
+            return parts.OrderBy(d => d).ToHashSet();
         }
 
         public async Task<IReadOnlyList<ProductionTaskData>> GetProductionTasksData(string machine, IEnumerable<string> machines,  IProgress<string> progress, CancellationToken cancellationToken)

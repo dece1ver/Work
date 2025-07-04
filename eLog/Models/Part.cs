@@ -49,6 +49,7 @@ namespace eLog.Models
         private string _OperatorComments;
         private PartTaskInfo _TaskInfo;
         private bool _IsTaskStatusWritten;
+        private bool _IsSerial;
 
         public Guid Guid { get; init; }
 
@@ -352,6 +353,19 @@ namespace eLog.Models
             set => Set(ref _MasterReactions, value);
         }
 
+        /// <summary>
+        /// Является ли деталь серийной
+        /// </summary>
+        public bool IsSerial
+        {
+            get => _IsSerial;
+            set
+            {
+                Set(ref _IsSerial, value);
+                OnPropertyChanged(nameof(Title));
+            }
+        }
+
 
 
         /// <summary> Информация об окончании наладки </summary>
@@ -513,12 +527,15 @@ namespace eLog.Models
         {
             get
             {
-                if (IsFinished == State.InProgress) return FullName.Length >= 75 ? FullName[..72] + "..." : FullName;
-                var symbol = IsSynced ? "✓" : "🗘";
-                var partName = FullName.Length >= 75 ? FullName[..72] + "..." : FullName;
-                return $"{symbol} {partName}".Trim();
+                if (IsFinished == State.InProgress) return FullName.TrimLen(65);
+                var suffix = IsSerial ? " [Cерийная продукция]" : "";
+                var partName = FullName.TrimLen(75);
+                return $"{partName}".Trim();
             }
         }
+
+        [JsonIgnore]
+        public bool InProgress => IsFinished == State.InProgress;
 
         public string OperatorComments
         {
@@ -566,7 +583,7 @@ namespace eLog.Models
                 if (EndMachiningTime >= StartMachiningTime && SetupIsFinished && FinishedCount > 0 &&
                     MachineTime > TimeSpan.Zero && !DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.Finished;
                 if (EndMachiningTime == DateTime.MinValue && FinishedCount == 0) return State.InProgress;
-                if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount == 0) return State.PartialSetup;
+                if (EndMachiningTime == StartMachiningTime && SetupIsFinished && FinishedCount is >= 0 and < 1) return State.PartialSetup;
                 if (DownTimes.Any(dt => dt.Type == DownTime.Types.PartialSetup)) return State.PartialSetup;
                 return State.InProgress;
             }

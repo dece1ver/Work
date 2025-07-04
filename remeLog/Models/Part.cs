@@ -53,7 +53,9 @@ namespace remeLog.Models
             bool excludeFromReports = false,
             string longSetupReasonComment = "",
             string longSetupFixComment = "",
-            string longSetupEngeneerComment = ""
+            string longSetupEngeneerComment = "",
+            double excludedOperationsTime = 0,
+            string increaseReason = ""
             )
         {
             _Guid = guid;
@@ -98,6 +100,8 @@ namespace remeLog.Models
             _LongSetupReasonComment = longSetupReasonComment;
             _LongSetupFixComment = longSetupFixComment;
             _LongSetupEngeneerComment = longSetupEngeneerComment;
+            _ExcludedOperationsTime = excludedOperationsTime;
+            _IncreaseReason = increaseReason;
         }
 
         public Part(Part part)
@@ -143,6 +147,8 @@ namespace remeLog.Models
             _LongSetupReasonComment = part.LongSetupReasonComment;
             _LongSetupFixComment = part.LongSetupFixComment;
             _LongSetupEngeneerComment = part.LongSetupEngeneerComment;
+            _ExcludedOperationsTime = part.ExcludedOperationsTime;
+            _IncreaseReason = part.IncreaseReason;
         }
 
         private Guid _Guid;
@@ -999,6 +1005,37 @@ namespace remeLog.Models
         }
 
 
+        private double _ExcludedOperationsTime;
+        /// <summary> Суммарное время исключённых операций при изменении техпроцесса </summary>
+        public double ExcludedOperationsTime
+        {
+            get => _ExcludedOperationsTime;
+            set
+            {
+                if (Set(ref _ExcludedOperationsTime, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
+        private string _IncreaseReason;
+        /// <summary> Причина увеличения норматива </summary>
+        public string IncreaseReason
+        {
+            get => _IncreaseReason;
+            set
+            {
+                if (Set(ref _IncreaseReason, value))
+                {
+                    NeedUpdate = true;
+                    OnPropertyChanged(nameof(NeedUpdate));
+                }
+            }
+        }
+
+
         private bool _ExcludeFromReports;
         /// <summary> Исключать ли деталь из расчетов в отчетах </summary>
         public bool ExcludeFromReports
@@ -1013,8 +1050,6 @@ namespace remeLog.Models
                 }
             }
         }
-
-
 
         private bool _NeedUpdate;
         /// <summary> Описание </summary>

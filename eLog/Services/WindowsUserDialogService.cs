@@ -153,6 +153,7 @@ namespace eLog.Services
             //{
             //    dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));
             //}
+
             part = dlg.Part;
 
             if (AppSettings.Instance.DebugMode) { WriteLog($"Подтверждено."); }
@@ -176,7 +177,7 @@ namespace eLog.Services
                 return false;
             }
             dlg.Part.EndMachiningTime = DateTime.Today.AddHours(DateTime.Now.Hour).AddMinutes(DateTime.Now.Minute);
-            if (dlg.Part.FinishedCount == 1) dlg.Part.StartMachiningTime = dlg.Part.EndMachiningTime;
+            if (dlg.Part.FinishedCount is <= 1) dlg.Part.StartMachiningTime = dlg.Part.EndMachiningTime;
             if (dlg.Part.FinishedCount > 0)
             {
                 dlg.Part.DownTimes = new DeepObservableCollection<DownTime>(dlg.Part.DownTimes.Where(dt => dt.Type != DownTime.Types.PartialSetup));

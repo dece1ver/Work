@@ -508,6 +508,66 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string IsSuccess = "isSuccess";
 
+        /// <summary>
+        /// Старое значение
+        /// </summary>
+        public const string OldValue = "oldValue";
+
+        /// <summary>
+        /// Новое значение
+        /// </summary>
+        public const string NewValue = "newValue";
+
+        /// <summary>
+        /// Изменение
+        /// </summary>
+        public const string Change = "change";
+
+        /// <summary>
+        /// Изменение в процентах
+        /// </summary>
+        public const string ChangeRatio = "changeRatio";
+
+        /// <summary>
+        /// Старое годовое значение
+        /// </summary>
+        public const string OldYearValue = "oldYearValue";
+
+        /// <summary>
+        /// Новое годовое значение
+        /// </summary>
+        public const string NewYearValue = "newYearValue";
+
+        /// <summary>
+        /// Изменение годовое
+        /// </summary>
+        public const string YearChange = "yearChange";
+
+        /// <summary>
+        /// Изменение % годовое
+        /// </summary>
+        public const string YearChangeRatio = "yearChangeRatio";
+
+        /// <summary>
+        /// Серийная по запускам
+        /// </summary>
+        public const string SerialPerRuns = "serialPerRuns";
+
+        /// <summary>
+        /// Серийная по списку
+        /// </summary>
+        public const string SerialPerList = "serialPerList";
+
+        /// <summary>
+        /// Время исключенных операций
+        /// </summary>
+        public const string ExcludedOperationsTime = "excludedOperationsTime";
+
+        /// <summary>
+        /// Причина увеличения норматива
+        /// </summary>
+        public const string IncreaseReason = "increaseReason";
+
         private static readonly Dictionary<string, string> _descriptions = new()
         {
             { Guid, "GUID" },
@@ -599,7 +659,19 @@ namespace remeLog.Infrastructure
             { Type, $"Тип" },
             { Description, $"Описание" },
             { YearCount, $"Годовая потребность" },
-            { IsSuccess, $"Успешно ли" }
+            { IsSuccess, $"Успешно ли" },
+            { OldValue, "Старое значение" },
+            { NewValue, "Новое значение" },
+            { Change, "Изменение" },
+            { ChangeRatio, "Изменение %" },
+            { OldYearValue, $"Старое{Environment.NewLine}годовое значение" },
+            { NewYearValue, $"Новое{Environment.NewLine}годовое значение" },
+            { YearChange, "Изменение годовое" },
+            { YearChangeRatio, "Изменение % годовое" },
+            { SerialPerRuns, $"Серийная{Environment.NewLine}по запускам" },
+            { SerialPerList, $"Серийная{Environment.NewLine}по списку" },
+            { ExcludedOperationsTime, $"Время исключённых{Environment.NewLine}операций" },
+            { IncreaseReason, $"Причина увеличения{Environment.NewLine}норматива" }
         };
 
         /// <summary>
