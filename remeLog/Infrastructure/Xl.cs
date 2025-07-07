@@ -465,10 +465,10 @@ namespace remeLog.Infrastructure
         /// <param name="path"></param>
         /// <returns></returns>
         /// TODO: Столбцы с отношениями
-        public static async Task<string> ExportNewReportForPeroidAsync(ICollection<Part> parts, DateTime fromDate, DateTime toDate, Shift shift, string path, bool addSheetPerMachine, IProgress<string> progress)
+        public static async Task<string> ExportNewReportForPeroidAsync(ICollection<Part> parts, DateTime fromDate, DateTime toDate, Shift shift, string path, IProgress<string> progress)
         {
             progress?.Report("Начало экспорта...");
-
+            var totalParts = parts;
             // ==================== ПОДГОТОВКА ДАННЫХ ====================
             var tempParts = new List<Part>();
             foreach (var p in parts)
@@ -731,11 +731,19 @@ namespace remeLog.Infrastructure
             ws.Range(1, 1, 1, cm.Count).Merge();
             ws.Range(1, 1, 1, 1).Style.Font.SetFontSize(14).Font.SetBold(true);
 
-            // ==================== СТРОКА ИТОГОВ ====================
+            // ==================== ИТОГИ ====================
             ws.Cell(row, ci[CM.Machine]).Value = "Итог:";
             ws.Cell(row, ci[CM.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
             ws.Range(row, ci[CM.Machine], row, ci[CM.UnspecifiedOtherShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             ws.Range(row, ci[CM.NoOperatorShifts], row, ci[CM.UnspecifiedOtherShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row + 1, ci[CM.AveragePartsCount])
+                .SetValue("Видов деталей:")
+                .Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+            ws.Cell(row + 1, ci[CM.Orders])
+                .SetValue(totalParts.DistinctBy(p => p.PartName).Select(p => p.PartName).Count());
+            ws.Cell(row + 1, ci[CM.SerialOrders])
+                .SetValue(totalParts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).DistinctBy(p => p.PartName).Select(p => p.PartName).Count());
+            //var b = 
 
             // ---------- ФОРМУЛЫ ДЛЯ ИТОГОВ ----------
             for (int col = ci[CM.WorkedShifts]; col <= ci[CM.UnspecifiedOtherShifts]; col++)
@@ -762,10 +770,26 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(101, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
 
-            ws.Cell(row, ci[CM.SerialPartsTimeRatio]).FormulaA1 = $"SUBTOTAL(101, {ws.Range(firstDataRow, ci[CM.SerialPartsTimeRatio], lastDataRow, ci[CM.SerialPartsTimeRatio]).RangeAddress})";
-            ws.Cell(row, ci[CM.SerialOrdersRatio]).FormulaA1 = $"SUBTOTAL(101, {ws.Range(firstDataRow, ci[CM.SerialOrdersRatio], lastDataRow, ci[CM.SerialOrdersRatio]).RangeAddress})";
-            ws.Cell(row, ci[CM.SerialCountRatio]).FormulaA1 = $"SUBTOTAL(101, {ws.Range(firstDataRow, ci[CM.SerialCountRatio], lastDataRow, ci[CM.SerialCountRatio]).RangeAddress})";
+            ws.Cell(row, ci[CM.SerialPartsTimeRatio]).FormulaA1 = $"{ws.Cell(row, ci[CM.SerialPartsTime]).Address}" +
+                $"/{ws.Cell(row, ci[CM.TotalTime]).Address}";
 
+            ws.Cell(row, ci[CM.SerialOrdersRatio]).FormulaA1 = $"{ws.Cell(row, ci[CM.SerialOrders]).Address}" +
+                 $"/{ws.Cell(row, ci[CM.Orders]).Address}";
+
+            ws.Cell(row, ci[CM.SerialCountRatio]).FormulaA1 = $"{ws.Cell(row, ci[CM.SerialCount]).Address}" +
+                $"/{ws.Cell(row, ci[CM.CountPerMachine]).Address}";
+
+            for (int col = ci[CM.Orders]; col <= ci[CM.SerialOrders]; col++)
+            {
+                string colLetter = ws.Column(col).ColumnLetter();
+                ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(109, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+            }
+
+            for (int col = ci[CM.CountPerMachine]; col <= ci[CM.SerialCount]; col++)
+            {
+                string colLetter = ws.Column(col).ColumnLetter();
+                ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(109, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+            }
 
             // ---------- ФОРМАТИРОВАНИЕ ИТОГОВ ----------
             ws.Range(row, ci[CM.WorkedShifts], row, ci[CM.UnspecifiedOtherShifts]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
@@ -790,6 +814,34 @@ namespace remeLog.Infrastructure
             ws.Columns(ci[CM.NoOperatorShifts], ci[CM.UnspecifiedOtherShifts]).Group();
             ws.Columns(ci[CM.CreateNcProgramTime], ci[CM.HardwareFailureTime]).Group();
 
+
+
+            // ==================== ОБЩИЙ СПИСОК ====================
+            var tcm = new CM
+                    .Builder()
+                    .Add(CM.Part)
+                    .Add(CM.SerialPerList)
+                    .Build();
+
+            var wst = wb.AddWorksheet("Общий список");
+            wst.Style.Font.FontSize = 10;
+            wst.Style.Alignment.WrapText = true;
+            wst.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            wst.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ConfigureWorksheetHeader(wst, tcm, HeaderRotateOption.Horizontal, 30);
+            ci = tcm.GetIndexes();
+            row = 3;
+            foreach (var part in totalParts.DistinctBy(p => p.PartName))
+            {
+                wst.Cell(row, ci[CM.Part]).SetValue(part.PartName);
+                wst.Cell(row, ci[CM.SerialPerList]).SetValue(serialPartNames.Contains(part.PartName.NormalizedPartNameWithoutComments()));
+                row++;
+            }
+            wst.Row(1).Delete();
+            var totalTable = wst.RangeUsed().CreateTable();
+            totalTable.Theme = XLTableTheme.TableStyleLight15;
+            wst.Column(ci[CM.Part]).Width = 70;
+            wst.Column(ci[CM.SerialPerList]).Width = 14;
 
 
             var partsByMachine = filteredParts.GroupBy(p => p.Machine).ToDictionary(g => g.Key, g => g.ToList());
@@ -837,39 +889,10 @@ namespace remeLog.Infrastructure
                         .Add(CM.FixedProductionTimePlan)
                         .Add(CM.EngineerComment)
                         .Build();
-            if (addSheetPerMachine)
+            foreach (var machine in partsByMachine.Keys)
             {
-                foreach (var machine in partsByMachine.Keys)
-                {
-                    progress?.Report($"Формирование листа по станку {machine}...");
-                    ConfigureMachineSheetForPeriod(wb, partsByMachine[machine], machine, mcm, serialPartNames);
-                }
-
-                var tcm = new CM
-                    .Builder()
-                    .Add(CM.Part)
-                    .Add(CM.Order)
-                    .Build();
-
-                var wst = wb.AddWorksheet("Общий список");
-                ConfigureWorksheetHeader(wst, tcm);
-                wst.Style.Font.FontSize = 10;
-                wst.Style.Alignment.WrapText = true;
-                wst.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                wst.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                ci = tcm.GetIndexes();
-                wst.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                wst.Columns().AdjustToContents();
-
-
-                wst.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                wst.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-                wst.RangeUsed().Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-                wst.RangeUsed().SetAutoFilter(true);
-                wst.Columns().AdjustToContents();
-                wst.Row(1).Delete();
-                wst.SheetView.FreezeRows(1);
-
+                progress?.Report($"Формирование листа по станку {machine}...");
+                ConfigureMachineSheetForPeriod(wb, partsByMachine[machine], machine, mcm, serialPartNames);
             }
             progress?.Report("Формирование завершено, сохранение файла...");
             wb.SaveAs(path);

@@ -1079,7 +1079,7 @@ namespace remeLog.ViewModels
                 await App.Current.Dispatcher.InvokeAsync(() => InProgress = true);
                 Status = await Task.Run(() =>
                     Xl.ExportNewReportForPeroidAsync(
-                        Parts, FromDate, ToDate, ShiftFilter, path, true, progress
+                        Parts, FromDate, ToDate, ShiftFilter, path, progress
                     ).GetAwaiter().GetResult()
                 );
             }
