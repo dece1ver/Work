@@ -468,8 +468,8 @@ namespace remeLog.Infrastructure
         {
             progress?.Report("Начало экспорта...");
 
+            // ==================== ПОДГОТОВКА ДАННЫХ ====================
             var tempParts = new List<Part>();
-
             foreach (var p in parts)
             {
                 tempParts.Add(p);
@@ -479,11 +479,13 @@ namespace remeLog.Infrastructure
             var res = machines.ReadMachines();
             Database.GetShiftsByPeriod(machines, fromDate, toDate, shift, out List<ShiftInfo> shifts);
             var totalDays = Util.GetWorkDaysBeetween(fromDate, toDate);
-            double totalWorkedMinutes;
 
+            // ==================== СОЗДАНИЕ EXCEL ДОКУМЕНТА ====================
             var wb = new XLWorkbook();
             var ws = wb.AddWorksheet("Отчет за период");
-            ws.Style.Font.FontSize = 12;
+            ws.Style.Font.FontSize = 11;
+
+            // ==================== НАСТРОЙКА КОЛОНОК ====================
             var cm = new CM.Builder()
                 .Add(CM.Machine)
                 .Add(CM.WorkedShifts)
@@ -500,21 +502,9 @@ namespace remeLog.Infrastructure
                 .Add(CM.ProductionRatioUnder, $"Эффективность изготовления{Environment.NewLine}на не серийке")
                 .Add(CM.SetupRatioOver, $"Эффективность наладки{Environment.NewLine}на серийке")
                 .Add(CM.ProductionRatioOver, $"Эффективность изготовления{Environment.NewLine}на серийке")
-                .Add(CM.SetupUnderOverRatio, $"Соотношение наладок{Environment.NewLine}(не серия / серий)")
-                .Add(CM.ProductionUnderOverRatio, $"Соотношение изготовлений{Environment.NewLine}(не серия / серий)")
+                .Add(CM.ProductionEfficiencyToTotalRatio)
                 .Add(CM.SetupToTotalRatio)
                 .Add(CM.ProductionToTotalRatio)
-                .Add(CM.ProductionEfficiencyToTotalRatio)
-                .Add(CM.AverageSetupTime)
-                .Add(CM.TotalSetupTime)
-                .Add(CM.TotalProductionTime)
-                .Add(CM.TotalDowntimesTime)
-                .Add(CM.TotalTime)
-                .Add(CM.AverageFinishedCount)
-                .Add(CM.AveragePartsCount)
-                .Add(CM.SmallProductionsRatio, $"Доля запусков{Environment.NewLine}не серийной продукции")
-                .Add(CM.SmallSeriesRatio, $"Доля партий{Environment.NewLine}не серийной продукции")
-                .Add(CM.AverageReplacementTime)
                 .Add(CM.SpecifiedDowntimes)
                 .Add(CM.CreateNcProgramTime)
                 .Add(CM.MaintenanceTime)
@@ -525,17 +515,34 @@ namespace remeLog.Infrastructure
                 .Add(CM.FixtureMakingTime)
                 .Add(CM.HardwareFailureTime)
                 .Add(CM.UnspecifiedDowntimes)
-                .Add(CM.CountPerMachine)
+                .Add(CM.AverageReplacementTime, "Среднее время замены детали, мин")
+                .Add(CM.AverageSetupTime, "Среднее время наладки, час")
+                .Add(CM.TotalSetupTime, "Общее время наладок, час")
+                .Add(CM.TotalProductionTime, "Общее время изготовления, час")
+                .Add(CM.TotalDowntimesTime, "Общее время простоев, час")
+                .Add(CM.NonSerialPartsTime)
+                .Add(CM.SerialPartsTime)
+                .Add(CM.TotalTime)
+                .Add(CM.AverageFinishedCount, "Среднее выполненное количество деталей, шт")
+                .Add(CM.AveragePartsCount, "Среднее количество деталей в партии, шт")
+                .Add(CM.Orders)
+                .Add(CM.SerialOrders)
+                .Add(CM.SerialCount)
+                .Add(CM.CountPerMachine, "Количество записей")
                 .Build();
+
             var headerRow = 2;
             var ci = cm.GetIndexes();
-            ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 65, 8);
-
+            ConfigureWorksheetHeader(ws, cm, HeaderRotateOption.Vertical, 105, 8);
             var headerRange = ws.Range(2, 1, 2, cm.Count);
+
+            // ==================== ПОДГОТОВКА ДАННЫХ ДЛЯ ОБРАБОТКИ ====================
             var row = 3;
             var firstDataRow = row;
+
             progress?.Report("Получение списка серийных деталей...");
             var serialParts = await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!);
+
             progress?.Report("Подготовка данных...");
             var serialPartNames = serialParts.Select(p => p.PartName.NormalizedPartNameWithoutComments()).ToImmutableHashSet();
             var filteredParts = parts
@@ -546,76 +553,48 @@ namespace remeLog.Infrastructure
                         .GroupBy(p => p.PartName)
                         .SelectMany(partGroup => partGroup))
                 .OrderBy(p => p.Machine);
+
             progress?.Report("Формирование общего листа...");
             var totalFinished = filteredParts.DistinctBy(p => p.Order).Sum(p => p.TotalCount);
 
+            // ==================== ЗАПОЛНЕНИЕ ДАННЫХ ПО СТАНКАМ ====================
             foreach (var partGroup in filteredParts.GroupBy(p => p.Machine).OrderBy(pg => pg.Key))
             {
+                ws.Row(row).Height = 20;
                 parts = partGroup.OrderBy(p => p.StartSetupTime).ToList();
-                totalWorkedMinutes = parts.FullWorkedTime().TotalMinutes;
+                double totalWorkedMinutes = parts.FullWorkedTime().TotalMinutes;
+
+                // ---------- ОСНОВНАЯ ИНФОРМАЦИЯ ----------
                 ws.Cell(row, ci[CM.Machine]).Value = partGroup.Key;
+
+                // ---------- ИНФОРМАЦИЯ О СМЕНАХ ----------
                 ws.Cell(row, ci[CM.WorkedShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s is not ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
                 ws.Cell(row, ci[CM.NoOperatorShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие оператора" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, ci[CM.HardwareRepairShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Ремонт оборудования" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, ci[CM.NoPowerShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Отсутствие электричества" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, ci[CM.ProcessRelatedLossShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Организационные потери" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is { Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 });
                 ws.Cell(row, ci[CM.UnspecifiedOtherShifts]).Value = shifts.Count(s => s.Machine == partGroup.Key && s.DowntimesComment == "Другое" && !Constants.Dates.Holidays.Contains(s.ShiftDate) && s is ({ Shift: "День", UnspecifiedDowntimes: 660 } or { Shift: "Ночь", UnspecifiedDowntimes: 630 }));
+
+                // ---------- КОЭФФИЦИЕНТЫ ЭФФЕКТИВНОСТИ ----------
                 ws.Cell(row, ci[CM.SetupRatio]).Value = parts.AverageSetupRatio();
                 ws.Cell(row, ci[CM.SetupRatioIncludeDowntimes]).Value = parts.AverageSetupRatioIncludeDowntimes();
                 ws.Cell(row, ci[CM.ProductionRatio]).Value = parts.ProductionRatio();
                 ws.Cell(row, ci[CM.ProductionRatioIncludeDowntimes]).Value = parts.ProductionRatioIncludeDowntimes();
+
+                // ---------- ЭФФЕКТИВНОСТЬ ПО ТИПУ ПРОДУКЦИИ ----------
                 var setupUnderRatio = parts.Where(p => !serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).AverageSetupRatio();
                 ws.Cell(row, ci[CM.SetupRatioUnder]).Value = setupUnderRatio;
+
                 var productionUnderRatio = parts.Where(p => !serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).ProductionRatio();
                 ws.Cell(row, ci[CM.ProductionRatioUnder]).Value = productionUnderRatio;
+
                 var setupOverRatio = parts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).AverageSetupRatio();
                 ws.Cell(row, ci[CM.SetupRatioOver]).Value = setupOverRatio;
+
                 var productionOverRatio = parts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).ProductionRatio();
                 ws.Cell(row, ci[CM.ProductionRatioOver]).Value = productionOverRatio;
-                ws.Cell(row, ci[CM.SetupUnderOverRatio]).Value = setupUnderRatio == 0 ? 0 : setupOverRatio / setupUnderRatio;
-                ws.Cell(row, ci[CM.ProductionUnderOverRatio]).Value = productionUnderRatio == 0 ? 0 : productionOverRatio / productionUnderRatio;
-                var setupTimeFactSum = parts.Sum(p => p.SetupTimeFact);
-                var prodTimeFactSum = parts.Sum(p => p.ProductionTimeFact);
-                ws.Cell(row, ci[CM.SetupToTotalRatio]).Value = 1 - prodTimeFactSum / totalWorkedMinutes - parts.SpecifiedDowntimesRatio(ShiftType.All);
-                ws.Cell(row, ci[CM.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
-                var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
-                ws.Cell(row, ci[CM.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
 
-                ws.Cell(row, ci[CM.AverageSetupTime]).SetValue(parts.AverageSetupTime().TotalHours);
-                ws.Cell(row, ci[CM.TotalSetupTime]).SetValue(parts.TotalSetupTime().TotalHours);
-                ws.Cell(row, ci[CM.TotalProductionTime]).SetValue(parts.TotalProductionTime().TotalHours);
-                ws.Cell(row, ci[CM.TotalDowntimesTime]).SetValue(parts.TotalDowntimesTime().TotalHours);
-                ws.Cell(row, ci[CM.TotalTime]).SetValue(totalWorkedMinutes / 60);
-
-                var uniquePartsPerMachine = parts.DistinctBy(p => p.PartName).ToList();
-
-                var averageFinishedCount = parts.Where(p => p.FinishedCount > 0).Average(p => p.FinishedCountFact);
-                var averagePartsCount = uniquePartsPerMachine.Average(p => p.TotalCount);
-                var smallProductionsRatio = (double)parts.Count(p => serialPartNames.Contains(p.PartName.NormalizedPartName()) && p.FinishedCount > 0) / parts.Count;
-                var smallSeriesRatio = (double)uniquePartsPerMachine.Count(p => !serialPartNames.Contains(p.PartName.NormalizedPartName())) / uniquePartsPerMachine.Count;
-
-                ws.Cell(row, ci[CM.AverageFinishedCount])
-                    .SetValue(averageFinishedCount)
-                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-
-                ws.Cell(row, ci[CM.AveragePartsCount])
-                    .SetValue(averagePartsCount)
-                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Integer;
-
-                ws.Cell(row, ci[CM.SmallProductionsRatio])
-                    .SetValue(smallProductionsRatio)
-                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-
-                ws.Cell(row, ci[CM.SmallSeriesRatio])
-                    .SetValue(smallSeriesRatio)
-                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-
-                ws.Range(row, ci[CM.SetupRatio], row, ci[CM.ProductionEfficiencyToTotalRatio]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-
-                ws.Cell(row, ci[CM.AverageReplacementTime])
-                    .SetValue(parts.AverageReplacementTimeRatio())
-                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-
+                // ---------- ДЕТАЛИЗАЦИЯ ПРОСТОЕВ ----------
                 ws.Cell(row, ci[CM.SpecifiedDowntimes]).Value = parts.SpecifiedDowntimesRatio(ShiftType.All);
                 ws.Cell(row, ci[CM.CreateNcProgramTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.CreateNcProgram);
                 ws.Cell(row, ci[CM.MaintenanceTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.Maintenance);
@@ -626,40 +605,106 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[CM.FixtureMakingTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.FixtureMaking);
                 ws.Cell(row, ci[CM.HardwareFailureTime]).Value = parts.SpecifiedDowntimeRatio(Downtime.HardwareFailure);
                 ws.Cell(row, ci[CM.UnspecifiedDowntimes]).Value = parts.UnspecifiedDowntimesRatio(fromDate, toDate, ShiftType.All);
+
+                // ---------- ВРЕМЕННЫЕ ПОКАЗАТЕЛИ ----------
+                var setupTimeFactSum = parts.Sum(p => p.SetupTimeFact);
+                var prodTimeFactSum = parts.Sum(p => p.ProductionTimeFact);
+                var prodTimePlanSum = parts.Sum(p => p.PlanForBatch);
+
+                ws.Cell(row, ci[CM.SetupToTotalRatio]).Value = 1 - prodTimeFactSum / totalWorkedMinutes - parts.SpecifiedDowntimesRatio(ShiftType.All);
+                ws.Cell(row, ci[CM.ProductionToTotalRatio]).Value = prodTimeFactSum / totalWorkedMinutes;
+                ws.Cell(row, ci[CM.ProductionEfficiencyToTotalRatio]).Value = prodTimePlanSum / totalWorkedMinutes;
+
+                ws.Cell(row, ci[CM.AverageSetupTime]).SetValue(parts.AverageSetupTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalSetupTime]).SetValue(parts.TotalSetupTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalProductionTime]).SetValue(parts.TotalProductionTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalDowntimesTime]).SetValue(parts.TotalDowntimesTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalTime]).SetValue(totalWorkedMinutes / 60);
+
+                // ---------- ВРЕМЯ ПО ТИПУ ПРОДУКЦИИ ----------
+                ws.Cell(row, ci[CM.SerialPartsTime]).SetValue(parts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).FullWorkedTime().TotalHours);
+                ws.Cell(row, ci[CM.NonSerialPartsTime]).SetValue(parts.Where(p => !serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).FullWorkedTime().TotalHours);
+
+                // ---------- СТАТИСТИКА ПО ДЕТАЛЯМ ----------
+                var uniquePartsPerMachine = parts.DistinctBy(p => p.PartName).ToList();
+                var averageFinishedCount = parts.Where(p => p.FinishedCount > 0).Average(p => p.FinishedCountFact);
+                var averagePartsCount = uniquePartsPerMachine.Average(p => p.TotalCount);
+
+                ws.Cell(row, ci[CM.AverageFinishedCount])
+                    .SetValue(averageFinishedCount)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
+
+                ws.Cell(row, ci[CM.AveragePartsCount])
+                    .SetValue(averagePartsCount)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
+
+                // ---------- КОЛИЧЕСТВО ЗАПИСЕЙ ----------
+                ws.Cell(row, ci[CM.Orders]).Value = parts.DistinctBy(p => p.Order).Count();
+                ws.Cell(row, ci[CM.SerialOrders]).Value = parts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).DistinctBy(p => p.Order).Count();
+                ws.Cell(row, ci[CM.SerialCount]).Value = parts.Count(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments()));
                 ws.Cell(row, ci[CM.CountPerMachine]).Value = parts.Count;
+
+                // ---------- ФОРМАТИРОВАНИЕ ЯЧЕЕК ----------
+                ws.Range(row, ci[CM.SetupRatio], row, ci[CM.ProductionEfficiencyToTotalRatio]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+                ws.Cell(row, ci[CM.AverageReplacementTime])
+                    .SetValue(parts.AverageReplacementTimeRatio())
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
                 ws.Range(row, ci[CM.SpecifiedDowntimes], row, ci[CM.SpecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
                 row++;
             }
-            var lastDataRow = row - 1;
-            //ws.Cell(row, workedShiftsColId).Value = totalDays;
-            var dataRange = ws.RangeUsed();
 
+            var lastDataRow = row - 1;
+
+            // ==================== СОЗДАНИЕ ТАБЛИЦЫ ====================
+            var dataRange = ws.RangeUsed();
+            var table = dataRange.CreateTable();
+            table.Name = "Отчёт за период";
+            table.Theme = XLTableTheme.None;
+
+            // ==================== ФОРМАТИРОВАНИЕ ТАБЛИЦЫ ====================
             dataRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
 
+            // ---------- ГРАНИЦЫ СЕКЦИЙ ----------
             ws.Range(headerRow, ci[CM.Machine], lastDataRow, ci[CM.Machine]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatioIncludeDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SetupRatioOver], lastDataRow, ci[CM.ProductionRatioOver]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.AverageSetupTime], lastDataRow, ci[CM.TotalTime]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.ProductionEfficiencyToTotalRatio], lastDataRow, ci[CM.SetupToTotalRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.TotalSetupTime], lastDataRow, ci[CM.TotalTime]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.NonSerialPartsTime], lastDataRow, ci[CM.SerialPartsTime]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.SpecifiedDowntimes], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+
+            // ---------- ЦВЕТОВОЕ ВЫДЕЛЕНИЕ СЕКЦИЙ ----------
             ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.ProductionRatioIncludeDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent1, 0.8);
             ws.Range(headerRow, ci[CM.SetupRatioUnder], lastDataRow, ci[CM.ProductionRatioUnder]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent2, 0.8);
-            ws.Range(headerRow, ci[CM.SetupRatioOver], lastDataRow, ci[CM.ProductionRatioOver]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.Range(headerRow, ci[CM.SetupRatioOver], lastDataRow, ci[CM.ProductionRatioOver]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent3, 0.8);
-            ws.Range(headerRow, ci[CM.SetupUnderOverRatio], lastDataRow, ci[CM.ProductionUnderOverRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent4, 0.8);
-            ws.Range(headerRow, ci[CM.SetupToTotalRatio], lastDataRow, ci[CM.ProductionEfficiencyToTotalRatio]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
-            ws.Range(headerRow, ci[CM.SetupToTotalRatio], lastDataRow, ci[CM.ProductionEfficiencyToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
-            ws.Range(headerRow, ci[CM.SpecifiedDowntimes], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
+            ws.Range(headerRow, ci[CM.AverageSetupTime], lastDataRow, ci[CM.TotalTime]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent4, 0.8);
+            ws.Range(headerRow, ci[CM.ProductionEfficiencyToTotalRatio], lastDataRow, ci[CM.ProductionToTotalRatio]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent5, 0.8);
             ws.Range(headerRow, ci[CM.SpecifiedDowntimes], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.Fill.BackgroundColor = XLColor.FromTheme(XLThemeColor.Accent6, 0.8);
-            ws.Range(headerRow, ci[CM.SpecifiedDowntimes], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+            // ---------- ФОРМАТИРОВАНИЕ ЧИСЕЛ ----------
+            ws.Range(headerRow, ci[CM.SetupRatio], lastDataRow, ci[CM.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+            ws.Range(firstDataRow, ci[CM.TotalSetupTime], lastDataRow, ci[CM.TotalTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
+            ws.Columns(ci[CM.AverageReplacementTime], ci[CM.AverageSetupTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+
+            // ---------- УСЛОВНОЕ ФОРМАТИРОВАНИЕ ----------
             ws.Range(firstDataRow, ci[CM.WorkedShifts], lastDataRow, ci[CM.WorkedShifts]).Style.Font.FontColor = XLColor.Red;
             ws.Range(firstDataRow, ci[CM.WorkedShifts], lastDataRow, ci[CM.WorkedShifts]).AddConditionalFormat().WhenEquals($"=$B${lastDataRow + 2}").Font.FontColor = XLColor.Green;
+
+            // ---------- ВЫРАВНИВАНИЕ ----------
             dataRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             dataRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            dataRange.SetAutoFilter(true);
             ws.Column(1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
             ws.Range(1, 1, 2, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            // ---------- ШИРИНА КОЛОНОК ----------
             ws.Columns().AdjustToContents();
-            ws.RowsUsed().Height = 20;
-            ws.Row(2).Height = 130;
+            ws.Column(ci[CM.Machine]).Width = 23;
+            ws.Columns(2, cm.Count).Width = 7;
+
+            // ==================== ЗАГОЛОВОК ОТЧЁТА ====================
             var title = $"Отчёт за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)}";
             switch (shift.Type)
             {
@@ -670,41 +715,51 @@ namespace remeLog.Infrastructure
                     title += " за ночные смены";
                     break;
             }
+
             ws.Cell(1, 1).Value = title;
             ws.Range(1, 1, 1, cm.Count).Merge();
-            ws.Range(1, 1, 1, 1).Style.Font.FontSize = 16;
-            ws.Columns(2, cm.Count).Width = 8;
+            ws.Range(1, 1, 1, 1).Style.Font.SetFontSize(14).Font.SetBold(true);
 
+            // ==================== СТРОКА ИТОГОВ ====================
             ws.Cell(row, ci[CM.Machine]).Value = "Итог:";
             ws.Cell(row, ci[CM.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
             ws.Range(row, ci[CM.Machine], row, ci[CM.UnspecifiedOtherShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             ws.Range(row, ci[CM.NoOperatorShifts], row, ci[CM.UnspecifiedOtherShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            // ---------- ФОРМУЛЫ ДЛЯ ИТОГОВ ----------
             for (int col = ci[CM.WorkedShifts]; col <= ci[CM.UnspecifiedOtherShifts]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
-                ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})/$B${lastDataRow + 2}";
+                ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(101, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})/$B${lastDataRow + 2}";
             }
+
             for (int col = ci[CM.SetupRatio]; col <= ci[CM.AverageSetupTime]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
-                ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+                ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(101, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
+
             for (int col = ci[CM.TotalSetupTime]; col <= ci[CM.TotalTime]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
-                ws.Cell(row, col).FormulaA1 = $"SUM({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+                ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(109, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
+
             for (int col = ci[CM.SpecifiedDowntimes]; col <= ci[CM.UnspecifiedDowntimes]; col++)
             {
                 string colLetter = ws.Column(col).ColumnLetter();
-                ws.Cell(row, col).FormulaA1 = $"AVERAGE({colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
+                ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(101, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
+
+            // ---------- ФОРМАТИРОВАНИЕ ИТОГОВ ----------
             ws.Range(row, ci[CM.WorkedShifts], row, ci[CM.UnspecifiedOtherShifts]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentPrecision2;
             ws.Range(row, ci[CM.SetupRatio], row, ci[CM.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-            ws.Range(firstDataRow, ci[CM.AverageSetupTime], row, ci[CM.TotalTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
-
+            ws.Range(row, ci[CM.AverageReplacementTime], row, ci[CM.AverageSetupTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+            ws.Range(row, ci[CM.TotalSetupTime], row, ci[CM.TotalTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
             ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+            // ==================== СТРОКА С ОБЩИМ КОЛИЧЕСТВОМ СМЕН ====================
             row++;
             ws.Cell(row, ci[CM.Machine]).Value = "Рабочих смен:";
             ws.Cell(row, ci[CM.Machine]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
@@ -713,7 +768,13 @@ namespace remeLog.Infrastructure
             ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
-            ws.Columns(ci[CM.SetupUnderOverRatio], ci[CM.ProductionUnderOverRatio]).Hide();
+            // ==================== ГРУППИРОВКА КОЛОНОК ====================
+            ws.Columns(ci[CM.NoOperatorShifts], ci[CM.UnspecifiedOtherShifts]).Collapse();
+            ws.Columns(ci[CM.CreateNcProgramTime], ci[CM.HardwareFailureTime]).Collapse();
+            ws.Columns(ci[CM.NoOperatorShifts], ci[CM.UnspecifiedOtherShifts]).Group();
+            ws.Columns(ci[CM.CreateNcProgramTime], ci[CM.HardwareFailureTime]).Group();
+
+
 
             var partsByMachine = filteredParts.GroupBy(p => p.Machine).ToDictionary(g => g.Key, g => g.ToList());
 

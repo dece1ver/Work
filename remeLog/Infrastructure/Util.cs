@@ -94,12 +94,16 @@ namespace remeLog.Infrastructure
                 if (filePath.CheckFileWriteAccess() is FileCheckResult.FileInUse)
                 {
                     // Получаем информацию о процессе, блокирующем файл
-                    var processInfo = GetProcessLockingFile(filePath);
+                    var processInfo = FileLockDetector.GetProcessLockingFile(filePath);
                     string processInfoText = processInfo != null
                         ? $"Процесс: {processInfo.ProcessName} (ID: {processInfo.Id})"
                         : "Неизвестный процесс";
 
-                    var result = MessageBox.Show(
+                    if (processInfo != null)
+                    {
+                        Console.WriteLine($"Блокирующий процесс: {processInfo.ProcessName} (PID: {processInfo.Id})");
+
+                        var result = MessageBox.Show(
                         $"Файл занят другим процессом.\n{processInfoText}\n\n" +
                         $"Да - закрыть процесс автоматически\n" +
                         $"Нет - закрыть процесс самостоятельно и продолжить\n" +
@@ -108,77 +112,94 @@ namespace remeLog.Infrastructure
                         MessageBoxButtons.YesNoCancel,
                         MessageBoxIcon.Question);
 
-                    if (result == DialogResult.Yes)
-                    {
-                        // Пытаемся закрыть процесс
-                        if (processInfo != null)
+                        if (result == DialogResult.Yes)
                         {
-                            try
+                            // Пытаемся закрыть процесс
+                            if (processInfo != null)
                             {
-                                // Пытаемся мягко закрыть процесс
-                                bool closedGracefully = libeLog.WinApi.Windows.Processes.CloseProcessGracefully(processInfo);
-
-                                if (!closedGracefully || !processInfo.HasExited)
+                                try
                                 {
-                                    // Если мягкое закрытие не удалось, спрашиваем о принудительном
-                                    var forceResult = MessageBox.Show(
-                                        "Программа не закрылась автоматически. Возможно, отображается диалог сохранения. Закрыть принудительно?",
-                                        "Принудительное закрытие",
-                                        MessageBoxButtons.YesNo,
-                                        MessageBoxIcon.Warning);
+                                    // Пытаемся мягко закрыть процесс
+                                    bool closedGracefully = libeLog.WinApi.Windows.Processes.CloseProcessGracefully(processInfo);
 
-                                    if (forceResult == DialogResult.Yes)
+                                    if (!closedGracefully || !processInfo.HasExited)
                                     {
-                                        processInfo.Kill();
-                                        processInfo.WaitForExit(10000); // Ждем 10 секунд
+                                        // Если мягкое закрытие не удалось, спрашиваем о принудительном
+                                        var forceResult = MessageBox.Show(
+                                            "Программа не закрылась автоматически. Возможно, отображается диалог сохранения. Закрыть принудительно?",
+                                            "Принудительное закрытие",
+                                            MessageBoxButtons.YesNo,
+                                            MessageBoxIcon.Warning);
+
+                                        if (forceResult == DialogResult.Yes)
+                                        {
+                                            processInfo.Kill();
+                                            processInfo.WaitForExit(10000); // Ждем 10 секунд
+                                        }
+                                    }
+
+                                    // Проверяем, освободился ли файл
+                                    if (filePath.CheckFileWriteAccess() == FileCheckResult.FileInUse)
+                                    {
+                                        MessageBox.Show("Не удалось освободить файл. Попробуйте закрыть процесс вручную.",
+                                            "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        return "";
                                     }
                                 }
-
-                                // Проверяем, освободился ли файл
-                                if (filePath.CheckFileWriteAccess() == FileCheckResult.FileInUse)
+                                catch (Exception ex)
                                 {
-                                    MessageBox.Show("Не удалось освободить файл. Попробуйте закрыть процесс вручную.",
+                                    MessageBox.Show($"Ошибка при закрытии процесса: {ex.Message}",
                                         "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                     return "";
                                 }
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                MessageBox.Show($"Ошибка при закрытии процесса: {ex.Message}",
+                                MessageBox.Show("Не удалось определить блокирующий процесс.",
                                     "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 return "";
                             }
                         }
-                        else
+                        else if (result == DialogResult.No)
                         {
-                            MessageBox.Show("Не удалось определить блокирующий процесс.",
-                                "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return "";
-                        }
-                    }
-                    else if (result == DialogResult.No)
-                    {
-                        // Пользователь выбрал закрыть файл самостоятельно
-                        // Проверяем, освободился ли файл через 10 секунд
-                        for (int i = 0; i < 10; i++)
-                        {
-                            System.Threading.Thread.Sleep(1000); // Ждем секунду между проверками
-                            if (filePath.CheckFileWriteAccess() != FileCheckResult.FileInUse)
-                                break;
-                        }
+                            // Пользователь выбрал закрыть файл самостоятельно
+                            // Проверяем, освободился ли файл через 10 секунд
+                            for (int i = 0; i < 10; i++)
+                            {
+                                System.Threading.Thread.Sleep(1000); // Ждем секунду между проверками
+                                if (filePath.CheckFileWriteAccess() != FileCheckResult.FileInUse)
+                                    break;
+                            }
 
-                        // Финальная проверка
-                        if (filePath.CheckFileWriteAccess() == FileCheckResult.FileInUse)
+                            // Финальная проверка
+                            if (filePath.CheckFileWriteAccess() == FileCheckResult.FileInUse)
+                            {
+                                MessageBox.Show("Файл всё ещё занят. Закройте файл вручную и попробуйте снова.",
+                                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return "";
+                            }
+                        }
+                        else // DialogResult.Cancel
                         {
-                            MessageBox.Show("Файл всё ещё занят. Закройте файл вручную и попробуйте снова.",
-                                "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return "";
                         }
                     }
-                    else // DialogResult.Cancel
+                    else
                     {
-                        return "";
+                        Console.WriteLine("Не удалось точно определить блокирующий процесс");
+
+                        var possibleProcesses = FileLockDetector.GetPossibleLockingProcesses(filePath);
+                        if (possibleProcesses.Count > 0)
+                        {
+                            Console.WriteLine("Возможные блокирующие процессы:");
+                            foreach (var process in possibleProcesses)
+                            {
+                                Console.WriteLine($"- {process.ProcessName} (PID: {process.Id})");
+                            }
+                        }
                     }
+
+                    
                 }
             }
 
