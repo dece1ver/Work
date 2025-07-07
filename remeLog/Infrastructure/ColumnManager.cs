@@ -344,6 +344,11 @@ namespace remeLog.Infrastructure
         public const string SerialOrders = "serialOrders";
 
         // <summary>
+        /// Доля серийных партий
+        /// </summary>
+        public const string SerialOrdersRatio = "serialOrdersRatio";
+
+        // <summary>
         /// Количество партий
         /// </summary>
         public const string Orders = "orders";
@@ -352,6 +357,11 @@ namespace remeLog.Infrastructure
         /// Количество серийных изготовлений
         /// </summary>
         public const string SerialCount = "serialCount";
+
+        /// <summary>
+        /// Доля серийных изготовлений
+        /// </summary>
+        public const string SerialCountRatio = "serialCountRatio";
 
         /// <summary>
         /// Отработано смен
@@ -599,6 +609,11 @@ namespace remeLog.Infrastructure
         public const string SerialPartsTime = "serialPartsTime";
 
         /// <summary>
+        /// Доля затраченноого времени на серийную продукцию
+        /// </summary>
+        public const string SerialPartsTimeRatio = "serialPartsTimeRatio";
+
+        /// <summary>
         /// Время затраченное на не серийную продукцию
         /// </summary>
         public const string NonSerialPartsTime = "nonSerialPartsTime";
@@ -710,9 +725,12 @@ namespace remeLog.Infrastructure
             { ExcludedOperationsTime, $"Время исключённых{Environment.NewLine}операций" },
             { IncreaseReason, $"Причина увеличения{Environment.NewLine}норматива" },
             { SerialPartsTime, $"Время затраченное на{Environment.NewLine}серийную продукцию, час" },
+            { SerialPartsTimeRatio, $"Доля времени затраченноого{Environment.NewLine}на серийную продукцию" },
             { Orders, $"Количество заказов, шт" },
             { SerialOrders, $"Количество заказов{Environment.NewLine}серийной продукции, шт" },
+            { SerialOrdersRatio, $"Доля заказов{Environment.NewLine}серийной продукции" },
             { SerialCount, $"Количество записей{Environment.NewLine}о серийной продукции, шт" },
+            { SerialCountRatio, $"Доля записей{Environment.NewLine}о серийной продукции" },
             { NonSerialPartsTime, $"Время затраченное на{Environment.NewLine}не серийную продукцию, час" }
         };
 
