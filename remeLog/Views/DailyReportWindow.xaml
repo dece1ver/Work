@@ -151,7 +151,7 @@
                         <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="Комментарий мастера по дневной смене:"/>
-                        <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="6" Text="{Binding DayMasterComment}" TextWrapping="Wrap"/>
+                        <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="6" Text="{Binding DayMasterComment}" TextWrapping="Wrap" AcceptsReturn="True"/>
 
                         <Border Grid.Row="0" Grid.Column="4" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
@@ -314,7 +314,7 @@
                         <Border Grid.Row="0" Grid.Column="2" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="Комментарий мастера по ночной смене:"/>
-                        <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="6" Text="{Binding NightMasterComment}" TextWrapping="Wrap"/>
+                        <TextBox Grid.Row="1" Grid.Column="3" Grid.RowSpan="6" Text="{Binding NightMasterComment}" TextWrapping="Wrap" AcceptsReturn="True"/>
 
                         <Border Grid.Row="0" Grid.Column="4" Grid.RowSpan="7" Margin="7" BorderBrush="Gray" BorderThickness="1"/>
 

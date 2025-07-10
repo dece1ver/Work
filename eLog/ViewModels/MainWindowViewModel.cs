@@ -139,7 +139,7 @@ namespace eLog.ViewModels
 
 
         /// <summary> Станок </summary>
-        public static Machine Machine
+        public Machine Machine
         {
             get => AppSettings.Instance.Machine!;
             set => AppSettings.Instance.Machine = value;
@@ -158,22 +158,22 @@ namespace eLog.ViewModels
         }
 
         /// <summary> Список операторов </summary>
-        public static DeepObservableCollection<Operator> Operators
+        public DeepObservableCollection<Operator> Operators
         {
             get => AppSettings.Instance.Operators;
             set => AppSettings.Instance.Operators = value;
         }
 
-        public static string[] Shifts => Text.Shifts;
+        public string[] Shifts => Text.Shifts;
 
-        public static string CurrentShift
+        public string CurrentShift
         {
             get => AppSettings.Instance.CurrentShift;
             set => AppSettings.Instance.CurrentShift = value;
         }
 
         /// <summary> Детали </summary>
-        public static DeepObservableCollection<Part> Parts
+        public DeepObservableCollection<Part> Parts
         {
             get => AppSettings.Instance.Parts;
             set
@@ -248,7 +248,7 @@ namespace eLog.ViewModels
             set => Set(ref _AssignedPartsIsLoading, value);
         }
 
-        public static bool WorkIsNotInProgress => Parts.Count == 0 || Parts.Count == Parts.Count(x => x.IsFinished is not Part.State.InProgress);
+        public bool WorkIsNotInProgress => Parts.Count == 0 || Parts[0].IsFinished != Part.State.InProgress;
         public bool CanAddPart => ShiftStarted && WorkIsNotInProgress && CurrentOperator is { } && Machine is { };
         public bool CanStartShift => CurrentOperator is { } && !string.IsNullOrEmpty(CurrentShift);
         public bool CanEditShiftAndParams => !ShiftStarted && WorkIsNotInProgress;
@@ -281,7 +281,7 @@ namespace eLog.ViewModels
         {
             Application.Current.Shutdown();
         }
-        private static bool CanCloseApplicationCommandExecute(object p) => true;
+        private bool CanCloseApplicationCommandExecute(object p) => true;
         #endregion
 
         #region StartShift
@@ -320,7 +320,7 @@ namespace eLog.ViewModels
             OnPropertyChanged(nameof(Parts));
         }
 
-        private static bool CanStartShiftCommandExecute(object p) => true;
+        private bool CanStartShiftCommandExecute(object p) => true;
         #endregion
 
         #region EndShift
@@ -359,7 +359,7 @@ namespace eLog.ViewModels
             OnPropertyChanged(nameof(CanEndShift));
             OnPropertyChanged(nameof(Parts));
         }
-        private static bool CanEndShiftCommandExecute(object p) => true;
+        private bool CanEndShiftCommandExecute(object p) => true;
         #endregion
 
         #region EditSettings
@@ -374,7 +374,7 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(_CanSendMessageCommandExecute));
             }
         }
-        private static bool CanEditSettingsCommandExecute(object p) => true;
+        private bool CanEditSettingsCommandExecute(object p) => true;
         #endregion
 
         #region LoadProductionTasks
@@ -422,7 +422,7 @@ namespace eLog.ViewModels
                 ProgressBarVisibility = Visibility.Collapsed;
             }
         }
-        private static bool CanLoadProductionTasksCommandExecute(object p) => !(string.IsNullOrWhiteSpace(AppSettings.Instance.GsId) || string.IsNullOrWhiteSpace(AppSettings.Instance.GoogleCredentialsPath));
+        private bool CanLoadProductionTasksCommandExecute(object p) => !(string.IsNullOrWhiteSpace(AppSettings.Instance.GsId) || string.IsNullOrWhiteSpace(AppSettings.Instance.GoogleCredentialsPath));
         public bool _CanLoadProductionTasksCommandExecute => LoadProductionTasksCommand.CanExecute(null);
         #endregion
 
@@ -474,7 +474,7 @@ namespace eLog.ViewModels
                 ProgressBarVisibility = Visibility.Collapsed;
             }
         }
-        private static bool CanLoadAssignedPartsCommandExecute(object p) => !(string.IsNullOrWhiteSpace(AppSettings.Instance.Machine?.Name) || string.IsNullOrWhiteSpace(AppSettings.Instance.GoogleCredentialsPath));
+        private bool CanLoadAssignedPartsCommandExecute(object p) => !(string.IsNullOrWhiteSpace(AppSettings.Instance.Machine?.Name) || string.IsNullOrWhiteSpace(AppSettings.Instance.GoogleCredentialsPath));
         public bool _CanLoadAssignedPartsCommandExecute => LoadAssignedPartsCommand.CanExecute(null);
         #endregion
 
@@ -546,7 +546,7 @@ namespace eLog.ViewModels
             }
         }
 
-        private static bool CanSendMessageCommandExecute(object p) => !string.IsNullOrWhiteSpace(AppSettings.Instance.PathToRecievers);
+        private bool CanSendMessageCommandExecute(object p) => !string.IsNullOrWhiteSpace(AppSettings.Instance.PathToRecievers);
 
         public bool _CanSendMessageCommandExecute => SendMessageCommand.CanExecute(null);
         #endregion
@@ -558,13 +558,15 @@ namespace eLog.ViewModels
             using (Overlay = new())
             {
                 if (!WindowsUserDialogService.EditOperators()) return;
+                AppSettings.Instance.Operators = new DeepObservableCollection<Operator>(Operators.OrderBy(p => p.LastName));
+                AppSettings.Save();
                 OnPropertyChanged(nameof(CurrentOperator));
                 OnPropertyChanged(nameof(Operators));
                 OnPropertyChanged(nameof(CanStartShift));
                 OnPropertyChanged(nameof(CanAddPart));
             }
         }
-        private static bool CanEditOperatorsCommandExecute(object p) => true;
+        private bool CanEditOperatorsCommandExecute(object p) => true;
         #endregion
 
         #region ShowAbout
@@ -630,7 +632,7 @@ namespace eLog.ViewModels
                 }
             }
         }
-        private static bool CanShowAboutCommandExecute(object p) => true;
+        private bool CanShowAboutCommandExecute(object p) => true;
         #endregion
 
         #region TestCommand
@@ -640,7 +642,7 @@ namespace eLog.ViewModels
             var dlg = new DifficultiesReportWindow() {Owner = App.Current.MainWindow};
             dlg.ShowDialog();
         }
-        private static bool CanTestCommandExecute(object p) => true;
+        private bool CanTestCommandExecute(object p) => true;
         #endregion
 
         #region StartDetail
@@ -697,7 +699,7 @@ namespace eLog.ViewModels
             }
             _editPart = false;
         }
-        private static bool CanStartDetailCommandExecute(object p) => true;
+        private bool CanStartDetailCommandExecute(object p) => true;
 
         #endregion
 
@@ -733,7 +735,7 @@ namespace eLog.ViewModels
                 }
             }
         }
-        private static bool CanSetDownTimeCommandExecute(object p) => true;
+        private bool CanSetDownTimeCommandExecute(object p) => true;
         #endregion
 
         #region EndDownTime
@@ -786,7 +788,7 @@ namespace eLog.ViewModels
                 }
             }
         }
-        private static bool CanEndDownTimeCommandExecute(object p) => true;
+        private bool CanEndDownTimeCommandExecute(object p) => true;
         #endregion
 
         #region EndSetup
@@ -849,7 +851,7 @@ namespace eLog.ViewModels
                 AppSettings.Save();
             }
         }
-        private static bool CanEndSetupCommandExecute(object p) => true;
+        private bool CanEndSetupCommandExecute(object p) => true;
         #endregion
 
         #region EditDetail
@@ -885,7 +887,7 @@ namespace eLog.ViewModels
             }
             _editPart = false;
         }
-        private static bool CanEditDetailCommandExecute(object p) => true;
+        private bool CanEditDetailCommandExecute(object p) => true;
         #endregion
 
         #region EndDetail
@@ -916,7 +918,7 @@ namespace eLog.ViewModels
                 OnPropertyChanged(nameof(Parts));
             }
         }
-        private static bool CanEndDetailCommandExecute(object p) => true;
+        private bool CanEndDetailCommandExecute(object p) => true;
         #endregion
 
         #region StartHelpCase
@@ -928,7 +930,7 @@ namespace eLog.ViewModels
                 var dlg = new GetPasswordDialogWindow();
             }
         }
-        private static bool CanStartHelpCaseCommandExecute(object p) => true;
+        private bool CanStartHelpCaseCommandExecute(object p) => true;
         #endregion
 
         #region EndHelpCase
@@ -940,7 +942,7 @@ namespace eLog.ViewModels
                 
             }
         }
-        private static bool CanEndHelpCaseCommandExecute(object p) => true;
+        private bool CanEndHelpCaseCommandExecute(object p) => true;
         #endregion
 
         #endregion

@@ -314,9 +314,30 @@ namespace remeLog.Infrastructure
         public const string AveragePartsCount = "averagePartsCount";
 
         /// <summary>
+        /// Средний размер серийной партии
+        /// </summary>
+        public const string AveragePartsCountSerial = "averagePartsCountSerial";
+
+        /// <summary>
+        /// Средний размер не серийной партии
+        /// </summary>
+        public const string AveragePartsCountNonSerial = "averagePartsCountNonSerial";
+
+
+        /// <summary>
         /// Среднее количество изготовленных деталей
         /// </summary>
         public const string AverageFinishedCount = "averageFinishedCount";
+
+        /// <summary>
+        /// Среднее количество изготовленных серийных деталей
+        /// </summary>
+        public const string AverageFinishedCountSerial = "averageFinishedCountSerial";
+
+        /// <summary>
+        /// Среднее количество изготовленных не серийных деталей
+        /// </summary>
+        public const string AverageFinishedCountNonSerial = "averageFinishedCountNonSerial";
 
         /// <summary>
         /// Количество штучных изготовлений
@@ -671,7 +692,11 @@ namespace remeLog.Infrastructure
             { FixedProductionTimePlan, "Норматив изготовления (И)" },
             { EngineerComment, "Комментарий техотдела" },
             { AveragePartsCount, "Средняя партия" },
+            { AveragePartsCountSerial, "Средняя серийная партия" },
+            { AveragePartsCountNonSerial, "Средняя не серийная партия" },
             { AverageFinishedCount, "Среднее изготовление" },
+            { AverageFinishedCountSerial, "Среднее изготовление серийки" },
+            { AverageFinishedCountNonSerial, "Среднее изготовление не серийки" },
             { SmallProductions, $"Количество штучных{Environment.NewLine}изготовлений" },
             { SmallSeries, $"Количество штучных{Environment.NewLine}партий" },
             { SmallProductionsRatio, $"Доля штучных{Environment.NewLine}изготовлений" },

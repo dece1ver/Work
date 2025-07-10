@@ -525,7 +525,10 @@ namespace remeLog.Infrastructure
                 .Add(CM.SerialPartsTime)
                 .Add(CM.TotalTime)
                 .Add(CM.SerialPartsTimeRatio)
+                .Add(CM.Finished, "Общее выполненное количество деталей, шт")
                 .Add(CM.AverageFinishedCount, "Среднее выполненное количество деталей, шт")
+                .Add(CM.AveragePartsCountNonSerial, "Среднее количество деталей в не серийной партии, шт")
+                .Add(CM.AveragePartsCountSerial, "Среднее количество деталей в серийной партии, шт")
                 .Add(CM.AveragePartsCount, "Среднее количество деталей в партии, шт")
                 .Add(CM.Orders)
                 .Add(CM.SerialOrders)
@@ -631,16 +634,33 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, ci[CM.SerialPartsTimeRatio]).FormulaA1 = $"{ws.Cell(row, ci[CM.SerialPartsTime]).Address.ToStringRelative()}/{ws.Cell(row, ci[CM.TotalTime]).Address.ToStringRelative()}";
 
                 // ---------- СТАТИСТИКА ПО ДЕТАЛЯМ ----------
-                var uniquePartsPerMachine = parts.DistinctBy(p => p.PartName).ToList();
+                var uniquePartsPerMachine = parts.DistinctBy(p => p.PartName.NormalizedPartNameWithoutComments()).ToList();
+                var uniqueSerialPartsPerMachine = parts
+                    .Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments()))
+                    .DistinctBy(p => p.PartName.NormalizedPartNameWithoutComments()).ToList();
+                var uniqueNonSerialPartsPerMachine = parts
+                    .Where(p => !serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments()))
+                    .DistinctBy(p => p.PartName.NormalizedPartNameWithoutComments()).ToList();
                 var averageFinishedCount = parts.Where(p => p.FinishedCount > 0).Average(p => p.FinishedCountFact);
-                var averagePartsCount = uniquePartsPerMachine.Average(p => p.TotalCount);
+
+                ws.Cell(row, ci[CM.Finished])
+                    .SetValue(parts.Sum(p => p.FinishedCount))
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
 
                 ws.Cell(row, ci[CM.AverageFinishedCount])
                     .SetValue(averageFinishedCount)
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
 
+                ws.Cell(row, ci[CM.AveragePartsCountSerial])
+                    .SetValue(uniqueSerialPartsPerMachine.Any() ? uniqueSerialPartsPerMachine.Average(p => p.TotalCount) : 0)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
+
+                ws.Cell(row, ci[CM.AveragePartsCountNonSerial])
+                    .SetValue(uniqueNonSerialPartsPerMachine.Any() ? uniqueNonSerialPartsPerMachine.Average(p => p.TotalCount) : 0)
+                    .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
+
                 ws.Cell(row, ci[CM.AveragePartsCount])
-                    .SetValue(averagePartsCount)
+                    .SetValue(uniquePartsPerMachine.Average(p => p.TotalCount))
                     .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
 
                 // ---------- КОЛИЧЕСТВО ЗАПИСЕЙ ----------
@@ -743,7 +763,7 @@ namespace remeLog.Infrastructure
                 .SetValue(totalParts.DistinctBy(p => p.PartName).Select(p => p.PartName).Count());
             ws.Cell(row + 1, ci[CM.SerialOrders])
                 .SetValue(totalParts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).DistinctBy(p => p.PartName).Select(p => p.PartName).Count());
-            //var b = 
+
 
             // ---------- ФОРМУЛЫ ДЛЯ ИТОГОВ ----------
             for (int col = ci[CM.WorkedShifts]; col <= ci[CM.UnspecifiedOtherShifts]; col++)
@@ -770,11 +790,17 @@ namespace remeLog.Infrastructure
                 ws.Cell(row, col).FormulaA1 = $"SUBTOTAL(101, {colLetter}{firstDataRow}:{colLetter}{lastDataRow})";
             }
 
+            ws.Cell(row, ci[CM.Finished]).FormulaA1 = $"SUBTOTAL(109, {ws.Range(firstDataRow, ci[CM.Finished], lastDataRow, ci[CM.Finished]).RangeAddress})";
+            ws.Cell(row, ci[CM.AverageFinishedCount]).FormulaA1 = $"SUBTOTAL(101, {ws.Range(firstDataRow, ci[CM.AverageFinishedCount], lastDataRow, ci[CM.AverageFinishedCount]).RangeAddress})";
+            ws.Cell(row, ci[CM.AveragePartsCount]).FormulaA1 = $"SUBTOTAL(101, {ws.Range(firstDataRow, ci[CM.AveragePartsCount], lastDataRow, ci[CM.AveragePartsCount]).RangeAddress})";
+            ws.Cell(row, ci[CM.AveragePartsCountSerial]).FormulaA1 = $"SUBTOTAL(101, {ws.Range(firstDataRow, ci[CM.AveragePartsCountSerial], lastDataRow, ci[CM.AveragePartsCountSerial]).RangeAddress})";
+            ws.Cell(row, ci[CM.AveragePartsCountNonSerial]).FormulaA1 = $"SUBTOTAL(101, {ws.Range(firstDataRow, ci[CM.AveragePartsCountNonSerial], lastDataRow, ci[CM.AveragePartsCountNonSerial]).RangeAddress})";
+
             ws.Cell(row, ci[CM.SerialPartsTimeRatio]).FormulaA1 = $"{ws.Cell(row, ci[CM.SerialPartsTime]).Address}" +
                 $"/{ws.Cell(row, ci[CM.TotalTime]).Address}";
 
             ws.Cell(row, ci[CM.SerialOrdersRatio]).FormulaA1 = $"{ws.Cell(row, ci[CM.SerialOrders]).Address}" +
-                 $"/{ws.Cell(row, ci[CM.Orders]).Address}";
+                $"/{ws.Cell(row, ci[CM.Orders]).Address}";
 
             ws.Cell(row, ci[CM.SerialCountRatio]).FormulaA1 = $"{ws.Cell(row, ci[CM.SerialCount]).Address}" +
                 $"/{ws.Cell(row, ci[CM.CountPerMachine]).Address}";
@@ -796,6 +822,7 @@ namespace remeLog.Infrastructure
             ws.Range(row, ci[CM.SetupRatio], row, ci[CM.UnspecifiedDowntimes]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
             ws.Range(row, ci[CM.AverageReplacementTime], row, ci[CM.AverageSetupTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
             ws.Range(row, ci[CM.TotalSetupTime], row, ci[CM.TotalTime]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
+            ws.Range(row, ci[CM.Finished], row, ci[CM.AveragePartsCount]).Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.IntegerWithSeparator;
             ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, ci[CM.WorkedShifts]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
 
