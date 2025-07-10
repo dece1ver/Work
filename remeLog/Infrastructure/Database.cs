@@ -540,6 +540,7 @@ namespace remeLog.Infrastructure
                         "CreateNcProgramTime = @CreateNcProgramTime, " +
                         "MaintenanceTime = @MaintenanceTime, " +
                         "ToolSearchingTime = @ToolSearchingTime, " +
+                        "ToolChangingTime = @ToolChangingTime, " +
                         "MentoringTime = @MentoringTime, " +
                         "ContactingDepartmentsTime = @ContactingDepartmentsTime, " +
                         "FixtureMakingTime = @FixtureMakingTime, " +
@@ -587,6 +588,7 @@ namespace remeLog.Infrastructure
                         cmd.Parameters.AddWithValue("@CreateNcProgramTime", part.CreateNcProgramTime);
                         cmd.Parameters.AddWithValue("@MaintenanceTime", part.MaintenanceTime);
                         cmd.Parameters.AddWithValue("@ToolSearchingTime", part.ToolSearchingTime);
+                        cmd.Parameters.AddWithValue("@ToolChangingTime", part.ToolChangingTime);
                         cmd.Parameters.AddWithValue("@MentoringTime", part.MentoringTime);
                         cmd.Parameters.AddWithValue("@ContactingDepartmentsTime", part.ContactingDepartmentsTime);
                         cmd.Parameters.AddWithValue("@FixtureMakingTime", part.FixtureMakingTime);
@@ -1331,7 +1333,7 @@ namespace remeLog.Infrastructure
             }
         }
 
-        internal static async void UpdateAppSettings()
+        internal static async Task UpdateAppSettings()
         {
             using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {

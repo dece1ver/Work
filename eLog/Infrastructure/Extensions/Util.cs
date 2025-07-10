@@ -110,9 +110,8 @@ namespace eLog.Infrastructure.Extensions
                 // если характеристика есть в 3 столбце
                 if (row.Cell(3).Value.TryGetText(out string characteristic) && !string.IsNullOrEmpty(characteristic))
                 {
-                    characteristic = characteristic.ToLowerInvariant().Trim();
                     var partName = row.Cell(2).Value.GetText();
-                    if (characteristic != "готовая продукция") partName += $" {characteristic}";
+                    if (characteristic.ToLowerInvariant().Trim() != "готовая продукция") partName += $" {characteristic}";
                     return new Part
                     {
                         Name = partName,

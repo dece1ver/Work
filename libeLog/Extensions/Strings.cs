@@ -165,6 +165,18 @@ namespace libeLog.Extensions
             var result = str[..trimmedLength];
             return ending ? result + "..." : result;
         }
+
+        /// <summary>
+        /// Сравнивает текущую строку с другой строкой без учёта регистра, используя StringComparison.OrdinalIgnoreCase.
+        /// </summary>
+        /// <param name="source">Исходная строка.</param>
+        /// <param name="other">Строка для сравнения.</param>
+        /// <returns>true, если строки равны без учёта регистра, иначе false.</returns>
+        public static bool EqualsOrdinalIgnoreCase(this string source, string other)
+        {
+            return string.Equals(source, other, StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
         /// Проверяет наличие директории и права доступа к ней
         /// </summary>

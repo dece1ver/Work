@@ -308,6 +308,15 @@ namespace remeLog.Models
             }
         }
 
+        /// <summary> Присутствует ли деталь в списке серийных </summary>
+        public bool IsSerial
+        {
+            get
+            {
+                return AppSettings.SerialParts.Contains(PartName.NormalizedPartNameWithoutComments());
+            }
+        }
+
         public string Problems => "Тут будут проблемы из списка.\n• Проблема №1\n• Проблема №2\n...";
 
 

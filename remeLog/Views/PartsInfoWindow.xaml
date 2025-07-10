@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:remeLog.Views" xmlns:controls="clr-namespace:remeLog.Views.Controls"
         mc:Ignorable="d" xmlns:inf="clr-namespace:remeLog.Infrastructure" 
         xmlns:cnv="clr-namespace:remeLog.Infrastructure.Converters"
+        xmlns:cnt="clr-namespace:remeLog.Views.Controls"
         xmlns:vm="clr-namespace:remeLog.ViewModels" xmlns:md="clr-namespace:remeLog.Models" 
         d:DataContext="{d:DesignInstance Type=vm:PartsInfoWindowViewModel}"
         Title="{Binding PartsInfo.Machine}" Height="800" Width="1600" 
@@ -120,7 +121,16 @@
 
         <DataGridTextColumn x:Key="PartNameColumn" Header="Деталь" Binding="{Binding PartName}" Width="130">
             <DataGridTextColumn.ElementStyle>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}">
+                    <Setter Property="TextDecorations" Value="None"/>
+                    <Setter Property="ToolTip" Value="Не серийная"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSerial}" Value="True">
+                            <Setter Property="TextDecorations" Value="Underline"/>
+                            <Setter Property="ToolTip" Value="Серийная"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
             </DataGridTextColumn.ElementStyle>
             <DataGridTextColumn.EditingElementStyle>
                 <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
@@ -1142,7 +1152,7 @@
                         </MenuItem.Header>
                     </MenuItem>
                 </MenuItem>
-                <MenuItem Header="Экспорт">
+                <MenuItem Header="Экспорт" IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}">
                     <MenuItem Header="Отчёты" Icon="{StaticResource OrderedListIcon}">
                         <MenuItem Header="Выработка операторов"
                                   Command="{Binding OperatorReportToExcelCommand}" Icon="{StaticResource OperatorsIcon}"
@@ -1206,123 +1216,125 @@
                     </MenuItem>
                 </MenuItem>
             </Menu>
-            <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
-                      VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
-                      ColumnWidth="SizeToCells" CanUserSortColumns="False" 
-                      VerticalScrollBarVisibility="Visible" 
-                      SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False" 
-                      SelectionMode="Extended" EnableColumnVirtualization="True" 
-                      EnableRowVirtualization="True"
-                      VirtualizingPanel.IsVirtualizing="True" 
-                      VirtualizingPanel.VirtualizationMode="Recycling"
-                      IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}" Margin="0 -1 0 0" BorderThickness="0" SelectedItem="{Binding SelectedPart, UpdateSourceTrigger=PropertyChanged}"
-                      AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectedCellsChanged="DataGrid_SelectedCellsChanged" PreviewKeyDown="DataGrid_PreviewKeyDown"
-                      Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}"
-                      >
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding NeedUpdate, UpdateSourceTrigger=PropertyChanged}" Value="True">
-                                <Setter Property="Foreground" Value="Blue"/>
-                            </DataTrigger>
-                            <Trigger Property="IsEditing" Value="True">
-                                <Setter Property="Foreground" Value="DarkRed"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
-                <DataGrid.CellStyle>
-                    <Style TargetType="DataGridCell">
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="LightBlue"/>
-                                <Setter Property="Foreground" Value="Black"/>
-                            </Trigger>
-                        </Style.Triggers>
+            <Grid>
+                <DataGrid ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" 
+                          VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray"
+                          ColumnWidth="SizeToCells" CanUserSortColumns="False" 
+                          VerticalScrollBarVisibility="Visible" 
+                          SelectionUnit="CellOrRowHeader" CanUserReorderColumns="False" 
+                          SelectionMode="Extended" EnableColumnVirtualization="True" 
+                          EnableRowVirtualization="True"
+                          VirtualizingPanel.IsVirtualizing="True" 
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          Margin="0 -1 0 0" BorderThickness="0" SelectedItem="{Binding SelectedPart, UpdateSourceTrigger=PropertyChanged}"
+                          AlternatingRowBackground="#01D3D3D3" PreviewMouseDown="DataGrid_PreviewMouseDown" SelectedCellsChanged="DataGrid_SelectedCellsChanged" PreviewKeyDown="DataGrid_PreviewKeyDown"
+                          Visibility="{Binding CompactView, Converter={StaticResource InvertedVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding NeedUpdate, UpdateSourceTrigger=PropertyChanged}" Value="True">
+                                    <Setter Property="Foreground" Value="Blue"/>
+                                </DataTrigger>
+                                <Trigger Property="IsEditing" Value="True">
+                                    <Setter Property="Foreground" Value="DarkRed"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="LightBlue"/>
+                                    <Setter Property="Foreground" Value="Black"/>
+                                </Trigger>
+                            </Style.Triggers>
 
-                    </Style>
-                </DataGrid.CellStyle>
-                <DataGrid.Resources>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="#01D3D3D3"/>
-                        <Setter Property="BorderBrush" Value="LightGray"/>
-                        <Setter Property="BorderThickness" Value="0 1 1 1"/>
-                        <Setter Property="Foreground" Value="Black"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="FontSize" Value="12"/>
-                        <Setter Property="Padding" Value="0 2"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center" />
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                        <Setter Property="SnapsToDevicePixels" Value="True"/>
-                        <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
-                        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
-                        <Setter Property="ContentTemplate" >
-                            <Setter.Value>
-                                <DataTemplate>
-                                    <TextBlock TextWrapping="Wrap" Text="{Binding}"
-                                       SnapsToDevicePixels="True"
-                                       Width="90"
-                                       VerticalAlignment="Center" TextAlignment="Center"
-                                       HorizontalAlignment="Center">
-                                        <TextBlock.LayoutTransform>
-                                            <RotateTransform Angle="270" />
-                                        </TextBlock.LayoutTransform>
-                                    </TextBlock>
-                                </DataTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </DataGrid.Resources>
+                        </Style>
+                    </DataGrid.CellStyle>
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#01D3D3D3"/>
+                            <Setter Property="BorderBrush" Value="LightGray"/>
+                            <Setter Property="BorderThickness" Value="0 1 1 1"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="Padding" Value="0 2"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Setter Property="SnapsToDevicePixels" Value="True"/>
+                            <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
+                            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                            <Setter Property="ContentTemplate" >
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <TextBlock TextWrapping="Wrap" Text="{Binding}"
+                           SnapsToDevicePixels="True"
+                           Width="90"
+                           VerticalAlignment="Center" TextAlignment="Center"
+                           HorizontalAlignment="Center">
+                                            <TextBlock.LayoutTransform>
+                                                <RotateTransform Angle="270" />
+                                            </TextBlock.LayoutTransform>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.Resources>
 
-                <DataGrid.Columns>
-                    <StaticResource ResourceKey="MachineColumn"/>
-                    <StaticResource ResourceKey="ShiftDateColumn"/>
-                    <StaticResource ResourceKey="ShiftColumn"/>
-                    <StaticResource ResourceKey="OperatorColumn"/>
-                    <StaticResource ResourceKey="PartNameColumn"/>
-                    <StaticResource ResourceKey="OrderColumn"/>
-                    <StaticResource ResourceKey="TotalCountColumn"/>
-                    <StaticResource ResourceKey="FinishedCountColumn"/>
-                    <StaticResource ResourceKey="SetupColumn"/>
-                    <StaticResource ResourceKey="StartSetupTimeColumn"/>
-                    <StaticResource ResourceKey="StartMachiningTimeColumn"/>
-                    <StaticResource ResourceKey="EndMachiningTimeColumn"/>
-                    <StaticResource ResourceKey="SetupTimePlanColumn"/>
-                    <StaticResource ResourceKey="SetupTimeFactColumn"/>
-                    <StaticResource ResourceKey="SingleProductionTimePlanColumn"/>
-                    <StaticResource ResourceKey="MachiningTimeColumn"/>
-                    <StaticResource ResourceKey="PartReplacementTimeColumn"/>
-                    <StaticResource ResourceKey="SingleProductionTimeColumn"/>
-                    <StaticResource ResourceKey="ProductionTimeFactColumn"/>
-                    <StaticResource ResourceKey="PlanForBatchColumn"/>
-                    <StaticResource ResourceKey="OperatorCommentColumn"/>
-                    <StaticResource ResourceKey="ProblemsColumn"/>
-                    <StaticResource ResourceKey="SetupDowntimesColumn"/>
-                    <StaticResource ResourceKey="MachiningDowntimesColumn"/>
-                    <StaticResource ResourceKey="PartialSetupTimeColumn"/>
-                    <StaticResource ResourceKey="CreateNcProgramTimeColumn"/>
-                    <StaticResource ResourceKey="MaintenanceTimeColumn"/>
-                    <StaticResource ResourceKey="ToolSearchingTimeColumn"/>
-                    <StaticResource ResourceKey="ToolChangingTimeColumn"/>
-                    <StaticResource ResourceKey="MentoringTimeColumn"/>
-                    <StaticResource ResourceKey="ContactingDepartmentsTimeColumn"/>
-                    <StaticResource ResourceKey="FixtureMakingTimeColumn"/>
-                    <StaticResource ResourceKey="HardwareFailureTimeColumn"/>
-                    <StaticResource ResourceKey="SpecifiedDowntimesRatioColumn"/>
-                    <StaticResource ResourceKey="SpecifiedDowntimesCommentColumn"/>
-                    <StaticResource ResourceKey="SetupRatioTitleColumn"/>
-                    <StaticResource ResourceKey="MasterSetupCommentColumn"/>
-                    <StaticResource ResourceKey="ProductionRatioTitleColumn"/>
-                    <StaticResource ResourceKey="MasterMachiningCommentColumn"/>
-                    <StaticResource ResourceKey="MasterCommentColumn"/>
-                    <StaticResource ResourceKey="FixedSetupTimePlanColumn"/>
-                    <StaticResource ResourceKey="FixedProductionTimePlanColumn"/>
-                    <StaticResource ResourceKey="EngineerCommentColumn"/>
-                    <StaticResource ResourceKey="ExcludedOperationsTimeColumn"/>
-                    <StaticResource ResourceKey="IncreaseReasonColumn"/>
-                    <StaticResource ResourceKey="ExcludeFromReportsColumn"/>
-                </DataGrid.Columns>
-            </DataGrid>
+                    <DataGrid.Columns>
+                        <StaticResource ResourceKey="MachineColumn"/>
+                        <StaticResource ResourceKey="ShiftDateColumn"/>
+                        <StaticResource ResourceKey="ShiftColumn"/>
+                        <StaticResource ResourceKey="OperatorColumn"/>
+                        <StaticResource ResourceKey="PartNameColumn"/>
+                        <StaticResource ResourceKey="OrderColumn"/>
+                        <StaticResource ResourceKey="TotalCountColumn"/>
+                        <StaticResource ResourceKey="FinishedCountColumn"/>
+                        <StaticResource ResourceKey="SetupColumn"/>
+                        <StaticResource ResourceKey="StartSetupTimeColumn"/>
+                        <StaticResource ResourceKey="StartMachiningTimeColumn"/>
+                        <StaticResource ResourceKey="EndMachiningTimeColumn"/>
+                        <StaticResource ResourceKey="SetupTimePlanColumn"/>
+                        <StaticResource ResourceKey="SetupTimeFactColumn"/>
+                        <StaticResource ResourceKey="SingleProductionTimePlanColumn"/>
+                        <StaticResource ResourceKey="MachiningTimeColumn"/>
+                        <StaticResource ResourceKey="PartReplacementTimeColumn"/>
+                        <StaticResource ResourceKey="SingleProductionTimeColumn"/>
+                        <StaticResource ResourceKey="ProductionTimeFactColumn"/>
+                        <StaticResource ResourceKey="PlanForBatchColumn"/>
+                        <StaticResource ResourceKey="OperatorCommentColumn"/>
+                        <StaticResource ResourceKey="ProblemsColumn"/>
+                        <StaticResource ResourceKey="SetupDowntimesColumn"/>
+                        <StaticResource ResourceKey="MachiningDowntimesColumn"/>
+                        <StaticResource ResourceKey="PartialSetupTimeColumn"/>
+                        <StaticResource ResourceKey="CreateNcProgramTimeColumn"/>
+                        <StaticResource ResourceKey="MaintenanceTimeColumn"/>
+                        <StaticResource ResourceKey="ToolSearchingTimeColumn"/>
+                        <StaticResource ResourceKey="ToolChangingTimeColumn"/>
+                        <StaticResource ResourceKey="MentoringTimeColumn"/>
+                        <StaticResource ResourceKey="ContactingDepartmentsTimeColumn"/>
+                        <StaticResource ResourceKey="FixtureMakingTimeColumn"/>
+                        <StaticResource ResourceKey="HardwareFailureTimeColumn"/>
+                        <StaticResource ResourceKey="SpecifiedDowntimesRatioColumn"/>
+                        <StaticResource ResourceKey="SpecifiedDowntimesCommentColumn"/>
+                        <StaticResource ResourceKey="SetupRatioTitleColumn"/>
+                        <StaticResource ResourceKey="MasterSetupCommentColumn"/>
+                        <StaticResource ResourceKey="ProductionRatioTitleColumn"/>
+                        <StaticResource ResourceKey="MasterMachiningCommentColumn"/>
+                        <StaticResource ResourceKey="MasterCommentColumn"/>
+                        <StaticResource ResourceKey="FixedSetupTimePlanColumn"/>
+                        <StaticResource ResourceKey="FixedProductionTimePlanColumn"/>
+                        <StaticResource ResourceKey="EngineerCommentColumn"/>
+                        <StaticResource ResourceKey="ExcludedOperationsTimeColumn"/>
+                        <StaticResource ResourceKey="IncreaseReasonColumn"/>
+                        <StaticResource ResourceKey="ExcludeFromReportsColumn"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <cnt:LoadingOverlay IsBusy="{Binding InProgress}"/>
+            </Grid>
         </DockPanel>
         <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
               Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"

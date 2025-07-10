@@ -1079,7 +1079,7 @@ namespace remeLog.ViewModels
                 await App.Current.Dispatcher.InvokeAsync(() => InProgress = true);
                 Status = await Task.Run(() =>
                     Xl.ExportNewReportForPeroidAsync(
-                        Parts, FromDate, ToDate, ShiftFilter, path, true, progress
+                        Parts, FromDate, ToDate, ShiftFilter, path, progress
                     ).GetAwaiter().GetResult()
                 );
             }
@@ -1783,7 +1783,7 @@ namespace remeLog.ViewModels
                     Status = "Не настроено соединение с БД";
                     return false;
                 }
-                Database.UpdateAppSettings();
+                await Util.UpdateAppSettingsAsync();
                 if (!first) await Task.Delay(1000, cancellationToken);
 
                 if (UseMockData)

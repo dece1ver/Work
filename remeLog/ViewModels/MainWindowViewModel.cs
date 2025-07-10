@@ -438,7 +438,7 @@ namespace remeLog.ViewModels
                 try
                 {
                     InProgress = true;
-                    Database.UpdateAppSettings();
+                    await Util.UpdateAppSettingsAsync();
 
                     if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString))
                     {

@@ -314,9 +314,35 @@ namespace remeLog.Infrastructure
         public const string AveragePartsCount = "averagePartsCount";
 
         /// <summary>
+        /// Средний размер серийной партии
+        /// </summary>
+        public const string AveragePartsCountSerial = "averagePartsCountSerial";
+
+        /// <summary>
+        /// Средний размер не серийной партии
+        /// </summary>
+        public const string AveragePartsCountNonSerial = "averagePartsCountNonSerial";
+
+
+        /// <summary>
         /// Среднее количество изготовленных деталей
         /// </summary>
         public const string AverageFinishedCount = "averageFinishedCount";
+
+        /// <summary>
+        /// Среднее количество изготовленных серийных деталей
+        /// </summary>
+        public const string AverageFinishedCountSerial = "averageFinishedCountSerial";
+
+        /// <summary>
+        /// Среднее количество изготовленных не серийных деталей
+        /// </summary>
+        public const string AverageFinishedCountNonSerial = "averageFinishedCountNonSerial";
+
+        /// <summary>
+        /// Количество штучных изготовлений
+        /// </summary>
+        public const string SmallProductions = "smallProductions";
 
         /// <summary>
         /// Доля штучных изготовлений
@@ -324,9 +350,39 @@ namespace remeLog.Infrastructure
         public const string SmallProductionsRatio = "smallProductionsRatio";
 
         /// <summary>
+        /// Количество штучных партий
+        /// </summary>
+        public const string SmallSeries = "smallSeries";
+
+        /// <summary>
         /// Доля штучных партий
         /// </summary>
         public const string SmallSeriesRatio = "smallSeriesRatio";
+
+        // <summary>
+        /// Количество серийных партий
+        /// </summary>
+        public const string SerialOrders = "serialOrders";
+
+        // <summary>
+        /// Доля серийных партий
+        /// </summary>
+        public const string SerialOrdersRatio = "serialOrdersRatio";
+
+        // <summary>
+        /// Количество партий
+        /// </summary>
+        public const string Orders = "orders";
+
+        /// <summary>
+        /// Количество серийных изготовлений
+        /// </summary>
+        public const string SerialCount = "serialCount";
+
+        /// <summary>
+        /// Доля серийных изготовлений
+        /// </summary>
+        public const string SerialCountRatio = "serialCountRatio";
 
         /// <summary>
         /// Отработано смен
@@ -568,6 +624,21 @@ namespace remeLog.Infrastructure
         /// </summary>
         public const string IncreaseReason = "increaseReason";
 
+        /// <summary>
+        /// Время затраченное на серийную продукцию
+        /// </summary>
+        public const string SerialPartsTime = "serialPartsTime";
+
+        /// <summary>
+        /// Доля затраченноого времени на серийную продукцию
+        /// </summary>
+        public const string SerialPartsTimeRatio = "serialPartsTimeRatio";
+
+        /// <summary>
+        /// Время затраченное на не серийную продукцию
+        /// </summary>
+        public const string NonSerialPartsTime = "nonSerialPartsTime";
+
         private static readonly Dictionary<string, string> _descriptions = new()
         {
             { Guid, "GUID" },
@@ -621,7 +692,13 @@ namespace remeLog.Infrastructure
             { FixedProductionTimePlan, "Норматив изготовления (И)" },
             { EngineerComment, "Комментарий техотдела" },
             { AveragePartsCount, "Средняя партия" },
+            { AveragePartsCountSerial, "Средняя серийная партия" },
+            { AveragePartsCountNonSerial, "Средняя не серийная партия" },
             { AverageFinishedCount, "Среднее изготовление" },
+            { AverageFinishedCountSerial, "Среднее изготовление серийки" },
+            { AverageFinishedCountNonSerial, "Среднее изготовление не серийки" },
+            { SmallProductions, $"Количество штучных{Environment.NewLine}изготовлений" },
+            { SmallSeries, $"Количество штучных{Environment.NewLine}партий" },
             { SmallProductionsRatio, $"Доля штучных{Environment.NewLine}изготовлений" },
             { SmallSeriesRatio, $"Доля штучных{Environment.NewLine}партий" },
             { WorkedShifts, "Отработанные смены" },
@@ -671,7 +748,15 @@ namespace remeLog.Infrastructure
             { SerialPerRuns, $"Серийная{Environment.NewLine}по запускам" },
             { SerialPerList, $"Серийная{Environment.NewLine}по списку" },
             { ExcludedOperationsTime, $"Время исключённых{Environment.NewLine}операций" },
-            { IncreaseReason, $"Причина увеличения{Environment.NewLine}норматива" }
+            { IncreaseReason, $"Причина увеличения{Environment.NewLine}норматива" },
+            { SerialPartsTime, $"Время затраченное на{Environment.NewLine}серийную продукцию, час" },
+            { SerialPartsTimeRatio, $"Доля времени затраченноого{Environment.NewLine}на серийную продукцию" },
+            { Orders, $"Количество заказов, шт" },
+            { SerialOrders, $"Количество заказов{Environment.NewLine}серийной продукции, шт" },
+            { SerialOrdersRatio, $"Доля заказов{Environment.NewLine}серийной продукции" },
+            { SerialCount, $"Количество записей{Environment.NewLine}о серийной продукции, шт" },
+            { SerialCountRatio, $"Доля записей{Environment.NewLine}о серийной продукции" },
+            { NonSerialPartsTime, $"Время затраченное на{Environment.NewLine}не серийную продукцию, час" }
         };
 
         /// <summary>
