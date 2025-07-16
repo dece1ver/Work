@@ -101,6 +101,31 @@ namespace libeLog.Infrastructure.Sql
                 .AddIntColumn("YearCount", false)
                 .Build(),
 
+            new TableBuilder("cnc_operations")
+                .AddIdColumn()
+                .AddIntColumn("SerialPartId", false)
+                .AddStringColumn("Name", 255, false)
+                .AddCompositeUnique("Name", "SerialPartId")
+                .AddForeignKey("SerialPartId", "cnc_serial_parts", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .Build(),
+
+            new TableBuilder("cnc_setups")
+                .AddIdColumn()
+                .AddIntColumn("CncOperationId", false)
+                .AddByteColumn("Number", false)
+                .AddCompositeUnique("CncOperationId", "Number")
+                .AddForeignKey("CncOperationId", "cnc_operations", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .Build(),
+
+            new TableBuilder("cnc_normatives")
+                .AddIdColumn()
+                .AddIntColumn("CncSetupId", false)
+                .AddByteColumn("NormativeType", false)
+                .AddDoubleColumn("Value", false)
+                .AddSmallDateTimeColumn("EffectiveFrom", false, "GETDATE()")
+                .AddForeignKey("CncSetupId", "cnc_setups", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .Build(),
+            
             new TableBuilder("cnc_shifts")
                 .AddIdColumn()
                 .AddSmallDateTimeColumn("ShiftDate", false)

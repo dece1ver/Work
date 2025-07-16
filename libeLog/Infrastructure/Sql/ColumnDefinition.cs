@@ -9,5 +9,6 @@
         public bool IsUnique { get; set; }
         public bool AutoIncrement { get; set; }
         public ForeignKeyDefinition? ForeignKey { get; set; }
+        public string? DefaultValueSql { get; set; }
     }
 }

@@ -12,8 +12,8 @@ namespace libeLog.Infrastructure.Sql
 
             sb.AppendLine($"## Таблица: {table.Name}");
             sb.AppendLine();
-            sb.AppendLine("| Колонка      | Тип           | NULL | PK | UNIQUE | FK | FK-таблица |");
-            sb.AppendLine("|--------------|---------------|------|----|--------|----|-------------|");
+            sb.AppendLine("| Колонка      | Тип           | NULL | PK | UNIQUE | FK | FK-таблица     | DEFAULT           |");
+            sb.AppendLine("|--------------|---------------|------|----|--------|----|----------------|-------------------|");
 
             foreach (var col in table.Columns)
             {
@@ -21,13 +21,13 @@ namespace libeLog.Infrastructure.Sql
                 var isPk = col.IsPrimaryKey || table.CompositePrimaryKey.Contains(col.Name) ? "✔" : "";
                 var isUnique = col.IsUnique || table.CompositeUniques.Any(u => u.Contains(col.Name)) ? "✔" : "";
 
-                // Находим FK-описание, если есть
                 var fk = table.ForeignKeys.FirstOrDefault(f => f.Columns.Count == 1 && f.Columns[0] == col.Name);
-
                 var isFk = fk != null ? "✔" : "";
                 var fkRef = fk != null ? $"{fk.ReferencedTable}({fk.ReferencedColumns[0]})" : "";
 
-                sb.AppendLine($"| {col.Name,-12} | {col.SqlType,-13} | {isNullable,-4} | {isPk,-2} | {isUnique,-6} | {isFk,-2} | {fkRef,-11} |");
+                var defaultValue = string.IsNullOrWhiteSpace(col.DefaultValueSql) ? "" : col.DefaultValueSql;
+
+                sb.AppendLine($"| {col.Name,-12} | {col.SqlType,-13} | {isNullable,-4} | {isPk,-2} | {isUnique,-6} | {isFk,-2} | {fkRef,-16} | {defaultValue,-17} |");
             }
 
             sb.AppendLine();
@@ -64,8 +64,8 @@ namespace libeLog.Infrastructure.Sql
             {
                 sb.AppendLine($"## Таблица: {table.Name}");
                 sb.AppendLine();
-                sb.AppendLine("| Колонка      | Тип           | NULL | PK | UNIQUE | FK | FK-таблица     |");
-                sb.AppendLine("|--------------|---------------|------|----|--------|----|----------------|");
+                sb.AppendLine("| Колонка      | Тип           | NULL | PK | UNIQUE | FK | FK-таблица     | DEFAULT           |");
+                sb.AppendLine("|--------------|---------------|------|----|--------|----|----------------|-------------------|");
 
                 foreach (var col in table.Columns)
                 {
@@ -77,7 +77,9 @@ namespace libeLog.Infrastructure.Sql
                     var isFk = fk != null ? "✔" : "";
                     var fkRef = fk != null ? $"{fk.ReferencedTable}({fk.ReferencedColumns[0]})" : "";
 
-                    sb.AppendLine($"| {col.Name,-12} | {col.SqlType,-13} | {isNullable,-4} | {isPk,-2} | {isUnique,-6} | {isFk,-2} | {fkRef,-16} |");
+                    var defaultValue = string.IsNullOrWhiteSpace(col.DefaultValueSql) ? "" : col.DefaultValueSql;
+
+                    sb.AppendLine($"| {col.Name,-12} | {col.SqlType,-13} | {isNullable,-4} | {isPk,-2} | {isUnique,-6} | {isFk,-2} | {fkRef,-16} | {defaultValue,-17} |");
                 }
 
                 sb.AppendLine();
@@ -110,4 +112,5 @@ namespace libeLog.Infrastructure.Sql
             return sb.ToString();
         }
     }
+
 }

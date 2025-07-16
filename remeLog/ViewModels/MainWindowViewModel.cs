@@ -438,7 +438,6 @@ namespace remeLog.ViewModels
                 try
                 {
                     InProgress = true;
-                    await Util.UpdateAppSettingsAsync();
 
                     if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString))
                     {
@@ -450,6 +449,7 @@ namespace remeLog.ViewModels
                     _cancellationTokenSource = new();
                     var cancellationToken = _cancellationTokenSource.Token;
                     await semaphoreSlim.WaitAsync(cancellationToken);
+                    await Util.UpdateAppSettingsAsync();
 
                     Status = "Получение списка станков...";
 

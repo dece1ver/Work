@@ -7,7 +7,7 @@
              mc:Ignorable="d" Background="Transparent"
              d:DesignHeight="450" d:DesignWidth="800"
              Visibility="{Binding IsBusy, RelativeSource={RelativeSource Self}, Converter={StaticResource VisibilityConverter}}">
-    <Grid Background="#60000000">
+    <Grid Background="#20000000">
         <!-- Полупрозрачный тёмный фон -->
         <Viewbox Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Canvas Width="100" Height="100">

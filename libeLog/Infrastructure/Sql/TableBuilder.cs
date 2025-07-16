@@ -105,7 +105,7 @@ namespace libeLog.Infrastructure.Sql
             var column = new ColumnDefinition
             {
                 Name = name,
-                SqlType = sqlType
+                SqlType = sqlType,
             };
 
             configure?.Invoke(new ColumnOptions(column));
@@ -133,11 +133,12 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="name">Имя столбца.</param>
         /// <param name="isPrimaryKey">Делает столбец первичным ключом, если true.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddGuidColumn(string name, bool isPrimaryKey = false, bool nullable = true)
+        public TableBuilder AddGuidColumn(string name, bool isPrimaryKey = false, bool nullable = true, string? defaultValue = null)
         {
             return AddColumn(name, "UNIQUEIDENTIFIER", opt => {
                 opt.Nullable(nullable);
                 if (isPrimaryKey) opt.PrimaryKey().Nullable(false);
+                if (defaultValue is not null) opt.DefaultSql(defaultValue);
             });
         }
 
@@ -148,10 +149,27 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="length">Максимальная длина. Если -1, используется NVARCHAR(MAX).</param>
         /// <param name="nullable">Указывает, допускается ли NULL.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddStringColumn(string name, int length = 255, bool nullable = true)
+        public TableBuilder AddStringColumn(string name, int length = 255, bool nullable = true, string? defaultValue = null)
         {
-            return AddColumn(name, $"NVARCHAR({(length == -1 ? "MAX" : length.ToString())})",
-                opt => opt.Nullable(nullable));
+            return AddColumn(name, $"NVARCHAR({(length == -1 ? "MAX" : length.ToString())})", opt =>
+            {
+                opt.Nullable(nullable);
+                if (defaultValue is not null) opt.DefaultSql(defaultValue);
+            });
+        }
+
+        /// <summary>
+        /// Добавляет целочисленный столбец типа TINYINT.
+        /// </summary>
+        /// <param name="name">Имя столбца.</param>
+        /// <param name="nullable">Указывает, допускается ли NULL.</param>
+        /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
+        public TableBuilder AddByteColumn(string name, bool nullable = true, string? defaultValue = null)
+        {
+            return AddColumn(name, "TINYINT", opt => {
+                opt.Nullable(nullable);
+                if (defaultValue is not null) opt.DefaultSql(defaultValue);
+            });
         }
 
         /// <summary>
@@ -160,9 +178,12 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="name">Имя столбца.</param>
         /// <param name="nullable">Указывает, допускается ли NULL.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddIntColumn(string name, bool nullable = true)
+        public TableBuilder AddIntColumn(string name, bool nullable = true, string? defaultValue = null)
         {
-            return AddColumn(name, "INT", opt => opt.Nullable(nullable));
+            return AddColumn(name, "INT", opt => { 
+                opt.Nullable(nullable);
+                if (defaultValue is not null) opt.DefaultSql(defaultValue);
+            });
         }
 
         /// <summary>
@@ -171,9 +192,12 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="name">Имя столбца.</param>
         /// <param name="nullable">Указывает, допускается ли NULL.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddDoubleColumn(string name, bool nullable = true)
+        public TableBuilder AddDoubleColumn(string name, bool nullable = true, string? defaultValue = null)
         {
-            return AddColumn(name, "FLOAT", opt => opt.Nullable(nullable));
+            return AddColumn(name, "FLOAT", opt => { 
+                opt.Nullable(nullable); 
+                if (defaultValue is not null) opt.DefaultSql(defaultValue); 
+            });
         }
 
 
@@ -184,9 +208,12 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="name">Имя столбца.</param>
         /// <param name="nullable">Указывает, допускается ли NULL.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddBoolColumn(string name, bool nullable = true)
+        public TableBuilder AddBoolColumn(string name, bool nullable = true, string? defaultValue = null)
         {
-            return AddColumn(name, "BIT", opt => opt.Nullable(nullable));
+            return AddColumn(name, "BIT", opt => { 
+                opt.Nullable(nullable); 
+                if (defaultValue is not null) opt.DefaultSql(defaultValue); 
+            });
         }
 
         /// <summary>
@@ -195,9 +222,12 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="name">Имя столбца.</param>
         /// <param name="nullable">Указывает, допускается ли NULL.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddSmallDateTimeColumn(string name, bool nullable = true)
+        public TableBuilder AddSmallDateTimeColumn(string name, bool nullable = true, string? defaultValue = null)
         {
-            return AddColumn(name, "SMALLDATETIME", opt => opt.Nullable(nullable));
+            return AddColumn(name, "SMALLDATETIME", opt => { 
+                opt.Nullable(nullable); 
+                if (defaultValue is not null) opt.DefaultSql(defaultValue);
+            });
         }
 
         /// <summary>
@@ -206,9 +236,11 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="name">Имя столбца.</param>
         /// <param name="nullable">Указывает, допускается ли NULL.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddDateTimeColumn(string name, bool nullable = true)
+        public TableBuilder AddDateTimeColumn(string name, bool nullable = true, string? defaultValue = null)
         {
-            return AddColumn(name, "DATETIME2", opt => opt.Nullable(nullable));
+            return AddColumn(name, "DATETIME2", opt => { 
+                opt.Nullable(nullable); 
+                if (defaultValue is not null) opt.DefaultSql(defaultValue); });
         }
 
         /// <summary>
@@ -219,9 +251,12 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="scale">Число знаков после запятой (по умолчанию 2).</param>
         /// <param name="nullable">Указывает, допускается ли NULL.</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddDecimalColumn(string name, int precision = 18, int scale = 2, bool nullable = true)
+        public TableBuilder AddDecimalColumn(string name, int precision = 18, int scale = 2, bool nullable = true, string? defaultValue = null)
         {
-            return AddColumn(name, $"DECIMAL({precision},{scale})", opt => opt.Nullable(nullable));
+            return AddColumn(name, $"DECIMAL({precision},{scale})", opt => { 
+                opt.Nullable(nullable); 
+                if (defaultValue is not null) opt.DefaultSql(defaultValue); 
+            });
         }
 
         /// <summary>
@@ -231,7 +266,7 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="length">Точ­ная длина (N).</param>
         /// <param name="nullable">Допускается ли NULL (по умолчанию true).</param>
         /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
-        public TableBuilder AddNCharColumn(string name, int length, bool nullable = true)
+        public TableBuilder AddNCharColumn(string name, int length, bool nullable = true, string? defaultValue = null)
         {
             if (length <= 0)
                 throw new ArgumentException("Длина NCHAR должна быть больше нуля.", nameof(length));
@@ -239,7 +274,10 @@ namespace libeLog.Infrastructure.Sql
             return AddSqlServerColumn(
                 name,
                 $"NCHAR({length})",
-                opt => opt.Nullable(nullable)
+                opt => {
+                    opt.Nullable(nullable);
+                    if (defaultValue is not null) opt.DefaultSql(defaultValue);
+                }
             );
         }
 
@@ -396,6 +434,12 @@ namespace libeLog.Infrastructure.Sql
             public ColumnOptions Identity(bool value = true)
             {
                 _column.AutoIncrement = value;
+                return this;
+            }
+
+            public ColumnOptions DefaultSql(string sqlExpression)
+            {
+                _column.DefaultValueSql = sqlExpression;
                 return this;
             }
 

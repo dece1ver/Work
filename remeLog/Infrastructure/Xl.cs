@@ -1082,13 +1082,37 @@ namespace remeLog.Infrastructure
         /// <param name="fromDate">Начальная дата</param>
         /// <param name="toDate">Конечная дата</param>
         /// <param name="path">Путь к формируемому файлу</param>
+        /// <param name="minPartsCount">Минимальное количество деталей</param>
+        /// <param name="maxPartsCount">Максимальное количество деталей</param>
+        /// <param name="serialParts">Серийные детали (опционально)</param>
         /// <returns>При удачном выполнении возвращает путь к записанному файлу</returns>
-        public static string ExportOperatorReport(IEnumerable<Part> parts, DateTime fromDate, DateTime toDate, string path, int minPartsCount, int maxPartsCount, HashSet<string>? serialParts = null)
+        public static string ExportOperatorReport(IEnumerable<Part> parts, DateTime fromDate, DateTime toDate,
+            string path, int minPartsCount, int maxPartsCount, HashSet<string>? serialParts = null)
         {
+            // Валидация входных параметров
+            if (parts == null) throw new ArgumentNullException(nameof(parts));
+            if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Путь не может быть пустым", nameof(path));
+            if (fromDate > toDate) throw new ArgumentException("Начальная дата не может быть позже конечной");
+            if (minPartsCount < 0) throw new ArgumentException("Минимальное количество деталей не может быть отрицательным");
+            if (maxPartsCount < minPartsCount) throw new ArgumentException("Максимальное количество не может быть меньше минимального");
+
             var operators = Database.GetOperators();
-            var wb = new XLWorkbook();
-            var ws = wb.AddWorksheet("Отчет по операторам");
             var workDays = Util.GetWorkDaysBeetween(fromDate, toDate);
+
+            // Предварительная фильтрация данных
+            var filteredParts = parts.Where(p => !p.ExcludeFromReports).ToList();
+            var onlySerial = serialParts?.Any() == true;
+
+            if (onlySerial)
+            {
+                filteredParts = filteredParts
+                    .Where(p => serialParts!.Contains(p.PartName.NormalizedPartNameWithoutComments()))
+                    .ToList();
+            }
+
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Отчет по операторам");
+
             var cm = new CM.Builder()
                 .Add(CM.Operator)
                 .Add(CM.Qualification)
@@ -1115,118 +1139,111 @@ namespace remeLog.Infrastructure
 
             var ci = cm.GetIndexes();
 
-
-            double? Coefficient(int qualification, double specDowntimesEx, double generalRatio, double averageSetupRatio, int workedShifts)
-            {
-                return averageSetupRatio < 0.5 || specDowntimesEx > 0.1 || workedShifts < workDays / 6 ? null :
-                    (qualification, generalRatio) switch
-                    {
-                        (1 or 2, > 1) => Coefficient2,     // 1.4
-                        (1 or 2, > 0.9) => Coefficient1,   // 1.2
-                        (3 or 4, > 1.05) => Coefficient2,  // 1.4
-                        (3 or 4, > 0.95) => Coefficient1,  // 1.2
-                        (5 or 6, > 1.1) => Coefficient2,   // 1.4
-                        (5 or 6, > 1) => Coefficient1,     // 1.2
-                        _ => null
-                    };
-            }
             ConfigureWorksheetHeader(ws, cm);
             var row = 3;
-            var onlySerial = serialParts != null && serialParts.Any();
-            if (onlySerial) 
-            {
-                parts = parts.Where(p => serialParts!.Contains(p.PartName.NormalizedPartNameWithoutComments())).ToList();
-            }
 
-            foreach (var partGroup in parts
-                .Where(p => !p.ExcludeFromReports)
+            foreach (var partGroup in filteredParts
                 .GroupBy(p => new { p.Operator, p.Machine })
                 .OrderBy(g => g.Key.Machine)
                 .ThenBy(g => g.Key.Operator))
             {
                 if (partGroup.Key.Operator.ToLower() == "ученик") continue;
-                var filteredParts = partGroup.ToList();
+
+                var groupParts = partGroup.ToList();
 
                 ws.Cell(row, ci[CM.Operator]).SetValue(partGroup.Key.Operator);
+
                 var qualification = partGroup.Key.Operator.GetOperatorQualification(operators);
                 var validQualification = int.TryParse(qualification, out int qualificationNumber);
                 ws.Cell(row, ci[CM.Qualification]).SetValue(validQualification ? qualificationNumber : qualification);
-                ws.Cell(row, ci[CM.Machine]).SetValue(filteredParts.First().Machine);
+                ws.Cell(row, ci[CM.Machine]).SetValue(groupParts.First().Machine);
 
-                var averageSetupRatio = filteredParts.AverageSetupRatio();
+                var averageSetupRatio = groupParts.AverageSetupRatio();
                 ws.Cell(row, ci[CM.SetupRatio])
                   .SetValue(averageSetupRatio)
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                var productionRatio = filteredParts.Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount && !p.ExcludeFromReports).ProductionRatio();
+                var productionRatio = groupParts
+                    .Where(p => p.FinishedCountFact >= minPartsCount && p.FinishedCountFact < maxPartsCount)
+                    .ProductionRatio();
                 ws.Cell(row, ci[CM.ProductionRatio])
                   .SetValue(productionRatio)
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                ws.Cell(row, ci[CM.AverageReplacementTime])
-                  .SetValue(filteredParts.AverageReplacementTimeRatio())
-                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+                var setupsCount = groupParts.Count(p =>
+                    p.SetupRatio is not (0 or double.NaN or double.NegativeInfinity or double.PositiveInfinity));
+                var productionsCount = groupParts.Count(p => p.ProductionRatio != 0);
 
-                ws.Cell(row, ci[CM.CreateNcProgramTime])
-                  .SetValue(filteredParts.Sum(p => p.CreateNcProgramTime));
+                ws.Cell(row, ci[CM.SetupsCount]).SetValue(setupsCount);
+                ws.Cell(row, ci[CM.ProductionsCount]).SetValue(productionsCount);
 
-                ws.Cell(row, ci[CM.MaintenanceTime])
-                  .SetValue(filteredParts.Sum(p => p.MaintenanceTime));
+                // Адреса ячеек для формул
+                string setupRatioAddr = ws.Cell(row, ci[CM.SetupRatio]).Address.ToStringRelative();
+                string productionRatioAddr = ws.Cell(row, ci[CM.ProductionRatio]).Address.ToStringRelative();
+                string setupsCountAddr = ws.Cell(row, ci[CM.SetupsCount]).Address.ToStringRelative();
+                string productionsCountAddr = ws.Cell(row, ci[CM.ProductionsCount]).Address.ToStringRelative();
 
-                ws.Cell(row, ci[CM.ToolSearchingTime])
-                  .SetValue(filteredParts.Sum(p => p.ToolSearchingTime));
+                // Формула общего коэффициента с учетом разряда
+                string qualificationAddr = ws.Cell(row, ci[CM.Qualification]).Address.ToStringRelative();
+                string generalRatioFormula = $"=IF({qualificationAddr}=1,{productionRatioAddr},({setupsCountAddr}*{setupRatioAddr}+{productionsCountAddr}*{productionRatioAddr})/({setupsCountAddr}+{productionsCountAddr}))";
 
-                ws.Cell(row, ci[CM.ToolChangingTime])
-                  .SetValue(filteredParts.Sum(p => p.ToolChangingTime));
-
-                ws.Cell(row, ci[CM.MentoringTime])
-                  .SetValue(filteredParts.Sum(p => p.MentoringTime));
-
-                ws.Cell(row, ci[CM.ContactingDepartmentsTime])
-                  .SetValue(filteredParts.Sum(p => p.ContactingDepartmentsTime));
-
-                ws.Cell(row, ci[CM.FixtureMakingTime])
-                  .SetValue(filteredParts.Sum(p => p.FixtureMakingTime));
-
-                ws.Cell(row, ci[CM.HardwareFailureTime])
-                  .SetValue(filteredParts.Sum(p => p.HardwareFailureTime));
-
-                ws.Cell(row, ci[CM.SpecifiedDowntimes])
-                  .SetValue(filteredParts.SpecifiedDowntimesRatio(ShiftType.All))
+                ws.Cell(row, ci[CM.GeneralRatio])
+                  .FormulaA1 = generalRatioFormula;
+                ws.Cell(row, ci[CM.GeneralRatio])
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
 
-                var specDowntimesEx = filteredParts.SpecifiedDowntimesRatioExcluding(new Downtime[] { Downtime.HardwareFailure, Downtime.Mentoring });
+                ws.Cell(row, ci[CM.AverageReplacementTime])
+                  .SetValue(groupParts.AverageReplacementTimeRatio())
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.Precision2;
+
+                ws.Cell(row, ci[CM.CreateNcProgramTime]).SetValue(groupParts.Sum(p => p.CreateNcProgramTime));
+                ws.Cell(row, ci[CM.MaintenanceTime]).SetValue(groupParts.Sum(p => p.MaintenanceTime));
+                ws.Cell(row, ci[CM.ToolSearchingTime]).SetValue(groupParts.Sum(p => p.ToolSearchingTime));
+                ws.Cell(row, ci[CM.ToolChangingTime]).SetValue(groupParts.Sum(p => p.ToolChangingTime));
+                ws.Cell(row, ci[CM.MentoringTime]).SetValue(groupParts.Sum(p => p.MentoringTime));
+                ws.Cell(row, ci[CM.ContactingDepartmentsTime]).SetValue(groupParts.Sum(p => p.ContactingDepartmentsTime));
+                ws.Cell(row, ci[CM.FixtureMakingTime]).SetValue(groupParts.Sum(p => p.FixtureMakingTime));
+                ws.Cell(row, ci[CM.HardwareFailureTime]).SetValue(groupParts.Sum(p => p.HardwareFailureTime));
+
+                ws.Cell(row, ci[CM.SpecifiedDowntimes])
+                  .SetValue(groupParts.SpecifiedDowntimesRatio(ShiftType.All))
+                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
+
+                var specDowntimesEx = groupParts.SpecifiedDowntimesRatioExcluding(new[] { Downtime.HardwareFailure, Downtime.Mentoring });
                 ws.Cell(row, ci[CM.SpecifiedDowntimesEx])
                   .SetValue(specDowntimesEx)
                   .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-
-                var generalRatio = (averageSetupRatio != 0 && productionRatio != 0)
-                    ? (averageSetupRatio + productionRatio) / 2
-                    : (averageSetupRatio != 0 ? averageSetupRatio : productionRatio);
-                if ((qualificationNumber == 1 || qualification?.ToLowerInvariant() == "ученик") && productionRatio != 0) generalRatio = productionRatio;
-
-                ws.Cell(row, ci[CM.GeneralRatio])
-                  .SetValue(generalRatio)
-                  .Style.NumberFormat.NumberFormatId = (int)XLPredefinedFormat.Number.PercentInteger;
-
-                ws.Cell(row, ci[CM.SetupsCount])
-                  .SetValue(filteredParts.Count(p => p.SetupRatio is not (0 or double.NaN or double.NegativeInfinity or double.PositiveInfinity)));
-
-                ws.Cell(row, ci[CM.ProductionsCount])
-                  .SetValue(filteredParts.Count(p => p.ProductionRatio != 0));
 
                 var workedShifts = parts.Where(p => p.Operator == partGroup.Key.Operator && p.Machine == partGroup.Key.Machine)
                                  .Select(p => p.ShiftDate)
                                  .Distinct()
                                  .Count();
-                ws.Cell(row, ci[CM.WorkedShifts])
-                  .SetValue(workedShifts);
+                ws.Cell(row, ci[CM.WorkedShifts]).SetValue(workedShifts);
 
+                // Excel-формула для коэффициента с учетом всех условий
                 if (validQualification)
-                    ws.Cell(row, ci[CM.Coefficient]).SetValue(Coefficient(qualificationNumber, specDowntimesEx, generalRatio, averageSetupRatio, workedShifts));
+                {
+                    string specDowntimesExAddr = ws.Cell(row, ci[CM.SpecifiedDowntimesEx]).Address.ToStringRelative();
+                    string generalRatioAddr = ws.Cell(row, ci[CM.GeneralRatio]).Address.ToStringRelative();
+                    string workedShiftsAddr = ws.Cell(row, ci[CM.WorkedShifts]).Address.ToStringRelative();
+
+                    // Единая формула коэффициента с учетом разряда внутри формулы
+                    string coefficientFormula = $@"=IF(OR({setupRatioAddr}<0.5,{specDowntimesExAddr}>0.1,{workedShiftsAddr}<{workDays / 6}),"""",
+                IF(OR({qualificationAddr}=1,{qualificationAddr}=2),
+                    IF({generalRatioAddr}>1,{Coefficient2},IF({generalRatioAddr}>0.9,{Coefficient1},"""")),
+                    IF(OR({qualificationAddr}=3,{qualificationAddr}=4),
+                        IF({generalRatioAddr}>1.05,{Coefficient2},IF({generalRatioAddr}>0.95,{Coefficient1},"""")),
+                        IF(OR({qualificationAddr}=5,{qualificationAddr}=6),
+                            IF({generalRatioAddr}>1.1,{Coefficient2},IF({generalRatioAddr}>1,{Coefficient1},"""")),
+                            """"))))";
+
+                    ws.Cell(row, ci[CM.Coefficient]).FormulaA1 = coefficientFormula;
+                }
 
                 row++;
             }
+
+            // Форматирование листа
             ws.RangeUsed().Style.Border.InsideBorder = XLBorderStyleValues.Thin;
             ws.RangeUsed().Style.Border.OutsideBorder = XLBorderStyleValues.Medium;
             ws.RangeUsed().SetAutoFilter(true);
@@ -1234,14 +1251,19 @@ namespace remeLog.Infrastructure
             ws.Column(ci[CM.Qualification]).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             ws.Column(ci[CM.Qualification]).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Columns(ci[CM.CreateNcProgramTime], ci[CM.SpecifiedDowntimes]).Group(true);
-            ws.Cell(1, 1).Value = $"Отчёт по операторам за период с {fromDate.ToString(Constants.ShortDateFormat)} по {toDate.ToString(Constants.ShortDateFormat)} (изготовление от {minPartsCount}{(maxPartsCount == int.MaxValue ? "" : $" до {maxPartsCount}")} шт.{(onlySerial ? " (Только серийка)" : "")})";
+
+            ws.Cell(1, 1).Value =
+                $"Отчёт по операторам за период с {fromDate:dd.MM.yyyy} по {toDate:dd.MM.yyyy} (изготовление от {minPartsCount}{(maxPartsCount == int.MaxValue ? "" : $" до {maxPartsCount}")} шт.{(onlySerial ? " (Только серийка)" : "")})";
             ws.Range(1, ci[CM.Operator], 1, cm.Count).Merge();
             ws.Range(1, ci[CM.Operator], 1, 1).Style.Font.FontSize = 14;
             ws.Columns(ci[CM.SetupRatio], cm.Count).Width = 7;
+
             wb.SaveAs(path);
-            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question)
-                == MessageBoxResult.Yes) Process.Start(new ProcessStartInfo() { UseShellExecute = true, FileName = path });
-            return $"Файл сохранен в \"{path}\"";
+
+            if (MessageBox.Show("Открыть сохраненный файл?", "Вопросик", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+
+            return path;
         }
 
         /// <summary>
