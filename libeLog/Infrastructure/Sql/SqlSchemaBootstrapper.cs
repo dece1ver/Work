@@ -88,10 +88,12 @@ namespace libeLog.Infrastructure.Sql
 
             new TableBuilder("cnc_remelog_config")
                 .AddIdColumn()
-                .AddDoubleColumn("max_setup_limit", false)
-                .AddDoubleColumn("long_setup_limit", false)
+                .AddDoubleColumn("max_setup_limit")
+                .AddDoubleColumn("long_setup_limit")
                 .AddStringColumn("NcArchivePath")
                 .AddStringColumn("NcIntermediatePath")
+                .AddStringColumn("Administrators")
+                .AddCompositeUnique("Administrators")
                 .Build(),
 
             new TableBuilder("cnc_serial_parts")
@@ -107,6 +109,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("Name", 255, false)
                 .AddCompositeUnique("Name", "SerialPartId")
                 .AddForeignKey("SerialPartId", "cnc_serial_parts", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .AddIntColumn("OrderIndex", false, 0)
                 .Build(),
 
             new TableBuilder("cnc_setups")

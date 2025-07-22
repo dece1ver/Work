@@ -1,9 +1,7 @@
-﻿using DocumentFormat.OpenXml.VariantTypes;
-using libeLog;
+﻿using libeLog;
 using libeLog.Base;
 using libeLog.Models;
 using remeLog.Infrastructure;
-using remeLog.Models;
 using remeLog.Views;
 using System;
 using System.Collections.Generic;
@@ -11,25 +9,35 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace remeLog.ViewModels
 {
     public class EditSerialPartsWindowViewModel : ViewModel
     {
+        public CancellationTokenSource _cts = new();
         public EditSerialPartsWindowViewModel()
         {
             SaveSerialPartsCommand = new LambdaCommand(OnSaveSerialPartsCommandExecuted, CanSaveSerialPartsCommandExecute);
+            DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
+            LoadPartsCommand = new LambdaCommand(OnLoadPartsCommandExecuted, CanLoadPartsCommandExecute);
             AddOperationCommand = new LambdaCommand(OnAddOperationCommandExecuted, CanAddOperationCommandExecute);
-            AddSetupCommand = new LambdaCommand(OnAddSetupCommandExecuted, CanAddSetupCommandExecute);
             RenameOperationCommand = new LambdaCommand(OnRenameOperationCommandExecuted, CanRenameOperationCommandExecute);
             DeleteOperationCommand = new LambdaCommand(OnDeleteOperationCommandExecuted, CanDeleteOperationCommandExecute);
+            AddSetupCommand = new LambdaCommand(OnAddSetupCommandExecuted, CanAddSetupCommandExecute);
+            DeleteSetupCommand = new LambdaCommand(OnDeleteSetupCommandExecuted, CanDeleteSetupCommandExecute);
+            SetNewSetupNormativeCommand = new LambdaCommand(OnSetNewSetupNormativeCommandExecuted, CanSetNewSetupNormativeCommandExecute);
+            SetNewProductionNormativeCommand = new LambdaCommand(OnSetNewProductionNormativeCommandExecuted, CanSetNewProductionNormativeCommandExecute);
 
             _Status = "";
             _SerialParts = new ObservableCollection<SerialPart>();
             SerialParts.CollectionChanged += OnSerialPartsCollectionChanged!;
             Task.Run(LoadSerialPartsAsync);
+            Task.Run(StartBackgroundCheckLoop);
+
         }
 
         private ObservableCollection<SerialPart> _SerialParts;
@@ -45,8 +53,16 @@ namespace remeLog.ViewModels
                 {
                     _SerialParts.CollectionChanged += OnSerialPartsCollectionChanged!;
                     SubscribeToSerialParts(_SerialParts);
+                    OnPropertyChanged(nameof(IsSaveEnabled));
                 }
             }
+        }
+
+        private CncOperation? _draggedOperation;
+        public CncOperation? DraggedOperation
+        {
+            get => _draggedOperation;
+            set => Set(ref _draggedOperation, value);
         }
 
         private string _Status;
@@ -70,6 +86,14 @@ namespace remeLog.ViewModels
             set => Set(ref _InProgress, value);
         }
 
+        private Overlay _Overlay = new(false);
+
+        public Overlay Overlay
+        {
+            get => _Overlay;
+            set => Set(ref _Overlay, value);
+        }
+
         #region SaveSerialParts
         public ICommand SaveSerialPartsCommand { get; }
         private async void OnSaveSerialPartsCommandExecuted(object p)
@@ -80,7 +104,14 @@ namespace remeLog.ViewModels
                 return;
             }
             InProgress = true;
-            await Database.SaveSerialPartsAsync(SerialParts, new Progress<string>(p => Status = p));
+            await Task.Run(async () =>
+            {
+                foreach (var part in SerialParts.Where(sp => sp.IsModified))
+                {
+                    await libeLog.Infrastructure.Database.SaveSerialPartAsync(part, AppSettings.Instance.ConnectionString, new Progress<string>(p => Status = p));
+                }
+            });
+            
             await LoadSerialPartsAsync();
             InProgress = false;
             Status = "Обновление завершено";
@@ -88,7 +119,40 @@ namespace remeLog.ViewModels
             Status = "";
         }
 
-        private bool CanSaveSerialPartsCommandExecute(object p) => !InProgress;
+        private bool CanSaveSerialPartsCommandExecute(object p) => !InProgress && IsSaveEnabled;
+        #endregion
+
+        #region LoadParts
+        public ICommand LoadPartsCommand { get; }
+        private void OnLoadPartsCommandExecuted(object p)
+        {
+            Task.Run(LoadSerialPartsAsync);
+        }
+        private bool CanLoadPartsCommandExecute(object p) => !InProgress;
+        #endregion
+
+        #region DeletePart
+        public ICommand DeletePartCommand { get; }
+        private void OnDeletePartCommandExecuted(object p)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+            if (p is not SerialPart serialPart) 
+                return; 
+            if (MessageBox.Show(
+                "Это действие необратимо.\nУдалить деталь из списка серийных вместе со всеми операциями и историей нормативов?", 
+                serialPart.PartName, 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                ShowMessage($"Удаление детали: {serialPart.PartName}");
+            }
+            else
+            {
+                ShowMessage("Отмена");
+            }
+        }
+        private bool CanDeletePartCommandExecute(object p) => !InProgress;
         #endregion
 
         #region AddOperation
@@ -114,7 +178,10 @@ namespace remeLog.ViewModels
             {
                 Setups = new() { new CncSetup { Number = 1 } }
             });
+            ShowMessage($"К детали: {serialPart.PartName} добавлена операция: {uniqueName}");
         }
+
+
 
         private bool CanAddOperationCommandExecute(object p) => !InProgress;
         #endregion
@@ -142,25 +209,51 @@ namespace remeLog.ViewModels
                 }
             }
 
-            if (nextNumber == 0) return;
+            if (nextNumber == 0)
+            {
+                ShowMessage("Превышение доступного числа установок.");
+                return;
+            }
 
             cncOperation.Setups.Add(new CncSetup
             {
                 Number = nextNumber
             });
+            ShowMessage($"Добавлена {nextNumber} установка");
         }
         private bool CanAddSetupCommandExecute(object p) => !InProgress;
-
         #endregion
 
         #region RenameOperation
         public ICommand RenameOperationCommand { get; }
         private void OnRenameOperationCommandExecuted(object p)
         {
-            if (p is not CncOperation cncOperation)
-                return;
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции"))) return;
 
-            
+            if (p is FrameworkElement fe && fe.DataContext is CncOperation cncOperation)
+            {
+                using (Overlay = new())
+                {
+                    var parentPart = SerialParts.FirstOrDefault(sp => sp.Operations.Contains(cncOperation));
+                    var dlg = new UserInputDialogWindow(parentPart?.PartName ?? "Ввод", $"Введите новое название операции '{cncOperation.Name}':")
+                    {
+                        Owner = Window.GetWindow(fe)
+                    };
+
+                    if (dlg.ShowDialog() != true)
+                    {
+                        ShowMessage("Отмена");
+                        return;
+                    }
+
+                    if (parentPart?.Operations.Any(x => x.Name == dlg.UserInput) == true)
+                    {
+                        ShowMessage("Операция с таким названием уже существует");
+                        return;
+                    }
+                    cncOperation.Name = dlg.UserInput;
+                }
+            }
         }
         private bool CanRenameOperationCommandExecute(object p) => !InProgress;
         #endregion
@@ -169,14 +262,159 @@ namespace remeLog.ViewModels
         public ICommand DeleteOperationCommand { get; }
         private void OnDeleteOperationCommandExecuted(object p)
         {
-            if (p is not CncOperation cncOperation)
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
                 return;
 
-            
+            if (p is FrameworkElement fe && fe.DataContext is CncOperation cncOperation)
+            {
+                var parentPart = SerialParts.FirstOrDefault(sp => sp.Operations.Contains(cncOperation));
+                if (parentPart == null)
+                    return;
+                if (MessageBox.Show($"Удалить операцию '{cncOperation.Name}'?", parentPart.PartName, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    parentPart.Operations.Remove(cncOperation);
+                    ShowMessage("Операция удалена");
+                }
+                else
+                {
+                    ShowMessage("Отмена");
+                }
+            }
         }
         private bool CanDeleteOperationCommandExecute(object p) => !InProgress;
         #endregion
 
+        #region DeleteSetup
+        public ICommand DeleteSetupCommand { get; }
+        private void OnDeleteSetupCommandExecuted(object p)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+
+            if (p is FrameworkElement fe && fe.DataContext is CncSetup cncSetup)
+            {
+                var parentOperation = SerialParts.SelectMany(sp => sp.Operations).FirstOrDefault(sp => sp.Setups.Contains(cncSetup));
+                if (parentOperation == null)
+                    return;
+                if (MessageBox.Show($"Удалить {cncSetup.Number} установ?", parentOperation.Name, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    parentOperation.Setups.Remove(cncSetup);
+                    ShowMessage("Операция удалена");
+                }
+                else
+                {
+                    ShowMessage("Отмена");
+                }
+            }
+        }
+        private bool CanDeleteSetupCommandExecute(object p) => !InProgress;
+        #endregion
+
+        #region SetNewSetupNormative
+        public ICommand SetNewSetupNormativeCommand { get; }
+        private void OnSetNewSetupNormativeCommandExecuted(object p)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+
+            if (p is FrameworkElement fe && fe.DataContext is CncSetup cncSetup)
+            {
+                var parentOperation = SerialParts.SelectMany(sp => sp.Operations).FirstOrDefault(sp => sp.Setups.Contains(cncSetup));
+                if (parentOperation == null)
+                    return;
+                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на наладку:", expectedType: typeof(double))
+                {
+                    Owner = Window.GetWindow(fe)
+                };
+                if (dlg.ShowDialog() == true && double.TryParse(dlg.UserInput, out double normative))
+                {
+                    if (normative <= 0)
+                    {
+                        ShowMessage("Значение должно быть больше 0");
+                        return;
+                    }
+                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Setup, Value = normative, EffectiveFrom = DateTime.Now });
+                    ShowMessage("Установлен новый норматив на наладку");
+                }
+                else
+                {
+                    ShowMessage("Отмена");
+                }
+            }
+        }
+        private bool CanSetNewSetupNormativeCommandExecute(object p) => !InProgress;
+        #endregion
+
+        #region SetNewProductionNormative
+        public ICommand SetNewProductionNormativeCommand { get; }
+
+        private void OnSetNewProductionNormativeCommandExecuted(object p)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+
+            if (p is FrameworkElement fe && fe.DataContext is CncSetup cncSetup)
+            {
+                var parentOperation = SerialParts.SelectMany(sp => sp.Operations).FirstOrDefault(sp => sp.Setups.Contains(cncSetup));
+                if (parentOperation == null)
+                    return;
+                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на изготовление:", expectedType: typeof(double))
+                {
+                    Owner = Window.GetWindow(fe)
+                };
+                if (dlg.ShowDialog() == true && double.TryParse(dlg.UserInput, out double normative))
+                {
+                    if (normative <= 0)
+                    {
+                        ShowMessage("Значение должно быть больше 0");
+                        return;
+                    }
+                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Production, Value = normative, EffectiveFrom = DateTime.Now });
+                    ShowMessage("Установлен новый норматив на изготовление");
+                }
+                else
+                {
+                    ShowMessage("Отмена");
+                }
+            }
+        }
+        private bool CanSetNewProductionNormativeCommandExecute(object p) => !InProgress;
+        #endregion
+
+        public void MoveOperation(CncOperation targetOperation, bool isAbove)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+
+            if (DraggedOperation == null || targetOperation == null) return;
+
+            var parentPart = SerialParts.FirstOrDefault(p =>
+                p.Operations.Contains(DraggedOperation) &&
+                p.Operations.Contains(targetOperation));
+
+            if (parentPart == null) return;
+
+            var operations = parentPart.Operations;
+            int oldIndex = operations.IndexOf(DraggedOperation);
+            int newIndex = operations.IndexOf(targetOperation);
+
+            if (!isAbove) newIndex++;
+            if (newIndex > oldIndex) newIndex--;
+
+            if (oldIndex != newIndex)
+            {
+                operations.Move(oldIndex, newIndex);
+                UpdateOrderIndexes(operations);
+            }
+        }
+
+        private static void UpdateOrderIndexes(IList<CncOperation> operations)
+        {
+            for (int i = 0; i < operations.Count; i++)
+            {
+                operations[i].OrderIndex = i;
+            }
+        }
 
         private async Task LoadSerialPartsAsync()
         {
@@ -187,6 +425,17 @@ namespace remeLog.ViewModels
             }
             var parts = await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString, new Progress<string>(p => Status = p));
             SerialParts = new ObservableCollection<SerialPart>(parts);
+            foreach (var part in SerialParts)
+            {
+                foreach (var operation in part.Operations)
+                {
+                    foreach (var setup in operation.Setups)
+                    {
+                        setup.UpdateDependentProperties();
+                    }
+                }
+                part.AcceptChanges();
+            }
             ValidateSerialParts();
         }
 
@@ -205,7 +454,6 @@ namespace remeLog.ViewModels
                         await Database.DeleteSerialPartAsync(p.Id, new Progress<string>(p => Status = p));
                     }
                 }
-
             ValidateSerialParts();
         }
 
@@ -228,6 +476,7 @@ namespace remeLog.ViewModels
         private void OnSerialPartPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             ValidateSerialParts();
+            OnPropertyChanged(nameof(IsSaveEnabled));
         }
 
         private void ValidateSerialParts()
@@ -249,12 +498,42 @@ namespace remeLog.ViewModels
         private string ValidatePart(SerialPart part)
         {
             if (string.IsNullOrWhiteSpace(part.PartName))
-                return "Ошибка: Название детали не может быть пустое.";
+                return "Ошибка: Название детали не может быть пустым.";
 
             if (SerialParts.Count(o => o.PartName == part.PartName) > 1)
                 return $"Ошибка: Деталь '{part.PartName}' уже существует.";
 
+            if (part.Operations.Any(op => !op.Setups.Any()))
+            {
+                return $"Ошибка: Деталь '{part.PartName}' содержит операцию без установов.";
+            }
+
+            var allSetups = part.Operations.SelectMany(op => op.Setups);
+            if (allSetups.Any(s => !s.SetupNormatives.Any()
+                                || !s.ProductionNormatives.Any()))
+            {
+                return $"Ошибка: Деталь '{part.PartName}' содержит установы без норматива.";
+            }
+            OnPropertyChanged(nameof(IsSaveEnabled));
             return null!;
+        }
+        private void ShowMessage(string message, int delay = 3000)
+        {
+            Task.Run(async () =>
+            {
+                Status = message;
+                await Task.Delay(delay);
+                if (Status == message) Status = string.Empty;
+            });
+        }
+
+        private async Task StartBackgroundCheckLoop()
+        {
+            while (!_cts.IsCancellationRequested)
+            {
+                ValidateSerialParts();
+                await Task.Delay(3000, _cts.Token);
+            }
         }
     }
 }

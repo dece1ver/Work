@@ -63,6 +63,10 @@ namespace remeLog.Infrastructure
         public static string NcArchivePath { get; set; } = "";
         [JsonIgnore]
         public static string NcIntermediatePath { get; set; } = "";
+        [JsonIgnore]
+        public static string[] Administrators { get; set; } = Array.Empty<string>();
+        [JsonIgnore]
+        public static string[] Users { get; set; } = Array.Empty<string>();
 
         /// <summary> Режим отладки </summary>
         public bool DebugMode { get; set; }

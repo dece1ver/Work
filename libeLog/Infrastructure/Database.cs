@@ -29,11 +29,11 @@ namespace libeLog.Infrastructure
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new(connectionString))
                 {
                     connection.Open();
                     string query = "SELECT SetupLimit FROM cnc_machines WHERE Name = @Name";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         command.Parameters.AddWithValue("@Name", machine);
 
@@ -83,11 +83,11 @@ namespace libeLog.Infrastructure
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (SqlConnection connection = new(connectionString))
                 {
                     connection.Open();
                     string query = "SELECT SetupCoefficient FROM cnc_machines WHERE Name = @Name";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlCommand command = new(query, connection))
                     {
                         command.Parameters.AddWithValue("@Name", machine);
 
@@ -134,7 +134,7 @@ namespace libeLog.Infrastructure
         /// </remarks>
         public static async Task<(string BaseUri, string User, string Pass, string NcProgramFolder)> GetWinnumConfigAsync(string connectionString)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new(connectionString))
             {
                 await connection.OpenAsync();
                 string query = "SELECT [BaseUri], [User], [Pass], [NcProgramFolder] FROM cnc_winnum_cfg";
@@ -182,7 +182,7 @@ namespace libeLog.Infrastructure
             {
                 while (await reader.ReadAsync())
                 {
-                    var part = new SerialPart
+                    var part = new SerialPart()
                     {
                         Id = reader.GetInt32(0),
                         PartName = reader.GetString(1),
@@ -244,20 +244,22 @@ namespace libeLog.Infrastructure
             // 4) Загрузка нормативов
             progress?.Report("Читаем нормативы...");
             using (var cmd = new SqlCommand(
-                "SELECT CncSetupId, NormativeType, Value, EffectiveFrom " +
+                "SELECT Id, CncSetupId, NormativeType, Value, EffectiveFrom " +
                 "FROM cnc_normatives " +
                 "ORDER BY EffectiveFrom", connection))
             using (var reader = await cmd.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
-                    var setupId = reader.GetInt32(0);
-                    var typeRaw = reader.GetByte(1);
-                    var value = reader.GetDouble(2);
-                    DateTime ef = reader.GetDateTime(3);
+                    var id = reader.GetInt32(0);
+                    var setupId = reader.GetInt32(1);
+                    var typeRaw = reader.GetByte(2);
+                    var value = reader.GetDouble(3);
+                    DateTime ef = reader.GetDateTime(4);
 
                     var entry = new NormativeEntry
                     {
+                        Id = id,
                         Type = (NormativeEntry.NormativeType)typeRaw,
                         Value = value,
                         EffectiveFrom = ef
@@ -280,111 +282,272 @@ namespace libeLog.Infrastructure
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ArgumentException("Пустая строка подключения", nameof(connectionString));
 
+            if (part == null)
+                throw new ArgumentNullException(nameof(part));
+
             using var conn = new SqlConnection(connectionString);
             await conn.OpenAsync();
             using var tx = conn.BeginTransaction();
 
             try
             {
-                progress?.Report("Сохраняем деталь...");
+                progress?.Report($"Сохраняем деталь {part.PartName}");
+
+                // 1. INSERT или UPDATE самой детали
                 if (part.Id == 0)
                 {
-                    using var cmd = new SqlCommand(
-                        @"INSERT INTO cnc_serial_parts(PartName, YearCount)
-                          VALUES(@name,@year);
-                          SELECT SCOPE_IDENTITY();", conn, tx);
-                    cmd.Parameters.AddWithValue("@name", part.PartName);
+                    using var cmd = new SqlCommand(@"
+                INSERT INTO cnc_serial_parts(PartName, YearCount)
+                VALUES(@name, @year);
+                SELECT SCOPE_IDENTITY();", conn, tx);
+                    cmd.Parameters.AddWithValue("@name", part.PartName ?? string.Empty);
                     cmd.Parameters.AddWithValue("@year", part.YearCount);
-                    part.Id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+                    var result = await cmd.ExecuteScalarAsync();
+                    if (result == null || result == DBNull.Value)
+                        throw new InvalidOperationException("Не удалось получить ID новой детали");
+
+                    part.Id = Convert.ToInt32(result);
                 }
                 else
                 {
-                    using var cmd = new SqlCommand(
-                        @"UPDATE cnc_serial_parts
-                          SET PartName=@name, YearCount=@year
-                          WHERE Id=@id;", conn, tx);
+                    using var cmd = new SqlCommand(@"
+                UPDATE cnc_serial_parts
+                SET PartName=@name, YearCount=@year
+                WHERE Id=@id;", conn, tx);
                     cmd.Parameters.AddWithValue("@id", part.Id);
-                    cmd.Parameters.AddWithValue("@name", part.PartName);
+                    cmd.Parameters.AddWithValue("@name", part.PartName ?? string.Empty);
                     cmd.Parameters.AddWithValue("@year", part.YearCount);
-                    await cmd.ExecuteNonQueryAsync();
+
+                    var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    if (rowsAffected == 0)
+                        throw new InvalidOperationException($"Деталь с ID {part.Id} не найдена для обновления");
                 }
 
-                foreach (var op in part.Operations)
+                // Только для обновления существующей детали — удаляем из БД всё, чего нет в модели
+                if (part.Id != 0)
                 {
-                    progress?.Report($"Сохраняем операцию «{op.Name}»...");
-                    if (op.Id == 0)
+                    // 2.1. Определяем удалённые операции
+                    var dbOpIds = new List<int>();
+                    using (var cmd = new SqlCommand("SELECT Id FROM cnc_operations WHERE SerialPartId=@pid", conn, tx))
                     {
-                        using var cmd = new SqlCommand(
-                            @"INSERT INTO cnc_operations(SerialPartId, Name)
-                              VALUES(@pid,@name);
-                              SELECT SCOPE_IDENTITY();", conn, tx);
                         cmd.Parameters.AddWithValue("@pid", part.Id);
-                        cmd.Parameters.AddWithValue("@name", op.Name);
-                        op.Id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-                    }
-                    else
-                    {
-                        using var cmd = new SqlCommand(
-                            @"UPDATE cnc_operations
-                              SET Name=@name
-                              WHERE Id=@id;", conn, tx);
-                        cmd.Parameters.AddWithValue("@id", op.Id);
-                        cmd.Parameters.AddWithValue("@name", op.Name);
-                        await cmd.ExecuteNonQueryAsync();
+                        using var rdr = await cmd.ExecuteReaderAsync();
+                        while (await rdr.ReadAsync())
+                            dbOpIds.Add(rdr.GetInt32(0));
                     }
 
-                    foreach (var setup in op.Setups)
-                    {
-                        progress?.Report($"Сохраняем установку №{setup.Number}...");
-                        if (setup.Id == 0)
-                        {
-                            using var cmd = new SqlCommand(
-                                @"INSERT INTO cnc_setups(CncOperationId, Number)
-                                  VALUES(@oid,@num);
-                                  SELECT SCOPE_IDENTITY();", conn, tx);
-                            cmd.Parameters.AddWithValue("@oid", op.Id);
-                            cmd.Parameters.AddWithValue("@num", setup.Number);
-                            setup.Id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-                        }
-                        else
-                        {
-                            using var cmd = new SqlCommand(
-                                @"UPDATE cnc_setups
-                                SET Number=@num
-                                WHERE Id=@id;", conn, tx);
-                            cmd.Parameters.AddWithValue("@id", setup.Id);
-                            cmd.Parameters.AddWithValue("@num", setup.Number);
-                            await cmd.ExecuteNonQueryAsync();
-                        }
+                    var keepOpIds = part.Operations?.Select(o => o.Id).Where(id => id != 0).ToList() ?? new List<int>();
+                    var delOpIds = dbOpIds.Except(keepOpIds).ToList();
 
-                        foreach (var norm in setup.Normatives)
+                    if (delOpIds.Any())
+                    {
+                        // 2.1.1. Удаляем нормативы у установок удалённых операций
+                        await DeleteByIds(conn, tx, @"
+                    DELETE N
+                    FROM cnc_normatives N
+                    JOIN cnc_setups S ON N.CncSetupId = S.Id
+                    WHERE S.CncOperationId IN ({0})", delOpIds);
+
+                        // 2.1.2. Удаляем сами установки
+                        await DeleteByIds(conn, tx, @"
+                    DELETE FROM cnc_setups
+                    WHERE CncOperationId IN ({0})", delOpIds);
+
+                        // 2.1.3. Удаляем операции
+                        await DeleteByIds(conn, tx, @"
+                    DELETE FROM cnc_operations
+                    WHERE Id IN ({0})", delOpIds);
+                    }
+
+                    // 2.2. Для каждой оставшейся операции — удалить из БД те установки, которых нет в модели
+                    if (part.Operations != null)
+                    {
+                        foreach (var op in part.Operations.Where(o => o.Id != 0))
                         {
-                            if (norm.Id == 0)
+                            var dbSetupIds = new List<int>();
+                            using (var cmd = new SqlCommand("SELECT Id FROM cnc_setups WHERE CncOperationId=@oid", conn, tx))
                             {
-                                progress?.Report($"Добавляем норматив {norm.Type}={norm.Value}...");
-                                using var cmd = new SqlCommand(
-                                    @"INSERT INTO cnc_normatives(CncSetupId, NormativeType, Value, EffectiveFrom)
-                                    VALUES(@sid,@type,@val,@ef);", conn, tx);
-                                cmd.Parameters.AddWithValue("@sid", setup.Id);
-                                cmd.Parameters.AddWithValue("@type", (byte)norm.Type);
-                                cmd.Parameters.AddWithValue("@val", norm.Value);
-                                cmd.Parameters.AddWithValue("@ef", norm.EffectiveFrom);
-                                await cmd.ExecuteNonQueryAsync();
+                                cmd.Parameters.AddWithValue("@oid", op.Id);
+                                using var rdr = await cmd.ExecuteReaderAsync();
+                                while (await rdr.ReadAsync())
+                                    dbSetupIds.Add(rdr.GetInt32(0));
+                            }
+
+                            var keepSetupIds = op.Setups?.Select(s => s.Id).Where(id => id != 0).ToList() ?? new List<int>();
+                            var delSetupIds = dbSetupIds.Except(keepSetupIds).ToList();
+
+                            if (delSetupIds.Any())
+                            {
+                                // 2.2.1. Удаляем нормативы удалённых установок
+                                await DeleteByIds(conn, tx, @"
+                            DELETE FROM cnc_normatives
+                            WHERE CncSetupId IN ({0})", delSetupIds);
+
+                                // 2.2.2. Удаляем установки
+                                await DeleteByIds(conn, tx, @"
+                            DELETE FROM cnc_setups
+                            WHERE Id IN ({0})", delSetupIds);
+                            }
+
+                            // 2.3. Для каждой оставшейся установки — удалить нормативы, которых нет в модели
+                            if (op.Setups != null)
+                            {
+                                foreach (var setup in op.Setups.Where(s => s.Id != 0))
+                                {
+                                    var dbNormIds = new List<int>();
+                                    using (var cmd = new SqlCommand("SELECT Id FROM cnc_normatives WHERE CncSetupId=@sid", conn, tx))
+                                    {
+                                        cmd.Parameters.AddWithValue("@sid", setup.Id);
+                                        using var rdr = await cmd.ExecuteReaderAsync();
+                                        while (await rdr.ReadAsync())
+                                            dbNormIds.Add(rdr.GetInt32(0));
+                                    }
+
+                                    var keepNormIds = setup.Normatives?.Select(n => n.Id).Where(id => id != 0).ToList() ?? new List<int>();
+                                    var delNormIds = dbNormIds.Except(keepNormIds).ToList();
+
+                                    if (delNormIds.Any())
+                                    {
+                                        await DeleteByIds(conn, tx, @"
+                                    DELETE FROM cnc_normatives
+                                    WHERE Id IN ({0})", delNormIds);
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                tx.Commit();
+                // 3. INSERT / UPDATE оставшихся операций, установок и нормативов
+                if (part.Operations != null)
+                {
+                    foreach (var op in part.Operations)
+                    {
+                        progress?.Report($"Сохраняем операцию «{op.Name}»...");
+
+                        if (op.Id == 0)
+                        {
+                            using var cmd = new SqlCommand(@"
+                        INSERT INTO cnc_operations(SerialPartId, Name, OrderIndex)
+                        VALUES(@pid, @name, @oid);
+                        SELECT SCOPE_IDENTITY();", conn, tx);
+                            cmd.Parameters.AddWithValue("@pid", part.Id);
+                            cmd.Parameters.AddWithValue("@name", op.Name ?? string.Empty);
+                            cmd.Parameters.AddWithValue("@oid", op.OrderIndex);
+
+                            var result = await cmd.ExecuteScalarAsync();
+                            if (result == null || result == DBNull.Value)
+                                throw new InvalidOperationException($"Не удалось получить ID новой операции {op.Name}");
+
+                            op.Id = Convert.ToInt32(result);
+                        }
+                        else
+                        {
+                            using var cmd = new SqlCommand(@"
+                        UPDATE cnc_operations
+                        SET Name=@name, OrderIndex=@oid 
+                        WHERE Id=@id;", conn, tx);
+                            cmd.Parameters.AddWithValue("@id", op.Id);
+                            cmd.Parameters.AddWithValue("@name", op.Name ?? string.Empty);
+                            cmd.Parameters.AddWithValue("@oid", op.OrderIndex);
+
+                            var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                            if (rowsAffected == 0)
+                                throw new InvalidOperationException($"Операция с ID {op.Id} не найдена для обновления");
+                        }
+
+                        if (op.Setups != null)
+                        {
+                            foreach (var setup in op.Setups)
+                            {
+                                progress?.Report($"Сохраняем установку №{setup.Number}...");
+
+                                if (setup.Id == 0)
+                                {
+                                    using var cmd = new SqlCommand(@"
+                                INSERT INTO cnc_setups(CncOperationId, Number)
+                                VALUES(@oid, @num);
+                                SELECT SCOPE_IDENTITY();", conn, tx);
+                                    cmd.Parameters.AddWithValue("@oid", op.Id);
+                                    cmd.Parameters.AddWithValue("@num", setup.Number);
+
+                                    var result = await cmd.ExecuteScalarAsync();
+                                    if (result == null || result == DBNull.Value)
+                                        throw new InvalidOperationException($"Не удалось получить ID новой установки №{setup.Number}");
+
+                                    setup.Id = Convert.ToInt32(result);
+                                }
+                                else
+                                {
+                                    using var cmd = new SqlCommand(@"
+                                UPDATE cnc_setups
+                                SET Number=@num
+                                WHERE Id=@id;", conn, tx);
+                                    cmd.Parameters.AddWithValue("@id", setup.Id);
+                                    cmd.Parameters.AddWithValue("@num", setup.Number);
+
+                                    var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                                    if (rowsAffected == 0)
+                                        throw new InvalidOperationException($"Установка с ID {setup.Id} не найдена для обновления");
+                                }
+
+                                // Добавляем только новые нормативы (история не изменяется)
+                                if (setup.Normatives != null)
+                                {
+                                    foreach (var norm in setup.Normatives.Where(n => n.Id == 0))
+                                    {
+                                        progress?.Report($"Добавляем норматив {norm.Type}={norm.Value}...");
+
+                                        using var cmd = new SqlCommand(@"
+                                    INSERT INTO cnc_normatives(CncSetupId, NormativeType, Value, EffectiveFrom)
+                                    VALUES(@sid, @type, @val, @ef);", conn, tx);
+                                        cmd.Parameters.AddWithValue("@sid", setup.Id);
+                                        cmd.Parameters.AddWithValue("@type", (byte)norm.Type);
+                                        cmd.Parameters.AddWithValue("@val", norm.Value);
+                                        cmd.Parameters.AddWithValue("@ef", norm.EffectiveFrom);
+
+                                        await cmd.ExecuteNonQueryAsync();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                await tx.CommitAsync();
                 progress?.Report("Сохранение завершено");
             }
             catch
             {
-                tx.Rollback();
+                await tx.RollbackAsync();
                 throw;
             }
         }
 
+        // Вспомогательный метод для безопасного удаления по списку ID
+        private static async Task DeleteByIds(SqlConnection conn, SqlTransaction tx, string sqlTemplate, List<int> ids)
+        {
+            if (!ids.Any()) return;
 
+            // Проверяем, что все ID действительно числовые (дополнительная защита)
+            if (ids.Any(id => id <= 0))
+                throw new ArgumentException("Найдены некорректные ID для удаления");
+
+            var parameters = new string[ids.Count];
+            using var cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.Transaction = tx;
+
+            for (int i = 0; i < ids.Count; i++)
+            {
+                var paramName = $"@id{i}";
+                parameters[i] = paramName;
+                cmd.Parameters.AddWithValue(paramName, ids[i]);
+            }
+
+            cmd.CommandText = string.Format(sqlTemplate, string.Join(",", parameters));
+            await cmd.ExecuteNonQueryAsync();
+        }
     }
 }

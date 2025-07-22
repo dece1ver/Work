@@ -15,7 +15,6 @@ namespace libeLog.Models
             Production = 1
         }
 
-
         private int _Id;
         /// <summary> ID </summary>
         public int Id
@@ -23,7 +22,6 @@ namespace libeLog.Models
             get => _Id;
             set => Set(ref _Id, value);
         }
-
 
         public NormativeType Type { get; set; }
 
@@ -33,16 +31,43 @@ namespace libeLog.Models
             NormativeType.Production => "Изготовление",
             _ => "Неизвестно"
         };
-        public double Value { get; set; }
-        public DateTime EffectiveFrom { get; set; }
+
+        private double _Value;
+        /// <summary> Описание </summary>
+        public double Value
+        {
+            get => _Value;
+            set => Set(ref _Value, value);
+        }
+
+
+        private DateTime _EffectiveFrom;
+        /// <summary> Описание </summary>
+        public DateTime EffectiveFrom
+        {
+            get => _EffectiveFrom;
+            set => Set(ref _EffectiveFrom, value);
+        }
 
         public bool Equals(NormativeEntry? other)
         {
             if (other is null) return false;
 
-            return Type == other.Type
+            return Id == other.Id
+                && Type == other.Type
                 && Value.Equals(other.Value)
                 && EffectiveFrom == other.EffectiveFrom;
+        }
+
+        public NormativeEntry Clone()
+        {
+            return new NormativeEntry
+            {
+                Id = this.Id,
+                Type = this.Type,
+                Value = this.Value,
+                EffectiveFrom = this.EffectiveFrom
+            };
         }
 
         public override bool Equals(object? obj) => Equals(obj as NormativeEntry);
@@ -57,5 +82,4 @@ namespace libeLog.Models
             return $"{Value} @ {EffectiveFrom:yy-MM-dd HH:mm} ({Type})";
         }
     }
-
 }

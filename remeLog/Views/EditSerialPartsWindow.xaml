@@ -8,8 +8,8 @@
         xmlns:cmd="clr-namespace:remeLog.Infrastructure.Commands"
         xmlns:vm="clr-namespace:remeLog.ViewModels"
         xmlns:lm="clr-namespace:libeLog.Models;assembly=libeLog"
-        mc:Ignorable="d" WindowStartupLocation="CenterOwner"
-        Title="Редактирование списка серийных деталей" Height="810" Width="500">
+        mc:Ignorable="d" WindowStartupLocation="CenterOwner" 
+        Title="Редактирование списка серийных деталей" Height="810" Width="500" ResizeMode="CanMinimize" Closing="editSerialPartsWindow_Closing">
     <Window.DataContext>
         <vm:EditSerialPartsWindowViewModel/>
     </Window.DataContext>
@@ -18,87 +18,129 @@
             <Setter Property="Height" Value="25"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
-
         <ContextMenu x:Key="EditingTextBoxContextMenu">
+            <MenuItem Header="Добавить операцию"
+                      Command="{Binding DataContext.AddOperationCommand, Source={x:Reference editSerialPartsWindow}}"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+            <Separator/>
             <MenuItem Header="Копировать" Command="ApplicationCommands.Copy" />
             <MenuItem Header="Вырезать" Command="ApplicationCommands.Cut" />
             <MenuItem Header="Вставить" Command="ApplicationCommands.Paste" />
             <MenuItem Header="Выделить все" Command="ApplicationCommands.SelectAll" />
-            <Separator/>
-            <MenuItem Header="Добавить операцию"
-                      Command="{Binding DataContext.AddOperationCommand, Source={x:Reference editSerialPartsWindow}}"
+            <MenuItem Header="Удалить деталь"
+                      Command="{Binding DataContext.DeletePartCommand, Source={x:Reference editSerialPartsWindow}}"
                       CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-
         </ContextMenu>
+        
         <ContextMenu x:Key="CncOperationContextMenu">
             <MenuItem Header="Добавить установ"
-              Command="{Binding DataContext.AddSetupCommand, Source={x:Reference editSerialPartsWindow}}"
-              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                      Command="{Binding DataContext.AddSetupCommand, Source={x:Reference editSerialPartsWindow}}"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+            <Separator/>
             <MenuItem Header="Переименовать операцию"
-              Command="{Binding DataContext.RenameOperationCommand, Source={x:Reference editSerialPartsWindow}}"
-              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                      Command="{Binding DataContext.RenameOperationCommand, Source={x:Reference editSerialPartsWindow}}"
+                      CommandParameter="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
             <MenuItem Header="Удалить операцию"
-              Command="{Binding DataContext.DeleteOperationCommand, Source={x:Reference editSerialPartsWindow}}"
-              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                      Command="{Binding DataContext.DeleteOperationCommand, Source={x:Reference editSerialPartsWindow}}"
+                      CommandParameter="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+        </ContextMenu>
+
+        <ContextMenu x:Key="CncSetupContextMenu">
+            <MenuItem Header="Изменить норматив наладки"
+                      Command="{Binding DataContext.SetNewSetupNormativeCommand, Source={x:Reference editSerialPartsWindow}}"
+                      CommandParameter="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+            <MenuItem Header="Изменить норматив изготовления"
+                      Command="{Binding DataContext.SetNewProductionNormativeCommand, Source={x:Reference editSerialPartsWindow}}"
+                      CommandParameter="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+            <Separator/>
+            <MenuItem Header="Удалить установ"
+                      Command="{Binding DataContext.DeleteSetupCommand, Source={x:Reference editSerialPartsWindow}}"
+                      CommandParameter="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
         </ContextMenu>
     </Window.Resources>
     <DockPanel>
-        <Grid DockPanel.Dock="Top" Margin="21 0">
+        <Grid DockPanel.Dock="Top" Margin="0 0 0 -1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="21"/>
                 <ColumnDefinition Width="340"/>
                 <ColumnDefinition Width="100"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Text="Наименование" Margin="-1 0 0 0" BorderBrush="Gray" IsReadOnly="False"/>
-            <TextBox Grid.Column="1" Text="Годовой план" Margin="-1 0 -1 0" BorderBrush="Gray" IsReadOnly="False"/>
+            <Button Grid.Column="0" Content="{StaticResource SyncIcon}" Margin="-1 0 0 0" Background="Transparent"
+                    Command="{Binding LoadPartsCommand}"/>
+            <TextBox Grid.Column="1" Text="Наименование" Margin="-1 0 0 0" BorderBrush="Gray" IsReadOnly="False"/>
+            <TextBox Grid.Column="2" Text="Годовой план" Margin="-1 0 -1 0" BorderBrush="Gray" IsReadOnly="False"/>
         </Grid>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
                 <TextBlock Text="{Binding Status}"/>
             </StatusBarItem>
         </StatusBar>
-        <Button DockPanel.Dock="Bottom" Content="Записать" 
-                IsEnabled="False" Width="100" Margin="5" 
+        <Button DockPanel.Dock="Bottom" Content="Записать"  Command="{Binding SaveSerialPartsCommand}"
+                IsEnabled="True" Width="100" Margin="5" 
                 HorizontalAlignment="Right" Height="40" Style="{StaticResource LvButton}"/>
-        <TreeView ItemsSource="{Binding SerialParts}" BorderThickness="0 0 0 0" Margin="0 0 0 0">
+        <TreeView ItemsSource="{Binding SerialParts}" BorderThickness="0 1 0 1" Margin="0 0 0 0">
             <TreeView.Resources>
-
                 <HierarchicalDataTemplate DataType="{x:Type lm:SerialPart}"
-                      ItemsSource="{Binding Operations}">
+                                          ItemsSource="{Binding Operations}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="340"/>
                             <ColumnDefinition Width="100"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" Text="{Binding PartName}" Margin="-1 -1 -1 0" ContextMenu="{StaticResource EditingTextBoxContextMenu}"/>
-                        <TextBox Grid.Column="1" Text="{Binding YearCount}" Margin="-1 -1 -1 0"/>
+                        <TextBox Grid.Column="0" Text="{
+                            Binding PartName, 
+                            UpdateSourceTrigger=PropertyChanged, 
+                            ValidatesOnDataErrors=True, 
+                            NotifyOnValidationError=True}" Margin="-1 -1 -1 0" 
+                                 VerticalContentAlignment="Center"
+                                 ContextMenu="{StaticResource EditingTextBoxContextMenu}">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsModified}" Value="True">
+                                            <Setter Property="Foreground" Value="Blue"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        <TextBox Grid.Column="1" Text="{
+                            Binding YearCount, 
+                            UpdateSourceTrigger=PropertyChanged, 
+                            ValidatesOnDataErrors=True, 
+                            NotifyOnValidationError=True}" Margin="-1 -1 -1 0">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsModified}" Value="True">
+                                            <Setter Property="Foreground" Value="Blue"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
                     </Grid>
                 </HierarchicalDataTemplate>
-
                 <HierarchicalDataTemplate DataType="{x:Type lm:CncOperation}"
-                      ItemsSource="{Binding Setups}">
-                    <TextBlock Text="{Binding Name}" ContextMenu="{StaticResource CncOperationContextMenu}"/>
+                                          ItemsSource="{Binding Setups}">
+                    <TextBlock Text="{Binding Name}" ContextMenu="{StaticResource CncOperationContextMenu}" HorizontalAlignment="Left"/>
                 </HierarchicalDataTemplate>
-
-                <HierarchicalDataTemplate DataType="{x:Type lm:CncSetup}"
-                                  ItemsSource="{Binding NormativesHistory}">
+                <HierarchicalDataTemplate DataType="{x:Type lm:CncSetup}" ItemsSource="{Binding NormativesHistory}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="302"/>
                             <ColumnDefinition Width="100"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" ContextMenu="{StaticResource CncSetupContextMenu}">
                             <TextBlock Text="{Binding Number}"/>
                             <TextBlock Text=" установка"/>
                             <TextBlock Text=" ― Наладка: "/>
                             <TextBlock Text="{Binding LastSetupNormative.Value, Mode=OneWay}"/>
                             <TextBlock Text=", Изготовление: "/>
                             <TextBlock Text="{Binding LastProductionNormative.Value, Mode=OneWay}"/>
-                        </StackPanel >
-                        <Button Grid.Row="0" Grid.Column="1" Content="Изменить" Margin="-1 -1 -1 0"/>
+                        </StackPanel>
                     </Grid>
-                    
                 </HierarchicalDataTemplate>
-
                 <HierarchicalDataTemplate DataType="{x:Type lm:NormativeEntry}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="[" />
@@ -110,6 +152,16 @@
                     </StackPanel>
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <EventSetter Event="PreviewMouseMove" Handler="TreeViewItem_PreviewMouseMove"/>
+                    <EventSetter Event="PreviewMouseLeftButtonDown" Handler="TreeViewItem_PreviewMouseLeftButtonDown"/>
+                    <EventSetter Event="DragOver" Handler="TreeViewItem_DragOver"/>
+                    <EventSetter Event="Drop" Handler="TreeViewItem_Drop"/>
+                    <EventSetter Event="DragLeave" Handler="TreeViewItem_DragLeave"/>
+                    <Setter Property="AllowDrop" Value="True"/>
+                </Style>
+            </TreeView.ItemContainerStyle>
         </TreeView>
     </DockPanel>
 </Window>

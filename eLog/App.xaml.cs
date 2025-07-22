@@ -294,6 +294,7 @@ namespace eLog
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
 
             e.Handled = true;
+            App.Current.Shutdown();
         }
 
         private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)

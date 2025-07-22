@@ -552,5 +552,40 @@ namespace remeLog.Infrastructure
             AppSettings.SerialParts = (await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!))
                 .PartNamesHashSet(EnumerableExtensions.PartNameNormalizeOption.NormalizeAndRemoveParentheses);
         }
+
+        /// <summary>
+        /// Проверяет, является ли текущий пользователь администратором Электронного журнала.
+        /// </summary>
+        /// <param name="action">
+        /// Необязательное действие, выполняемое, если пользователь не входит в список администраторов ЭЖ.
+        /// Может использоваться для отображения сообщений или логирования.
+        /// </param>
+        /// <returns>
+        /// <c>true</c>, если пользователь включён в список <see cref="AppSettings.Administrators"/>; иначе <c>false</c>.
+        /// </returns>
+        public static bool IsAppAdmin(Action? action = null)
+        {
+            var isAdmin = AppSettings.Administrators.Contains(Environment.UserName);
+            if (isAdmin)
+                action?.Invoke();
+            return isAdmin;
+        }
+
+        /// <summary>
+        /// Проверяет, не обладает ли текущий пользователь достаточными правами.
+        /// </summary>
+        /// <param name="action">
+        /// Необязательное действие, вызываемое, если пользователь не имеет необходимых привилегий.
+        /// </param>
+        /// <returns>
+        /// <c>true</c>, если пользователь <b>не</b> входит в список <see cref="AppSettings.Administrators"/>; иначе <c>false</c>.
+        /// </returns>
+        public static bool IsNotAppAdmin(Action? action = null)
+        {
+            bool notPrivileged = !AppSettings.Administrators.Contains(Environment.UserName);
+            if (notPrivileged)
+                action?.Invoke();
+            return notPrivileged;
+        }
     }
 }

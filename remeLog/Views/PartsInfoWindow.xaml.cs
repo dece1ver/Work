@@ -48,7 +48,7 @@ namespace remeLog.Views
             foreach (UIElement gridChild in grid.Children)
             {
                 if (gridChild is AdornedElementPlaceholder { AdornedElement: TextBlock textBlock } 
-                && Validation.GetErrors(textBlock) is ICollection<ValidationError> { Count: > 0 } errors)
+                && System.Windows.Controls.Validation.GetErrors(textBlock) is ICollection<ValidationError> { Count: > 0 } errors)
                 {
                     MessageBox.Show(errors.First().ErrorContent.ToString(), "Некорректный ввод", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
@@ -140,7 +140,6 @@ namespace remeLog.Views
 
                     extendedTextBoxMenu.PlacementTarget = editingTextBox;
                     extendedTextBoxMenu.IsOpen = true;
-
                     return;
                 }
 
@@ -159,6 +158,13 @@ namespace remeLog.Views
                                 var masterCommentContextMenu = (ContextMenu)FindResource("MasterCommentCellContextMenu");
                                 masterCommentContextMenu.PlacementTarget = cell;
                                 masterCommentContextMenu.IsOpen = true;
+                                break;
+                            case 40 or 41 when p.IsSerial:
+                                e.Handled = true;
+                                cell.Focus();
+                                var serialPartFixedSetupContextMenu = (ContextMenu)FindResource("SerialPartFixedNormativesContextMenu");
+                                serialPartFixedSetupContextMenu.PlacementTarget = cell;
+                                serialPartFixedSetupContextMenu.IsOpen = true;
                                 break;
                             case 42:
                                 e.Handled = true;

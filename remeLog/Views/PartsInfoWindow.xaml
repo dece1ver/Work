@@ -496,8 +496,7 @@
                     <Grid>
                         <ComboBox ItemsSource="{Binding DataContext.SetupReasons, Source={x:Reference partsInfoWindow}}" 
                                   SelectedItem="{Binding MasterSetupComment, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
-                                  Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"
-                                  />
+                                  Style="{StaticResource TableComboBox}" VerticalAlignment="Stretch"/>
                     </Grid>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
@@ -547,36 +546,53 @@
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
 
-        <DataGridTextColumn x:Key="FixedSetupTimePlanColumn" Header="(И) Норматив наладки" Binding="{Binding FixedSetupTimePlan, 
-                            UpdateSourceTrigger=Default, 
-                            StringFormat=0.##,
-                            Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
-                            Visibility="{Binding DataContext.ViewMode, 
-                            Source={x:Reference partsInfoWindow}, 
-                            Converter={StaticResource UserRoleVisibilityConverter}, 
-                            ConverterParameter='Viewer, Engineer, Developer'}">
-            <DataGridTextColumn.ElementStyle>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-            </DataGridTextColumn.ElementStyle>
-            <DataGridTextColumn.EditingElementStyle>
-                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-            </DataGridTextColumn.EditingElementStyle>
-        </DataGridTextColumn>
+        <DataGridTemplateColumn x:Key="FixedSetupTimePlanColumn" Header="(И) Норматив наладки" Width="36">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding FixedSetupTimePlan, StringFormat=0.##, Converter={StaticResource ExpressionToDoubleConverter}}"
+                               Style="{StaticResource TableTextBlock}"
+                               IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding FixedSetupTimePlan, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ExpressionToDoubleConverter}}"
+                             Style="{StaticResource TableTextBox}"
+                             IsReadOnly="{Binding IsSerial}"
+                             IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+            <DataGridTemplateColumn.Visibility>
+                <Binding Path="DataContext.ViewMode" 
+                 RelativeSource="{RelativeSource AncestorType=Window}" 
+                 Converter="{StaticResource UserRoleVisibilityConverter}" 
+                 ConverterParameter="Viewer, Engineer, Developer"/>
+            </DataGridTemplateColumn.Visibility>
+        </DataGridTemplateColumn>
 
-        <DataGridTextColumn x:Key="FixedProductionTimePlanColumn" Header="(И) Норматив изготовления" Binding="{Binding FixedProductionTimePlan, 
-                            UpdateSourceTrigger=Default, StringFormat=0.##, 
-                            Converter={StaticResource ExpressionToDoubleConverter}}" Width="36"
-                            Visibility="{Binding DataContext.ViewMode, 
-                            Source={x:Reference partsInfoWindow}, 
-                            Converter={StaticResource UserRoleVisibilityConverter}, 
-                            ConverterParameter='Viewer, Engineer, Developer'}">
-            <DataGridTextColumn.ElementStyle>
-                <Style TargetType="TextBlock" BasedOn="{StaticResource TableTextBlock}"/>
-            </DataGridTextColumn.ElementStyle>
-            <DataGridTextColumn.EditingElementStyle>
-                <Style TargetType="TextBox" BasedOn="{StaticResource TableTextBox}"/>
-            </DataGridTextColumn.EditingElementStyle>
-        </DataGridTextColumn>
+        <DataGridTemplateColumn x:Key="FixedProductionTimePlanColumn" Header="(И) Норматив изготовления" Width="36">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding FixedProductionTimePlan, StringFormat=0.##, Converter={StaticResource ExpressionToDoubleConverter}}"
+                               Style="{StaticResource TableTextBlock}"
+                               IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+            <DataGridTemplateColumn.CellEditingTemplate>
+                <DataTemplate>
+                    <TextBox Text="{Binding FixedProductionTimePlan, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ExpressionToDoubleConverter}}"
+                             Style="{StaticResource TableTextBox}"
+                             IsReadOnly="{Binding IsSerial}"
+                             IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellEditingTemplate>
+            <DataGridTemplateColumn.Visibility>
+                <Binding Path="DataContext.ViewMode" 
+          RelativeSource="{RelativeSource AncestorType=Window}" 
+          Converter="{StaticResource UserRoleVisibilityConverter}" 
+          ConverterParameter="Viewer, Engineer, Developer"/>
+            </DataGridTemplateColumn.Visibility>
+        </DataGridTemplateColumn>
 
         <DataGridTextColumn x:Key="EngineerCommentColumn" Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="125"
                             Visibility="{Binding DataContext.ViewMode, 
@@ -696,6 +712,10 @@
                 <MenuItem Header="Диаметр (Ø)" Tag="Ø" Click="OnInsertSymbolClick"/>
                 <MenuItem Header="Микрон (µ)" Tag="µ" Click="OnInsertSymbolClick"/>
             </MenuItem>
+        </ContextMenu>
+
+        <ContextMenu x:Key="SerialPartFixedNormativesContextMenu">
+            <MenuItem Header="Изменить норматив" Command="{Binding DataContext.ChangeSerialPartNormativesCommand, Source={x:Reference partsInfoWindow}}" />
         </ContextMenu>
 
     </Window.Resources>

@@ -1,7 +1,9 @@
 ﻿using libeLog.Base;
+using libeLog.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +16,11 @@ namespace libeLog.Models
     /// </summary>
     public class CncSetup : ViewModel, IEquatable<CncSetup>
     {
+        public CncSetup()
+        {
+            SubscribeToNestedChanges();
+        }
+
         private int _Id;
         /// <summary> Уникальный ID установки </summary>
         public int Id
@@ -31,11 +38,18 @@ namespace libeLog.Models
         }
 
         private ObservableCollection<NormativeEntry> _Normatives = new();
-        /// <summary> Нормативы, относящиеся к установке </summary>
         public ObservableCollection<NormativeEntry> Normatives
         {
             get => _Normatives;
-            set => Set(ref _Normatives, value);
+            set
+            {
+                if (Set(ref _Normatives, value))
+                {
+                    UnsubscribeFromNestedChanges();
+                    SubscribeToNestedChanges();
+                    UpdateDependentProperties();
+                }
+            }
         }
 
         /// <summary> Нормативы наладки </summary>
@@ -68,6 +82,35 @@ namespace libeLog.Models
         public NormativeEntry? LastProductionNormative =>
             ProductionNormatives.OrderByDescending(n => n.EffectiveFrom).FirstOrDefault();
 
+        private void SubscribeToNestedChanges()
+        {
+            if (_Normatives != null)
+                _Normatives.CollectionChanged += OnNormativesCollectionChanged;
+        }
+
+        private void UnsubscribeFromNestedChanges()
+        {
+            if (_Normatives != null)
+                _Normatives.CollectionChanged -= OnNormativesCollectionChanged;
+        }
+
+        private void OnNormativesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("CncSetup.OnNormativesCollectionChanged сработал");
+            UpdateDependentProperties();
+        }
+
+        public void UpdateDependentProperties()
+        {
+            OnPropertyChanged(nameof(LastSetupNormative));
+            OnPropertyChanged(nameof(LastProductionNormative));
+            OnPropertyChanged(nameof(SetupNormatives));
+            OnPropertyChanged(nameof(ProductionNormatives));
+            OnPropertyChanged(nameof(NormativesHistory));
+            OnPropertyChanged(nameof(SetupHistory));
+            OnPropertyChanged(nameof(ProductionHistory));
+        }
+
         /// <summary>
         /// Создает глубокую копию установки
         /// </summary>
@@ -77,14 +120,7 @@ namespace libeLog.Models
             {
                 Id = this.Id,
                 Number = this.Number,
-                Normatives = new ObservableCollection<NormativeEntry>(
-                    this.Normatives.Select(n => new NormativeEntry
-                    {
-                        Type = n.Type,
-                        Value = n.Value,
-                        EffectiveFrom = n.EffectiveFrom
-                    })
-                )
+                Normatives = Normatives.Select(n => n.Clone()).ToObservableCollection()
             };
         }
 
@@ -113,5 +149,4 @@ namespace libeLog.Models
             return $"Установка #{Number} (ID {Id}) — {Normatives.Count} нормативов";
         }
     }
-
 }
