@@ -1613,7 +1613,16 @@ namespace remeLog.ViewModels
             }
             var dlg = new EditSerialPartNormativeWindow() { SerialPart = serialPart };
             if (dlg.ShowDialog() != true) return;
-
+            if (!dlg.NewSetupNormative.HasValue && !dlg.NewProductionNormative.HasValue)
+            {
+                return;
+            }
+            foreach (var part in Parts.Where(p => p.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments() && p.Order == SelectedPart?.Order && p.Setup == SelectedPart?.Setup))
+            {
+                if (dlg.NewSetupNormative.HasValue && dlg.NewSetupNormative.Value > 0) part.FixedSetupTimePlan = dlg.NewSetupNormative.Value;
+                if (dlg.NewProductionNormative.HasValue && dlg.NewProductionNormative.Value > 0) part.FixedProductionTimePlan = dlg.NewProductionNormative.Value;
+            }
+            UpdatePartsCommand.Execute(true);
         }
         private bool CanChangeSerialPartNormativesCommandExecute(object p) => SelectedPart is { };
         #endregion
@@ -1650,7 +1659,11 @@ namespace remeLog.ViewModels
         public ICommand UpdatePartsCommand { get; }
         private async void OnUpdatePartsCommandExecutedAsync(object p)
         {
-            if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) return;
+            if (p is bool skipAsk && !skipAsk || p is not bool)
+            {
+                if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) return;
+            }
+            
             foreach (var part in Parts.Where(p => p.NeedUpdate))
             {
                 var (res, mess) = await part.UpdatePartAsync();

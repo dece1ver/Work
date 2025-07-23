@@ -27,9 +27,31 @@
         </ContextMenu>
     </Window.Resources>
     <DockPanel>
-        <Button DockPanel.Dock="Bottom" Content="Подтвердить" 
-                IsEnabled="False" Width="100" Margin="5" 
-                HorizontalAlignment="Right" Height="40" Style="{StaticResource LvButton}"/>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Text="{Binding Status}"/>
+            </StatusBarItem>
+        </StatusBar>
+        <Grid DockPanel.Dock="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Новый норматив наладки:" Margin="5 0" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Новый норматив изготовления:" Margin="5 0" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding NewSetupNormative}" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding NewProductionNormative}" VerticalAlignment="Center"/>
+
+            <Button Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
+                    Content="Подтвердить" 
+                    Width="100" Margin="5" 
+                    HorizontalAlignment="Right" Height="40" Style="{StaticResource LvButton}" Click="Button_Click"/>
+        </Grid>
         <TreeView ItemsSource="{Binding SerialPart.Operations}" BorderThickness="0 1 0 1" Margin="0 0 0 0">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type lm:CncOperation}"

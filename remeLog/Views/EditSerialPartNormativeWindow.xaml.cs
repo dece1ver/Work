@@ -1,4 +1,7 @@
-﻿using libeLog.Models;
+﻿using DocumentFormat.OpenXml.Presentation;
+using libeLog;
+using libeLog.Models;
+using remeLog.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +28,13 @@ namespace remeLog.Views
             Setup, Production
         }
 
+        public EditSerialPartNormativeWindow()
+        {
+            SetNewSetupNormativeCommand = new LambdaCommand(OnSetNewSetupNormativeCommandExecuted, CanSetNewSetupNormativeCommandExecute);
+            SetNewProductionNormativeCommand = new LambdaCommand(OnSetNewProductionNormativeCommandExecuted, CanSetNewProductionNormativeCommandExecute);
+            InitializeComponent();
+        }
+
         public static readonly DependencyProperty SerialPartProperty =
         DependencyProperty.Register(nameof(SerialPart), typeof(SerialPart), typeof(EditSerialPartNormativeWindow),
             new PropertyMetadata(null));
@@ -32,6 +42,18 @@ namespace remeLog.Views
         public static readonly DependencyProperty DisplayModeProperty =
             DependencyProperty.Register(nameof(DisplayMode), typeof(OperationDisplayMode), typeof(EditSerialPartNormativeWindow),
                 new PropertyMetadata(OperationDisplayMode.Setup));
+
+        public static readonly DependencyProperty NewSetupNormativeProperty =
+        DependencyProperty.Register(nameof(NewSetupNormative), typeof(double?), typeof(EditSerialPartNormativeWindow),
+            new PropertyMetadata(null));
+
+        public static readonly DependencyProperty NewProductionNormativeProperty =
+        DependencyProperty.Register(nameof(NewProductionNormative), typeof(double?), typeof(EditSerialPartNormativeWindow),
+            new PropertyMetadata(null));
+
+        public static readonly DependencyProperty StatusProperty =
+            DependencyProperty.Register(nameof(Status), typeof(string), typeof(EditSerialPartNormativeWindow), 
+                new PropertyMetadata(string.Empty));
 
         public SerialPart SerialPart
         {
@@ -45,11 +67,109 @@ namespace remeLog.Views
             set => SetValue(DisplayModeProperty, value);
         }
 
-        public double NewNormative { get; set; }
-
-        public EditSerialPartNormativeWindow()
+        public double? NewSetupNormative
         {
-            InitializeComponent();
+            get => (double?)GetValue(NewSetupNormativeProperty);
+            set => SetValue(NewSetupNormativeProperty, value);
+        }
+
+        public double? NewProductionNormative
+        {
+            get => (double?)GetValue(NewProductionNormativeProperty);
+            set => SetValue(NewProductionNormativeProperty, value);
+        }
+
+        public string Status
+        {
+            get { return (string)GetValue(StatusProperty); }
+            set { SetValue(StatusProperty, value); }
+        }
+
+        #region SetNewSetupNormative
+        public ICommand SetNewSetupNormativeCommand { get; }
+        private void OnSetNewSetupNormativeCommandExecuted(object p)
+        {
+            if (p is FrameworkElement fe && fe.DataContext is CncSetup cncSetup)
+            {
+                var parentOperation = SerialPart.Operations.FirstOrDefault(sp => sp.Setups.Contains(cncSetup));
+                if (parentOperation == null)
+                    return;
+                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на наладку:", expectedType: typeof(double))
+                {
+                    Owner = Window.GetWindow(fe)
+                };
+                if (dlg.ShowDialog() == true && double.TryParse(dlg.UserInput, out double normative))
+                {
+                    if (normative <= 0)
+                    {
+                        ShowMessage("Значение должно быть больше 0");
+                        return;
+                    }
+                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Setup, Value = normative, EffectiveFrom = DateTime.Now });
+                    NewSetupNormative = normative;
+                    ShowMessage("Установлен новый норматив на наладку");
+                }
+                else
+                {
+                    ShowMessage("Отмена");
+                }
+            }
+        }
+        private bool CanSetNewSetupNormativeCommandExecute(object p) => true;
+        #endregion
+
+        #region SetNewProductionNormative
+        public ICommand SetNewProductionNormativeCommand { get; }
+
+        private void OnSetNewProductionNormativeCommandExecuted(object p)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+
+            if (p is FrameworkElement fe && fe.DataContext is CncSetup cncSetup)
+            {
+                var parentOperation = SerialPart.Operations.FirstOrDefault(sp => sp.Setups.Contains(cncSetup));
+                if (parentOperation == null)
+                    return;
+                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на изготовление:", expectedType: typeof(double))
+                {
+                    Owner = Window.GetWindow(fe)
+                };
+                if (dlg.ShowDialog() == true && double.TryParse(dlg.UserInput, out double normative))
+                {
+                    if (normative <= 0)
+                    {
+                        ShowMessage("Значение должно быть больше 0");
+                        return;
+                    }
+                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Production, Value = normative, EffectiveFrom = DateTime.Now });
+                    NewProductionNormative = normative;
+                    ShowMessage("Установлен новый норматив на изготовление");
+                }
+                else
+                {
+                    ShowMessage("Отмена");
+                }
+            }
+        }
+        private bool CanSetNewProductionNormativeCommandExecute(object p) => true;
+        #endregion
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+            await libeLog.Infrastructure.Database.SaveSerialPartAsync(SerialPart, AppSettings.Instance.ConnectionString!, new Progress<string>(p => Status = p));
+            Close();
+        }
+
+        private void ShowMessage(string message, int delay = 3000)
+        {
+            Task.Run(async () =>
+            {
+                Status = message;
+                await Task.Delay(delay);
+                if (Status == message) Status = string.Empty;
+            });
         }
     }
 }
