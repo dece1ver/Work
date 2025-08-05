@@ -61,6 +61,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("LogPath", -1)
                 .AddStringColumn("OrderPrefixes", -1)
                 .AddStringColumn("AssignedPartsGsId")
+                .AddStringColumn("OrdersXlPath")
                 .Build(),
 
             new TableBuilder("cnc_machines")

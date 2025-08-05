@@ -1338,8 +1338,7 @@ namespace remeLog.Infrastructure
             using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
                 await connection.OpenAsync();
-                string query = $"SELECT max_setup_limit, long_setup_limit, NcArchivePath, NcIntermediatePath, Administrators FROM cnc_remelog_config;";
-                using (SqlCommand command = new(query, connection))
+                using (SqlCommand command = new("SELECT max_setup_limit, long_setup_limit, NcArchivePath, NcIntermediatePath, Administrators FROM cnc_remelog_config;", connection))
                 {
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
@@ -1347,15 +1346,27 @@ namespace remeLog.Infrastructure
 
                         while (await reader.ReadAsync())
                         {
-                            AppSettings.MaxSetupLimit = await reader.GetValueOrDefaultAsync(0, 1.5);
-                            AppSettings.LongSetupLimit = await reader.GetValueOrDefaultAsync(1, 240.0);
-                            AppSettings.NcArchivePath = await reader.GetValueOrDefaultAsync(2, "");
-                            AppSettings.NcIntermediatePath = await reader.GetValueOrDefaultAsync(3, "");
+                            if (!reader.IsDBNull(0)) AppSettings.MaxSetupLimit = await reader.GetFieldValueAsync<double>(0);
+                            if (!reader.IsDBNull(1)) AppSettings.LongSetupLimit = await reader.GetValueOrDefaultAsync(1, 240.0);
+                            if (!reader.IsDBNull(2)) AppSettings.NcArchivePath = await reader.GetValueOrDefaultAsync(2, "");
+                            if (!reader.IsDBNull(3)) AppSettings.NcIntermediatePath = await reader.GetValueOrDefaultAsync(3, "");
                             if (!reader.IsDBNull(4)) administrators.Add(await reader.GetFieldValueAsync<string>(4));
                         }
                         AppSettings.Administrators = administrators.ToArray();
                     }
                 }
+                AppSettings.MaxSetupLimits.Clear();
+                using (SqlCommand command = new("SELECT Name, SetupCoefficient FROM cnc_machines", connection))
+                {
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            AppSettings.MaxSetupLimits.Add(await reader.GetFieldValueAsync<string>(0), await reader.GetValueOrDefaultAsync(1, 1.5));
+                        }
+                    }
+                }
+                AppSettings.Save();
             }
         }
     }

@@ -58,6 +58,10 @@ namespace remeLog.Infrastructure
         [JsonIgnore]
         public static double MaxSetupLimit { get; set; } = 2;
         [JsonIgnore]
+        public static Dictionary<string, double> MaxSetupLimits { get; set; } = new();
+        [JsonIgnore]
+        public static double FallbackMaxSetupLimitValue { get; set; } = 1.5;
+        [JsonIgnore]
         public static double LongSetupLimit { get; set; } = 240;
         [JsonIgnore]
         public static string NcArchivePath { get; set; } = "";
@@ -182,7 +186,6 @@ namespace remeLog.Infrastructure
                         Util.WriteLog(ex, msg);
                         CreateBaseConfig();
                     }
-
                 }
                 else
                 {

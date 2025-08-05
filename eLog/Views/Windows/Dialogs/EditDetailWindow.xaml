@@ -5,13 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:l="clr-namespace:eLog.Views.Windows.Dialogs"
         
-        xmlns:vm="clr-namespace:eLog.ViewModels" xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
+        xmlns:vm="clr-namespace:eLog.ViewModels" 
+        xmlns:cmd="clr-namespace:eLog.Infrastructure.Commands"
         xmlns:ctrl="clr-namespace:eLog.Views.Controls"
         xmlns:inf="clr-namespace:eLog.Infrastructure"
+        xmlns:style="clr-namespace:eLog.Infrastructure.Style"
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         mc:Ignorable="d" FontSize="16" WindowStyle="None"
-        Title="Редактирование детали" Height="600" Width="1100" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
+        Title="Редактирование детали" Height="600" Width="1200" WindowStartupLocation="CenterOwner" Topmost="False" ResizeMode="NoResize" Loaded="Window_Loaded">
     <Window.Resources>
         <Style TargetType="Button" x:Key="OperationButton">
             <Setter Property="Width" Value="87"/>
@@ -70,12 +72,12 @@
                 </StatusBar>
                 <Grid Margin="10 9 10 10">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="147"/>
+                        <ColumnDefinition Width="157"/>
                         <ColumnDefinition/>
-                        <ColumnDefinition Width="155"/>
+                        <ColumnDefinition Width="157"/>
                         <ColumnDefinition/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="260"/>
+                        <ColumnDefinition Width="300"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -153,15 +155,41 @@
                     <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" >
                         <Border BorderThickness="1" BorderBrush="{StaticResource ComboBox.Static.Editable.Border}" Margin="1">
                             <StackPanel Orientation="Horizontal">
-                                <ComboBox Style="{DynamicResource DashComboBoxStyle}" Margin="0 0 0 0" Width="49" DockPanel.Dock="Left" 
+                                <ComboBox Style="{DynamicResource LeftEmptyComboBoxStyle}" Margin="0 0 0 0" Width="49" DockPanel.Dock="Left" 
                                       SelectedItem="{Binding OrderQualifier}"
                                       ItemsSource="{Binding OrderQualifiers, Source={x:Static inf:AppSettings.Instance}}" FontSize="20" BorderThickness="0"
                                       VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="Auto"/>
-                                <ComboBox Style="{DynamicResource SlashComboBoxStyle}" Margin="-3 0 0 0" Width="44" DockPanel.Dock="Left"
-                                      SelectedItem="{Binding OrderMonth}" IsEnabled="{Binding NonEmptyOrder}"  FontSize="20"
+                                <ComboBox Style="{DynamicResource CenterEmptyComboBoxStyle}" Margin="0 0 0 0" Width="49" DockPanel.Dock="Left" 
+                                      SelectedItem="{Binding OrderYear}"
                                       Visibility="{Binding NonEmptyOrder, Converter={StaticResource VisibilityConverter}}"
-                                      ItemsSource="{Binding OrderMonths, Mode=OneWay}" BorderThickness="0"
-                                      VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="400"/>
+                                      ItemsSource="{Binding OrderYears, Mode=OneWay}" FontSize="20" BorderThickness="5"
+                                      VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="Auto"/>
+                                <StackPanel Visibility="{Binding NonEmptyOrder, Converter={StaticResource VisibilityConverter}}">
+                                    <ComboBox 
+                                        Style="{DynamicResource SlashComboBoxStyle}"
+                                        SelectedItem="{Binding OrderMonth}"
+                                        IsEnabled="{Binding NonEmptyOrder}"
+                                        FontSize="20"
+                                        ItemsSource="{Binding OrderMonths, Mode=OneWay}"
+                                        BorderThickness="0"
+                                        VerticalContentAlignment="Center" 
+                                        Padding="3" 
+                                        MaxDropDownHeight="400"
+                                        Visibility="{Binding NewOrderFormat, Converter={StaticResource InvertedVisibilityConverter}}">
+                                    </ComboBox>
+                                    <ComboBox 
+                                        Style="{DynamicResource DashComboBoxStyle}"
+                                        SelectedItem="{Binding OrderMonth}"
+                                        IsEnabled="{Binding NonEmptyOrder}"
+                                        FontSize="20"
+                                        ItemsSource="{Binding OrderMonths, Mode=OneWay}"
+                                        BorderThickness="0"
+                                        VerticalContentAlignment="Center"
+                                        Padding="3"
+                                        MaxDropDownHeight="400"
+                                        Visibility="{Binding NewOrderFormat, Converter={StaticResource VisibilityConverter}}">
+                                    </ComboBox>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                         <Button x:Name="FindOrderDetailsButton" Style="{StaticResource OperationButton}"
@@ -295,7 +323,7 @@
                                 <TextBlock Text="Убрать наладку" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Margin="2 2 2 -3"/>
                             </Button.Content>
                         </Button>
-                        <TextBox DockPanel.Dock="Right" Width="163"
+                        <TextBox DockPanel.Dock="Right" Width="187"
                              d:Text="01.01.2023 01:00" IsEnabled="{Binding WithSetup}" Visibility="{Binding WithSetup, Converter={StaticResource VisibilityConverter}}"
                              Text="{Binding StartMachiningTime, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
                              Validation.ErrorTemplate="{StaticResource ValidationFailed}"/>
@@ -348,10 +376,10 @@
                          Text="{Binding Part.OperatorComments, UpdateSourceTrigger=PropertyChanged}"/>
 
 
-                    <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0"
-                            HorizontalAlignment="Stretch" VerticalAlignment="Bottom" LastChildFill="True">
+                    <DockPanel Grid.Column="0" Grid.Row="8" Margin="0 0 2 0" Grid.ColumnSpan="2"
+                            HorizontalAlignment="Left" VerticalAlignment="Bottom" LastChildFill="True">
                         <Button Click="Button_Click" Content="SCAN" DockPanel.Dock="Right" Visibility="Collapsed"/>
-                        <Button Margin="0 0 0 0" Height="60" Style="{StaticResource GeneralButton}" Padding="0 3 0 0"
+                        <Button Margin="0 0 2 0" Height="60" Style="{StaticResource GeneralButton}" Padding="0 3 0 0" Width="156"
                             HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="{StaticResource CloseIcon}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}">
                             <Button.Command>
@@ -368,7 +396,7 @@
                         Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"
                         Style="{StaticResource KeyboardButton}" 
                         VerticalAlignment="Top" HorizontalAlignment="Stretch"
-                        Margin="74 1 75 1" Click="SpaceButton_Click"/>
+                        Margin="92 1 84 1" Click="SpaceButton_Click"/>
                     <ctrl:ControlKeyboardControl Grid.Column="5" Grid.Row="7" Margin="0 8 -1 0"
                                              Visibility="{Binding KeyboardVisibility, RelativeSource={RelativeSource AncestorType=l:EditDetailWindow}}"/>
 

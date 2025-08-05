@@ -40,15 +40,23 @@ namespace eLog.Views.Windows.Dialogs
             var order = Part.Order;
             _OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
                 ? order.Split('/')[1]
+                : order.Contains('-')
+                ? order.Split('-')[1]
                 : Text.WithoutOrderDescription;
+            _OrderYear = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && !order.Contains('/') && order.Contains('-') 
+                ? order.Split('-')[0][^4..^2] 
+                : OrderYears[0];
             _OrderQualifier =
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
-                    ? order.Split('-')[0]
+                    ? order.Split('-')[0][..2]
                     : AppSettings.Instance.OrderQualifiers[0];
             _OrderMonth =
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
                     ? order.Split('-')[1].Split('/')[0]
+                    : !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && !order.Contains('/')
+                    ? order.Split('-')[0][^2..]
                     : "01";
+
             PartName = Part.FullName;
 
             _FinishedCount = Part.FinishedCount > 0 || Part.StartMachiningTime == Part.EndMachiningTime && Part.EndMachiningTime != DateTime.MinValue ? Part.FinishedCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
@@ -89,7 +97,54 @@ namespace eLog.Views.Windows.Dialogs
             }
         }
 
+        public bool NewOrderFormat => OrderYear != "-";
+
+        public static string[] OrderYears => 
+            Enumerable.Range(DateTime.Now.Year - 2, 3)
+            .Select(y => (y - 2000).ToString("D2"))
+            .Prepend("-")
+            .ToArray();
+
         public static string[] OrderMonths => Enumerable.Range(1, 12).Select(x => x.ToString("D2")).ToArray();
+
+
+        public string OrderYear
+        {
+            get => _OrderYear;
+            set
+            {
+                Set(ref _OrderYear, value);
+                Parts.Clear();
+                OnPropertyChanged(nameof(OrderValidation));
+                OnPropertyChanged(nameof(NewOrderFormat));
+                OnPropertyChanged(nameof(NonEmptyOrder));
+                OnPropertyChanged(nameof(Part.Order));
+                Status = OrderValidation switch
+                {
+                    OrderValidationTypes.Error => string.Empty,
+                    OrderValidationTypes.Empty => $"Изготовление без М/Л",
+                    OrderValidationTypes.Valid => $"Выбран заказ: {Part.Order}",
+                    _ => Status
+                };
+                switch (OrderValidation)
+                {
+                    case OrderValidationTypes.Error when OrderText == Text.WithoutOrderDescription:
+                        OrderText = string.Empty;
+                        break;
+                    case OrderValidationTypes.Error:
+                        Status = string.Empty;
+                        break;
+                    case OrderValidationTypes.Empty:
+                        Status = "Изготовление без М/Л";
+                        OrderText = Text.WithoutOrderDescription;
+                        break;
+                    case OrderValidationTypes.Valid:
+                        Status = $"Выбран заказ: {Part.Order}";
+                        break;
+                }
+                OnPropertyChanged(nameof(CanBeClosed));
+            }
+        }
 
         public string OrderQualifier
         {
@@ -99,6 +154,7 @@ namespace eLog.Views.Windows.Dialogs
                 Set(ref _OrderQualifier, value);
                 Parts.Clear();
                 OnPropertyChanged(nameof(OrderValidation));
+                OnPropertyChanged(nameof(NewOrderFormat));
                 OnPropertyChanged(nameof(NonEmptyOrder));
                 OnPropertyChanged(nameof(Part.Order));
                 Status = OrderValidation switch
@@ -166,6 +222,7 @@ namespace eLog.Views.Windows.Dialogs
                 Set(ref _OrderMonth, value);
                 Parts.Clear();
                 OnPropertyChanged(nameof(OrderValidation));
+                OnPropertyChanged(nameof(NewOrderFormat));
                 OnPropertyChanged(nameof(Part.Order));
                 Status = OrderValidation switch
                 {
@@ -185,6 +242,7 @@ namespace eLog.Views.Windows.Dialogs
                 Set(ref _OrderText, value);
                 Parts.Clear();
                 OnPropertyChanged(nameof(OrderValidation));
+                OnPropertyChanged(nameof(NewOrderFormat));
                 OnPropertyChanged(nameof(Part.Order));
                 Status = OrderValidation switch
                 {
@@ -201,6 +259,7 @@ namespace eLog.Views.Windows.Dialogs
         private string _OrderText;
         private string _OrderMonth;
         private string _OrderQualifier;
+        private string _OrderYear;
 
         /// <summary> Статус </summary>
         public string Status
@@ -302,21 +361,17 @@ namespace eLog.Views.Windows.Dialogs
                     return OrderValidationTypes.Empty;
                 }
 
-                if (OrderText.Length < 9 ||
-                    !char.IsNumber(OrderText[0]) ||
-                    !char.IsNumber(OrderText[1]) ||
-                    !char.IsNumber(OrderText[2]) ||
-                    !char.IsNumber(OrderText[3]) ||
-                    !char.IsNumber(OrderText[4]) ||
-                    OrderText[5] != '.' ||
-                    !char.IsNumber(OrderText[6]) ||
-                    !char.IsNumber(OrderText[^1]) ||
-                    OrderText.Count(x => x is '.') != 2)
+                if (OrderText.Count(x => x == '.') != 2 ||
+                    !OrderText.Split('.')[0].All(char.IsDigit) ||
+                    string.IsNullOrEmpty(OrderText.Split('.')[1]) ||
+                    !OrderText.Split('.')[1].All(char.IsDigit) ||
+                    string.IsNullOrEmpty(OrderText.Split('.')[2]) ||
+                    !OrderText.Split('.')[2].All(char.IsDigit))
                 {
                     Part.Order = string.Empty;
                     return OrderValidationTypes.Error;
                 }
-                Part.Order = $"{OrderQualifier}-{OrderMonth}/{OrderText}";
+                Part.Order = $"{OrderQualifier}{OrderYear}{OrderMonth}{(OrderYear == "-" ? "/" : "-")}{OrderText}";
                 return OrderValidationTypes.Valid;
             }
         }
@@ -578,7 +633,11 @@ namespace eLog.Views.Windows.Dialogs
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (FromTasks) Task.Run(() => FindOrders());
+            if (FromTasks) Task.Run(() =>
+            {
+                if (Database.TryGetOrdersPath(out var ordersPath) && !string.IsNullOrEmpty(ordersPath)) AppSettings.Instance.OrdersSourcePath = ordersPath;
+                FindOrders();
+            });
             if (File.Exists(AppSettings.LocalOrdersFile))
             {
                 Status =
@@ -602,6 +661,7 @@ namespace eLog.Views.Windows.Dialogs
             });
             await Task.Run(() =>
             {
+                
                 switch (OrderValidation)
                 {
                     case OrderValidationTypes.Valid:
@@ -856,6 +916,7 @@ namespace eLog.Views.Windows.Dialogs
             {
                 try
                 {
+                    if (Database.TryGetOrdersPath(out var ordersPath) && !string.IsNullOrEmpty(ordersPath)) AppSettings.Instance.OrdersSourcePath = ordersPath;
                     if (File.Exists(AppSettings.Instance.OrdersSourcePath) &&
                         Path.GetExtension(AppSettings.Instance.OrdersSourcePath).ToLower() == ".xlsx")
                     {
