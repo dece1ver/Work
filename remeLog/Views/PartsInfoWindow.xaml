@@ -716,6 +716,7 @@
 
         <ContextMenu x:Key="SerialPartFixedNormativesContextMenu">
             <MenuItem Header="Изменить норматив" Command="{Binding DataContext.ChangeSerialPartNormativesCommand, Source={x:Reference partsInfoWindow}}" />
+            <MenuItem Header="Очистить" Tag="0" Click="OnSetValueClick"/>
         </ContextMenu>
 
     </Window.Resources>

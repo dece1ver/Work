@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -398,6 +399,77 @@ namespace remeLog.Views
             }
         }
 
+        private void OnSetValueClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem item) return;
+            if (!Util.IsNotAppAdmin(() => MessageBox.Show("Нет прав на выполнение операции", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error))) return;
+            string value = item.Tag?.ToString() ?? string.Empty;
+
+            if (Keyboard.FocusedElement is DataGridCell cell)
+            {
+                var dataGrid = FindVisualParent<DataGrid>(cell);
+                if (dataGrid == null) return;
+
+                var selectedCells = dataGrid.SelectedCells;
+
+                if (selectedCells.Count > 0)
+                {
+                    foreach (var selectedCell in selectedCells)
+                    {
+                        SetCellValue(dataGrid, selectedCell, value);
+                    }
+                }
+                else
+                {
+                    SetSingleCellValue(cell, dataGrid, value);
+                }
+            }
+        }
+
+        private void SetCellValue(DataGrid dataGrid, DataGridCellInfo cellInfo, string value)
+        {
+            var cellContainer = GetDataGridCell(dataGrid, cellInfo);
+            if (cellContainer != null)
+            {
+                SetSingleCellValue(cellContainer, dataGrid, value);
+            }
+        }
+
+        private void SetSingleCellValue(DataGridCell cell, DataGrid dataGrid, string value)
+        {
+            TextBox? textBox = FindVisualChild<TextBox>(cell);
+            if (textBox != null)
+            {
+                textBox.Text = value;
+                textBox.Focus();
+                return;
+            }
+
+            dataGrid.CurrentCell = new DataGridCellInfo(cell);
+            dataGrid.BeginEdit();
+
+            textBox = FindVisualChild<TextBox>(cell);
+            if (textBox != null)
+            {
+                textBox.Text = value;
+                textBox.Focus();
+            }
+        }
+
+        private DataGridCell? GetDataGridCell(DataGrid dataGrid, DataGridCellInfo cellInfo)
+        {
+            var rowContainer = (DataGridRow)dataGrid.ItemContainerGenerator.ContainerFromItem(cellInfo.Item);
+            if (rowContainer != null)
+            {
+                var presenter = FindVisualChild<DataGridCellsPresenter>(rowContainer);
+                if (presenter != null)
+                {
+                    var cell = (DataGridCell)presenter.ItemContainerGenerator.ContainerFromIndex(cellInfo.Column.DisplayIndex);
+                    return cell;
+                }
+            }
+            return null;
+        }
 
         private void OnClearVariantClick(object sender, RoutedEventArgs e)
         {
@@ -517,6 +589,21 @@ namespace remeLog.Views
                 parent = VisualTreeHelper.GetParent(parent);
             }
             return (T)parent!;
+        }
+
+        private T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T result)
+                    return result;
+
+                var childOfChild = FindVisualChild<T>(child);
+                if (childOfChild != null)
+                    return childOfChild;
+            }
+            return null;
         }
     }
 }

@@ -1617,15 +1617,25 @@ namespace remeLog.ViewModels
             {
                 return;
             }
-            foreach (var part in Parts.Where(p => p.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments() && p.Order == SelectedPart?.Order && p.Setup == SelectedPart?.Setup))
+            foreach (var part in Parts.Where(p => 
+            p.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments() 
+            && p.Order == SelectedPart?.Order 
+            && p.Setup == SelectedPart?.Setup))
             {
-                if (dlg.NewSetupNormative.HasValue && dlg.NewSetupNormative.Value > 0) part.FixedSetupTimePlan = dlg.NewSetupNormative.Value;
-                if (dlg.NewProductionNormative.HasValue && dlg.NewProductionNormative.Value > 0) part.FixedProductionTimePlan = dlg.NewProductionNormative.Value;
+                if (dlg.NewSetupNormative.HasValue 
+                    && dlg.NewSetupNormative.Value > 0 
+                    && SelectedPart?.SetupTimePlan == part.SetupTimePlan) 
+                        part.FixedSetupTimePlan = dlg.NewSetupNormative.Value;
+                if (dlg.NewProductionNormative.HasValue 
+                    && dlg.NewProductionNormative.Value > 0 
+                    && SelectedPart?.SingleProductionTimePlan == part.SingleProductionTimePlan) 
+                        part.FixedProductionTimePlan = dlg.NewProductionNormative.Value;
             }
             UpdatePartsCommand.Execute(true);
         }
         private bool CanChangeSerialPartNormativesCommandExecute(object p) => SelectedPart is { };
         #endregion
+
 
         #region DeletePart
         public ICommand DeletePartCommand { get; }
