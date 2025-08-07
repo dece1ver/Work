@@ -356,6 +356,22 @@ namespace remeLog.ViewModels
             }
         }
 
+        private bool _OnlySerialPartsFilter;
+        /// <summary> Фильтр только по серийным деталям </summary>
+        public bool OnlySerialPartsFilter
+        {
+            get => _OnlySerialPartsFilter;
+
+            set 
+            {
+                if (!CanBeChanged()) return;
+                if (Set(ref _OnlySerialPartsFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
+            } 
+        }
+
 
         private ObservableCollection<MachineFilter> _MachineFilters;
         /// <summary> Список станков с необходимостью фильтрации </summary>
@@ -1915,7 +1931,15 @@ namespace remeLog.ViewModels
                 sb.AppendFormat("AND totalCount {0} {1} ", totalCountOperator, totalCountValue);
 
             if (SetupFilter != null)
-                sb.AppendFormat("AND Setup = {0}", SetupFilter);
+                sb.AppendFormat("AND Setup = {0} ", SetupFilter);
+
+            if (OnlySerialPartsFilter)
+            {
+                var serialNamesNormalized = string.Join(", ", SerialParts.Select(sp => $"'{sp.PartName.NormalizedPartNameWithoutComments()}'"));
+
+                sb.AppendFormat("AND dbo.NormalizedPartNameWithoutComments(PartName) IN ({0}) ", serialNamesNormalized);
+            }
+                
 
             var machines = string.Join(", ", MachineFilters.Where(mf => mf.Filter).Select(m => $"'{m.Machine}'").Distinct());
             sb.AppendFormat("AND Machine IN ({0}) ", machines);

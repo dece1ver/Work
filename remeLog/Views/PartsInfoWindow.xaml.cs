@@ -578,7 +578,7 @@ namespace remeLog.Views
                 return TextBox.TextProperty;
             if (element is TextBlock)
                 return TextBlock.TextProperty;
-            throw new NotSupportedException("Unsupported element type");
+            throw new NotSupportedException($"Неподдерживаемый тип: {element.GetType()}");
         }
 
         private static T FindVisualParent<T>(DependencyObject obj) where T : DependencyObject

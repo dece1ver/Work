@@ -49,6 +49,16 @@ namespace libeLog.Models
             set => Set(ref _EffectiveFrom, value);
         }
 
+
+        private bool _IsApproved;
+        /// <summary> Утверждённый </summary>
+        public bool IsApproved
+        {
+            get => _IsApproved;
+            set => Set(ref _IsApproved, value);
+        }
+
+
         public bool Equals(NormativeEntry? other)
         {
             if (other is null) return false;

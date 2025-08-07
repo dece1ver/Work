@@ -173,7 +173,7 @@ namespace libeLog.Models
 
         public override string ToString()
         {
-            return $"{Name} (ID {Id}) — {Setups.Count} установок";
+            return $"{Name} — установок: {Setups.Count}";
         }
     }
 }

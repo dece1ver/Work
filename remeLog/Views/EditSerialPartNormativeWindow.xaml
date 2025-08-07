@@ -68,9 +68,11 @@
                             <TextBlock Text="{Binding Number}"/>
                             <TextBlock Text=" установка"/>
                             <TextBlock Text=" ― Наладка: "/>
-                            <TextBlock Text="{Binding LastSetupNormative.Value, Mode=OneWay}"/>
+                            <TextBlock Visibility="{Binding LastSetupNormative.IsApproved, Converter={StaticResource VisibilityConverter}}" Text="{Binding LastSetupNormative.Value, Mode=OneWay}" FontWeight="Bold"/>
+                            <TextBlock Visibility="{Binding LastSetupNormative.IsApproved, Converter={StaticResource InvertedVisibilityConverter}}" Text="{Binding LastSetupNormative.Value, Mode=OneWay}"/>
                             <TextBlock Text=", Изготовление: "/>
-                            <TextBlock Text="{Binding LastProductionNormative.Value, Mode=OneWay}"/>
+                            <TextBlock Visibility="{Binding LastProductionNormative.IsApproved, Converter={StaticResource VisibilityConverter}}" Text="{Binding LastProductionNormative.Value, Mode=OneWay}" FontWeight="Bold"/>
+                            <TextBlock Visibility="{Binding LastProductionNormative.IsApproved, Converter={StaticResource InvertedVisibilityConverter}}" Text="{Binding LastProductionNormative.Value, Mode=OneWay}"/>
                         </StackPanel>
                     </Grid>
                 </HierarchicalDataTemplate>
@@ -81,7 +83,8 @@
                         <TextBlock Text="] " />
                         <TextBlock Text="{Binding NormativeTypeDisplay}" FontStyle="Italic"/>
                         <TextBlock Text=": "/>
-                        <TextBlock Text="{Binding Value, StringFormat=N2}" FontWeight="Bold"/>
+                        <TextBlock Visibility="{Binding IsApproved, Converter={StaticResource VisibilityConverter}}" Text="{Binding Value, StringFormat=N2}" FontWeight="Bold"/>
+                        <TextBlock Visibility="{Binding IsApproved, Converter={StaticResource InvertedVisibilityConverter}}" Text="{Binding Value, StringFormat=N2}"/>
                     </StackPanel>
                 </HierarchicalDataTemplate>
             </TreeView.Resources>

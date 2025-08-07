@@ -1338,12 +1338,12 @@ namespace remeLog.Infrastructure
             using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
                 await connection.OpenAsync();
-                using (SqlCommand command = new("SELECT max_setup_limit, long_setup_limit, NcArchivePath, NcIntermediatePath, Administrators FROM cnc_remelog_config;", connection))
+                using (SqlCommand command = new("SELECT max_setup_limit, long_setup_limit, NcArchivePath, NcIntermediatePath, Administrators, CncOperations FROM cnc_remelog_config;", connection))
                 {
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
                         var administrators = new List<string>();
-
+                        var operatios = new List<string>();
                         while (await reader.ReadAsync())
                         {
                             if (!reader.IsDBNull(0)) AppSettings.MaxSetupLimit = await reader.GetFieldValueAsync<double>(0);
@@ -1351,8 +1351,10 @@ namespace remeLog.Infrastructure
                             if (!reader.IsDBNull(2)) AppSettings.NcArchivePath = await reader.GetValueOrDefaultAsync(2, "");
                             if (!reader.IsDBNull(3)) AppSettings.NcIntermediatePath = await reader.GetValueOrDefaultAsync(3, "");
                             if (!reader.IsDBNull(4)) administrators.Add(await reader.GetFieldValueAsync<string>(4));
+                            if (!reader.IsDBNull(5)) operatios.Add(await reader.GetFieldValueAsync<string>(5));
                         }
                         AppSettings.Administrators = administrators.ToArray();
+                        AppSettings.CncOperations = operatios.ToArray();
                     }
                 }
                 AppSettings.MaxSetupLimits.Clear();

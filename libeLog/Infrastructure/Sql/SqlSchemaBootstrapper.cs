@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.Data.SqlClient;
+using static libeLog.Infrastructure.Sql.ApplicationFunctions;
 
 namespace libeLog.Infrastructure.Sql
 {
@@ -24,6 +25,44 @@ namespace libeLog.Infrastructure.Sql
             {
                 await ApplyAsync(connection, table, progress, cancellationToken);
             }
+
+            var fnBuilder = new FunctionSqlBuilder();
+            var manager = new FunctionManager(connection.ConnectionString, fnBuilder);
+
+            manager.Register(new FunctionDefinition
+            {
+                Name = "NormalizedPartNameWithoutComments",
+                Parameters = new List<FunctionParameter>
+                {
+                    new("@name", "NVARCHAR(MAX)")
+                },
+                ReturnType = "NVARCHAR(MAX)",
+                Options = new List<string> { "RETURNS NULL ON NULL INPUT" },
+                Body = @"
+    IF @name IS NULL OR LEN(LTRIM(RTRIM(@name))) = 0
+        RETURN '';
+
+    DECLARE @r NVARCHAR(MAX) = @name;
+
+    WHILE CHARINDEX('(', @r) > 0
+    BEGIN
+        DECLARE @s INT = CHARINDEX('(', @r);
+        DECLARE @e INT = CHARINDEX(')', @r, @s);
+        IF @e > 0
+            SET @r = STUFF(@r, @s, @e - @s + 1, '');
+        ELSE
+            BREAK;
+    END
+
+    SET @r = REPLACE(@r, '""', '');
+
+    WHILE CHARINDEX('  ', @r) > 0
+        SET @r = REPLACE(@r, '  ', ' ');
+
+    RETURN LOWER(LTRIM(RTRIM(@r)));"
+            });
+            manager.DeployAll();
+            progress?.Report(($"Функции:{string.Join("\n", manager.Functions)}", Status.Ok));
         }
 
         public static async Task ApplyAsync(SqlConnection connection, TableDefinition table, IProgress<(string, Status?)>? progress = null, CancellationToken cancellationToken = default)
@@ -34,7 +73,7 @@ namespace libeLog.Infrastructure.Sql
             if (updated)
                 progress?.Report(($"Таблица: {table.Name}", Status.Warning));
             else
-                progress?.Report(($"Таблица: {table.Name}", Status.Ok));
+                progress?.Report(($"Таблица: {table.Name}", Status.Ok));   
         }
 
         /// <summary>
@@ -93,8 +132,8 @@ namespace libeLog.Infrastructure.Sql
                 .AddDoubleColumn("long_setup_limit")
                 .AddStringColumn("NcArchivePath")
                 .AddStringColumn("NcIntermediatePath")
+                .AddStringColumn("CncOperations")
                 .AddStringColumn("Administrators")
-                .AddCompositeUnique("Administrators")
                 .Build(),
 
             new TableBuilder("cnc_serial_parts")
@@ -128,6 +167,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddDoubleColumn("Value", false)
                 .AddSmallDateTimeColumn("EffectiveFrom", false, "GETDATE()")
                 .AddForeignKey("CncSetupId", "cnc_setups", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .AddBoolColumn("IsAproved", false, false)
                 .Build(),
             
             new TableBuilder("cnc_shifts")

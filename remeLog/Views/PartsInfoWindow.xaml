@@ -839,6 +839,7 @@
                             <ColumnDefinition Width="75"/>
                             <ColumnDefinition Width="320"/>
                             <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="auto"/>
@@ -950,8 +951,11 @@
                             <controls:IncDecControl Grid.Row="0" Grid.Column="5" Grid.RowSpan="2" Value="{Binding SetupFilter, Delay=500, Mode=TwoWay}" Width="22" Margin="-2 -1 0 0"/>
                         </Grid>
 
-                        <ComboBox Grid.Column="5" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
-                                  ItemsSource="{Binding MachineFilters}" Margin="25 0" Width="180"
+                        <CheckBox Grid.Row="0" Grid.Column="5" Margin="25 0 0 0" VerticalAlignment="Center" Content="Только серийные"
+                                  IsChecked="{Binding OnlySerialPartsFilter}"/>
+
+                        <ComboBox Grid.Column="6" Grid.Row="0" Text="Фильтр по станку" IsEditable="True" IsReadOnly="True" Focusable="False"
+                                  ItemsSource="{Binding MachineFilters}" Margin="25 0 0 0" Width="180"
                                   HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" 
                                   >
                             <ComboBox.ItemTemplate>
@@ -963,7 +967,7 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
-                        <Button Grid.Column="5" Grid.Row="2" Margin="25 0" Command="{Binding DeleteFilterCommand}" 
+                        <Button Grid.Column="6" Grid.Row="2" Margin="25 0" Command="{Binding DeleteFilterCommand}" 
                                 Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Left">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal" Margin="0 2 0 0">
@@ -973,19 +977,19 @@
                             </Button.Content>
                         </Button>
 
-                        <TextBlock Grid.Row="0" Grid.Column="7" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" Margin="0 0 5 0"/>
-                        <StackPanel Grid.Row="0" Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Grid.Row="0" Grid.Column="8" Text="От" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" Margin="0 0 5 0"/>
+                        <StackPanel Grid.Row="0" Grid.Column="9" Orientation="Horizontal" HorizontalAlignment="Right">
                             <DatePicker SelectedDate="{Binding FromDate}" Width="100" BorderThickness="1 1 0 0"/>
                             <controls:IncDecControl Value="{Binding FromDate, Mode=TwoWay}" Width="23" Margin="0 0 4 -1"/>
                         </StackPanel>
 
-                        <TextBlock Grid.Row="2" Grid.Column="7" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" Margin="0 0 5 0"/>
-                        <StackPanel Grid.Row="2" Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Grid.Row="2" Grid.Column="8" Text="До" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" Margin="0 0 5 0"/>
+                        <StackPanel Grid.Row="2" Grid.Column="9" Orientation="Horizontal" HorizontalAlignment="Right">
                             <DatePicker SelectedDate="{Binding ToDate}" Width="100" BorderThickness="1 0 0 1"/>
                             <controls:IncDecControl Value="{Binding ToDate, Mode=TwoWay}" Width="23" Margin="0 -1 4 0"/>
                         </StackPanel>
 
-                        <Button Grid.Row="0" Grid.Column="9" Content="+ сутки" 
+                        <Button Grid.Row="0" Grid.Column="10" Content="+ сутки" 
                                 Margin="0" BorderThickness="1 1 0 0"
                                 Command="{Binding IncreaseDateCommand}">
                             <Button.Resources>
@@ -994,7 +998,7 @@
                                 </Style>
                             </Button.Resources>
                         </Button>
-                        <Button Grid.Row="2" Grid.Column="9" Content="- сутки" 
+                        <Button Grid.Row="2" Grid.Column="10" Content="- сутки" 
                                 Margin="0" BorderThickness="1 0 0 1"
                                 Command="{Binding DecreaseDateCommand}">
                             <Button.Resources>
@@ -1003,19 +1007,19 @@
                                 </Style>
                             </Button.Resources>
                         </Button>
-                        <Button Grid.Row="0" Grid.Column="10" Content="Вчера" 
+                        <Button Grid.Row="0" Grid.Column="11" Content="Вчера" 
                                 Margin="0" BorderThickness="1 1 0 0"
                                 Command="{Binding SetYesterdayDateCommand}"/>
-                        <Button Grid.Row="2" Grid.Column="10" Content="Неделя" 
+                        <Button Grid.Row="2" Grid.Column="11" Content="Неделя" 
                                 Margin="0" BorderThickness="1 0 0 1"
                                 Command="{Binding SetWeekDateCommand}"/>
-                        <Button Grid.Row="0" Grid.Column="11" Content="Месяц" 
+                        <Button Grid.Row="0" Grid.Column="12" Content="Месяц" 
                                 Margin="0" BorderThickness="1 1 0 0"
                                 Command="{Binding SetMonthDateCommand}"/>
-                        <Button Grid.Row="2" Grid.Column="11" Content="Год" 
+                        <Button Grid.Row="2" Grid.Column="12" Content="Год" 
                                 Margin="0" BorderThickness="1 0 0 1"
                                 Command="{Binding SetYearDateCommand}"/>
-                        <Button Grid.Row="0" Grid.Column="12" Grid.RowSpan="3" Content="*"
+                        <Button Grid.Row="0" Grid.Column="13" Grid.RowSpan="3" Content="*"
                                 Margin="0 0 0 0" BorderThickness="1 1 1 1" Padding="0 2 0 0"
                                 Command="{Binding SetAllDateCommand}">
                             <Button.Resources>

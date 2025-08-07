@@ -2489,15 +2489,18 @@ namespace remeLog.Infrastructure
                 .Add(CM.FixedSetupTimePlan)
                 .Add(CM.FixedProductionTimePlan)
                 .Add(CM.EngineerComment)
+                .Add(CM.SerialPerList)
                 .Build();
 
             ConfigureWorksheetHeader(ws, cm);
+            var serialParts = !string.IsNullOrEmpty(AppSettings.Instance.ConnectionString) ? libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString).GetAwaiter().GetResult() : new();
 
             var ci = cm.GetIndexes();
 
             var row = 3;
             foreach (var part in parts)
             {
+                var isSerial = serialParts.Select(sp => sp.PartName.NormalizedPartNameWithoutComments()).Contains(part.PartName.NormalizedPartNameWithoutComments());
                 ws.Cell(row, ci[CM.Machine]).SetValue(part.Machine);
 
                 ws.Cell(row, ci[CM.Date])
@@ -2508,7 +2511,7 @@ namespace remeLog.Infrastructure
 
                 ws.Cell(row, ci[CM.Operator]).SetValue(part.Operator);
 
-                ws.Cell(row, ci[CM.Part]).SetValue(part.PartName);
+                ws.Cell(row, ci[CM.Part]).SetValue(part.PartName).Style.Font.SetUnderline(isSerial ? XLFontUnderlineValues.Single : XLFontUnderlineValues.None);
 
                 ws.Cell(row, ci[CM.Order]).SetValue(part.Order);
 
@@ -2601,6 +2604,8 @@ namespace remeLog.Infrastructure
 
                 ws.Cell(row, ci[CM.EngineerComment]).SetValue(part.EngineerComment);
 
+                ws.Cell(row, ci[CM.SerialPerList]).SetValue(isSerial);
+
                 row++;
             }
 
@@ -2626,6 +2631,10 @@ namespace remeLog.Infrastructure
             ws.Column(ci[CM.MasterSetupComment]).Width = 20;
             ws.Column(ci[CM.MasterProductionComment]).Width = 20;
             ws.Column(ci[CM.MasterComment]).Width = 20;
+            ws.Column(ci[CM.SerialPerList]).Width = 8;
+
+            ws.Columns(ci[CM.PartialSetupTime], ci[CM.HardwareFailureTime]).Group(false);
+            
             ws.Row(1).Delete();
             ws.SheetView.FreezeRows(1);
 

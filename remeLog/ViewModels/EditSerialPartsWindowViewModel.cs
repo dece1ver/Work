@@ -235,7 +235,7 @@ namespace remeLog.ViewModels
                 using (Overlay = new())
                 {
                     var parentPart = SerialParts.FirstOrDefault(sp => sp.Operations.Contains(cncOperation));
-                    var dlg = new UserInputDialogWindow(parentPart?.PartName ?? "Ввод", $"Введите новое название операции '{cncOperation.Name}':")
+                    var dlg = new UserInputDialogWindow(parentPart?.PartName ?? "Ввод", $"Введите новое название операции '{cncOperation.Name}':", cncOperation.Name, focusAndSelect: true, useOperationsContexMenu: true)
                     {
                         Owner = Window.GetWindow(fe)
                     };
@@ -322,7 +322,7 @@ namespace remeLog.ViewModels
                 var parentOperation = SerialParts.SelectMany(sp => sp.Operations).FirstOrDefault(sp => sp.Setups.Contains(cncSetup));
                 if (parentOperation == null)
                     return;
-                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на наладку:", expectedType: typeof(double))
+                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на наладку:", expectedType: typeof(double), focusAndSelect: true, checkBox: new(false, "Подтвержденный"))
                 {
                     Owner = Window.GetWindow(fe)
                 };
@@ -333,7 +333,7 @@ namespace remeLog.ViewModels
                         ShowMessage("Значение должно быть больше 0");
                         return;
                     }
-                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Setup, Value = normative, EffectiveFrom = DateTime.Now });
+                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Setup, Value = normative, EffectiveFrom = DateTime.Now, IsApproved = dlg.OptionalCheckBox is { IsChecked: true } });
                     ShowMessage("Установлен новый норматив на наладку");
                 }
                 else
@@ -358,7 +358,7 @@ namespace remeLog.ViewModels
                 var parentOperation = SerialParts.SelectMany(sp => sp.Operations).FirstOrDefault(sp => sp.Setups.Contains(cncSetup));
                 if (parentOperation == null)
                     return;
-                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на изготовление:", expectedType: typeof(double))
+                var dlg = new UserInputDialogWindow($"{parentOperation}: {cncSetup.Number} установ", "Введите новый норматив на изготовление:", expectedType: typeof(double), focusAndSelect: true, checkBox: new(false, "Подтвержденный"))
                 {
                     Owner = Window.GetWindow(fe)
                 };
@@ -369,7 +369,7 @@ namespace remeLog.ViewModels
                         ShowMessage("Значение должно быть больше 0");
                         return;
                     }
-                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Production, Value = normative, EffectiveFrom = DateTime.Now });
+                    cncSetup.Normatives.Add(new NormativeEntry() { Type = NormativeEntry.NormativeType.Production, Value = normative, EffectiveFrom = DateTime.Now, IsApproved = dlg.OptionalCheckBox is { IsChecked: true } });
                     ShowMessage("Установлен новый норматив на изготовление");
                 }
                 else

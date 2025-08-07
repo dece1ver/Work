@@ -244,7 +244,7 @@ namespace libeLog.Infrastructure
             // 4) Загрузка нормативов
             progress?.Report("Читаем нормативы...");
             using (var cmd = new SqlCommand(
-                "SELECT Id, CncSetupId, NormativeType, Value, EffectiveFrom " +
+                "SELECT Id, CncSetupId, NormativeType, Value, EffectiveFrom, IsAproved " +
                 "FROM cnc_normatives " +
                 "ORDER BY EffectiveFrom", connection))
             using (var reader = await cmd.ExecuteReaderAsync())
@@ -255,14 +255,16 @@ namespace libeLog.Infrastructure
                     var setupId = reader.GetInt32(1);
                     var typeRaw = reader.GetByte(2);
                     var value = reader.GetDouble(3);
-                    DateTime ef = reader.GetDateTime(4);
+                    var ef = reader.GetDateTime(4);
+                    var apr = reader.GetBoolean(5);
 
                     var entry = new NormativeEntry
                     {
                         Id = id,
                         Type = (NormativeEntry.NormativeType)typeRaw,
                         Value = value,
-                        EffectiveFrom = ef
+                        EffectiveFrom = ef,
+                        IsApproved = apr,
                     };
 
                     if (setupsById.TryGetValue(setupId, out var setup))
@@ -344,20 +346,20 @@ namespace libeLog.Infrastructure
                     {
                         // 2.1.1. Удаляем нормативы у установок удалённых операций
                         await DeleteByIds(conn, tx, @"
-                    DELETE N
-                    FROM cnc_normatives N
-                    JOIN cnc_setups S ON N.CncSetupId = S.Id
-                    WHERE S.CncOperationId IN ({0})", delOpIds);
+                            DELETE N
+                            FROM cnc_normatives N
+                            JOIN cnc_setups S ON N.CncSetupId = S.Id
+                            WHERE S.CncOperationId IN ({0})", delOpIds);
 
                         // 2.1.2. Удаляем сами установки
                         await DeleteByIds(conn, tx, @"
-                    DELETE FROM cnc_setups
-                    WHERE CncOperationId IN ({0})", delOpIds);
+                            DELETE FROM cnc_setups
+                            WHERE CncOperationId IN ({0})", delOpIds);
 
                         // 2.1.3. Удаляем операции
                         await DeleteByIds(conn, tx, @"
-                    DELETE FROM cnc_operations
-                    WHERE Id IN ({0})", delOpIds);
+                            DELETE FROM cnc_operations
+                            WHERE Id IN ({0})", delOpIds);
                     }
 
                     // 2.2. Для каждой оставшейся операции — удалить из БД те установки, которых нет в модели
@@ -500,12 +502,13 @@ namespace libeLog.Infrastructure
                                         progress?.Report($"Добавляем норматив {norm.Type}={norm.Value}...");
 
                                         using var cmd = new SqlCommand(@"
-                                    INSERT INTO cnc_normatives(CncSetupId, NormativeType, Value, EffectiveFrom)
-                                    VALUES(@sid, @type, @val, @ef);", conn, tx);
+                                    INSERT INTO cnc_normatives(CncSetupId, NormativeType, Value, EffectiveFrom, IsAproved)
+                                    VALUES(@sid, @type, @val, @ef, @apr);", conn, tx);
                                         cmd.Parameters.AddWithValue("@sid", setup.Id);
                                         cmd.Parameters.AddWithValue("@type", (byte)norm.Type);
                                         cmd.Parameters.AddWithValue("@val", norm.Value);
                                         cmd.Parameters.AddWithValue("@ef", norm.EffectiveFrom);
+                                        cmd.Parameters.AddWithValue("@apr", norm.IsApproved);
 
                                         await cmd.ExecuteNonQueryAsync();
                                     }

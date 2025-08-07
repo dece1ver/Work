@@ -21,6 +21,19 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <ContextMenu x:Key="EditingTextBoxContextMenu">
+            <MenuItem Header="Копировать" Command="ApplicationCommands.Copy" />
+            <MenuItem Header="Вырезать" Command="ApplicationCommands.Cut" />
+            <MenuItem Header="Вставить" Command="ApplicationCommands.Paste" />
+            <MenuItem Header="Выделить все" Command="ApplicationCommands.SelectAll" />
+            <Separator/>
+            <MenuItem Visibility="{Binding UseOperationsContextMenu, Converter={StaticResource VisibilityConverter}}" Header="Вставка спецсимволов">
+                <MenuItem Header="Градус (°)" Tag="°" Click="OnVariantClick"/>
+                <MenuItem Header="Плюс-минус (±)" Tag="±" Click="OnVariantClick"/>
+                <MenuItem Header="Диаметр (Ø)" Tag="Ø" Click="OnVariantClick"/>
+                <MenuItem Header="Микрон (µ)" Tag="µ" Click="OnVariantClick"/>
+            </MenuItem>
+        </ContextMenu>
     </Window.Resources>
 
     <StackPanel Margin="10">
@@ -28,10 +41,14 @@
                    d:Text="Ввод:"
                    TextWrapping="Wrap" Margin="0 0 30 0" />
         <TextBox x:Name="InputBox"
-                 Margin="0 0 0 10"
+                 Margin="0 0 0 0"
                  Text="{Binding UserInput, RelativeSource={RelativeSource AncestorType=Window}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged,
                                 ValidatesOnDataErrors=True, ValidatesOnExceptions=True, NotifyOnValidationError=True}"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <CheckBox Margin="-1 5 0 0" 
+                  IsChecked="{Binding OptionalCheckBox.IsChecked, RelativeSource={RelativeSource AncestorType=Window}}" 
+                  Content="{Binding OptionalCheckBox.Content, RelativeSource={RelativeSource AncestorType=Window}}" 
+                  Visibility="{Binding UseOptionalCheckBox, Converter={StaticResource VisibilityConverter}, RelativeSource={RelativeSource AncestorType=Window}}"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 5 0 0">
             <Button Content="Отмена" Width="75" IsCancel="True"/>
             <Button Content="OK" Width="75" Margin="10 0 0 0" IsDefault="True"
                     Click="Ok_Click"

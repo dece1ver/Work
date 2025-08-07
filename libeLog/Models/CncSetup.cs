@@ -146,7 +146,7 @@ namespace libeLog.Models
 
         public override string ToString()
         {
-            return $"Установка #{Number} (ID {Id}) — {Normatives.Count} нормативов";
+            return $"Установка №{Number} — нормативов: {Normatives.Count}";
         }
     }
 }
