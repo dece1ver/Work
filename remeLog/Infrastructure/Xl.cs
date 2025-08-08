@@ -1228,7 +1228,7 @@ namespace remeLog.Infrastructure
                     string workedShiftsAddr = ws.Cell(row, ci[CM.WorkedShifts]).Address.ToStringRelative();
 
                     // Единая формула коэффициента с учетом разряда внутри формулы
-                    string coefficientFormula = $@"=IF(OR({setupRatioAddr}<0.5,{specDowntimesExAddr}>0.1,{workedShiftsAddr}<{workDays / 6}),"""",
+                    string coefficientFormula = $@"=IF(OR((AND({setupRatioAddr}<0.5,{setupRatioAddr}>0)),{specDowntimesExAddr}>0.1,{workedShiftsAddr}<{workDays / 6}),"""",
                 IF(OR({qualificationAddr}=1,{qualificationAddr}=2),
                     IF({generalRatioAddr}>1,{Coefficient2},IF({generalRatioAddr}>0.9,{Coefficient1},"""")),
                     IF(OR({qualificationAddr}=3,{qualificationAddr}=4),
@@ -2681,7 +2681,6 @@ namespace remeLog.Infrastructure
             }
             return "Н/Д";
         }
-
 
         private static void ConfigureWorksheetStyles(IXLWorksheet ws)
         {
