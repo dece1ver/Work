@@ -546,7 +546,11 @@
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
 
-        <DataGridTemplateColumn x:Key="FixedSetupTimePlanColumn" Header="(И) Норматив наладки" Width="36">
+        <DataGridTemplateColumn x:Key="FixedSetupTimePlanColumn" Header="(И) Норматив наладки" Width="36"
+                                Visibility="{Binding DataContext.ViewMode, 
+                                Source={x:Reference partsInfoWindow}, 
+                                Converter={StaticResource UserRoleVisibilityConverter}, 
+                                ConverterParameter='Viewer, Engineer, Developer'}">
             <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding FixedSetupTimePlan, StringFormat=0.##, Converter={StaticResource ExpressionToDoubleConverter}}"
@@ -562,15 +566,13 @@
                              IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
-            <DataGridTemplateColumn.Visibility>
-                <Binding Path="DataContext.ViewMode" 
-                 RelativeSource="{RelativeSource AncestorType=Window}" 
-                 Converter="{StaticResource UserRoleVisibilityConverter}" 
-                 ConverterParameter="Viewer, Engineer, Developer"/>
-            </DataGridTemplateColumn.Visibility>
         </DataGridTemplateColumn>
 
-        <DataGridTemplateColumn x:Key="FixedProductionTimePlanColumn" Header="(И) Норматив изготовления" Width="36">
+        <DataGridTemplateColumn x:Key="FixedProductionTimePlanColumn" Header="(И) Норматив изготовления" Width="36"
+                                Visibility="{Binding DataContext.ViewMode, 
+                                Source={x:Reference partsInfoWindow}, 
+                                Converter={StaticResource UserRoleVisibilityConverter}, 
+                                ConverterParameter='Viewer, Engineer, Developer'}">
             <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding FixedProductionTimePlan, StringFormat=0.##, Converter={StaticResource ExpressionToDoubleConverter}}"
@@ -586,12 +588,6 @@
                              IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
-            <DataGridTemplateColumn.Visibility>
-                <Binding Path="DataContext.ViewMode" 
-          RelativeSource="{RelativeSource AncestorType=Window}" 
-          Converter="{StaticResource UserRoleVisibilityConverter}" 
-          ConverterParameter="Viewer, Engineer, Developer"/>
-            </DataGridTemplateColumn.Visibility>
         </DataGridTemplateColumn>
 
         <DataGridTextColumn x:Key="EngineerCommentColumn" Header="Комментарий техотдела" Binding="{Binding EngineerComment}" Width="125"

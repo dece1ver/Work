@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:remeLog.Views"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:vm="clr-namespace:remeLog.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
+        xmlns:cnt="clr-namespace:remeLog.Views.Controls"
         mc:Ignorable="d"
         Title="Отчеты электронного журнала" Height="704" Width="1080" WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closing="Window_Closing">
     <Window.DataContext>
@@ -205,6 +206,22 @@
                             </Button.Resources>
                         </Button>
                     </Grid>
+                    <Button Width="100" HorizontalAlignment="Left" Margin="4 0"
+                            IsEnabled="{Binding InProgress, Converter={StaticResource InvertedBoolConverter}}"
+                            Command="{Binding ShowPartsInfoCommand}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="2"/>
+                            </Style>
+                        </Button.Resources>
+                        <Button.Content>
+                            <TextBlock TextAlignment="Center">
+                                <Run Text="Подробно"/>
+                                <LineBreak/>
+                                <Run Text="по всем"/>
+                            </TextBlock>
+                        </Button.Content>
+                    </Button>
                 </DockPanel>
                 <ListView ItemsSource="{Binding Parts, UpdateSourceTrigger=PropertyChanged}" IsManipulationEnabled="True" FontSize="14" DockPanel.Dock="Top" Focusable="False" 
                           BorderBrush="Transparent" Margin="-4 2 -2 0" ItemContainerStyle="{StaticResource ListViewItemsStyle}"
@@ -434,6 +451,7 @@
                 </ListView>
             </DockPanel>
         </DockPanel>
+        <cnt:LoadingOverlay IsBusy="{Binding InProgress}"/>
         <Grid Grid.Column="0" Background="Black" d:Background="Transparent" d:Visibility="Collapsed"
               Visibility="{Binding Overlay.State, Converter={StaticResource OverlayVisibilityConverter}}"
               Opacity="{Binding Overlay.State, Converter={StaticResource OverlayOpacityConverter}}"/>

@@ -257,7 +257,7 @@
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Vertical">
-                                <GroupBox Style="{DynamicResource GroupBoxStyle}" BorderThickness="1" >
+                                <GroupBox Style="{DynamicResource PulseGroupBoxStyle}" BorderThickness="1" >
                                     <GroupBox.Header>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock FontSize="18" Text="(наладка) " Visibility="{Binding SetupIsNotFinished, Converter={StaticResource VisibilityConverter}}" FontWeight="Bold"/>
@@ -285,7 +285,7 @@
                                                 </ContentControl>
                                             </Grid>
                                             <TextBlock FontSize="18" Text="{Binding Title}" FontWeight="DemiBold"/>
-                                            <TextBlock Text="серийная продукция" Foreground="Gray" FontSize="9" Margin="3 0 -100 0" Visibility="{Binding IsSerial, Converter={StaticResource VisibilityConverter}}"/>
+                                            <TextBlock Text="серийная продукция" Foreground="Gray" FontSize="9" Margin="3 0 -100 0" Visibility="Collapsed"/>
                                         </StackPanel>
 
                                     </GroupBox.Header>
@@ -294,31 +294,37 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="1" Height="30" Width="150" VerticalAlignment="Top"
-                                                BorderBrush="LightGray" Margin="0 0 0 0" BorderThickness="1" Visibility="{Binding TaskInfo, Converter={StaticResource TaskInfoVisibilityConverter}}">
-                                            <Grid>
-                                                <ContentControl Content="{StaticResource SyncIcon}" Visibility="{Binding NeedToSyncTask, Converter={StaticResource VisibilityConverter}}"
-                                                       RenderTransformOrigin="0.5 0.5" HorizontalAlignment="Left" Margin="6"
-                                                       Padding="0">
-                                                    <ContentControl.RenderTransform>
-                                                        <RotateTransform />
-                                                    </ContentControl.RenderTransform>
-                                                    <ContentControl.Triggers>
-                                                        <EventTrigger RoutedEvent="Label.Loaded">
-                                                            <BeginStoryboard>
-                                                                <Storyboard RepeatBehavior="Forever">
-                                                                    <DoubleAnimation
-                                                                        Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                                        From="0" To="360"
-                                                                        Duration="0:0:1"/>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </EventTrigger>
-                                                    </ContentControl.Triggers>
-                                                </ContentControl>
-                                                <TextBlock Text="{Binding TaskInfo, Converter={StaticResource TaskInfoTextConverter}}" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                            </Grid>
-                                        </Border>
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="1">
+                                            <Border Height="30" Width="150" VerticalAlignment="Top"
+                                                    BorderBrush="LightGray" Margin="0 0 0 0" BorderThickness="1" Visibility="{Binding TaskInfo, Converter={StaticResource TaskInfoVisibilityConverter}}">
+                                                <Grid>
+                                                    <ContentControl Content="{StaticResource SyncIcon}" Visibility="{Binding NeedToSyncTask, Converter={StaticResource VisibilityConverter}}"
+                                                                     RenderTransformOrigin="0.5 0.5" HorizontalAlignment="Left" Margin="6"
+                                                                     Padding="0">
+                                                        <ContentControl.RenderTransform>
+                                                            <RotateTransform />
+                                                        </ContentControl.RenderTransform>
+                                                        <ContentControl.Triggers>
+                                                            <EventTrigger RoutedEvent="Label.Loaded">
+                                                                <BeginStoryboard>
+                                                                    <Storyboard RepeatBehavior="Forever">
+                                                                        <DoubleAnimation
+                                                                            Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                            From="0" To="360"
+                                                                            Duration="0:0:1"/>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </EventTrigger>
+                                                        </ContentControl.Triggers>
+                                                    </ContentControl>
+                                                    <TextBlock Text="{Binding TaskInfo, Converter={StaticResource TaskInfoTextConverter}}" FontSize="12" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                            <Border Height="30" Width="150" VerticalAlignment="Top"
+                                                    BorderBrush="LightGray" Margin="0 -1 0 0" BorderThickness="1" Visibility="{Binding IsSerial, Converter={StaticResource VisibilityConverter}}">
+                                                <TextBlock Text="Серийная продукция" FontSize="12" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </StackPanel>
                                         <Grid Grid.Column="0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>

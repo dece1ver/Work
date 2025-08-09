@@ -95,7 +95,7 @@ namespace remeLog.ViewModels
             _ShiftFilter = ShiftFilterItems.FirstOrDefault();
             _OperatorFilter = "";
             _FinishedCountFilter = "";
-            _Parts = PartsInfo.Parts;
+            _Parts = new();
             _OrderFilter = "";
             _PartNameFilter = "";
             _EngineerCommentFilter = "";
@@ -134,12 +134,14 @@ namespace remeLog.ViewModels
             
             foreach (var machineFilter in MachineFilters)
             {
-                machineFilter.Filter = machineFilter.Machine == PartsInfo.Machine;
+                machineFilter.Filter = machineFilter.Machine == PartsInfo.Machine || PartsInfo.Machine == "Все станки";
             }
 
             SerialParts = await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!);
 
             lockUpdate = false;
+
+            await LoadPartsAsync();
         }
 
         private void Part_PropertyChanged(object sender, PropertyChangedEventArgs e)
