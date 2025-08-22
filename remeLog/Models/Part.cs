@@ -317,6 +317,26 @@ namespace remeLog.Models
             }
         }
 
+        /// <summary>
+        /// Разрешено ли редактировать нормативы детали - true если деталь не серийная, либо если серийная и редактирование разблокировано вручную.
+        /// </summary>
+        public bool IsEditEnabled => !IsSerial || IsUnlocked;
+
+        private bool _IsUnlocked;
+        /// <summary> Разлокировано ли редактирование (участвует только если деталь серийная) </summary>
+        public bool IsUnlocked
+        {
+            get => _IsUnlocked;
+            set
+            {
+                if (Set(ref _IsUnlocked, value))
+                {
+                    OnPropertyChanged(nameof(IsEditEnabled));
+                }
+            }
+        }
+
+
         public string Problems => "Тут будут проблемы из списка.\n• Проблема №1\n• Проблема №2\n...";
 
 

@@ -589,7 +589,6 @@ namespace remeLog.ViewModels
             }
         }
 
-
         private void LockUpdate() => lockUpdate = true;
 
         private void UnlockUpdate()

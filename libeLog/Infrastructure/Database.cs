@@ -13,6 +13,49 @@ namespace libeLog.Infrastructure
     public static class Database
     {
         /// <summary>
+        /// Удаляет запись из указанной таблицы по значению поля <c>Id</c>.
+        /// </summary>
+        /// <param name="connectionString">Строка подключения к базе данных SQL Server.</param>
+        /// <param name="id">Значение идентификатора записи для удаления.</param>
+        /// <param name="table">Имя таблицы, из которой нужно удалить запись.</param>
+        /// <returns>Количество удалённых строк.</returns>
+        public static int RemoveById(string connectionString, string id, string table)
+        {
+            using (SqlConnection connection = new(connectionString))
+            {
+                connection.Open();
+                string query = $"DELETE FROM {table} WHERE Id = @Id";
+                using (SqlCommand command = new(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+                    return command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Асинхронно удаляет запись из указанной таблицы по значению поля <c>Id</c>.
+        /// </summary>
+        /// <param name="connectionString">Строка подключения к базе данных SQL Server.</param>
+        /// <param name="id">Значение идентификатора записи для удаления.</param>
+        /// <param name="table">Имя таблицы, из которой нужно удалить запись.</param>
+        /// <returns>Количество удалённых строк.</returns>
+        public static async Task<int> RemoveByIdAsync(string connectionString, string id, string table)
+        {
+            await using (SqlConnection connection = new(connectionString))
+            {
+                await connection.OpenAsync();
+                string query = $"DELETE FROM {table} WHERE Id = @Id";
+                await using (SqlCommand command = new(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+                    return await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+
+        /// <summary>
         /// Получает лимит наладки для заданного станка из базы данных по переданной строке подключения.
         /// </summary>
         /// <param name="machine">Имя станка для получения лимита наладки.</param>
@@ -196,7 +239,7 @@ namespace libeLog.Infrastructure
 
             // 2) Загрузка операций
             progress?.Report("Читаем операции...");
-            using (var cmd = new SqlCommand("SELECT Id, SerialPartId, Name FROM cnc_operations ORDER BY Name", connection))
+            using (var cmd = new SqlCommand("SELECT Id, SerialPartId, Name FROM cnc_operations ORDER BY Id", connection))
             using (var reader = await cmd.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())

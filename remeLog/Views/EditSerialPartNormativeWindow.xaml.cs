@@ -32,6 +32,7 @@ namespace remeLog.Views
         {
             SetNewSetupNormativeCommand = new LambdaCommand(OnSetNewSetupNormativeCommandExecuted, CanSetNewSetupNormativeCommandExecute);
             SetNewProductionNormativeCommand = new LambdaCommand(OnSetNewProductionNormativeCommandExecuted, CanSetNewProductionNormativeCommandExecute);
+            RemoveNormativeCommand = new LambdaCommand(OnRemoveNormativeCommandExecuted, CanRemoveNormativeCommandExecute);
             InitializeComponent();
         }
 
@@ -153,6 +154,22 @@ namespace remeLog.Views
             }
         }
         private bool CanSetNewProductionNormativeCommandExecute(object p) => true;
+        #endregion
+
+        #region RemoveNormative
+        public ICommand RemoveNormativeCommand { get; }
+        private async void OnRemoveNormativeCommandExecuted(object p)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+
+            if (p is FrameworkElement fe && fe.DataContext is NormativeEntry normative)
+            {
+                if (MessageBox.Show("Удалить норматив?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                await Database.RemoveNormativeAsync(normative);
+            }
+        }
+        private bool CanRemoveNormativeCommandExecute(object p) => true;
         #endregion
 
         private async void Button_Click(object sender, RoutedEventArgs e)

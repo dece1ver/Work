@@ -519,8 +519,11 @@ namespace remeLog.Infrastructure
                 .Add(CM.AverageReplacementTime, "Среднее время замены детали, мин")
                 .Add(CM.AverageSetupTime, "Среднее время наладки, час")
                 .Add(CM.TotalSetupTime, "Общее время наладок, час")
+                .Add(CM.TotalSetupTimeSerial, "Общее время наладок серийки, час")
                 .Add(CM.TotalProductionTime, "Общее время изготовления, час")
+                .Add(CM.TotalProductionTimeSerial, "Общее время изготовления серийки, час")
                 .Add(CM.TotalDowntimesTime, "Общее время простоев, час")
+                .Add(CM.TotalDowntimesTimeSerial, "Общее время простоев серийки, час")
                 .Add(CM.NonSerialPartsTime)
                 .Add(CM.SerialPartsTime)
                 .Add(CM.TotalTime)
@@ -624,8 +627,11 @@ namespace remeLog.Infrastructure
 
                 ws.Cell(row, ci[CM.AverageSetupTime]).SetValue(parts.AverageSetupTime().TotalHours);
                 ws.Cell(row, ci[CM.TotalSetupTime]).SetValue(parts.TotalSetupTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalSetupTimeSerial]).SetValue(parts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).TotalSetupTime().TotalHours);
                 ws.Cell(row, ci[CM.TotalProductionTime]).SetValue(parts.TotalProductionTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalProductionTimeSerial]).SetValue(parts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).TotalProductionTime().TotalHours);
                 ws.Cell(row, ci[CM.TotalDowntimesTime]).SetValue(parts.TotalDowntimesTime().TotalHours);
+                ws.Cell(row, ci[CM.TotalDowntimesTimeSerial]).SetValue(parts.Where(p => serialPartNames.Contains(p.PartName.NormalizedPartNameWithoutComments())).TotalDowntimesTime().TotalHours);
                 ws.Cell(row, ci[CM.TotalTime]).SetValue(totalWorkedMinutes / 60);
 
                 // ---------- ВРЕМЯ ПО ТИПУ ПРОДУКЦИИ ----------

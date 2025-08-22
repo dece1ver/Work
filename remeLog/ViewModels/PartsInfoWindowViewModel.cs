@@ -87,6 +87,7 @@ namespace remeLog.ViewModels
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
             ShowArchiveTableCommand = new LambdaCommand(OnShowArchiveTableCommandExecuted, CanShowArchiveTableCommandExecute);
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
+            UnlockSerialPartNormativesCommand = new LambdaCommand(OnUnlockSerialPartNormativesCommandExecuted, CanUnlockSerialPartNormativesCommandExecute);
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecutedAsync, CanUpdatePartsCommandExecute);
 
             CalcFixed = Part.CalcFixed;
@@ -1618,8 +1619,11 @@ namespace remeLog.ViewModels
         public ICommand ChangeSerialPartNormativesCommand { get; }
         private void OnChangeSerialPartNormativesCommandExecuted(object p)
         {
+
             var serialPart = SerialParts.FirstOrDefault(sp => sp.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments());
             if (serialPart == null) return;
+            if (Util.IsNotAppAdmin(() => MessageBox.Show("Нет прав на выполнение операции", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error)))
+                return;
             if (!serialPart.Operations.Any())
             {
                 MessageBox.Show(
@@ -1651,7 +1655,23 @@ namespace remeLog.ViewModels
             }
             UpdatePartsCommand.Execute(true);
         }
-        private bool CanChangeSerialPartNormativesCommandExecute(object p) => SelectedPart is { };
+        private bool CanChangeSerialPartNormativesCommandExecute(object p) => SelectedPart != null && SerialParts.FirstOrDefault(sp => sp.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments()) != null;
+        #endregion
+
+        #region UnlockSerialPartNormatives
+        public ICommand UnlockSerialPartNormativesCommand { get; }
+        private void OnUnlockSerialPartNormativesCommandExecuted(object p)
+        {
+ 
+            var serialPart = SerialParts.FirstOrDefault(sp => sp.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments());
+            if (serialPart == null) return;
+            foreach (var part in Parts.Where(p => p.PartName.NormalizedPartNameWithoutComments() == serialPart.PartName.NormalizedPartNameWithoutComments()))
+            {
+                part.IsUnlocked = true;
+            }
+            
+        }
+        private bool CanUnlockSerialPartNormativesCommandExecute(object p) => SelectedPart is { };
         #endregion
 
 

@@ -520,14 +520,29 @@ namespace remeLog.Infrastructure
         public const string TotalSetupTime = "setupTime";
 
         /// <summary>
+        /// Время в наладке на серийке
+        /// </summary>
+        public const string TotalSetupTimeSerial = "setupTimeSerial";
+
+        /// <summary>
         /// Вермя изготовления
         /// </summary>
         public const string TotalProductionTime = "productionTime";
 
         /// <summary>
+        /// Вермя изготовления на серийке
+        /// </summary>
+        public const string TotalProductionTimeSerial = "productionTimeSerial";
+
+        /// <summary>
         /// Вермя простоев
         /// </summary>
         public const string TotalDowntimesTime = "downtimesTime";
+
+        /// <summary>
+        /// Вермя простоев на серийке
+        /// </summary>
+        public const string TotalDowntimesTimeSerial = "downtimesTimeSerial";
 
         /// <summary>
         /// Вермя общее
@@ -728,8 +743,11 @@ namespace remeLog.Infrastructure
             { CountPerMachine, $"Количество{Environment.NewLine}по станку" },
             { AverageSetupTime, $"Среднее{Environment.NewLine}время наладки" },
             { TotalSetupTime, $"Время наладки" },
+            { TotalSetupTimeSerial, $"Время наладки на серийке" },
             { TotalProductionTime, $"Время изготовления" },
+            { TotalProductionTimeSerial, $"Время изготовления на серийке" },
             { TotalDowntimesTime, $"Время простоев" },
+            { TotalDowntimesTimeSerial, $"Время простоев на серийке" },
             { TotalTime, $"Отмеченное общее время" },
             { IsEqual, $"Совпадает" },
             { Coefficient, $"Коэффициент" },

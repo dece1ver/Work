@@ -31,13 +31,21 @@ namespace remeLog.ViewModels
             DeleteSetupCommand = new LambdaCommand(OnDeleteSetupCommandExecuted, CanDeleteSetupCommandExecute);
             SetNewSetupNormativeCommand = new LambdaCommand(OnSetNewSetupNormativeCommandExecuted, CanSetNewSetupNormativeCommandExecute);
             SetNewProductionNormativeCommand = new LambdaCommand(OnSetNewProductionNormativeCommandExecuted, CanSetNewProductionNormativeCommandExecute);
+            SetNewProductionNormativeCommand = new LambdaCommand(OnSetNewProductionNormativeCommandExecuted, CanSetNewProductionNormativeCommandExecute);
+            RemoveNormativeCommand = new LambdaCommand(OnRemoveNormativeCommandExecuted, CanRemoveNormativeCommandExecute);
 
             _Status = "";
             _SerialParts = new ObservableCollection<SerialPart>();
             SerialParts.CollectionChanged += OnSerialPartsCollectionChanged!;
-            Task.Run(LoadSerialPartsAsync);
-            Task.Run(StartBackgroundCheckLoop);
+            _ = Init();
+        }
 
+        async Task Init()
+        {
+            InProgress = true;
+            _ = Task.Run(StartBackgroundCheckLoop);
+            await LoadSerialPartsAsync();
+            InProgress = false;
         }
 
         private ObservableCollection<SerialPart> _SerialParts;
@@ -124,9 +132,11 @@ namespace remeLog.ViewModels
 
         #region LoadParts
         public ICommand LoadPartsCommand { get; }
-        private void OnLoadPartsCommandExecuted(object p)
+        private async void OnLoadPartsCommandExecuted(object p)
         {
-            Task.Run(LoadSerialPartsAsync);
+            InProgress = true;
+            await LoadSerialPartsAsync();
+            InProgress = false;
         }
         private bool CanLoadPartsCommandExecute(object p) => !InProgress;
         #endregion
@@ -381,6 +391,35 @@ namespace remeLog.ViewModels
         private bool CanSetNewProductionNormativeCommandExecute(object p) => !InProgress;
         #endregion
 
+        #region RemoveNormative
+        public ICommand RemoveNormativeCommand { get; }
+        private async void OnRemoveNormativeCommandExecuted(object p)
+        {
+            if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
+                return;
+
+            if (p is FrameworkElement fe && fe.DataContext is NormativeEntry normative)
+            {
+                try
+                {
+                    InProgress = true;
+                    if (MessageBox.Show("Удалить норматив?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                    await Database.RemoveNormativeAsync(normative);
+                    await LoadSerialPartsAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    InProgress = false;
+                }
+            }
+        }
+        private bool CanRemoveNormativeCommandExecute(object p) => true;
+        #endregion
+
         public void MoveOperation(CncOperation targetOperation, bool isAbove)
         {
             if (Util.IsNotAppAdmin(() => ShowMessage("Нет прав на выполнение операции")))
@@ -423,21 +462,32 @@ namespace remeLog.ViewModels
                 Status = "Детали не могут быть загружены т.к. строка подключения не настроена";
                 return;
             }
-            var parts = await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString, new Progress<string>(p => Status = p));
-            SerialParts = new ObservableCollection<SerialPart>(parts);
-            foreach (var part in SerialParts)
+
+            var parts = await Task.Run(() =>
             {
-                foreach (var operation in part.Operations)
+                var loaded = libeLog.Infrastructure.Database
+                    .GetSerialPartsAsync(AppSettings.Instance.ConnectionString,
+                        new Progress<string>(p => Status = p))
+                    .GetAwaiter().GetResult();
+
+                foreach (var part in loaded)
                 {
-                    foreach (var setup in operation.Setups)
+                    foreach (var operation in part.Operations)
                     {
-                        setup.UpdateDependentProperties();
+                        foreach (var setup in operation.Setups)
+                        {
+                            setup.UpdateDependentProperties();
+                        }
                     }
+                    part.AcceptChanges();
                 }
-                part.AcceptChanges();
-            }
+                return loaded;
+            });
+
+            SerialParts = new ObservableCollection<SerialPart>(parts);
             ValidateSerialParts();
         }
+
 
         private async void OnSerialPartsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {

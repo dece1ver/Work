@@ -47,6 +47,11 @@ namespace remeLog.Infrastructure
             }
         }
 
+        public static async Task<int> RemoveNormativeAsync(NormativeEntry normative)
+        {
+            return await libeLog.Infrastructure.Database.RemoveByIdAsync(AppSettings.Instance.ConnectionString!, normative.Id.ToString(), "cnc_normatives");
+        }
+
         public static List<OperatorInfo> GetOperators()
         {
             List<OperatorInfo> operators = new();

@@ -472,7 +472,7 @@
             <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate>
                     <TextBox Text="{Binding SpecifiedDowntimesComment, UpdateSourceTrigger=PropertyChanged}" 
-             Style="{StaticResource TableLargeTextBox}">
+                             Style="{StaticResource TableLargeTextBox}">
                     </TextBox>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
@@ -555,15 +555,15 @@
                 <DataTemplate>
                     <TextBlock Text="{Binding FixedSetupTimePlan, StringFormat=0.##, Converter={StaticResource ExpressionToDoubleConverter}}"
                                Style="{StaticResource TableTextBlock}"
-                               IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                               IsEnabled="{Binding IsEditEnabled}"/>
                 </DataTemplate>
             </DataGridTemplateColumn.CellTemplate>
             <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate>
-                    <TextBox Text="{Binding FixedSetupTimePlan, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ExpressionToDoubleConverter}}"
+                    <TextBox Text="{Binding FixedSetupTimePlan, Converter={StaticResource ExpressionToDoubleConverter}}"
                              Style="{StaticResource TableTextBox}"
-                             IsReadOnly="{Binding IsSerial}"
-                             IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                             IsReadOnly="{Binding IsEditEnabled, Converter={StaticResource InvertedBoolConverter}}"
+                             IsEnabled="{Binding IsEditEnabled}"/>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
@@ -577,15 +577,15 @@
                 <DataTemplate>
                     <TextBlock Text="{Binding FixedProductionTimePlan, StringFormat=0.##, Converter={StaticResource ExpressionToDoubleConverter}}"
                                Style="{StaticResource TableTextBlock}"
-                               IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                               IsEnabled="{Binding IsEditEnabled, Converter={StaticResource InvertedBoolConverter}}"/>
                 </DataTemplate>
             </DataGridTemplateColumn.CellTemplate>
             <DataGridTemplateColumn.CellEditingTemplate>
                 <DataTemplate>
-                    <TextBox Text="{Binding FixedProductionTimePlan, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ExpressionToDoubleConverter}}"
+                    <TextBox Text="{Binding FixedProductionTimePlan, Converter={StaticResource ExpressionToDoubleConverter}}"
                              Style="{StaticResource TableTextBox}"
-                             IsReadOnly="{Binding IsSerial}"
-                             IsEnabled="{Binding IsSerial, Converter={StaticResource InvertedBoolConverter}}"/>
+                             IsReadOnly="{Binding IsEditEnabled, Converter={StaticResource InvertedBoolConverter}}"
+                             IsEnabled="{Binding IsEditEnabled}"/>
                 </DataTemplate>
             </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
@@ -712,6 +712,7 @@
 
         <ContextMenu x:Key="SerialPartFixedNormativesContextMenu">
             <MenuItem Header="Изменить норматив" Command="{Binding DataContext.ChangeSerialPartNormativesCommand, Source={x:Reference partsInfoWindow}}" />
+            <MenuItem Header="Разблокировать" Command="{Binding DataContext.UnlockSerialPartNormativesCommand, Source={x:Reference partsInfoWindow}}" />
             <MenuItem Header="Очистить" Tag="0" Click="OnSetValueClick"/>
         </ContextMenu>
 
