@@ -285,6 +285,31 @@ namespace libeLog.Infrastructure.Sql
         }
 
         /// <summary>
+        /// Добавляет вычисляемый столбец (Computed Column).
+        /// </summary>
+        /// <param name="name">Имя столбца.</param>
+        /// <param name="expression">SQL-выражение для вычисления.</param>
+        /// <param name="persisted">Флаг: хранить ли как PERSISTED (по умолчанию true).</param>
+        /// <returns>Текущий экземпляр <see cref="TableBuilder"/>.</returns>
+        public TableBuilder AddComputedColumn(string name, string expression, bool persisted = true)
+        {
+            SqlValidationHelper.ValidateName(name);
+
+            if (_table.Columns.Any(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException($"Дублирующееся имя столбца: {name}");
+
+            var column = new ColumnDefinition
+            {
+                Name = name,
+                ComputedExpression = expression,
+                IsPersisted = persisted
+            };
+
+            _table.Columns.Add(column);
+            return this;
+        }
+
+        /// <summary>
         /// Устанавливает составной первичный ключ по указанным именам столбцов.
         /// </summary>
         /// <param name="columns">Список имён колонок, входящих в составной PK.</param>
@@ -452,6 +477,12 @@ namespace libeLog.Infrastructure.Sql
             public ColumnOptions Identity(bool value = true)
             {
                 _column.AutoIncrement = value;
+                return this;
+            }
+
+            public ColumnOptions Persisted(bool value = true)
+            {
+                _column.IsPersisted = value;
                 return this;
             }
 

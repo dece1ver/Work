@@ -39,10 +39,14 @@ namespace libeLog.Infrastructure.Sql
                     )
                     BEGIN
                         ALTER TABLE [dbo].[{tableName}] 
-                            ADD [{col.Name}] {col.SqlType}
-                            {(col.AutoIncrement ? "IDENTITY(1,1)" : "")}
-                            {(col.DefaultValueSql is not null ? $" DEFAULT {col.DefaultValueSql}" : "")}
-                            {(col.IsNullable ? "NULL" : "NOT NULL")};
+                            ADD [{col.Name}] 
+                            {(col.IsComputed
+                                ? $"AS {col.ComputedExpression} {(col.IsPersisted ? "PERSISTED" : "")}"
+                                : $@"{col.SqlType}
+                                    {(col.AutoIncrement ? "IDENTITY(1,1)" : "")}
+                                    {(col.DefaultValueSql is not null ? $" DEFAULT {col.DefaultValueSql}" : "")}
+                                    {(col.IsNullable ? "NULL" : "NOT NULL")}"
+                            )};
                     END
                 ");
 

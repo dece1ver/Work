@@ -55,7 +55,25 @@ namespace libeLog.Infrastructure.Sql
             }
 
             public string BuildDropScript(FunctionDefinition func)
-                => $"IF OBJECT_ID('{func.FullName}', 'FN') IS NOT NULL DROP FUNCTION {func.FullName};";
+            {
+                return $@"
+                DECLARE @sql NVARCHAR(MAX) = N'';
+                SELECT @sql += 'ALTER TABLE [' + s.name + '].[' + t.name + '] DROP COLUMN [' + c.name + '];' + CHAR(13)
+                FROM sys.computed_columns c
+                JOIN sys.tables t ON t.object_id = c.object_id
+                JOIN sys.schemas s ON s.schema_id = t.schema_id
+                JOIN sys.sql_expression_dependencies d 
+                    ON d.referencing_id = c.object_id
+                WHERE d.referenced_entity_name = '{func.Name}'
+                  AND d.referenced_schema_name = '{func.Schema}';
+
+                IF LEN(@sql) > 0
+                    EXEC sp_executesql @sql;
+                IF OBJECT_ID('{func.FullName}', 'FN') IS NOT NULL
+                    DROP FUNCTION {func.FullName};
+                ";
+            }
+
         }
 
         /// <summary>

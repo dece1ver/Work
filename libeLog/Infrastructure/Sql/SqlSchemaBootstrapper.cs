@@ -20,12 +20,6 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="cancellationToken">Токен отмены.</param>
         public static async Task ApplyAllAsync(SqlConnection connection, IProgress<(string, Status?)>? progress = null, CancellationToken cancellationToken = default)
         {
-            var tables = GetAllTableDefinitions();
-            foreach (var table in tables)
-            {
-                await ApplyAsync(connection, table, progress, cancellationToken);
-            }
-
             var fnBuilder = new FunctionSqlBuilder();
             var manager = new FunctionManager(connection.ConnectionString, fnBuilder);
 
@@ -34,35 +28,40 @@ namespace libeLog.Infrastructure.Sql
                 Name = "NormalizedPartNameWithoutComments",
                 Parameters = new List<FunctionParameter>
                 {
-                    new("@name", "NVARCHAR(MAX)")
+                    new("@name", "NVARCHAR(255)")
                 },
-                ReturnType = "NVARCHAR(MAX)",
-                Options = new List<string> { "RETURNS NULL ON NULL INPUT" },
+                ReturnType = "NVARCHAR(255)",
+                Options = new List<string> { "RETURNS NULL ON NULL INPUT", "SCHEMABINDING" },
                 Body = @"
-    IF @name IS NULL OR LEN(LTRIM(RTRIM(@name))) = 0
-        RETURN '';
+                    IF @name IS NULL OR LEN(LTRIM(RTRIM(@name))) = 0
+                        RETURN '';
 
-    DECLARE @r NVARCHAR(MAX) = @name;
+                    DECLARE @r NVARCHAR(255) = @name;
 
-    WHILE CHARINDEX('(', @r) > 0
-    BEGIN
-        DECLARE @s INT = CHARINDEX('(', @r);
-        DECLARE @e INT = CHARINDEX(')', @r, @s);
-        IF @e > 0
-            SET @r = STUFF(@r, @s, @e - @s + 1, '');
-        ELSE
-            BREAK;
-    END
+                    WHILE CHARINDEX('(', @r) > 0
+                    BEGIN
+                        DECLARE @s INT = CHARINDEX('(', @r);
+                        DECLARE @e INT = CHARINDEX(')', @r, @s);
+                        IF @e > 0
+                            SET @r = STUFF(@r, @s, @e - @s + 1, '');
+                        ELSE
+                            BREAK;
+                    END
 
-    SET @r = REPLACE(@r, '""', '');
+                    SET @r = REPLACE(@r, '""', '');
 
-    WHILE CHARINDEX('  ', @r) > 0
-        SET @r = REPLACE(@r, '  ', ' ');
+                    WHILE CHARINDEX('  ', @r) > 0
+                        SET @r = REPLACE(@r, '  ', ' ');
 
-    RETURN LOWER(LTRIM(RTRIM(@r)));"
+                    RETURN LOWER(LTRIM(RTRIM(@r)));"
             });
             manager.DeployAll();
             progress?.Report(($"Функции:{string.Join("\n", manager.Functions)}", Status.Ok));
+            var tables = GetAllTableDefinitions();
+            foreach (var table in tables)
+            {
+                await ApplyAsync(connection, table, progress, cancellationToken);
+            }
         }
 
         public static async Task ApplyAsync(SqlConnection connection, TableDefinition table, IProgress<(string, Status?)>? progress = null, CancellationToken cancellationToken = default)
@@ -71,7 +70,7 @@ namespace libeLog.Infrastructure.Sql
             progress?.Report(($"Таблица: {table.Name}", Status.Sync));
             var updated = await helper.ApplyMissingColumnsAndConstraintsAsync(table, progress, cancellationToken);
             if (updated)
-                progress?.Report(($"Таблица: {table.Name}", Status.Warning));
+                progress?.Report(($"Таблица: {table.Name}", Status.Ok));
             else
                 progress?.Report(($"Таблица: {table.Name}", Status.Ok));   
         }
@@ -141,6 +140,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("PartName", 255, false)
                 .AddCompositeUnique("PartName")
                 .AddIntColumn("YearCount", false)
+                .AddComputedColumn("NormalizedPartName", "dbo.NormalizedPartNameWithoutComments(PartName)")
                 .Build(),
 
             new TableBuilder("cnc_operations")
@@ -233,6 +233,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddSmallDateTimeColumn("ShiftDate", false)
                 .AddStringColumn("Operator", -1, false)
                 .AddStringColumn("PartName", -1, false)
+                .AddComputedColumn("NormalizedPartName", "dbo.NormalizedPartNameWithoutComments(PartName)")
                 .AddStringColumn("Order", 50, false)
                 .AddIntColumn("Setup", false)
                 .AddDoubleColumn("FinishedCount", false)

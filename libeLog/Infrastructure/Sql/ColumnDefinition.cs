@@ -10,5 +10,8 @@
         public bool AutoIncrement { get; set; }
         public ForeignKeyDefinition? ForeignKey { get; set; }
         public string? DefaultValueSql { get; set; }
+        public string? ComputedExpression { get; set; }
+        public bool IsPersisted { get; set; } = true;
+        public bool IsComputed => !string.IsNullOrEmpty(ComputedExpression);
     }
 }

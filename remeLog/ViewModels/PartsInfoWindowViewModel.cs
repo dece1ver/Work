@@ -1959,10 +1959,9 @@ namespace remeLog.ViewModels
             {
                 var serialNamesNormalized = string.Join(", ", SerialParts.Select(sp => $"'{sp.PartName.NormalizedPartNameWithoutComments()}'"));
 
-                sb.AppendFormat("AND dbo.NormalizedPartNameWithoutComments(PartName) IN ({0}) ", serialNamesNormalized);
+                sb.AppendFormat("AND NormalizedPartName IN ({0}) ", serialNamesNormalized);
             }
                 
-
             var machines = string.Join(", ", MachineFilters.Where(mf => mf.Filter).Select(m => $"'{m.Machine}'").Distinct());
             sb.AppendFormat("AND Machine IN ({0}) ", machines);
 

@@ -1811,8 +1811,7 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="2">
                         <StackPanel>
-                            <ContentPresenter ContentSource="Header"
-                                          Margin="0"/>
+                            <ContentPresenter ContentSource="Header" Margin="0"/>
                             <ContentPresenter Margin="0"/>
                         </StackPanel>
                     </Border>

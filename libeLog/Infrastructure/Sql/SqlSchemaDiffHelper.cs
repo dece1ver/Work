@@ -132,7 +132,7 @@ namespace libeLog.Infrastructure.Sql
             var columnsToAdd = await GetColumnsToAddAsync(tableName, tableDefinition, cancellationToken);
             if (columnsToAdd.Count > 0)
             {
-                progress?.Report(($"    | Требуется добавление столбцов:\n\t{string.Join(", ", columnsToAdd.Select(c => c.Name))}.", null));
+                progress?.Report(($"    | Добавление столбцов:\n\t{string.Join(", ", columnsToAdd.Select(c => c.Name))}.", null));
                 var columnScript = SqlSchemaAlterHelper.GenerateAddColumnsScript(tableName, columnsToAdd);
                 await ExecuteNonQueryAsync(columnScript, cancellationToken);
                 updated = true;
