@@ -47,6 +47,11 @@ namespace remeLog.Infrastructure
             }
         }
 
+        public static async Task<int> RemoveNormativeAsync(NormativeEntry normative)
+        {
+            return await libeLog.Infrastructure.Database.RemoveByIdAsync(AppSettings.Instance.ConnectionString!, normative.Id.ToString(), "cnc_normatives");
+        }
+
         public static List<OperatorInfo> GetOperators()
         {
             List<OperatorInfo> operators = new();
@@ -1338,20 +1343,37 @@ namespace remeLog.Infrastructure
             using (SqlConnection connection = new(AppSettings.Instance.ConnectionString))
             {
                 await connection.OpenAsync();
-                string query = $"SELECT max_setup_limit, long_setup_limit, NcArchivePath, NcIntermediatePath FROM cnc_remelog_config;";
-                using (SqlCommand command = new(query, connection))
+                using (SqlCommand command = new("SELECT max_setup_limit, long_setup_limit, NcArchivePath, NcIntermediatePath, Administrators, CncOperations FROM cnc_remelog_config;", connection))
+                {
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        var administrators = new List<string>();
+                        var operatios = new List<string>();
+                        while (await reader.ReadAsync())
+                        {
+                            if (!reader.IsDBNull(0)) AppSettings.MaxSetupLimit = await reader.GetFieldValueAsync<double>(0);
+                            if (!reader.IsDBNull(1)) AppSettings.LongSetupLimit = await reader.GetValueOrDefaultAsync(1, 240.0);
+                            if (!reader.IsDBNull(2)) AppSettings.NcArchivePath = await reader.GetValueOrDefaultAsync(2, "");
+                            if (!reader.IsDBNull(3)) AppSettings.NcIntermediatePath = await reader.GetValueOrDefaultAsync(3, "");
+                            if (!reader.IsDBNull(4)) administrators.Add(await reader.GetFieldValueAsync<string>(4));
+                            if (!reader.IsDBNull(5)) operatios.Add(await reader.GetFieldValueAsync<string>(5));
+                        }
+                        AppSettings.Administrators = administrators.ToArray();
+                        AppSettings.CncOperations = operatios.ToArray();
+                    }
+                }
+                AppSettings.MaxSetupLimits.Clear();
+                using (SqlCommand command = new("SELECT Name, SetupCoefficient FROM cnc_machines", connection))
                 {
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
                         {
-                            AppSettings.MaxSetupLimit = await reader.GetValueOrDefaultAsync(0, 1.5);
-                            AppSettings.LongSetupLimit = await reader.GetValueOrDefaultAsync(1, 240.0);
-                            AppSettings.NcArchivePath = await reader.GetValueOrDefaultAsync(2, "");
-                            AppSettings.NcIntermediatePath = await reader.GetValueOrDefaultAsync(3, "");
+                            AppSettings.MaxSetupLimits.Add(await reader.GetFieldValueAsync<string>(0), await reader.GetValueOrDefaultAsync(1, 1.5));
                         }
                     }
                 }
+                AppSettings.Save();
             }
         }
     }

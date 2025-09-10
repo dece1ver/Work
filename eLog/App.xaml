@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:eLog"
              xmlns:inf="clr-namespace:eLog.Infrastructure"
              xmlns:cnv="clr-namespace:eLog.Infrastructure.Converters"
+             xmlns:style="clr-namespace:eLog.Infrastructure.Style"
              StartupUri="Views/Windows/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
@@ -23,6 +24,10 @@
             <cnv:SetupsVisibilityConverter x:Key="SetupsVisibilityConverter"/>
             <cnv:TaskInfoTextConverter x:Key="TaskInfoTextConverter"/>
             <cnv:TaskInfoVisibilityConverter x:Key="TaskInfoVisibilityConverter"/>
+            <style:ComboBoxStyleSelector
+                x:Key="OrderStyleSelector"
+                SlashStyle="{StaticResource SlashComboBoxStyle}"
+                DashStyle="{StaticResource DashComboBoxStyle}" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

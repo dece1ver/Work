@@ -317,6 +317,26 @@ namespace remeLog.Models
             }
         }
 
+        /// <summary>
+        /// Разрешено ли редактировать нормативы детали - true если деталь не серийная, либо если серийная и редактирование разблокировано вручную.
+        /// </summary>
+        public bool IsEditEnabled => !IsSerial || IsUnlocked;
+
+        private bool _IsUnlocked;
+        /// <summary> Разлокировано ли редактирование (участвует только если деталь серийная) </summary>
+        public bool IsUnlocked
+        {
+            get => _IsUnlocked;
+            set
+            {
+                if (Set(ref _IsUnlocked, value))
+                {
+                    OnPropertyChanged(nameof(IsEditEnabled));
+                }
+            }
+        }
+
+
         public string Problems => "Тут будут проблемы из списка.\n• Проблема №1\n• Проблема №2\n...";
 
 
@@ -1134,7 +1154,7 @@ namespace remeLog.Models
             } }
         public double SetupRatio => SetupTimePlanForCalc / SetupTimeFact;
         public double SetupRatioIncludeDowntimes => SetupTimeFact > 0 ? SetupTimePlanForCalc / (SetupTimeFact + SetupDowntimes) : 0;
-        public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : SetupRatio > AppSettings.MaxSetupLimit ? $"{SetupRatio:0%}\n({AppSettings.MaxSetupLimit:0%})" : $"{SetupRatio:0%}";
+        public string SetupRatioTitle => SetupRatio is double.NaN or double.PositiveInfinity ? "б/н" : SetupRatio > AppSettings.MaxSetupLimits.GetValueOrDefault(Machine, AppSettings.FallbackMaxSetupLimitValue) ? $"{SetupRatio:0%}\n({AppSettings.MaxSetupLimits.GetValueOrDefault(Machine, AppSettings.FallbackMaxSetupLimitValue):0%})" : $"{SetupRatio:0%}";
         public double ProductionRatio => FinishedCountFact * ProductionTimePlanForCalc / ProductionTimeFact;
         public string ProductionRatioTitle => ProductionRatio is double.NaN or double.PositiveInfinity or double.NegativeInfinity ? "б/и" : $"{ProductionRatio:0%}";
         public double SpecifiedDowntimesRatio => (SetupDowntimes + MachiningDowntimes) / (EndMachiningTime - StartSetupTime).TotalMinutes;
@@ -1196,7 +1216,7 @@ namespace remeLog.Models
                 {
                     case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && SetupRatio == 0 && SetupTimeFact > 0:
                         return "Необходимо указать причину отсутствия номатива наладки.";
-                    case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && SetupRatio is < 0.695 or > 2 && SetupTimeFact > 0:
+                    case nameof(MasterSetupComment) when string.IsNullOrWhiteSpace(MasterSetupComment) && (SetupRatio < 0.695 || SetupRatio > AppSettings.MaxSetupLimit) && SetupTimeFact > 0:
                         return "Необходимо указать причину невыполнения номатива наладки.";
 
                     case nameof(MasterMachiningComment) when string.IsNullOrWhiteSpace(MasterMachiningComment) && ProductionRatio == 0:

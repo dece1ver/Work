@@ -30,6 +30,9 @@ namespace libeLog.Infrastructure.Sql
 
                     if (col.AutoIncrement) sb.Append(" IDENTITY(1,1)");
 
+                    if (col.DefaultValueSql is not null)
+                        sb.Append($" DEFAULT {col.DefaultValueSql}");
+
                     if (!col.IsNullable) sb.Append(" NOT NULL");
 
                     if (col.IsPrimaryKey && table.CompositePrimaryKey.Count == 0)
@@ -37,7 +40,7 @@ namespace libeLog.Infrastructure.Sql
 
                     if (col.IsUnique) sb.Append(" UNIQUE");
 
-                    if (i < table.Columns.Count - 1 || NeedsPostColumnConstraints(table)) sb.Append(",");
+                    if (i < table.Columns.Count - 1 || NeedsPostColumnConstraints(table)) sb.Append(',');
                     sb.AppendLine();
                 }
 

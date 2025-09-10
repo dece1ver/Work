@@ -132,7 +132,7 @@ namespace libeLog.Infrastructure.Sql
             var columnsToAdd = await GetColumnsToAddAsync(tableName, tableDefinition, cancellationToken);
             if (columnsToAdd.Count > 0)
             {
-                progress?.Report(($"    | Требуется добавление столбцов:\n\t{string.Join(", ", columnsToAdd.Select(c => c.Name))}.", null));
+                progress?.Report(($"    | Добавление столбцов:\n\t{string.Join(", ", columnsToAdd.Select(c => c.Name))}.", null));
                 var columnScript = SqlSchemaAlterHelper.GenerateAddColumnsScript(tableName, columnsToAdd);
                 await ExecuteNonQueryAsync(columnScript, cancellationToken);
                 updated = true;
@@ -276,16 +276,16 @@ namespace libeLog.Infrastructure.Sql
             await connection.OpenAsync(cancellationToken);
 
             var sql = @"
-        SELECT STRING_AGG(kcu.COLUMN_NAME, ',') as PK_COLUMNS
-        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-        JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu 
-            ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME 
-            AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
-            AND tc.TABLE_NAME = kcu.TABLE_NAME
-        WHERE tc.TABLE_SCHEMA = 'dbo' 
-            AND tc.TABLE_NAME = @TableName 
-            AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
-        GROUP BY tc.CONSTRAINT_NAME";
+                SELECT STRING_AGG(kcu.COLUMN_NAME, ',') as PK_COLUMNS
+                FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu 
+                    ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME 
+                    AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA
+                    AND tc.TABLE_NAME = kcu.TABLE_NAME
+                WHERE tc.TABLE_SCHEMA = 'dbo' 
+                    AND tc.TABLE_NAME = @TableName 
+                    AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+                GROUP BY tc.CONSTRAINT_NAME";
 
             using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@TableName", tableName);
@@ -293,7 +293,7 @@ namespace libeLog.Infrastructure.Sql
             var result = await command.ExecuteScalarAsync(cancellationToken);
             if (result == null) return false;
 
-            var existingColumns = result.ToString().Split(',').Select(c => c.Trim()).OrderBy(c => c);
+            var existingColumns = result.ToString()?.Split(',').Select(c => c.Trim()).OrderBy(c => c);
             var requestedColumns = columns.OrderBy(c => c);
 
             return existingColumns.SequenceEqual(requestedColumns, StringComparer.OrdinalIgnoreCase);

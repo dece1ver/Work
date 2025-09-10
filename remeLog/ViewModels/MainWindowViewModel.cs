@@ -311,7 +311,8 @@ namespace remeLog.ViewModels
 
             using (Overlay = new())
             {
-                var partsInfo = (CombinedParts)p;
+                var partsInfo = p is CombinedParts cp ? cp : new CombinedParts("Все станки", FromDate, ToDate) { Parts = Parts.SelectMany(cp => cp.Parts).OrderBy(p => p.StartSetupTime).ToObservableCollection() };
+
                 partsInfo.FromDate = FromDate;
                 partsInfo.ToDate = ToDate;
                 var partsInfoWindow = new PartsInfoWindow(partsInfo);
@@ -438,7 +439,6 @@ namespace remeLog.ViewModels
                 try
                 {
                     InProgress = true;
-                    await Util.UpdateAppSettingsAsync();
 
                     if (string.IsNullOrWhiteSpace(AppSettings.Instance.ConnectionString))
                     {
@@ -450,10 +450,11 @@ namespace remeLog.ViewModels
                     _cancellationTokenSource = new();
                     var cancellationToken = _cancellationTokenSource.Token;
                     await semaphoreSlim.WaitAsync(cancellationToken);
+                    await Util.UpdateAppSettingsAsync();
 
                     Status = "Получение списка станков...";
 
-                    switch (Machines.ReadMachines())
+                    switch (await Task.Run(Machines.ReadMachines))
                     {
                         case DbResult.AuthError:
                             MessageBox.Show("Не удалось получить список станков из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -466,7 +467,7 @@ namespace remeLog.ViewModels
                             break;
                     }
                     Status = "Получение списка причин неотмеченных простоев...";
-                    switch (AppSettings.Instance.UnspecifiedDowntimesReasons.ReadDowntimeReasons())
+                    switch (await Task.Run(AppSettings.Instance.UnspecifiedDowntimesReasons.ReadDowntimeReasons))
                     {
                         case DbResult.AuthError:
                             MessageBox.Show("Не удалось получить список причин простоев из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -480,7 +481,7 @@ namespace remeLog.ViewModels
                     }
 
                     Status = "Получение списка причин отклонений в наладке...";
-                    switch (AppSettings.Instance.SetupReasons.ReadDeviationReasons(DeviationReasonType.Setup))
+                    switch (await Task.Run(() => AppSettings.Instance.SetupReasons.ReadDeviationReasons(DeviationReasonType.Setup)))
                     {
                         case DbResult.AuthError:
                             MessageBox.Show("Не удалось получить список причин отклонений для наладок из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -494,7 +495,7 @@ namespace remeLog.ViewModels
                     }
 
                     Status = "Получение списка причин отклонений в изготовлении...";
-                    switch (AppSettings.Instance.MachiningReasons.ReadDeviationReasons(DeviationReasonType.Machining))
+                    switch (await Task.Run(() => AppSettings.Instance.MachiningReasons.ReadDeviationReasons(DeviationReasonType.Machining)))
                     {
                         case DbResult.AuthError:
                             MessageBox.Show("Не удалось получить список причин отклонений для изготовления из-за неудачной авторизации в базе данных.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -507,10 +508,10 @@ namespace remeLog.ViewModels
                             break;
                     }
 
-                    Application.Current.Dispatcher.Invoke(() =>
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         Status = "Очистка списка деталей...";
-                        Parts.Clear();
+                        var list = new List<CombinedParts>();
                         foreach (var machine in Machines)
                         {
                             ReportState state = ReportState.NotExist;
@@ -542,8 +543,9 @@ namespace remeLog.ViewModels
                                     state = ReportState.Partial;
                                 }
                             }
-                            Parts.Add(new CombinedParts(machine, FromDate, ToDate) { IsReportExist = state, IsReportChecked = dayChecked && nightChecked });
+                            list.Add(new CombinedParts(machine, FromDate, ToDate) { IsReportExist = state, IsReportChecked = dayChecked && nightChecked });
                         }
+                        Parts = list.ToObservableCollection();
                         return true;
                     });
                     Status = "Загрузка информации...";
@@ -551,7 +553,8 @@ namespace remeLog.ViewModels
                     {
                         try
                         {
-                            part.Parts = await Database.ReadPartsByShiftDateAndMachine(FromDate, ToDate, part.Machine, cancellationToken);
+                            var partsData = await Database.ReadPartsByShiftDateAndMachine(FromDate, ToDate, part.Machine, cancellationToken);
+                            await App.Current.Dispatcher.InvokeAsync(() => part.Parts = partsData);
                         }
                         catch (OperationCanceledException)
                         {
@@ -585,7 +588,6 @@ namespace remeLog.ViewModels
                 MessageBox.Show($"Непредвиденная ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
 
         private void LockUpdate() => lockUpdate = true;
 

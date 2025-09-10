@@ -54,6 +54,7 @@ namespace remeLog.ViewModels
             DecreaseSetupCommand = new LambdaCommand(OnDecreaseSetupCommandExecuted, CanDecreaseSetupCommandExecute);
             DeleteFilterCommand = new LambdaCommand(OnDeleteFilterCommandExecuted, CanDeleteFilterCommandExecute);
             DeletePartCommand = new LambdaCommand(OnDeletePartCommandExecuted, CanDeletePartCommandExecute);
+            ChangeSerialPartNormativesCommand = new LambdaCommand(OnChangeSerialPartNormativesCommandExecuted, CanChangeSerialPartNormativesCommandExecute);
             ExportHistoryToExcelCommand = new LambdaCommand(OnExportHistoryToExcelCommandExecuted, CanExportHistoryToExcelCommandExecute);
             ExportLongSetupsCommand = new LambdaCommand(OnExportLongSetupsCommandExecuted, CanExportLongSetupsCommandExecute);
             ExportPartsReportToExcelCommand = new LambdaCommand(OnExportPartsReportToExcelCommandExecuted, CanExportPartsReportToExcelCommandExecute);
@@ -86,6 +87,7 @@ namespace remeLog.ViewModels
             ShowAllMachinesCommand = new LambdaCommand(OnShowAllMachinesCommandExecuted, CanShowAllMachinesCommandExecute);
             ShowArchiveTableCommand = new LambdaCommand(OnShowArchiveTableCommandExecuted, CanShowArchiveTableCommandExecute);
             ShowInfoCommand = new LambdaCommand(OnShowInfoCommandExecuted, CanShowInfoCommandExecute);
+            UnlockSerialPartNormativesCommand = new LambdaCommand(OnUnlockSerialPartNormativesCommandExecuted, CanUnlockSerialPartNormativesCommandExecute);
             UpdatePartsCommand = new LambdaCommand(OnUpdatePartsCommandExecutedAsync, CanUpdatePartsCommandExecute);
 
             CalcFixed = Part.CalcFixed;
@@ -94,7 +96,7 @@ namespace remeLog.ViewModels
             _ShiftFilter = ShiftFilterItems.FirstOrDefault();
             _OperatorFilter = "";
             _FinishedCountFilter = "";
-            _Parts = PartsInfo.Parts;
+            _Parts = new();
             _OrderFilter = "";
             _PartNameFilter = "";
             _EngineerCommentFilter = "";
@@ -103,6 +105,7 @@ namespace remeLog.ViewModels
             _ToDate = PartsInfo.ToDate;
             _MachineFilters = new();
             _MachineFilters.CollectionChanged += MachineFiltersSource_CollectionChanged!;
+            _SerialParts = new();
             _Parts.CollectionChanged += _Parts_CollectionChanged;
             _ViewMode = AppSettings.Instance.User ??= User.Viewer;
             foreach (Part part in _Parts)
@@ -129,13 +132,17 @@ namespace remeLog.ViewModels
         async Task Init()
         {
             await _MachineFilters.ReadMachines();
-
+            
             foreach (var machineFilter in MachineFilters)
             {
-                machineFilter.Filter = machineFilter.Machine == PartsInfo.Machine;
+                machineFilter.Filter = machineFilter.Machine == PartsInfo.Machine || PartsInfo.Machine == "Все станки";
             }
 
+            SerialParts = await libeLog.Infrastructure.Database.GetSerialPartsAsync(AppSettings.Instance.ConnectionString!);
+
             lockUpdate = false;
+
+            await LoadPartsAsync();
         }
 
         private void Part_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -352,6 +359,22 @@ namespace remeLog.ViewModels
             }
         }
 
+        private bool _OnlySerialPartsFilter;
+        /// <summary> Фильтр только по серийным деталям </summary>
+        public bool OnlySerialPartsFilter
+        {
+            get => _OnlySerialPartsFilter;
+
+            set 
+            {
+                if (!CanBeChanged()) return;
+                if (Set(ref _OnlySerialPartsFilter, value))
+                {
+                    _ = LoadPartsAsync();
+                }
+            } 
+        }
+
 
         private ObservableCollection<MachineFilter> _MachineFilters;
         /// <summary> Список станков с необходимостью фильтрации </summary>
@@ -377,6 +400,14 @@ namespace remeLog.ViewModels
             set => Set(ref _SelectedPart, value);
         }
 
+
+        private List<SerialPart> _SerialParts;
+        /// <summary> Серийные детали </summary>
+        public List<SerialPart> SerialParts
+        {
+            get => _SerialParts;
+            set => Set(ref _SerialParts, value);
+        }
 
 
         public CombinedParts PartsInfo { get; set; }
@@ -1584,6 +1615,66 @@ namespace remeLog.ViewModels
         private static bool CanShowArchiveTableCommandExecute(object p) => true;
         #endregion
 
+        #region ChangeSerialPartNormatives
+        public ICommand ChangeSerialPartNormativesCommand { get; }
+        private void OnChangeSerialPartNormativesCommandExecuted(object p)
+        {
+
+            var serialPart = SerialParts.FirstOrDefault(sp => sp.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments());
+            if (serialPart == null) return;
+            if (Util.IsNotAppAdmin(() => MessageBox.Show("Нет прав на выполнение операции", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error)))
+                return;
+            if (!serialPart.Operations.Any())
+            {
+                MessageBox.Show(
+                    "У этой серийной детали нет операций, к которым могут принадлежать нормативы. Создайте операции с установками в окне 'Серийные детали'", 
+                    SelectedPart?.PartName, 
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Information);
+                return;
+            }
+            var dlg = new EditSerialPartNormativeWindow() { SerialPart = serialPart };
+            if (dlg.ShowDialog() != true) return;
+            if (!dlg.NewSetupNormative.HasValue && !dlg.NewProductionNormative.HasValue)
+            {
+                return;
+            }
+            foreach (var part in Parts.Where(p => 
+            p.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments() 
+            && p.Order == SelectedPart?.Order 
+            && p.Setup == SelectedPart?.Setup))
+            {
+                if (dlg.NewSetupNormative.HasValue 
+                    && dlg.NewSetupNormative.Value > 0 
+                    && SelectedPart?.SetupTimePlan == part.SetupTimePlan) 
+                        part.FixedSetupTimePlan = dlg.NewSetupNormative.Value;
+                if (dlg.NewProductionNormative.HasValue 
+                    && dlg.NewProductionNormative.Value > 0 
+                    && SelectedPart?.SingleProductionTimePlan == part.SingleProductionTimePlan) 
+                        part.FixedProductionTimePlan = dlg.NewProductionNormative.Value;
+            }
+            UpdatePartsCommand.Execute(true);
+        }
+        private bool CanChangeSerialPartNormativesCommandExecute(object p) => SelectedPart != null && SerialParts.FirstOrDefault(sp => sp.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments()) != null;
+        #endregion
+
+        #region UnlockSerialPartNormatives
+        public ICommand UnlockSerialPartNormativesCommand { get; }
+        private void OnUnlockSerialPartNormativesCommandExecuted(object p)
+        {
+ 
+            var serialPart = SerialParts.FirstOrDefault(sp => sp.PartName.NormalizedPartNameWithoutComments() == SelectedPart?.PartName.NormalizedPartNameWithoutComments());
+            if (serialPart == null) return;
+            foreach (var part in Parts.Where(p => p.PartName.NormalizedPartNameWithoutComments() == serialPart.PartName.NormalizedPartNameWithoutComments()))
+            {
+                part.IsUnlocked = true;
+            }
+            
+        }
+        private bool CanUnlockSerialPartNormativesCommandExecute(object p) => SelectedPart is { };
+        #endregion
+
+
         #region DeletePart
         public ICommand DeletePartCommand { get; }
         private void OnDeletePartCommandExecuted(object p)
@@ -1616,7 +1707,11 @@ namespace remeLog.ViewModels
         public ICommand UpdatePartsCommand { get; }
         private async void OnUpdatePartsCommandExecutedAsync(object p)
         {
-            if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) return;
+            if (p is bool skipAsk && !skipAsk || p is not bool)
+            {
+                if (MessageBox.Show("Обновить информацию?", "Вы точно уверены?", MessageBoxButton.YesNo, MessageBoxImage.Question) is MessageBoxResult.No) return;
+            }
+            
             foreach (var part in Parts.Where(p => p.NeedUpdate))
             {
                 var (res, mess) = await part.UpdatePartAsync();
@@ -1858,8 +1953,15 @@ namespace remeLog.ViewModels
                 sb.AppendFormat("AND totalCount {0} {1} ", totalCountOperator, totalCountValue);
 
             if (SetupFilter != null)
-                sb.AppendFormat("AND Setup = {0}", SetupFilter);
+                sb.AppendFormat("AND Setup = {0} ", SetupFilter);
 
+            if (OnlySerialPartsFilter)
+            {
+                var serialNamesNormalized = string.Join(", ", SerialParts.Select(sp => $"'{sp.PartName.NormalizedPartNameWithoutComments()}'"));
+
+                sb.AppendFormat("AND NormalizedPartName IN ({0}) ", serialNamesNormalized);
+            }
+                
             var machines = string.Join(", ", MachineFilters.Where(mf => mf.Filter).Select(m => $"'{m.Machine}'").Distinct());
             sb.AppendFormat("AND Machine IN ({0}) ", machines);
 

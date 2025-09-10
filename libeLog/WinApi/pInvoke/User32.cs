@@ -128,5 +128,11 @@ namespace libeLog.WinApi.pInvoke
         public static extern IntPtr GetForegroundWindow();
         public static string mss;
 
+        [DllImport(FileName)]
+        public static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport(FileName)]
+        public static extern bool EnableMenuItem(IntPtr hMenu, SC uIDEnableItem, MF uEnable);
+
     }
 }

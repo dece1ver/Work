@@ -89,7 +89,7 @@
                                             <Setter Property="Text" Value="{x:Null}" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Icon}" Value="Ok">
-                                                    <Setter Property="Text" Value="- в порядке" />
+                                                    <Setter Property="Text" Value="- ОК" />
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Icon}" Value="Error">
                                                     <Setter Property="Text" Value="- ошибка" />

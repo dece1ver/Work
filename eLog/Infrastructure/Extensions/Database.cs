@@ -37,7 +37,32 @@ namespace eLog.Infrastructure.Extensions
             {
                 return "";
             }
-            
+        }
+
+        public static bool TryGetOrdersPath(out string ordersPath)
+        {
+            ordersPath = null!;
+            bool result = false;
+            try
+            {
+                using SqlConnection connection = new(AppSettings.Instance.ConnectionString);
+                connection.Open();
+                var query = "SELECT OrdersXlPath FROM cnc_elog_config";
+                using SqlCommand command = new(query, connection);
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    ordersPath = reader.GetString(0);
+                    result = true;
+                    if (result) break;
+                }
+                return result;
+            }
+            catch
+            {
+                return result;
+            }
+
         }
 
         public async static Task<ObservableCollection<Operator>> GetOperatorsAsync(IProgress<string>? progress = null)

@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.Data.SqlClient;
+using static libeLog.Infrastructure.Sql.ApplicationFunctions;
 
 namespace libeLog.Infrastructure.Sql
 {
@@ -19,6 +20,43 @@ namespace libeLog.Infrastructure.Sql
         /// <param name="cancellationToken">Токен отмены.</param>
         public static async Task ApplyAllAsync(SqlConnection connection, IProgress<(string, Status?)>? progress = null, CancellationToken cancellationToken = default)
         {
+            var fnBuilder = new FunctionSqlBuilder();
+            var manager = new FunctionManager(connection.ConnectionString, fnBuilder);
+
+            manager.Register(new FunctionDefinition
+            {
+                Name = "NormalizedPartNameWithoutComments",
+                Parameters = new List<FunctionParameter>
+                {
+                    new("@name", "NVARCHAR(255)")
+                },
+                ReturnType = "NVARCHAR(255)",
+                Options = new List<string> { "RETURNS NULL ON NULL INPUT", "SCHEMABINDING" },
+                Body = @"
+                    IF @name IS NULL OR LEN(LTRIM(RTRIM(@name))) = 0
+                        RETURN '';
+
+                    DECLARE @r NVARCHAR(255) = @name;
+
+                    WHILE CHARINDEX('(', @r) > 0
+                    BEGIN
+                        DECLARE @s INT = CHARINDEX('(', @r);
+                        DECLARE @e INT = CHARINDEX(')', @r, @s);
+                        IF @e > 0
+                            SET @r = STUFF(@r, @s, @e - @s + 1, '');
+                        ELSE
+                            BREAK;
+                    END
+
+                    SET @r = REPLACE(@r, '""', '');
+
+                    WHILE CHARINDEX('  ', @r) > 0
+                        SET @r = REPLACE(@r, '  ', ' ');
+
+                    RETURN LOWER(LTRIM(RTRIM(@r)));"
+            });
+            manager.DeployAll();
+            progress?.Report(($"Функции:{string.Join("\n", manager.Functions)}", Status.Ok));
             var tables = GetAllTableDefinitions();
             foreach (var table in tables)
             {
@@ -32,9 +70,9 @@ namespace libeLog.Infrastructure.Sql
             progress?.Report(($"Таблица: {table.Name}", Status.Sync));
             var updated = await helper.ApplyMissingColumnsAndConstraintsAsync(table, progress, cancellationToken);
             if (updated)
-                progress?.Report(($"Таблица: {table.Name}", Status.Warning));
-            else
                 progress?.Report(($"Таблица: {table.Name}", Status.Ok));
+            else
+                progress?.Report(($"Таблица: {table.Name}", Status.Ok));   
         }
 
         /// <summary>
@@ -61,6 +99,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("LogPath", -1)
                 .AddStringColumn("OrderPrefixes", -1)
                 .AddStringColumn("AssignedPartsGsId")
+                .AddStringColumn("OrdersXlPath")
                 .Build(),
 
             new TableBuilder("cnc_machines")
@@ -88,10 +127,12 @@ namespace libeLog.Infrastructure.Sql
 
             new TableBuilder("cnc_remelog_config")
                 .AddIdColumn()
-                .AddDoubleColumn("max_setup_limit", false)
-                .AddDoubleColumn("long_setup_limit", false)
+                .AddDoubleColumn("max_setup_limit")
+                .AddDoubleColumn("long_setup_limit")
                 .AddStringColumn("NcArchivePath")
                 .AddStringColumn("NcIntermediatePath")
+                .AddStringColumn("CncOperations")
+                .AddStringColumn("Administrators")
                 .Build(),
 
             new TableBuilder("cnc_serial_parts")
@@ -99,8 +140,36 @@ namespace libeLog.Infrastructure.Sql
                 .AddStringColumn("PartName", 255, false)
                 .AddCompositeUnique("PartName")
                 .AddIntColumn("YearCount", false)
+                .AddComputedColumn("NormalizedPartName", "dbo.NormalizedPartNameWithoutComments(PartName)")
                 .Build(),
 
+            new TableBuilder("cnc_operations")
+                .AddIdColumn()
+                .AddIntColumn("SerialPartId", false)
+                .AddStringColumn("Name", 255, false)
+                .AddCompositeUnique("Name", "SerialPartId")
+                .AddForeignKey("SerialPartId", "cnc_serial_parts", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .AddIntColumn("OrderIndex", false, 0)
+                .Build(),
+
+            new TableBuilder("cnc_setups")
+                .AddIdColumn()
+                .AddIntColumn("CncOperationId", false)
+                .AddByteColumn("Number", false)
+                .AddCompositeUnique("CncOperationId", "Number")
+                .AddForeignKey("CncOperationId", "cnc_operations", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .Build(),
+
+            new TableBuilder("cnc_normatives")
+                .AddIdColumn()
+                .AddIntColumn("CncSetupId", false)
+                .AddByteColumn("NormativeType", false)
+                .AddDoubleColumn("Value", false)
+                .AddSmallDateTimeColumn("EffectiveFrom", false, "GETDATE()")
+                .AddForeignKey("CncSetupId", "cnc_setups", "Id", ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+                .AddBoolColumn("IsAproved", false, false)
+                .Build(),
+            
             new TableBuilder("cnc_shifts")
                 .AddIdColumn()
                 .AddSmallDateTimeColumn("ShiftDate", false)
@@ -164,6 +233,7 @@ namespace libeLog.Infrastructure.Sql
                 .AddSmallDateTimeColumn("ShiftDate", false)
                 .AddStringColumn("Operator", -1, false)
                 .AddStringColumn("PartName", -1, false)
+                .AddComputedColumn("NormalizedPartName", "dbo.NormalizedPartNameWithoutComments(PartName)")
                 .AddStringColumn("Order", 50, false)
                 .AddIntColumn("Setup", false)
                 .AddDoubleColumn("FinishedCount", false)
