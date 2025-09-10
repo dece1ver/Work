@@ -1,6 +1,5 @@
 ﻿using libeLog.Extensions;
 using remeLog.Infrastructure;
-using remeLog.Views;
 using System;
 using System.Diagnostics;
 using System.Globalization;
