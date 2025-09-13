@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -361,16 +362,12 @@ namespace eLog.Views.Windows.Dialogs
                     return OrderValidationTypes.Empty;
                 }
 
-                if (OrderText.Count(x => x == '.') != 2 ||
-                    !OrderText.Split('.')[0].All(char.IsDigit) ||
-                    string.IsNullOrEmpty(OrderText.Split('.')[1]) ||
-                    !OrderText.Split('.')[1].All(char.IsDigit) ||
-                    string.IsNullOrEmpty(OrderText.Split('.')[2]) ||
-                    !OrderText.Split('.')[2].All(char.IsDigit))
+                if (!IsValidOrderText(OrderText))
                 {
                     Part.Order = string.Empty;
                     return OrderValidationTypes.Error;
                 }
+
                 Part.Order = $"{OrderQualifier}{OrderYear}{OrderMonth}{(OrderYear == "-" ? "/" : "-")}{OrderText}";
                 return OrderValidationTypes.Valid;
             }
@@ -381,37 +378,6 @@ namespace eLog.Views.Windows.Dialogs
         public bool CanIncreaseSetup => Part.Setup < 24;
         public bool CanDecreaseSetup => Part.Setup > 1;
 
-        #region Валидация полного номера М/Л (уже не нужно, оставил на всякий случай)
-        //public OrderValidation OrderValidateType
-        //{
-        //    get
-        //    {
-        //        if (OrderText is "")
-        //        {
-        //            return OrderValidationTypes.Empty;
-        //        }
-
-        //        if (OrderText.Length < 14 ||
-        //            !char.IsLetter(OrderText[0]) ||
-        //            !char.IsLetter(OrderText[1]) ||
-        //            OrderText[2] != '-' ||
-        //            !char.IsNumber(OrderText[3]) ||
-        //            !char.IsNumber(OrderText[4]) ||
-        //            OrderText[5] != '/' ||
-        //            !char.IsNumber(OrderText[6]) ||
-        //            !char.IsNumber(OrderText[7]) ||
-        //            !char.IsNumber(OrderText[8]) ||
-        //            !char.IsNumber(OrderText[9]) ||
-        //            !char.IsNumber(OrderText[10]) ||
-        //            OrderText[11] != '.' ||
-        //            !char.IsNumber(OrderText[12]) ||
-        //            OrderText.Split('/')[1].Count(x => x is '.') != 2) return OrderValidationTypes.Error;
-        //        Part.Order = OrderText;
-        //        return OrderValidationTypes.Valid;
-        //    }
-        //} 
-        #endregion
-
         #region Обертки требуемых для валидации свойств детали, потому что я хз как отсюда влиять на их сеттеры без влияния на геттеры (никак?).
         public string PartName
         {
@@ -419,6 +385,7 @@ namespace eLog.Views.Windows.Dialogs
             set
             {
                 Part.Name = value;
+                Debug.WriteLine($"PartName set to '{value}' from {Environment.StackTrace}");
                 OnPropertyChanged(nameof(CanBeClosed));
             }
         }
@@ -748,6 +715,7 @@ namespace eLog.Views.Windows.Dialogs
         private void LoadPreviousPartButton_Click(object sender, RoutedEventArgs e)
         {
             if (AppSettings.Instance.Parts.Count <= 0) return;
+
             Part prev;
             var parts = AppSettings.Instance.Parts
                 .Where(x => x.IsFinished is not Part.State.InProgress)
@@ -764,6 +732,7 @@ namespace eLog.Views.Windows.Dialogs
                     TotalCount = x.First().TotalCount,
                     FinishedCount = x.Sum(p => p.FinishedCount)
                 }).ToList();
+
             switch (parts.Count)
             {
                 case 1:
@@ -785,27 +754,24 @@ namespace eLog.Views.Windows.Dialogs
                     Status = "Не найдено подходящих деталей.";
                     return;
             }
-            Part.Setup = prev.Setup;
-            WithSetup = false;
-            PartName = prev.FullName;
+
             var order = prev.Order;
-            OrderText = !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('/')
-            ? order.Split('/')[1]
-            : Text.WithoutOrderDescription;
-            OrderQualifier =
-            !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-')
-            ? order.Split('-')[0]
-            : AppSettings.Instance.OrderQualifiers[0];
-            OrderMonth =
-            !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
-            ? order.Split('-')[1].Split('/')[0]
-                    : "01";
+
+            var (qualifier, year, month, text, oldFormat) = ParseOrder(prev.Order);
+
+            OrderQualifier = qualifier;
+            OrderYear = year;
+            OrderMonth = month;
+            OrderText = text;
+
             Part.Name = prev.Name;
             Part.Number = prev.Number;
-            PartName = prev.FullName;
-            OnPropertyChanged(nameof(PartName));
-
+            Part.Setup = prev.Setup;
+            Part.StartSetupTime = prev.StartSetupTime;
             StartSetupTime = Part.StartSetupTime.ToString(Constants.DateTimeFormat);
+            PartName = prev.FullName;
+
+            OnPropertyChanged(nameof(PartName));
             OnPropertyChanged(nameof(StartSetupTime));
 
             if (prev.SetupIsFinished)
@@ -841,10 +807,10 @@ namespace eLog.Views.Windows.Dialogs
 
             OnPropertyChanged(nameof(CanIncreaseSetup));
             OnPropertyChanged(nameof(CanDecreaseSetup));
-
             OnPropertyChanged(nameof(TotalCount));
             OnPropertyChanged(nameof(CanBeClosed));
         }
+
 
         private void SpaceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1062,6 +1028,37 @@ namespace eLog.Views.Windows.Dialogs
                 !string.IsNullOrWhiteSpace(order) && order != Text.WithoutOrderDescription && order.Contains('-') && order.Contains('/')
                     ? order.Split('-')[1].Split('/')[0]
                     : "01";
+        }
+
+        private (string Qualifier, string Year, string Month, string Text, bool OldFormat) ParseOrder(string order)
+        {
+            if (string.IsNullOrWhiteSpace(order) || order == Text.WithoutOrderDescription)
+                return (Text.WithoutOrderItem, "-", "01", Text.WithoutOrderDescription, false);
+
+            bool oldFormat = false;
+            int sep = order.IndexOf('/');
+            if (sep >= 0)
+            {
+                oldFormat = true;
+            }
+            else
+            {
+                sep = order.IndexOf('-');
+            }
+
+            string qualifier = order[..2];
+            string month = order[..sep][^2..];
+            string year = oldFormat ? "-" : order[2..sep][..^2];
+            string text = order[(sep + 1)..];
+
+            return (qualifier, year, month, text, oldFormat);
+        }
+
+        private bool IsValidOrderText(string text)
+        {
+            var parts = text.Split('.');
+            if (parts.Length != 3) return false;
+            return parts.All(p => !string.IsNullOrEmpty(p) && p.All(char.IsDigit));
         }
     }
 }

@@ -1855,7 +1855,7 @@ namespace remeLog.ViewModels
 
             using (Overlay = new())
             {
-                var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, PartsInfo.Machine)) { Owner = p as PartsInfoWindow };
+                var dailyInfoWindow = new DailyReportWindow((Parts, ToDate, MachineFilters.Where(mf => mf.Filter).First().Machine)) { Owner = p as PartsInfoWindow };
                 dailyInfoWindow.ShowDialog();
             }
         }

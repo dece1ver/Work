@@ -274,8 +274,8 @@
                                     <Storyboard RepeatBehavior="Forever" AutoReverse="True">
                                         <ColorAnimation Storyboard.TargetName="AnimatedBrush"
                                                     Storyboard.TargetProperty="Color"
-                                                    From="Green" To="DarkGreen"
-                                                    Duration="0:0:1"/>
+                                                    From="DarkGray" To="DarkGray"
+                                                    Duration="0:0:0"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </DataTrigger.EnterActions>
@@ -286,7 +286,7 @@
                                         <ColorAnimation Storyboard.TargetName="AnimatedBrush"
                                                     Storyboard.TargetProperty="Color"
                                                     To="#D5DFE5"
-                                                    Duration="0:0:0.2"/>
+                                                    Duration="0:0:1"/>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </DataTrigger.ExitActions>
