@@ -63,11 +63,11 @@
             <DockPanel >
                 <StatusBar DockPanel.Dock="Bottom" >
                     <StatusBarItem>
-                        <StackPanel Orientation="Horizontal" Width="1088">
-                            <TextBlock Text="{Binding Status}" d:Text="Статус" Width="810"/>
-                            <ProgressBar Width="259" Margin="10 0" IsIndeterminate="True"
-                                         Visibility="{Binding ProgressBarVisibility}" />
-                        </StackPanel>
+                        <DockPanel Width="1195">
+                            <ProgressBar DockPanel.Dock="Right" Width="299" Margin="10 0" IsIndeterminate="True"
+                                         Visibility="{Binding ProgressBarVisibility}" HorizontalAlignment="Right"/>
+                            <TextBlock Text="{Binding Status}" d:Text="Статус" DockPanel.Dock="Left" HorizontalAlignment="Left"/>
+                        </DockPanel>
                     </StatusBarItem>
                 </StatusBar>
                 <Grid Margin="10 9 10 10">
@@ -155,7 +155,7 @@
                     <DockPanel Grid.Row="2" Grid.Column="1" Margin="0" >
                         <Border BorderThickness="1" BorderBrush="{StaticResource ComboBox.Static.Editable.Border}" Margin="1">
                             <StackPanel Orientation="Horizontal">
-                                <ComboBox Style="{DynamicResource LeftEmptyComboBoxStyle}" Margin="0 0 0 0" Width="49" DockPanel.Dock="Left" 
+                                <ComboBox Style="{DynamicResource LeftEmptyComboBoxStyle}" Margin="0 0 0 0" Width="49" DockPanel.Dock="Left"
                                       SelectedItem="{Binding OrderQualifier}"
                                       ItemsSource="{Binding OrderQualifiers, Source={x:Static inf:AppSettings.Instance}}" FontSize="20" BorderThickness="0"
                                       VerticalContentAlignment="Center" Padding="3" MaxDropDownHeight="Auto"/>
@@ -175,8 +175,8 @@
                                         VerticalContentAlignment="Center" 
                                         Padding="3" 
                                         MaxDropDownHeight="400"
-                                        Visibility="{Binding NewOrderFormat, Converter={StaticResource InvertedVisibilityConverter}}">
-                                    </ComboBox>
+                                        Visibility="{Binding NewOrderFormat, Converter={StaticResource InvertedVisibilityConverter}}" d:Visibility="Collapsed"/>
+
                                     <ComboBox 
                                         Style="{DynamicResource DashComboBoxStyle}"
                                         SelectedItem="{Binding OrderMonth}"
