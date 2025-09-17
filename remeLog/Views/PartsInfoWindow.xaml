@@ -703,10 +703,10 @@
             <MenuItem Header="Выделить все" Command="ApplicationCommands.SelectAll" />
             <Separator/>
             <MenuItem Header="Вставка спецсимволов">
-                <MenuItem Header="Градус (°)" Tag="°" Click="OnInsertSymbolClick"/>
-                <MenuItem Header="Плюс-минус (±)" Tag="±" Click="OnInsertSymbolClick"/>
-                <MenuItem Header="Диаметр (Ø)" Tag="Ø" Click="OnInsertSymbolClick"/>
-                <MenuItem Header="Микрон (µ)" Tag="µ" Click="OnInsertSymbolClick"/>
+                <MenuItem Header="Градус (°)" Tag="°" Click="OnInsertValueClick"/>
+                <MenuItem Header="Плюс-минус (±)" Tag="±" Click="OnInsertValueClick"/>
+                <MenuItem Header="Диаметр (Ø)" Tag="Ø" Click="OnInsertValueClick"/>
+                <MenuItem Header="Микрон (µ)" Tag="µ" Click="OnInsertValueClick"/>
             </MenuItem>
         </ContextMenu>
 
@@ -714,6 +714,13 @@
             <MenuItem Header="Изменить норматив" Command="{Binding DataContext.ChangeSerialPartNormativesCommand, Source={x:Reference partsInfoWindow}}" />
             <MenuItem Header="Разблокировать" Command="{Binding DataContext.UnlockSerialPartNormativesCommand, Source={x:Reference partsInfoWindow}}" />
             <MenuItem Header="Очистить" Tag="0" Click="OnSetValueClick"/>
+        </ContextMenu>
+
+        <ContextMenu x:Key="TimeContextMenu">
+            <MenuItem Header="07:00" Click="OnInsertValueClick"/>
+            <MenuItem Header="08:00" Click="OnInsertValueClick"/>
+            <MenuItem Header="19:00" Click="OnInsertValueClick"/>
+            <MenuItem Header="20:00" Click="OnInsertValueClick"/>
         </ContextMenu>
 
     </Window.Resources>

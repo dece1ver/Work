@@ -153,6 +153,13 @@ namespace remeLog.Views
                     {
                         switch (column.DisplayIndex)
                         {
+                            case 9 or 10 or 11:
+                                e.Handled = true;
+                                cell.Focus();
+                                var timeContextMenu = (ContextMenu)FindResource("TimeContextMenu");
+                                timeContextMenu.PlacementTarget = cell;
+                                timeContextMenu.IsOpen = true;
+                                break;
                             case 39:
                                 e.Handled = true;
                                 cell.Focus();
@@ -373,29 +380,43 @@ namespace remeLog.Views
             }
         }
 
-        private void OnInsertSymbolClick(object sender, RoutedEventArgs e)
+        private void OnInsertValueClick(object sender, RoutedEventArgs e)
         {
             if (sender is not MenuItem item) return;
-            string specialChar = item.Tag?.ToString() ?? item.Header?.ToString() ?? "";
-
-            if (Keyboard.FocusedElement is TextBox textBox)
-            {
-                int caretIndex = textBox.CaretIndex;
-                textBox.Text = textBox.Text.Insert(caretIndex, specialChar);
-                textBox.CaretIndex = caretIndex + specialChar.Length;
-                textBox.Focus();
-                return;
-            }
+            string value = item.Tag?.ToString() ?? item.Header?.ToString() ?? "";
 
             ContextMenu? contextMenu = FindVisualParent<ContextMenu>(item);
-
-            if (contextMenu?.PlacementTarget is TextBox placementTextBox)
+            if (contextMenu?.PlacementTarget is FrameworkElement target)
             {
-                int caretIndex = placementTextBox.CaretIndex;
-                placementTextBox.Text = placementTextBox.Text.Insert(caretIndex, specialChar);
-                placementTextBox.CaretIndex = caretIndex + specialChar.Length;
-                placementTextBox.Focus();
-                return;
+                switch (target)
+                {
+                    case TextBox textBox:
+                        int caretIndex = textBox.CaretIndex;
+                        textBox.Text = textBox.Text.Insert(caretIndex, value);
+                        textBox.CaretIndex = caretIndex + value.Length;
+                        textBox.Focus();
+                        return;
+
+                    case DataGridCell cell:
+                        var dataGrid = FindVisualParent<DataGrid>(cell);
+                        if (dataGrid == null) return;
+
+                        if (cell.IsEditing)
+                        {
+                            if (cell.Content is TextBox editor)
+                            {
+                                int caret = editor.CaretIndex;
+                                editor.Text = editor.Text.Insert(caret, value);
+                                editor.CaretIndex = caret + value.Length;
+                                editor.Focus();
+                            }
+                        }
+                        else
+                        {
+                            SetSingleCellValue(cell, dataGrid, value);
+                        }
+                        return;
+                }
             }
         }
 

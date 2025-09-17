@@ -1,10 +1,8 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using libeLog;
+﻿using libeLog;
 using libeLog.Base;
 using libeLog.Extensions;
 using libeLog.Infrastructure;
 using libeLog.Models;
-using Microsoft.IdentityModel.Tokens;
 using remeLog.Infrastructure;
 using remeLog.Infrastructure.Extensions;
 using remeLog.Infrastructure.Types;
@@ -18,7 +16,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -850,9 +847,9 @@ namespace remeLog.ViewModels
                     var simpleTagIntervalCalculationTask = operation.GetSimpleTagIntervalCalculationAsync(AppId.CNC_MONITORING, TagId.NC_PROGRAM_RUN, startTime, SelectedPart.EndMachiningTime, progress);
                     var operationsSummaryTask = operation.GetOperationSummaryAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime, progress);
                     var completedQtyTask = operation.GetCompletedQtyAsync(AppId.CNC_MONITORING, startTime, SelectedPart.EndMachiningTime, progress);
-                    var startCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Ordering.Asc, progress, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
-                    var endCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Ordering.Asc, progress, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5));
-                    var programNamesTask = signal.GetUniqSignalsAsync(machine.WnNcProgramNameSignal, Ordering.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5), progress);
+                    var startCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Ordering.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5), progress: progress) ;
+                    var endCountTask = signal.GetSignalAsync(machine.WnCounterSignal, SignalType.ByTime, Ordering.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5), progress: progress);
+                    var programNamesTask = signal.GetUniqSignalsAsync(machine.WnNcProgramNameSignal, Ordering.Asc, startTime.AddMinutes(-5), SelectedPart.EndMachiningTime.AddMinutes(5), progress: progress);
                     var machineInfoTask = operation.GetMachineInfo(AppId.CNC_MONITORING, progress);
 
                     await Task.WhenAll(
@@ -867,6 +864,8 @@ namespace remeLog.ViewModels
                         endCountTask, 
                         machineInfoTask);
 
+                    progress.Report("Разбор полученных данных и вычисления");
+
                     var platformDateTime = await platformDateTimeTask;
                     var cloudDateTime = await cloudDateTimeTask;
                     var priorityTagDuration = await priorityTagDurationTask;
@@ -879,6 +878,7 @@ namespace remeLog.ViewModels
                     var programNamesRaw = await programNamesTask;
                     var machineInfoRaw = await machineInfoTask;
 
+                    
                     var tagIntervalCalculations = Parser.ParseTimeIntervals(Parser.ParseXmlItems(tagIntervalCalculation), true);
                     var orderedTagIntervalCalculations = tagIntervalCalculations.OrderBy(x => x.Start);
                     var priorityTagDurations = Parser.ParsePriorityTagDurations(priorityTagDuration, startTime, SelectedPart.EndMachiningTime);
@@ -908,38 +908,6 @@ namespace remeLog.ViewModels
                     var signalNames = Enumerable.Range(0, 2000).Select(i => $"A{i}").ToList();
                     var signals = new ConcurrentDictionary<string, ConcurrentBag<string>>();
 
-                    #region Шляпа
-                    // шляпа чтобы посмотреть все сигналы
-                    //await Parallel.ForEachAsync(signalNames, new ParallelOptions { MaxDegreeOfParallelism = 100 },
-                    //    async (signalName, _) =>
-                    //    {
-                    //        try
-                    //        {
-                    //            var raw = await signal.GetUniqSignalsAsync(signalName, Ordering.Asc, start, end, progress);
-                    //            var parsedItems = Parser.ParseXmlItems(raw);
-
-                    //            var signalValues = signals.GetOrAdd(signalName, _ => new ConcurrentBag<string>());
-
-                    //            foreach (var item in parsedItems)
-                    //            {
-                    //                if (item.ContainsKey("value"))
-                    //                {
-                    //                    signalValues.Add(item["value"]);
-                    //                }
-                    //            }
-                    //        }
-                    //        catch (InvalidOperationException ex)
-                    //        {
-                    //        }
-                    //        catch (Exception ex)
-                    //        {
-                    //            MessageBox.Show(ex.Message);
-                    //        }
-                    //    });
-
-                    //var signalsFinal = signals.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList());
-                    #endregion 
-
                     if (Parser.TryParseXmlItems(completedQty, out var cqty))
                     {
                         foreach (var item in cqty)
@@ -955,6 +923,7 @@ namespace remeLog.ViewModels
                         }
                     }
                     
+                    progress.Report("Подготовка окна");
                     sb.AppendLine($"Файлы УП: {string.Join(", ", programNames)}");
                     var completedInfo = sb.ToString();
                     var win = new WinnumInfoWindow($"" +
@@ -968,7 +937,7 @@ namespace remeLog.ViewModels
                         $"{new DateTime(SelectedPart.EndMachiningTime.Year, SelectedPart.EndMachiningTime.Month, SelectedPart.EndMachiningTime.Day):d}\n" +
                         $"{completedInfo}" +
                         $"", Path.Combine(winnumConfig.NcProgramFolder, serialNumber), priorityTagDurations, intervals);
-                    win.ShowDialog();
+                    win.Show();
                 }
                 catch (Exception ex)
                 {
