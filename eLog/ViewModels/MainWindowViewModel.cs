@@ -60,6 +60,7 @@ namespace eLog.ViewModels
             LoadProductionTasksCommand = new LambdaCommand(OnLoadProductionTasksCommandExecuted, CanLoadProductionTasksCommandExecute);
             LoadAssignedPartsCommand = new LambdaCommand(OnLoadAssignedPartsCommandExecuted, CanLoadAssignedPartsCommandExecute);
             SendMessageCommand = new LambdaCommand(OnSendMessageCommandExecuted, CanSendMessageCommandExecute);
+            OpenReferenceCommand = new LambdaCommand(OnOpenReferenceCommandExecuted, CanOpenReferenceCommandExecute);
             ShowAboutCommand = new LambdaCommand(OnShowAboutCommandExecuted, CanShowAboutCommandExecute);
             TestCommand = new LambdaCommand(OnTestCommandExecuted, CanTestCommandExecute);
 
@@ -556,6 +557,19 @@ namespace eLog.ViewModels
         private bool CanSendMessageCommandExecute(object p) => !string.IsNullOrWhiteSpace(AppSettings.Instance.PathToRecievers);
 
         public bool _CanSendMessageCommandExecute => SendMessageCommand.CanExecute(null);
+        #endregion
+
+        #region OpenReference
+        public ICommand OpenReferenceCommand { get; }
+        private void OnOpenReferenceCommandExecuted(object p)
+        {
+            using (Overlay = new())
+            {
+                var referenceWindow = new ReferenceWindow { Owner = Application.Current.MainWindow };
+                referenceWindow.ShowDialog();
+            }
+        }
+        private bool CanOpenReferenceCommandExecute(object p) => true;
         #endregion
 
         #region EditOperators

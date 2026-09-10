@@ -71,6 +71,13 @@
                 </MenuItem>
             </Menu>
             <DockPanel DockPanel.Dock="Top" Height="Auto" LastChildFill="True">
+                <Button Style="{StaticResource GeneralButton}"
+                        Margin="4 4 0 0"
+                        Width="34"
+                        Content="{StaticResource HelpIcon}" Padding="2"
+                        ToolTip="Справочники"
+                        Command="{Binding OpenReferenceCommand}">
+                </Button>
                 <Button Visibility="{Binding _CanLoadAssignedPartsCommandExecute, Converter={StaticResource VisibilityConverter}}"
                         Margin="4 4 0 0" 
                         Width="34"
@@ -93,8 +100,8 @@
                                                                     <BeginStoryboard>
                                                                         <Storyboard RepeatBehavior="Forever">
                                                                             <DoubleAnimation
-                                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                                From="0" To="360" Duration="0:0:1" />
+                                                                                Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                From="0" To="360" Duration="0:0:1" />
                                                                         </Storyboard>
                                                                     </BeginStoryboard>
                                                                 </DataTrigger.EnterActions>
@@ -124,7 +131,7 @@
                         Command="{Binding SendMessageCommand}">
                 </Button>
                 <Button Visibility="{Binding _CanLoadProductionTasksCommandExecute, Converter={StaticResource VisibilityConverter}}"
-                        Margin="4 4 -4 0" 
+                        Margin="4 4 0 0" 
                         Width="34"
                         Command="{Binding LoadProductionTasksCommand}">
                     <Button.Style>
@@ -168,6 +175,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
+                
                 <TextBlock Text="{Binding Machine.Name}" d:Text="Станок" Padding="0 3" Margin="9 0" DockPanel.Dock="Left"/>
                 <!--<TextBlock Text="Оператор:" Padding="5 3" Margin="10 0 0 0" DockPanel.Dock="Left"/>-->
                 <ComboBox ItemsSource="{Binding Operators}" DockPanel.Dock="Left"
